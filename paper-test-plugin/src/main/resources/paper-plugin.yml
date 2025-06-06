@@ -1,0 +1,4 @@
+name: TestPlugin
+api-version: 1.21.5
+main: net.strokkur.testplugin.TestPlugin
+version: 1.0-SNAPSHOT
