@@ -9,6 +9,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/paper" />
+            <option value="$PROJECT_DIR$/paper-test-plugin" />
           </set>
         </option>
       </GradleProjectSettings>

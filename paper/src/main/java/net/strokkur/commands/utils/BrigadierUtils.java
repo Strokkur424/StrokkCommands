@@ -2,11 +2,15 @@ package net.strokkur.commands.utils;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.ArgumentType;
+import com.mojang.brigadier.arguments.FloatArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import net.strokkur.commands.annotations.arguments.FloatArg;
+import net.strokkur.commands.annotations.arguments.IntArg;
 import net.strokkur.commands.annotations.arguments.StringArg;
 import net.strokkur.commands.exceptions.UnknownArgumentException;
 import net.strokkur.commands.objects.CommandInformation;
@@ -18,9 +22,12 @@ import org.jspecify.annotations.NullUnmarked;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 @SuppressWarnings("UnstableApiUsage")
 @NullUnmarked
@@ -33,16 +40,28 @@ public abstract class BrigadierUtils {
         Class<?> type = parameter.getType();
 
         if (type == String.class) {
-            StringArg stringAnnotation = parameter.getAnnotation(StringArg.class);
-            if (stringAnnotation == null) {
-                return StringArgumentType.word();
-            }
-
-            return switch (stringAnnotation.value()) {
-                case WORD -> StringArgumentType.word();
-                case STRING -> StringArgumentType.string();
-                case GREEDY -> StringArgumentType.greedyString();
-            };
+            return annotatedOr(parameter, StringArg.class,
+                a -> switch (a.value()) {
+                    case WORD -> StringArgumentType.word();
+                    case STRING -> StringArgumentType.string();
+                    case GREEDY -> StringArgumentType.greedyString();
+                },
+                StringArgumentType::word
+            );
+        }
+        
+        if (type == float.class || type == Float.class) {
+            return annotatedOr(parameter, FloatArg.class, 
+                a -> FloatArgumentType.floatArg(a.min(), a.max()),
+                FloatArgumentType::floatArg
+            );
+        }
+        
+        if (type == int.class || type == Integer.class) {
+            return annotatedOr(parameter, IntArg.class,
+                a -> IntegerArgumentType.integer(a.min(), a.max()),
+                IntegerArgumentType::integer
+            );
         }
 
         throw new UnknownArgumentException(type, command, method);
@@ -73,4 +92,13 @@ public abstract class BrigadierUtils {
 
         return root.build();
     }
+    
+    private static <T extends Annotation> ArgumentType<?> annotatedOr(Parameter parameter, Class<T> annotation, Function<T, ArgumentType<?>> function, Supplier<ArgumentType<?>> supplier) {
+        T annotated = parameter.getAnnotation(annotation);
+        if (annotated == null) {
+            return supplier.get();
+        }
+        
+        return function.apply(annotated);
+    } 
 }
