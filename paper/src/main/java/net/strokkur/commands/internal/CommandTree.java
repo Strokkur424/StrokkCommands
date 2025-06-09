@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 class CommandTree {
 
@@ -21,6 +22,11 @@ class CommandTree {
 
     public void insert(ExecutorInformation executor) {
         insert(executor.arguments(), executor);
+    }
+    
+    public void visitAll(Consumer<CommandTree> tree) {
+        treeMap.values().forEach(branch -> branch.visitAll(tree));
+        tree.accept(this);
     }
 
     public void insert(List<ArgumentInformation> arguments, ExecutorInformation executor) {
@@ -41,6 +47,14 @@ class CommandTree {
 
             treeMap.put(name, next);
         }
+    }
+
+    public ArgumentInformation getArgument() {
+        return argument;
+    }
+
+    public @Nullable ExecutorInformation getExecutor() {
+        return executor;
     }
 
     public @Nullable String getName() {

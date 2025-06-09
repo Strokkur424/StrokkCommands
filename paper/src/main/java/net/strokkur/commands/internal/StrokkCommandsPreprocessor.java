@@ -21,11 +21,11 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeMirror;
-import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -35,13 +35,10 @@ import static net.strokkur.commands.internal.Classnames.PLAYER;
 
 @NullMarked
 @AutoService(Processor.class)
-public class StrokkCommandPreprocessor extends AbstractProcessor {
+public class StrokkCommandsPreprocessor extends AbstractProcessor {
 
-    private static final String[] BASIC_IMPORTS = {
+    private static final List<String> BASIC_IMPORTS = List.of(
         "com.mojang.brigadier.Command",
-        "com.mojang.brigadier.arguments.FloatArgumentType",
-        "com.mojang.brigadier.arguments.IntegerArgumentType",
-        "com.mojang.brigadier.arguments.StringArgumentType",
         "com.mojang.brigadier.tree.LiteralCommandNode",
         "org.bukkit.entity.Entity",
         "org.bukkit.entity.Player",
@@ -49,7 +46,7 @@ public class StrokkCommandPreprocessor extends AbstractProcessor {
         "io.papermc.paper.command.brigadier.CommandSourceStack",
         "io.papermc.paper.command.brigadier.Commands",
         "java.util.List"
-    };
+    );
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {
@@ -62,152 +59,6 @@ public class StrokkCommandPreprocessor extends AbstractProcessor {
     public SourceVersion getSupportedSourceVersion() {
         return SourceVersion.RELEASE_21;
     }
-    
-    /*
-    @Command(...)
-    public void MyCommand {
-    
-        @Executes
-        public void execute(CommandSender sender, @Executor Player player) {
-            // logic ...
-        }
-    
-        @Executes
-        public void execute(CommandSender sender, @Executor Player player, String wordInput) {
-            // logic ...
-        }
-        
-        @Executes
-        public void execute(CommandSender sender, String wordInput, int exp) {
-            // logic ...
-        }
-    }
-    
-    <--->
-    
-    public void MyCommandBrigadierImpl {
-        
-        private static final MyCommand instance = new MyCommand();
-        
-        public static LiteralCommandNode<CommandSourceStack> build() {
-            return Commands.literal(...)
-                .requires(stack -> stack.getExecutor() instanceof Player)
-                .executes(ctx -> {
-                    instance.execute(ctx.getSource().getSender(), ctx.getSource().getExecutor());
-                    return Command.SINGLE_SUCCESS;
-                })
-            
-                .then(Commands.argument("wordInput", StringArgumentType.word())
-                    .requires(stack -> stack.getExecutor() instanceof Player)
-                    .executes(ctx -> {
-                        instance.execute(ctx.getSource().getSender(), ctx.getSource().getExecutor(), StringArgumentType.getString(ctx, "wordInput"));
-                        return Command.SINGLE_SUCCESS;
-                    })
-                )
-                
-                // This would happen twice~. We need to build up our own tree which combines these things first, so that we can build the correct
-                // Brigadier tree out of our command annotations.
-                .then(Command.argument("wordInput", StringArgumentType.word())
-                    .then(Commands.argument("exp", IntegerArgumentType.integer())
-                        .executes(ctx -> {
-                            instance.execute(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "wordInput"), IntegerArgumentType.getInt(ctx, "exp"));
-                            return Command.SINGLE_SUCCESS;
-                        })
-                    )
-                )
-                .build();
-        }
-    }
-    
-    
-    ============ Structure Update ==============
-    @Executes
-    private void noArgs(CommandSender sender, @Executor Player executor) {
-        sender.sendRichMessage("<green>Success! The executing player is " + executor.getName());
-        executor.sendRichMessage("<gradient:gold:yellow>Hehe very good!");
-    }
-    
-    @Executes("name")
-    private void nameArg(CommandSender sender, String name) {
-        sender.sendRichMessage("<green>You put in: <name>", Placeholder.unparsed("name", name));
-    }
-    
-    @Executes("float")
-    private void floatArg(CommandSender sender, float value) {
-        sender.sendRichMessage("<transition:red:blue:%s>This is some transitioning text :P (%s)".formatted(value, value));
-    }
-    
-    @Executes("literal-test")
-    private void literalTest(CommandSender sender, @Literal({"one", "two", "three"}) String literal, @IntArg(min = 1, max = 3) int value) {
-        int actual = switch (literal) {
-            case "one" -> 1;
-            case "two" -> 2;
-            case "three" -> 3;
-            default -> throw new UnsupportedOperationException("Incorrect literal");
-        };
-        
-        sender.sendPlainMessage("Your input is " + literal + ", which " + (actual == value ? "matches" : "doesn't match") + " your input value!");
-    }
-    
-    ---
-    Should convert to:
-    ---
-    
-    Commands.literal("simplecommand")
-        .requires(stack -> stack.getExecutor() instanceof Player)
-        .executes(ctx -> {
-            instance.noArgs(ctx.getSource().getSender(), (Player) ctx.getSource().getExecutor())
-            return Command.SINGLE_SUCCESS;
-        })
-        
-        .then(Commands.literal("name")
-            .then(Commands.argument("name", StringArgumentType.word())
-                .executes(ctx -> {
-                    instance.nameArg(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "name"));
-                    return Command.SINGLE_SUCCESS;
-                })
-            )
-        )
-        
-        .then(Commands.literal("float")
-            .then(Commands.argument("value", FloatArgumentType.float())
-                .executes(ctx -> {
-                    instance.floatArg(ctx.getSource().getSender(), FloatArgumentType.getFloat(ctx, "value"));
-                    return Command.SINGLE_SUCCESS;
-                })
-            )
-        )
-        
-        .then(Commands.literal("literal-test")
-            .then(Commands.literal("one")
-                .then(Commands.argument("value", IntegerArgumentType.integer(1, 3))
-                    .executes(ctx -> {
-                        instance.literalTest(ctx.getSource().getSender(), "one", IntegerArgumentType.getInteger(ctx, "value"));
-                        return Command.SINGLE_SUCCESS;
-                    });
-                )
-            )
-            .then(Commands.literal("two")
-                .then(Commands.argument("value", IntegerArgumentType.integer(1, 3))
-                    .executes(ctx -> {
-                        instance.literalTest(ctx.getSource().getSender(), "two", IntegerArgumentType.getInteger(ctx, "value"));
-                        return Command.SINGLE_SUCCESS;
-                    });
-                )
-            )
-            .then(Commands.literal("three")
-                .then(Commands.argument("value", IntegerArgumentType.integer(1, 3))
-                    .executes(ctx -> {
-                        instance.literalTest(ctx.getSource().getSender(), "three", IntegerArgumentType.getInteger(ctx, "value"));
-                        return Command.SINGLE_SUCCESS;
-                    });
-                )
-            )
-        )
-    
-    
-    
-     */
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
@@ -226,7 +77,6 @@ public class StrokkCommandPreprocessor extends AbstractProcessor {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-
         }
 
         return true;
@@ -311,11 +161,21 @@ public class StrokkCommandPreprocessor extends AbstractProcessor {
         packagesAndClass.removeLast();
         String packageName = String.join(".", packagesAndClass);
 
+        Set<String> imports = new HashSet<>(BASIC_IMPORTS);
+        command.visitAll(branch -> {
+            if (branch.getArgument() instanceof RequiredArgumentInformation reqInfo) {
+                String importString = reqInfo.type().importString();
+                if (importString != null) {
+                    imports.add(importString);
+                }
+            }
+        });
+
         try (PrintWriter out = new PrintWriter(obj.openWriter())) {
             out.println("package " + packageName + ";");
             out.println();
 
-            for (String importString : BASIC_IMPORTS) {
+            for (String importString : imports.stream().sorted().toList()) {
                 out.println("import " + importString + ";");
             }
             out.println();
@@ -326,9 +186,11 @@ public class StrokkCommandPreprocessor extends AbstractProcessor {
             out.println();
             out.print("""
                     public static void register(Commands commands) {
-                        commands.register(create(), "%s", List.of(%s));
+                        commands.register(create(), %s, List.of(%s));
                     }
-                """.formatted(info.description(), info.aliases() == null ? "" : '"' + String.join("\" , \"", info.aliases()) + '"'));
+                """.formatted(
+                info.description() != null ? '"' + info.description() + '"' : "null",
+                info.aliases() == null ? "" : '"' + String.join("\" , \"", info.aliases()) + '"'));
             out.println();
             out.println("    public static LiteralCommandNode<CommandSourceStack> create() {");
             out.print("        return ");
@@ -340,6 +202,7 @@ public class StrokkCommandPreprocessor extends AbstractProcessor {
     }
 
     private void info(String format, Object... arguments) {
-        super.processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, format.replaceAll("\\{}", "%s").formatted(arguments));
+        // We don't need this outside dev
+        // super.processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, format.replaceAll("\\{}", "%s").formatted(arguments));
     }
 }
