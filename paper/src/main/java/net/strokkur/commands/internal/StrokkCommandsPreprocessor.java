@@ -31,6 +31,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -132,7 +133,6 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
         return classElement.getEnclosedElements().stream()
             .filter(element -> element.getAnnotation(Executes.class) != null)
             .map(methodElement -> {
-                String name = methodElement.getSimpleName().toString();
                 List<? extends VariableElement> variableElements = ((ExecutableElement) methodElement).getParameters();
                 List<? extends TypeMirror> typeMirrors = ((ExecutableType) methodElement.asType()).getParameterTypes();
                 List<String> parameterClassNames = typeMirrors.stream().map(TypeMirror::toString).toList();
@@ -166,11 +166,12 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
                         continue;
                     }
 
-                    argumentInformation.add(new RequiredArgumentInformation(
-                        variableElements.get(i).toString(),
-                        variableElements.get(i),
-                        BrigadierArgumentConversion.getAsArgumentType(variableElements.get(i), variableElements.get(i).toString(), parameterClassNames.get(i))
-                    ));
+                    BrigadierArgumentType asBrigadier = BrigadierArgumentConversion.getAsArgumentType(variableElements.get(i), variableElements.get(i).toString(), parameterClassNames.get(i));
+                    if (asBrigadier == null) {
+                        return null;
+                    }
+
+                    argumentInformation.add(new RequiredArgumentInformation(variableElements.get(i).toString(), variableElements.get(i), asBrigadier));
                 }
 
                 String initialLiteralsString = methodElement.getAnnotation(Executes.class).value();
@@ -185,7 +186,9 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
                 executorType.addRequirement(requirements);
 
                 return new ExecutorInformation(classElement, (ExecutableElement) methodElement, executorType, initialLiterals, argumentInformation, requirements);
-            }).toList();
+            })
+            .filter(Objects::nonNull)
+            .toList();
     }
 
     private void createBrigadierSourceFile(String commandClassName, CommandInformation info, CommandTree command) throws IOException {
