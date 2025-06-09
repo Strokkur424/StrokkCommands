@@ -162,13 +162,5 @@ Where did the file come from? Don't question it, just accept it. (Or if you *do*
 And that's it! You are completely done. You don't have to see one of those pesky Brigadier trees ever again.
 Make sure to give the project a **star**, I would really appreciate it!
 
-<a class="github-button" href="https://github.com/Strokkur424/StrokkCommands" 
-    data-color-scheme="no-preference: dark; light: light; dark: dark;"
-    data-icon="octicon-star"
-    data-size="large"
-    aria-label="Star Strokkur424/StrokkCommands on GitHub">Star</a>
-
-<script async defer src="https://buttons.github.io/buttons.js"></script>
-
 ## How does it all work?
 // I will explain this later, at the time of writing, I have been coding on this for 14 hours straight, so please be patient ^-^
