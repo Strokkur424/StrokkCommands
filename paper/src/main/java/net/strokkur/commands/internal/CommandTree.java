@@ -7,11 +7,11 @@ import java.util.ArrayList;
 @NullMarked
 class CommandTree extends CommandNode {
 
-    private final Requirement requirement;
+    private final Requirement rootRequirement;
 
-    public CommandTree(String name, Requirement requirement) {
+    public CommandTree(String name, Requirement rootRequirement) {
         super(new LiteralArgumentInformation(name, new String[]{name}), name);
-        this.requirement = requirement;
+        this.rootRequirement = rootRequirement;
     }
 
     public String printAsBrigadier(int baseIndent) {
@@ -19,7 +19,7 @@ class CommandTree extends CommandNode {
     }
 
     @Override
-    protected Requirement getRequirement() {
-        return Requirement.combine(requirement, super.getRequirement());
+    protected Requirement getRequirementFor(ExecutorInformation executorInformation) {
+        return Requirement.combine(rootRequirement, super.getRequirementFor(executorInformation));
     }
 }

@@ -12,8 +12,10 @@ import net.strokkur.commands.annotations.RequiresOP;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 
 import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.Messager;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
@@ -30,6 +32,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import static net.strokkur.commands.internal.Classnames.COMMAND_SENDER;
@@ -50,6 +53,11 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
         "io.papermc.paper.command.brigadier.Commands",
         "java.util.List"
     );
+    
+    private static @Nullable Messager MESSENGER = null;
+    static Optional<Messager> getMessenger() {
+        return Optional.ofNullable(MESSENGER);
+    }
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {
@@ -66,6 +74,8 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
     @Override
     @NullUnmarked
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+        MESSENGER = super.processingEnv.getMessager();
+        
         for (Element element : roundEnv.getElementsAnnotatedWith(Command.class)) {
             info("Currently processing {}...", element);
 
@@ -80,7 +90,6 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
                 requiresOP != null ? Requirement.PERMISSION_OP : null
             );
 
-            info("Requirement: {}", requirement.requirementString());
             CommandTree tree = new CommandTree(information.commandName(), requirement);
             executorInformation.forEach(tree::insert);
             try {
@@ -225,8 +234,8 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
         }
     }
 
-    private void info(String format, Object... arguments) {
+    static void info(String format, Object... arguments) {
         // We don't need this outside dev
-         super.processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, format.replaceAll("\\{}", "%s").formatted(arguments));
+        getMessenger().ifPresent(e -> e.printMessage(Diagnostic.Kind.NOTE, format.replaceAll("\\{}", "%s").formatted(arguments)));
     }
 }

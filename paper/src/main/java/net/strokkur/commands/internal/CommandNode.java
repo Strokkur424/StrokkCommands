@@ -16,8 +16,10 @@ class CommandNode {
 
     private final ArgumentInformation argument;
     private final String nodeName;
+    private final List<Requirement> childRequirements = new ArrayList<>();
 
     private @Nullable ExecutorInformation currentExecutor = null;
+    private boolean requestsNoPermission = false;
 
     public CommandNode(ArgumentInformation argument, String nodeName) {
         this.argument = argument;
@@ -31,6 +33,11 @@ class CommandNode {
     public void insert(List<ArgumentInformation> arguments, ExecutorInformation executorInformation) {
         if (arguments.isEmpty()) {
             setCurrentExecutor(executorInformation);
+
+            if (executorInformation.getInitialRequirement() == Requirement.NONE) {
+                StrokkCommandsPreprocessor.info("{} requests no permissions.", nodeName);
+                this.setRequestsNoPermission(true);
+            }
             return;
         }
 
@@ -40,6 +47,22 @@ class CommandNode {
 
         for (String name : names) {
             CommandNode next = childNodes.getOrDefault(name, new CommandNode(arguments.getFirst(), name));
+
+            // We "compile" our requirements as early as possible so that we can check them by reference 
+            if (!executorInformation.isCompiledRequirement()) {
+                executorInformation.setRequirement(getRequirementFor(executorInformation));
+            }
+            Requirement requirement = executorInformation.requirement();
+
+            // The 'requirement' variable has all the requirements required for executing the command.
+            // We basically just always want to add them to our tree, so that the filtering
+            // can happen on print time.
+
+            this.addChildRequirement(requirement);
+            if (executorInformation.getInitialRequirement() == Requirement.NONE) {
+                StrokkCommandsPreprocessor.info("{} requests no permissions.", nodeName);
+                this.setRequestsNoPermission(true);
+            }
 
             List<ArgumentInformation> nextArguments = new ArrayList<>(arguments);
             nextArguments.removeFirst();
@@ -69,14 +92,34 @@ class CommandNode {
     public void setCurrentExecutor(@Nullable ExecutorInformation currentExecutor) {
         this.currentExecutor = currentExecutor;
     }
-    
+
+    public void setRequestsNoPermission(boolean requestsNoPermission) {
+        this.requestsNoPermission = requestsNoPermission;
+    }
+
+    public List<Requirement> getChildRequirements() {
+        return childRequirements;
+    }
+
+    public void addChildRequirement(Requirement requirement) {
+        childRequirements.add(requirement);
+    }
+
+    public boolean requestsNoPermission() {
+        return requestsNoPermission;
+    }
+
     protected Requirement getRequirement() {
         if (this.currentExecutor == null) {
             return Requirement.NONE;
         }
-        
-        Requirement out = this.currentExecutor.requirement();
-        switch (this.currentExecutor.type()) {
+
+        return getRequirementFor(this.currentExecutor);
+    }
+
+    protected Requirement getRequirementFor(ExecutorInformation executor) {
+        Requirement out = executor.requirement();
+        switch (executor.type()) {
             case ENTITY -> out = Requirement.combine(out, new Requirement("stack.getExecutor() != null"));
             case PLAYER -> out = Requirement.combine(out, new Requirement("stack.getExecutor() instanceof Player"));
         }
@@ -93,13 +136,8 @@ class CommandNode {
             ? "Commands.argument(\"%s\", %s)".formatted(this.argument.argumentName(), req.type().initializer())
             : "Commands.literal(\"%s\")".formatted(this.nodeName));
 
-        Requirement status = getRequirement();
-        if (status.requirementString() != null && !status.requirementString().isBlank()) {
-            builder.append("\n").append(indentPlus).append(".requires(stack -> ")
-                .append(status.requirementString())
-                .append(")");
-        }
-        
+        setRequirement(builder, indentPlus);
+
         if (this.currentExecutor != null) {
             builder.append("\n").append(indentPlus).append(".executes(ctx -> {\n");
             builder.append(indentPlusPlus).append("INSTANCE.%s(\n".formatted(this.currentExecutor.methodName()))
@@ -137,5 +175,41 @@ class CommandNode {
                 .append("\n").append(indent).append("    ").append(")"));
 
         return builder.toString();
+    }
+
+    private void setRequirement(StringBuilder builder, String indentPlus) {
+        List<Requirement> allRequirements = new ArrayList<>(getChildRequirements());
+        if (this.currentExecutor != null) {
+            allRequirements.add(this.currentExecutor.requirement());
+        }
+
+        List<Requirement> allUnhandledRequirements = new ArrayList<>(allRequirements.stream()
+            .filter(req -> !req.isEmpty())
+            .filter(req -> !req.isHandled())
+            .toList());
+
+        // The following conditions have to be true if we want to print the requirements:
+        // 1. There should be requirements present
+        // 2. All of our requirements (including the child requirements and the current requirement should be **not** handled yet)
+        // 3. This node is either an executor or `this.requestsNoPermission` returns false.
+
+        if (allUnhandledRequirements.isEmpty()) {
+            StrokkCommandsPreprocessor.info("{} has no unhandled requirements!", nodeName);
+            return;
+        }
+
+        if (this.getCurrentExecutor() != null) {
+            if (this.requestsNoPermission()) {
+                StrokkCommandsPreprocessor.info("{} has no executor and a child node requests, that permissions are kept clean!", nodeName);
+                return;
+            }
+        }
+
+        Requirement compiled = Requirement.either(allUnhandledRequirements);
+        builder.append("\n").append(indentPlus).append(".requires(stack -> ")
+            .append(compiled.getRequirementString())
+            .append(")");
+        allUnhandledRequirements.forEach(req -> req.setHandled(true));
+        StrokkCommandsPreprocessor.info("{} has been set to '{}'", nodeName, compiled.getRequirementString());
     }
 }
