@@ -1,7 +1,9 @@
 package net.strokkur.commands.internal;
 
+import net.strokkur.commands.annotations.arguments.DoubleArg;
 import net.strokkur.commands.annotations.arguments.FloatArg;
 import net.strokkur.commands.annotations.arguments.IntArg;
+import net.strokkur.commands.annotations.arguments.LongArg;
 import net.strokkur.commands.annotations.arguments.StringArg;
 import net.strokkur.commands.objects.arguments.StringArgType;
 import org.jspecify.annotations.NonNull;
@@ -19,25 +21,44 @@ abstract class BrigadierArgumentConversion {
     private static final SetMap<String, BiFunction<VariableElement, String, BrigadierArgumentType>> CONVERSION_MAP = new SetHashMap<>();
 
     static {
+        // Primitive argument types
+        CONVERSION_MAP.putFor((p, name) -> new BrigadierArgumentType(
+            "BoolArgumentType.bool()",
+            "BoolArgumentType.getBool(ctx, \"%s\")".formatted(name),
+            "com.mojang.brigadier.arguments.BoolArgumentType"
+        ), "boolean", "java.lang.Boolean");
+
+        CONVERSION_MAP.putFor((p, name) -> annotatedOr(p, IntArg.class,
+            a -> "IntegerArgumentType.integer(%s, %s)".formatted(a.min(), a.max()),
+            "IntegerArgumentType.integer()", "IntegerArgumentType.getInteger(ctx, \"%s\")".formatted(name),
+            "com.mojang.brigadier.arguments.IntegerArgumentType"
+        ), "int", "java.lang.Integer");
+
+        CONVERSION_MAP.putFor((p, name) -> annotatedOr(p, LongArg.class,
+            a -> "LongArgumentType.longArg(%s, %s)".formatted(a.min(), a.max()),
+            "LongArgumentType.longArg()", "LongArgumentType.getLong(ctx, \"%s\")".formatted(name),
+            "com.mojang.brigadier.arguments.LongArgumentType"
+        ), "long", "java.lang.Long");
+        
+        CONVERSION_MAP.putFor((p, name) -> annotatedOr(p, FloatArg.class,
+            a -> "FloatArgumentType.floatArg(%s, %s)".formatted(a.min(), a.max()),
+            "FloatArgumentType.floatArg()",
+            "FloatArgumentType.getFloat(ctx, \"%s\")".formatted(name),
+            "com.mojang.brigadier.arguments.FloatArgumentType"
+        ), "float", "java.lang.Float");
+        
+        CONVERSION_MAP.putFor((p, name) -> annotatedOr(p, DoubleArg.class,
+            a -> "DoubleArgumentType.doubleArg(%s, %s)".formatted(a.min(), a.max()),
+            "DoubleArgumentType.doubleArg()", "DoubleArgumentType.getDouble(ctx, \"%s\")".formatted(name),
+            "com.mojang.brigadier.arguments.DoubleArgumentType"
+        ), "double", "java.lang.Double");
+        
         CONVERSION_MAP.putFor((p, name) -> annotatedOr(p, StringArg.class,
             a -> "StringArgumentType.%s()".formatted(a.value().getBrigadierType()),
             "StringArgumentType.%s()".formatted(StringArgType.WORD.getBrigadierType()),
             "StringArgumentType.getString(ctx, \"%s\")".formatted(name),
             "com.mojang.brigadier.arguments.StringArgumentType"
         ), "java.lang.String");
-
-        CONVERSION_MAP.putFor((p, name) -> annotatedOr(p, FloatArg.class,
-            a -> "FloatArgumentType.floatArg(%s,%s)".formatted(a.min(), a.max()),
-            "FloatArgumentType.floatArg()",
-            "FloatArgumentType.getFloat(ctx, \"%s\")".formatted(name),
-            "com.mojang.brigadier.arguments.FloatArgumentType"
-        ), "float", "java.lang.Float");
-
-        CONVERSION_MAP.putFor((p, name) -> annotatedOr(p, IntArg.class,
-            a -> "IntegerArgumentType.integer(%s,%s)".formatted(a.min(), a.max()),
-            "IntegerArgumentType.integer()", "IntegerArgumentType.getInteger(ctx, \"%s\")".formatted(name),
-            "com.mojang.brigadier.arguments.IntegerArgumentType"
-        ), "int", "java.lang.Integer");
     }
 
 

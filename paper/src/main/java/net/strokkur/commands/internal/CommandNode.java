@@ -147,9 +147,9 @@ class CommandNode {
                     builder.append('"').append(literalsLeft.removeFirst()).append('"');
                 }
             }
-            builder.append("\n").append(indentPlusPlus).append(");");
+            builder.append("\n").append(indentPlusPlus).append(");\n");
 
-            builder.append(indent).append("\n").append(indentPlusPlus).append("return Command.SINGLE_SUCCESS;\n");
+            builder.append(indentPlusPlus).append("return Command.SINGLE_SUCCESS;\n");
             builder.append(indent).append("    })");
         }
 
