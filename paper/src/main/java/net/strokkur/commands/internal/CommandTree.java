@@ -1,141 +1,25 @@
 package net.strokkur.commands.internal;
 
-import org.jspecify.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
 
-class CommandTree {
+@NullMarked
+class CommandTree extends CommandNode {
 
-    private final Map<String, CommandTree> treeMap = new HashMap<>();
-    private final ArgumentInformation argument;
+    private final Requirement requirement;
 
-    private @Nullable String name;
-    private @Nullable ExecutorInformation executor = null;
-
-    public CommandTree(ArgumentInformation argument) {
-        this.argument = argument;
-    }
-
-    public void insert(ExecutorInformation executor) {
-        insert(executor.arguments(), executor);
-    }
-    
-    public void visitAll(Consumer<CommandTree> tree) {
-        treeMap.values().forEach(branch -> branch.visitAll(tree));
-        tree.accept(this);
-    }
-
-    public void insert(List<ArgumentInformation> arguments, ExecutorInformation executor) {
-        if (arguments.isEmpty()) {
-            setExecutor(executor);
-            return;
-        }
-
-        String[] names = arguments.getFirst() instanceof LiteralArgumentInformation litArg ? litArg.literals() : new String[]{arguments.getFirst().argumentName()};
-
-        for (String name : names) {
-            CommandTree next = treeMap.getOrDefault(name, new CommandTree(arguments.getFirst()));
-            next.setName(name);
-
-            List<ArgumentInformation> nextArguments = new ArrayList<>(arguments);
-            nextArguments.removeFirst();
-            next.insert(nextArguments, executor);
-
-            treeMap.put(name, next);
-        }
-    }
-
-    public ArgumentInformation getArgument() {
-        return argument;
-    }
-
-    public @Nullable ExecutorInformation getExecutor() {
-        return executor;
-    }
-
-    public @Nullable String getName() {
-        return name;
-    }
-
-    public void setExecutor(@Nullable ExecutorInformation executor) {
-        this.executor = executor;
-    }
-
-    public void setName(@Nullable String name) {
-        this.name = name;
-    }
-
-    @Override
-    public String toString() {
-        if (treeMap.isEmpty()) {
-            return "CommandTree{" +
-                   "argument=" + argument + "," +
-                   "executes=" + (this.executor != null) + "}";
-        }
-
-        return "CommandTree{"
-               + "children=[\n" + String.join("\n\t", treeMap.entrySet().stream().map(e -> e.getKey() + ": " + e.getValue()).toList()) + "],"
-               + "executes=" + (this.executor != null) + "}";
+    public CommandTree(String name, Requirement requirement) {
+        super(new LiteralArgumentInformation(name, new String[]{name}), name);
+        this.requirement = requirement;
     }
 
     public String printAsBrigadier(int baseIndent) {
         return printAsBrigadier(baseIndent, new ArrayList<>());
     }
 
-    public String printAsBrigadier(int baseIndent, List<String> literalPosition) {
-        String indent = "    ".repeat(baseIndent);
-        String indentPlus = "    ".repeat(baseIndent + 1);
-        String indentPlusPlus = "    ".repeat(baseIndent + 2);
-        String indentPlusThree = "    ".repeat(baseIndent + 3);
-
-        StringBuilder builder = new StringBuilder(argument instanceof RequiredArgumentInformation req
-            ? "Commands.argument(\"%s\", %s)".formatted(this.argument.argumentName(), req.type().initializer())
-            : "Commands.literal(\"%s\")".formatted(this.name));
-
-        if (this.executor != null) {
-            switch (this.executor.type()) {
-                case ENTITY -> builder.append("\n").append(indentPlus).append(".requires(stack -> stack.getExecutor() != null)");
-                case PLAYER -> builder.append("\n").append(indentPlus).append(".requires(stack -> stack.getExecutor() instanceof Player)");
-            }
-            builder.append("\n").append(indentPlus).append(".executes(ctx -> {\n");
-            builder.append(indentPlusPlus).append("instance.%s(ctx.getSource().getSender()".formatted(this.executor.methodName()));
-
-            switch (this.executor.type()) {
-                case ENTITY -> builder.append(",\n").append(indentPlusThree).append("ctx.getSource().getExecutor()");
-                case PLAYER -> builder.append(",\n").append(indentPlusThree).append("(Player) ctx.getSource().getExecutor()");
-            }
-
-            List<String> literalsLeft = new ArrayList<>(literalPosition);
-            this.executor.arguments().stream()
-                .forEachOrdered(arg -> {
-                    builder.append(",\n").append(indentPlusThree);
-                    if (arg instanceof RequiredArgumentInformation info) {
-                        builder.append(info.type().retriever());
-                    } else if (arg instanceof LiteralArgumentInformation literal){
-                        builder.append('"').append(literalsLeft.removeFirst()).append('"');
-                    }
-                });
-            builder.append("\n").append(indentPlusPlus).append(");");
-
-            builder.append(indent).append("\n").append(indentPlusPlus).append("return Command.SINGLE_SUCCESS;\n");
-            builder.append(indent).append("    })");
-        }
-        
-        if (argument instanceof LiteralArgumentInformation) {
-            literalPosition.add(this.name);
-        }
-
-        treeMap.values()
-            .stream()
-            .map(cmdTree -> cmdTree.printAsBrigadier(baseIndent + 1, literalPosition))
-            .forEach(branch -> builder.append("\n").append(indent).append("    ")
-                .append(".then(").append(branch)
-                .append("\n").append(indent).append("    ").append(")"));
-
-        return builder.toString();
+    @Override
+    protected Requirement getRequirement() {
+        return Requirement.combine(requirement, super.getRequirement());
     }
 }

@@ -7,6 +7,8 @@ import net.strokkur.commands.annotations.Description;
 import net.strokkur.commands.annotations.Executes;
 import net.strokkur.commands.annotations.Executor;
 import net.strokkur.commands.annotations.Literal;
+import net.strokkur.commands.annotations.Permission;
+import net.strokkur.commands.annotations.RequiresOP;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.NullUnmarked;
@@ -61,6 +63,7 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
     }
 
     @Override
+    @NullUnmarked
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         for (Element element : roundEnv.getElementsAnnotatedWith(Command.class)) {
             info("Currently processing {}...", element);
@@ -68,9 +71,15 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
             CommandInformation information = getCommandInformation(element);
             List<ExecutorInformation> executorInformation = getExecutorInformation(element);
 
-            CommandTree tree = new CommandTree(null);
-            tree.setName(information.commandName());
+            Permission permission = element.getAnnotation(Permission.class);
+            RequiresOP requiresOP = element.getAnnotation(RequiresOP.class);
 
+            Requirement requirement = Requirement.combine(
+                permission != null ? Requirement.ofPermission(permission.value()) : null,
+                requiresOP != null ? Requirement.PERMISSION_OP : null
+            );
+
+            CommandTree tree = new CommandTree(information.commandName(), requirement);
             executorInformation.forEach(tree::insert);
             try {
                 createBrigadierSourceFile(element.toString(), information, tree);
@@ -144,7 +153,13 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
                     initialLiterals = initialLiteralsString.split(" ");
                 }
 
-                return new ExecutorInformation(name, executorType, initialLiterals, argumentInformation);
+                Permission permission = methodElement.getAnnotation(Permission.class);
+                RequiresOP requiresOP = methodElement.getAnnotation(RequiresOP.class);
+
+                return new ExecutorInformation(name, executorType, initialLiterals, argumentInformation, Requirement.combine(
+                    permission != null ? Requirement.ofPermission(permission.value()) : null,
+                    requiresOP != null ? Requirement.PERMISSION_OP : null)
+                );
             }).toList();
     }
 
@@ -162,7 +177,7 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
         String packageName = String.join(".", packagesAndClass);
 
         Set<String> imports = new HashSet<>(BASIC_IMPORTS);
-        command.visitAll(branch -> {
+        command.visit(branch -> {
             if (branch.getArgument() instanceof RequiredArgumentInformation reqInfo) {
                 String importString = reqInfo.type().importString();
                 if (importString != null) {
@@ -180,9 +195,9 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
             }
             out.println();
 
-            out.println("public class " + newClassName + " {");
+            out.println("public final class " + newClassName + " {");
             out.println();
-            out.println("    private static " + className + " instance = new " + className + "();");
+            out.println("    private static final " + className + " INSTANCE = new " + className + "();");
             out.println();
             out.print("""
                     public static void register(Commands commands) {
@@ -197,6 +212,13 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
             out.print(command.printAsBrigadier(2));
             out.println(".build();");
             out.println("    }");
+            out.println();
+            out.print("""
+                    private %s() {
+                        throw new UnsupportedOperationException("You cannot instantiate a static class!");
+                    }
+                """.formatted(newClassName));
+
             out.println("}");
         }
     }
