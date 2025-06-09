@@ -93,15 +93,14 @@ class CommandNode {
             ? "Commands.argument(\"%s\", %s)".formatted(this.argument.argumentName(), req.type().initializer())
             : "Commands.literal(\"%s\")".formatted(this.nodeName));
 
+        Requirement status = getRequirement();
+        if (status.requirementString() != null && !status.requirementString().isBlank()) {
+            builder.append("\n").append(indentPlus).append(".requires(stack -> ")
+                .append(status.requirementString())
+                .append(")");
+        }
+        
         if (this.currentExecutor != null) {
-            Requirement status = getRequirement();
-
-            if (status.requirementString() != null && !status.requirementString().isBlank()) {
-                builder.append("\n").append(indentPlus).append(".requires(stack -> ")
-                    .append(status.requirementString())
-                    .append(")");
-            }
-
             builder.append("\n").append(indentPlus).append(".executes(ctx -> {\n");
             builder.append(indentPlusPlus).append("INSTANCE.%s(\n".formatted(this.currentExecutor.methodName()))
                 .append(indentPlusThree).append("ctx.getSource().getSender()");

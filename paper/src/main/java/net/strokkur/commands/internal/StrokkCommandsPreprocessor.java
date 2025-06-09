@@ -23,6 +23,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeMirror;
+import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -79,6 +80,7 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
                 requiresOP != null ? Requirement.PERMISSION_OP : null
             );
 
+            info("Requirement: {}", requirement.requirementString());
             CommandTree tree = new CommandTree(information.commandName(), requirement);
             executorInformation.forEach(tree::insert);
             try {
@@ -225,6 +227,6 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
 
     private void info(String format, Object... arguments) {
         // We don't need this outside dev
-        // super.processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, format.replaceAll("\\{}", "%s").formatted(arguments));
+         super.processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, format.replaceAll("\\{}", "%s").formatted(arguments));
     }
 }

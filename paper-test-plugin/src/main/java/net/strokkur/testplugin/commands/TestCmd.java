@@ -9,11 +9,11 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 @Command("test")
+@Permission("some.value")
+@RequiresOP
 public class TestCmd {
 
     @Executes
-    @Permission("some.value")
-    @RequiresOP
     void executeOne(CommandSender sender, @Executor Player player, String stringArg) {
         sender.sendPlainMessage("One!");
     }
