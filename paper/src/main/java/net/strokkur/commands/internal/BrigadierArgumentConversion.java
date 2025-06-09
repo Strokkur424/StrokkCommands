@@ -92,6 +92,101 @@ abstract class BrigadierArgumentConversion {
                 "org.bukkit.World"
             )
         ), "org.bukkit.World");
+
+        //<editor-fold desc="Entity and Player arguments">
+        putFor((p, name) -> BrigadierArgumentType.of(
+            "ArgumentTypes.entity()",
+            "ctx.getArgument(\"%s\", EntitySelectorArgumentResolver.class).resolve(ctx.getSource()).getFirst()".formatted(name),
+            Set.of(
+                "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+                "io.papermc.paper.command.brigadier.argument.resolvers.selector.EntitySelectorArgumentResolver"
+            )
+        ), "org.bukkit.entity.Entity");
+
+        putFor((p, name) -> BrigadierArgumentType.of(
+            "ArgumentTypes.entities()",
+            "ctx.getArgument(\"%s\", EntitySelectorArgumentResolver.class).resolve(ctx.getSource())".formatted(name),
+            Set.of(
+                "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+                "io.papermc.paper.command.brigadier.argument.resolvers.selector.EntitySelectorArgumentResolver"
+            )
+        ), "java.util.List<org.bukkit.entity.Entity>", "java.util.Collection<org.bukkit.entity.Entity>");
+
+        putFor((p, name) -> BrigadierArgumentType.of(
+            "ArgumentTypes.entities()",
+            "ctx.getArgument(\"%s\", EntitySelectorArgumentResolver.class).resolve(ctx.getSource()).toArray(Entity[]::new)".formatted(name),
+            Set.of(
+                "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+                "io.papermc.paper.command.brigadier.argument.resolvers.selector.EntitySelectorArgumentResolver",
+                "org.bukkit.entity.Entity"
+            )
+        ), "org.bukkit.entity.Entity[]");
+
+        putFor((p, name) -> BrigadierArgumentType.of(
+            "ArgumentTypes.player()",
+            "ctx.getArgument(\"%s\", PlayerSelectorArgumentResolver.class).resolve(ctx.getSource()).getFirst()".formatted(name),
+            Set.of(
+                "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+                "io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver"
+            )
+        ), "org.bukkit.entity.Player");
+
+        putFor((p, name) -> BrigadierArgumentType.of(
+            "ArgumentTypes.players()",
+            "ctx.getArgument(\"%s\", PlayerSelectorArgumentResolver.class).resolve(ctx.getSource())".formatted(name),
+            Set.of(
+                "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+                "io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver"
+            )
+        ), "java.util.List<org.bukkit.entity.Player>", "java.util.Collection<org.bukkit.entity.Player>");
+
+        putFor((p, name) -> BrigadierArgumentType.of(
+            "ArgumentTypes.players()",
+            "ctx.getArgument(\"%s\", PlayerSelectorArgumentResolver.class).resolve(ctx.getSource()).toArray(Player[]::new)".formatted(name),
+            Set.of(
+                "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+                "io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver",
+                "org.bukkit.entity.Player"
+            )
+        ), "org.bukkit.entity.Player[]");
+
+        putFor((p, name) -> BrigadierArgumentType.of(
+            "ArgumentTypes.playerProfiles()",
+            "ctx.getArgument(\"%s\", PlayerProfileListResolver.class).resolve(ctx.getSource()).getFirst()".formatted(name),
+            Set.of(
+                "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+                "io.papermc.paper.command.brigadier.argument.resolvers.PlayerProfileListResolver"
+            )
+        ), "com.destroystokyo.paper.profile.PlayerProfile");
+
+        putFor((p, name) -> BrigadierArgumentType.of(
+            "ArgumentTypes.playerProfiles()",
+            "ctx.getArgument(\"%s\", PlayerProfileListResolver.class).resolve(ctx.getSource())".formatted(name),
+            Set.of(
+                "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+                "io.papermc.paper.command.brigadier.argument.resolvers.PlayerProfileListResolver"
+            )
+        ), "java.util.Collection<com.destroystokyo.paper.profile.PlayerProfile>");
+
+        putFor((p, name) -> BrigadierArgumentType.of(
+            "ArgumentTypes.playerProfiles()",
+            "ctx.getArgument(\"%s\", PlayerProfileListResolver.class).resolve(ctx.getSource()).stream().toList()".formatted(name),
+            Set.of(
+                "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+                "io.papermc.paper.command.brigadier.argument.resolvers.PlayerProfileListResolver"
+            )
+        ), "java.util.Collection<com.destroystokyo.paper.profile.PlayerProfile>", "java.util.List<com.destroystokyo.paper.profile.PlayerProfile>");
+
+        putFor((p, name) -> BrigadierArgumentType.of(
+            "ArgumentTypes.playerProfiles()",
+            "ctx.getArgument(\"%s\", PlayerProfileListResolver.class).resolve(ctx.getSource()).toArray(PlayerProfile[]::new)".formatted(name),
+            Set.of(
+                "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+                "io.papermc.paper.command.brigadier.argument.resolvers.PlayerProfileListResolver",
+                "com.destroystokyo.paper.profile.PlayerProfile"
+            )
+        ), "com.destroystokyo.paper.profile.PlayerProfile[]");
+        //</editor-fold>
     }
 
     private static void putFor(BiFunction<VariableElement, String, BrigadierArgumentType> value, String... keys) {
