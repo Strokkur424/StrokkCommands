@@ -37,6 +37,20 @@ import static net.strokkur.commands.internal.Classnames.PLAYER;
 @AutoService(Processor.class)
 public class StrokkCommandPreprocessor extends AbstractProcessor {
 
+    private static final String[] BASIC_IMPORTS = {
+        "com.mojang.brigadier.Command",
+        "com.mojang.brigadier.arguments.FloatArgumentType",
+        "com.mojang.brigadier.arguments.IntegerArgumentType",
+        "com.mojang.brigadier.arguments.StringArgumentType",
+        "com.mojang.brigadier.tree.LiteralCommandNode",
+        "org.bukkit.entity.Entity",
+        "org.bukkit.entity.Player",
+        "org.bukkit.command.CommandSender",
+        "io.papermc.paper.command.brigadier.CommandSourceStack",
+        "io.papermc.paper.command.brigadier.Commands",
+        "java.util.List"
+    };
+
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         return Set.of(
@@ -205,14 +219,14 @@ public class StrokkCommandPreprocessor extends AbstractProcessor {
 
             CommandTree tree = new CommandTree(null);
             tree.setName(information.commandName());
-            
+
             executorInformation.forEach(tree::insert);
+            try {
+                createBrigadierSourceFile(element.toString(), information, tree);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
 
-            info("{}'s Command Tree resolves to this: \n{}", information.commandName(), tree.printAsBrigadier(0));
-
-//            info("{} declares command: {}", element, information);
-//            info("It has the following executors:");
-//            executorInformation.forEach(info -> info("- {}", info));
         }
 
         return true;
@@ -284,11 +298,44 @@ public class StrokkCommandPreprocessor extends AbstractProcessor {
             }).toList();
     }
 
-    private void writeFile(String className) throws IOException {
-        JavaFileObject obj = processingEnv.getFiler().createSourceFile(className);
+    private void createBrigadierSourceFile(String commandClassName, CommandInformation info, CommandTree command) throws IOException {
+        String newClassPackageName = commandClassName + "Brigadier";
+
+        info("Printing class file for {}", newClassPackageName);
+        JavaFileObject obj = processingEnv.getFiler().createSourceFile(newClassPackageName);
+
+        List<String> packagesAndClass = new ArrayList<>(List.of(commandClassName.split("\\.")));
+        String className = packagesAndClass.getLast();
+        String newClassName = packagesAndClass.getLast() + "Brigadier";
+
+        packagesAndClass.removeLast();
+        String packageName = String.join(".", packagesAndClass);
 
         try (PrintWriter out = new PrintWriter(obj.openWriter())) {
+            out.println("package " + packageName + ";");
+            out.println();
 
+            for (String importString : BASIC_IMPORTS) {
+                out.println("import " + importString + ";");
+            }
+            out.println();
+
+            out.println("public class " + newClassName + " {");
+            out.println();
+            out.println("    private static " + className + " instance = new " + className + "();");
+            out.println();
+            out.print("""
+                    public static void register(Commands commands) {
+                        commands.register(create(), "%s", List.of(%s));
+                    }
+                """.formatted(info.description(), info.aliases() == null ? "" : '"' + String.join("\" , \"", info.aliases()) + '"'));
+            out.println();
+            out.println("    public static LiteralCommandNode<CommandSourceStack> create() {");
+            out.print("        return ");
+            out.print(command.printAsBrigadier(2));
+            out.println(".build();");
+            out.println("    }");
+            out.println("}");
         }
     }
 

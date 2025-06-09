@@ -69,6 +69,10 @@ class CommandTree {
     }
 
     public String printAsBrigadier(int baseIndent) {
+        return printAsBrigadier(baseIndent, new ArrayList<>());
+    }
+
+    public String printAsBrigadier(int baseIndent, List<String> literalPosition) {
         String indent = "    ".repeat(baseIndent);
         String indentPlus = "    ".repeat(baseIndent + 1);
         String indentPlusPlus = "    ".repeat(baseIndent + 2);
@@ -87,23 +91,33 @@ class CommandTree {
             builder.append(indentPlusPlus).append("instance.%s(ctx.getSource().getSender()".formatted(this.executor.methodName()));
 
             switch (this.executor.type()) {
-                case ENTITY -> builder.append(",\n").append(indentPlusThree).append("stack.getExecutor()");
-                case PLAYER -> builder.append(",\n").append(indentPlusThree).append("(Player) stack.getExecutor()");
+                case ENTITY -> builder.append(",\n").append(indentPlusThree).append("ctx.getSource().getExecutor()");
+                case PLAYER -> builder.append(",\n").append(indentPlusThree).append("(Player) ctx.getSource().getExecutor()");
             }
 
+            List<String> literalsLeft = new ArrayList<>(literalPosition);
             this.executor.arguments().stream()
-                .filter(info -> info instanceof RequiredArgumentInformation)
-                .map(info -> (RequiredArgumentInformation) info)
-                .forEachOrdered(info -> builder.append(",\n").append(indentPlusThree).append(info.type().retriever()));
+                .forEachOrdered(arg -> {
+                    builder.append(",\n").append(indentPlusThree);
+                    if (arg instanceof RequiredArgumentInformation info) {
+                        builder.append(info.type().retriever());
+                    } else if (arg instanceof LiteralArgumentInformation literal){
+                        builder.append('"').append(literalsLeft.removeFirst()).append('"');
+                    }
+                });
             builder.append("\n").append(indentPlusPlus).append(");");
 
             builder.append(indent).append("\n").append(indentPlusPlus).append("return Command.SINGLE_SUCCESS;\n");
             builder.append(indent).append("    })");
         }
+        
+        if (argument instanceof LiteralArgumentInformation) {
+            literalPosition.add(this.name);
+        }
 
         treeMap.values()
             .stream()
-            .map(cmdTree -> cmdTree.printAsBrigadier(baseIndent + 1))
+            .map(cmdTree -> cmdTree.printAsBrigadier(baseIndent + 1, literalPosition))
             .forEach(branch -> builder.append("\n").append(indent).append("    ")
                 .append(".then(").append(branch)
                 .append("\n").append(indent).append("    ").append(")"));
