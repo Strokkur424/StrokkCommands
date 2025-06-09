@@ -11,7 +11,7 @@ import org.bukkit.command.CommandSender;
 
 import static net.strokkur.commands.objects.arguments.StringArgType.GREEDY;
 
-//@Command("tellmini")
+@Command("tellmini")
 @RequiresOP
 class TellMiniCommand {
 

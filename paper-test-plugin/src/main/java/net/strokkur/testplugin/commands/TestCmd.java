@@ -8,12 +8,12 @@ import org.bukkit.command.CommandSender;
 public class TestCmd {
 
     @Executes("literal")
-    void executeOne(CommandSender sender) {
+    void executeOne(CommandSender sender, float value) {
         sender.sendPlainMessage("One!");
     }
-
-    @Executes("literal two")
-    void executeTwo(CommandSender sender) {
+    
+    @Executes("literal")
+    void executeTwo(CommandSender sender, float value, String otherValue) {
         sender.sendPlainMessage("Two!");
     }
 }

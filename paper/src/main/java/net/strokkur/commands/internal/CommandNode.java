@@ -30,20 +30,21 @@ class CommandNode {
     }
 
     public void insert(ExecutorInformation executorInformation) {
-        insert(executorInformation.getArguments(), executorInformation);
+        insert(executorInformation.arguments(), executorInformation);
     }
 
     public void insert(List<ArgumentInformation> arguments, ExecutorInformation executorInformation) {
         if (arguments.isEmpty()) {
             if (hasExecutor()) {
                 StrokkCommandsPreprocessor.getMessenger().ifPresent(messager -> messager.printError(
-                    executorInformation.getClassName() + "#" + executorInformation.getMethodName() + " has the " +
-                    "same semantic as another method. Please check your command definitions!"
+                    "The defined command clashes with the command defined in '"
+                    + (getCurrentExecutor() != null ? getCurrentExecutor().methodElement() : null)
+                    + "'", executorInformation.methodElement()
                 ));
             }
 
             setCurrentExecutor(executorInformation);
-            getRequirements().addAll(executorInformation.getRequirements());
+            getRequirements().addAll(executorInformation.requirements());
             return;
         }
 
@@ -53,8 +54,18 @@ class CommandNode {
 
         for (String name : names) {
             CommandNode next = childNodes.getOrDefault(name, new CommandNode(this, arguments.getFirst(), name));
-
             List<ArgumentInformation> nextArguments = new ArrayList<>(arguments);
+
+            if (!next.getArgument().equals(nextArguments.getFirst())) {
+                StrokkCommandsPreprocessor.getMessenger().ifPresent(messager -> {
+                    next.getArgument().element();
+                    messager.printError(
+                        "Found argument of same name but different type! Duplicate argument found at: " + next.getArgument().element(),
+                        nextArguments.getFirst().element()
+                    );
+                });
+            }
+
             nextArguments.removeFirst();
             next.insert(nextArguments, executorInformation);
 
@@ -113,16 +124,16 @@ class CommandNode {
 
         if (this.currentExecutor != null) {
             builder.append("\n").append(indentPlus).append(".executes(ctx -> {\n");
-            builder.append(indentPlusPlus).append("INSTANCE.%s(\n".formatted(this.currentExecutor.getMethodName()))
+            builder.append(indentPlusPlus).append("INSTANCE.%s(\n".formatted(this.currentExecutor.methodName()))
                 .append(indentPlusThree).append("ctx.getSource().getSender()");
 
-            switch (this.currentExecutor.getType()) {
+            switch (this.currentExecutor.type()) {
                 case ENTITY -> builder.append(",\n").append(indentPlusThree).append("ctx.getSource().getExecutor()");
                 case PLAYER -> builder.append(",\n").append(indentPlusThree).append("(Player) ctx.getSource().getExecutor()");
             }
 
             List<String> literalsLeft = new ArrayList<>(literalPosition);
-            for (ArgumentInformation arg : this.currentExecutor.getArguments()) {
+            for (ArgumentInformation arg : this.currentExecutor.arguments()) {
                 if (arg instanceof LiteralArgumentInformation lit) {
                     if (!lit.addToMethod()) {
                         continue;

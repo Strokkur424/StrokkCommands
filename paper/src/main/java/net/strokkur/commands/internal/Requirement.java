@@ -20,7 +20,7 @@ final class Requirement {
     public static Requirement ofPermission(String permission) {
         return new Requirement("stack.getSender().hasPermission(\"%s\")".formatted(permission));
     }
-    
+
     public static String stringOfAll(Collection<Requirement> requirements) {
         List<Requirement> nonEmpty = requirements.stream()
             .filter(req -> !req.isEmpty())
@@ -42,7 +42,7 @@ final class Requirement {
         }
         return permissionString;
     }
-    
+
     public static String stringOfEither(List<Requirement> requirements) {
         List<Requirement> nonEmpty = requirements.stream()
             .filter(req -> !req.isEmpty())

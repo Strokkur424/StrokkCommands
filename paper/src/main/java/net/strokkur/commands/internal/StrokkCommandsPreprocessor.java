@@ -25,7 +25,6 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeMirror;
-import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -60,6 +59,26 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
         return Optional.ofNullable(MESSENGER);
     }
 
+    @NullUnmarked
+    private static @NonNull List<Requirement> getAnnotatedRequirements(@NonNull Element element) {
+        Permission permission = element.getAnnotation(Permission.class);
+        RequiresOP requiresOP = element.getAnnotation(RequiresOP.class);
+
+        List<Requirement> requirements = new ArrayList<>(2);
+        if (permission != null) {
+            requirements.add(Requirement.ofPermission(permission.value()));
+        }
+        if (requiresOP != null) {
+            requirements.add(Requirement.IS_OP);
+        }
+        return requirements;
+    }
+
+    static void info(String format, Object... arguments) {
+        // We don't need this outside dev
+        //getMessenger().ifPresent(e -> e.printMessage(Diagnostic.Kind.NOTE, format.replaceAll("\\{}", "%s").formatted(arguments)));
+    }
+
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         return Set.of(
@@ -81,9 +100,9 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
             info("Currently processing {}...", element);
 
             CommandInformation information = getCommandInformation(element);
-            List<ExecutorInformation> executorInformation = getExecutorInformation(element);
+            List<ExecutorInformation> executorInformation = getExecutorInformation((TypeElement) element);
 
-            CommandTree tree = new CommandTree(information.commandName(), getAnnotatedRequirements(element));
+            CommandTree tree = new CommandTree(information.commandName(), element, getAnnotatedRequirements(element));
             executorInformation.forEach(tree::insert);
             try {
                 createBrigadierSourceFile(element.toString(), information, tree);
@@ -93,21 +112,6 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
         }
 
         return true;
-    }
-
-    @NullUnmarked
-    private static @NonNull List<Requirement> getAnnotatedRequirements(@NonNull Element element) {
-        Permission permission = element.getAnnotation(Permission.class);
-        RequiresOP requiresOP = element.getAnnotation(RequiresOP.class);
-
-        List<Requirement> requirements = new ArrayList<>(2);
-        if (permission != null) {
-            requirements.add(Requirement.ofPermission(permission.value()));
-        }
-        if (requiresOP != null) {
-            requirements.add(Requirement.IS_OP);
-        }
-        return requirements;
     }
 
     @NullUnmarked
@@ -124,7 +128,7 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
     }
 
     @NullUnmarked
-    private @NonNull List<ExecutorInformation> getExecutorInformation(@NonNull Element classElement) {
+    private @NonNull List<ExecutorInformation> getExecutorInformation(@NonNull TypeElement classElement) {
         return classElement.getEnclosedElements().stream()
             .filter(element -> element.getAnnotation(Executes.class) != null)
             .map(methodElement -> {
@@ -154,12 +158,17 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
                 for (int i = executorType == ExecutorType.NONE ? 1 : 2; i < typeMirrors.size(); i++) {
                     Literal literalAnnotation = variableElements.get(i).getAnnotation(Literal.class);
                     if (literalAnnotation != null) {
-                        argumentInformation.add(new LiteralArgumentInformation(variableElements.get(i).toString(), literalAnnotation.value()));
+                        argumentInformation.add(new LiteralArgumentInformation(
+                            variableElements.get(i).toString(),
+                            variableElements.get(i),
+                            literalAnnotation.value())
+                        );
                         continue;
                     }
 
                     argumentInformation.add(new RequiredArgumentInformation(
                         variableElements.get(i).toString(),
+                        variableElements.get(i),
                         BrigadierArgumentConversion.getAsArgumentType(variableElements.get(i), variableElements.get(i).toString(), parameterClassNames.get(i))
                     ));
                 }
@@ -171,11 +180,11 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
                 } else {
                     initialLiterals = initialLiteralsString.split(" ");
                 }
-                
+
                 List<Requirement> requirements = getAnnotatedRequirements(methodElement);
                 executorType.addRequirement(requirements);
-                
-                return new ExecutorInformation(classElement.toString(), name, executorType, initialLiterals, argumentInformation, requirements);
+
+                return new ExecutorInformation(classElement, (ExecutableElement) methodElement, executorType, initialLiterals, argumentInformation, requirements);
             }).toList();
     }
 
@@ -237,10 +246,5 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
 
             out.println("}");
         }
-    }
-
-    static void info(String format, Object... arguments) {
-        // We don't need this outside dev
-         getMessenger().ifPresent(e -> e.printMessage(Diagnostic.Kind.NOTE, format.replaceAll("\\{}", "%s").formatted(arguments)));
     }
 }

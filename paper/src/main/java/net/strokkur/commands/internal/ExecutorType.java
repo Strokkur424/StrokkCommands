@@ -22,11 +22,11 @@ enum ExecutorType {
     public @Nullable String getPredicate() {
         return predicate;
     }
-    
+
     public boolean hasPredicate() {
         return predicate != null;
     }
-    
+
     public void addRequirement(List<Requirement> requirementList) {
         if (hasPredicate()) {
             requirementList.add(new Requirement(predicate));

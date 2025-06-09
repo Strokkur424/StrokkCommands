@@ -1,18 +1,16 @@
 package net.strokkur.commands.internal;
 
-import org.jspecify.annotations.NullMarked;
-
+import javax.lang.model.element.Element;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-@NullMarked
 class CommandTree extends CommandNode {
 
-    public CommandTree(String name, List<Requirement> rootRequirements) {
+    public CommandTree(String name, Element classElement, List<Requirement> rootRequirements) {
         //noinspection DataFlowIssue
-        super(null, new LiteralArgumentInformation(name, new String[]{name}), name);
+        super(null, new LiteralArgumentInformation(name, classElement, new String[]{name}), name);
         this.getRequirements().addAll(rootRequirements);
     }
 
@@ -47,10 +45,10 @@ class CommandTree extends CommandNode {
 
     @Override
     public void insert(ExecutorInformation executorInformation) {
-        if (executorInformation.getInitialLiterals() != null) {
-            for (int i = executorInformation.getInitialLiterals().length - 1; i >= 0; i--) {
-                String literal = executorInformation.getInitialLiterals()[i];
-                executorInformation.getArguments().addFirst(new LiteralArgumentInformation(literal, new String[]{literal}, false));
+        if (executorInformation.initialLiterals() != null) {
+            for (int i = executorInformation.initialLiterals().length - 1; i >= 0; i--) {
+                String literal = executorInformation.initialLiterals()[i];
+                executorInformation.arguments().addFirst(new LiteralArgumentInformation(literal, executorInformation.methodElement(), new String[]{literal}, false));
             }
         }
 

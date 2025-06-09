@@ -11,7 +11,7 @@ import net.strokkur.commands.annotations.arguments.IntArg;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-//@Command("simple")
+@Command("simple")
 @Aliases("testsimple")
 @Description("A very simple test command to show how annotations work")
 public class SimpleCommand {
