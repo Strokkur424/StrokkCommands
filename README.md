@@ -135,7 +135,7 @@ here. So it does make sense to give them a read, even if you might not understan
 This step works 1:1 the same as written in the [Paper docs about command registration](https://docs.papermc.io/paper/dev/command-api/basics/registration/).
 But what do you register? After you build your command and are happy with it, **before** you can register it, you
 have to **compile the project first**. This allows the annotation preprocessor to run and generate a file.
-The **class name of this file will be <YourCommandClass>Brigadier.java**. You can then register it
+The **class name of this file will be &lt;YourCommandClass&gt;Brigadier.java**. You can then register it
 using the exposed `#register(Commands)` method.
 
 As example:
