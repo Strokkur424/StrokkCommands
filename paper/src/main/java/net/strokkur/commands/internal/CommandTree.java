@@ -10,12 +10,12 @@ import java.util.Map;
 class CommandTree {
 
     private final Map<String, CommandTree> treeMap = new HashMap<>();
-    private final @Nullable ArgumentInformation argument;
+    private final ArgumentInformation argument;
 
     private @Nullable String name;
     private @Nullable ExecutorInformation executor = null;
 
-    public CommandTree(@Nullable ArgumentInformation argument) {
+    public CommandTree(ArgumentInformation argument) {
         this.argument = argument;
     }
 
@@ -68,7 +68,46 @@ class CommandTree {
                + "executes=" + (this.executor != null) + "}";
     }
 
-    public String printAsBrigadier() {
-        throw new UnsupportedOperationException("Not implemented");
+    public String printAsBrigadier(int baseIndent) {
+        String indent = "    ".repeat(baseIndent);
+        String indentPlus = "    ".repeat(baseIndent + 1);
+        String indentPlusPlus = "    ".repeat(baseIndent + 2);
+        String indentPlusThree = "    ".repeat(baseIndent + 3);
+
+        StringBuilder builder = new StringBuilder(argument instanceof RequiredArgumentInformation req
+            ? "Commands.argument(\"%s\", %s)".formatted(this.argument.argumentName(), req.type().initializer())
+            : "Commands.literal(\"%s\")".formatted(this.name));
+
+        if (this.executor != null) {
+            switch (this.executor.type()) {
+                case ENTITY -> builder.append("\n").append(indentPlus).append(".requires(stack -> stack.getExecutor() != null)");
+                case PLAYER -> builder.append("\n").append(indentPlus).append(".requires(stack -> stack.getExecutor() instanceof Player)");
+            }
+            builder.append("\n").append(indentPlus).append(".executes(ctx -> {\n");
+            builder.append(indentPlusPlus).append("instance.%s(ctx.getSource().getSender()".formatted(this.executor.methodName()));
+
+            switch (this.executor.type()) {
+                case ENTITY -> builder.append(",\n").append(indentPlusThree).append("stack.getExecutor()");
+                case PLAYER -> builder.append(",\n").append(indentPlusThree).append("(Player) stack.getExecutor()");
+            }
+
+            this.executor.arguments().stream()
+                .filter(info -> info instanceof RequiredArgumentInformation)
+                .map(info -> (RequiredArgumentInformation) info)
+                .forEachOrdered(info -> builder.append(",\n").append(indentPlusThree).append(info.type().retriever()));
+            builder.append("\n").append(indentPlusPlus).append(");");
+
+            builder.append(indent).append("\n").append(indentPlusPlus).append("return Command.SINGLE_SUCCESS;\n");
+            builder.append(indent).append("    })");
+        }
+
+        treeMap.values()
+            .stream()
+            .map(cmdTree -> cmdTree.printAsBrigadier(baseIndent + 1))
+            .forEach(branch -> builder.append("\n").append(indent).append("    ")
+                .append(".then(").append(branch)
+                .append("\n").append(indent).append("    ").append(")"));
+
+        return builder.toString();
     }
 }

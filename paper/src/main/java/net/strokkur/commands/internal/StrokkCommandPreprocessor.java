@@ -204,9 +204,11 @@ public class StrokkCommandPreprocessor extends AbstractProcessor {
             List<ExecutorInformation> executorInformation = getExecutorInformation(element);
 
             CommandTree tree = new CommandTree(null);
-            executorInformation.forEach(tree::insert);
+            tree.setName(information.commandName());
             
-            info("{}'s Command Tree resolves to this: {}", information.commandName(), tree);
+            executorInformation.forEach(tree::insert);
+
+            info("{}'s Command Tree resolves to this: \n{}", information.commandName(), tree.printAsBrigadier(0));
 
 //            info("{} declares command: {}", element, information);
 //            info("It has the following executors:");
@@ -286,7 +288,7 @@ public class StrokkCommandPreprocessor extends AbstractProcessor {
         JavaFileObject obj = processingEnv.getFiler().createSourceFile(className);
 
         try (PrintWriter out = new PrintWriter(obj.openWriter())) {
-            
+
         }
     }
 

@@ -21,7 +21,7 @@ abstract class BrigadierArgumentConversion {
         CONVERSION_MAP.putFor((p, name) -> annotatedOr(p, StringArg.class,
             a -> "StringArgumentType.%s()".formatted(a.value().getBrigadierType()),
             "StringArgumentType.%s()".formatted(StringArgType.WORD.getBrigadierType()),
-            "StringArgumentType.getString(ctx, \"%s\"".formatted(name)
+            "StringArgumentType.getString(ctx, \"%s\")".formatted(name)
         ), "java.lang.String");
 
         CONVERSION_MAP.putFor((p, name) -> annotatedOr(p, FloatArg.class,
