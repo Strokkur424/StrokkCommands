@@ -40,4 +40,5 @@ bin/
 
 ### Mac OS ###
 .DS_Store
-/paper-test-plugin/run/
+run/
+MavenCredentials.properties
