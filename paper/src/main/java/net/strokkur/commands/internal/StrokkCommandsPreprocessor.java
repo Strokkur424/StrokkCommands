@@ -53,8 +53,9 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
         "io.papermc.paper.command.brigadier.Commands",
         "java.util.List"
     );
-    
+
     private static @Nullable Messager MESSENGER = null;
+
     static Optional<Messager> getMessenger() {
         return Optional.ofNullable(MESSENGER);
     }
@@ -75,22 +76,14 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
     @NullUnmarked
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         MESSENGER = super.processingEnv.getMessager();
-        
+
         for (Element element : roundEnv.getElementsAnnotatedWith(Command.class)) {
             info("Currently processing {}...", element);
 
             CommandInformation information = getCommandInformation(element);
             List<ExecutorInformation> executorInformation = getExecutorInformation(element);
 
-            Permission permission = element.getAnnotation(Permission.class);
-            RequiresOP requiresOP = element.getAnnotation(RequiresOP.class);
-
-            Requirement requirement = Requirement.combine(
-                permission != null ? Requirement.ofPermission(permission.value()) : null,
-                requiresOP != null ? Requirement.PERMISSION_OP : null
-            );
-
-            CommandTree tree = new CommandTree(information.commandName(), requirement);
+            CommandTree tree = new CommandTree(information.commandName(), getAnnotatedRequirements(element));
             executorInformation.forEach(tree::insert);
             try {
                 createBrigadierSourceFile(element.toString(), information, tree);
@@ -100,6 +93,21 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
         }
 
         return true;
+    }
+
+    @NullUnmarked
+    private static @NonNull List<Requirement> getAnnotatedRequirements(@NonNull Element element) {
+        Permission permission = element.getAnnotation(Permission.class);
+        RequiresOP requiresOP = element.getAnnotation(RequiresOP.class);
+
+        List<Requirement> requirements = new ArrayList<>(2);
+        if (permission != null) {
+            requirements.add(Requirement.ofPermission(permission.value()));
+        }
+        if (requiresOP != null) {
+            requirements.add(Requirement.IS_OP);
+        }
+        return requirements;
     }
 
     @NullUnmarked
@@ -163,14 +171,11 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
                 } else {
                     initialLiterals = initialLiteralsString.split(" ");
                 }
-
-                Permission permission = methodElement.getAnnotation(Permission.class);
-                RequiresOP requiresOP = methodElement.getAnnotation(RequiresOP.class);
-
-                return new ExecutorInformation(name, executorType, initialLiterals, argumentInformation, Requirement.combine(
-                    permission != null ? Requirement.ofPermission(permission.value()) : null,
-                    requiresOP != null ? Requirement.PERMISSION_OP : null)
-                );
+                
+                List<Requirement> requirements = getAnnotatedRequirements(methodElement);
+                executorType.addRequirement(requirements);
+                
+                return new ExecutorInformation(name, executorType, initialLiterals, argumentInformation, requirements);
             }).toList();
     }
 
@@ -188,7 +193,7 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
         String packageName = String.join(".", packagesAndClass);
 
         Set<String> imports = new HashSet<>(BASIC_IMPORTS);
-        command.visit(branch -> {
+        command.visitEach(branch -> {
             if (branch.getArgument() instanceof RequiredArgumentInformation reqInfo) {
                 String importString = reqInfo.type().importString();
                 if (importString != null) {

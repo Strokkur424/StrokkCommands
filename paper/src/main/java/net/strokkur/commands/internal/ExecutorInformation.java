@@ -11,34 +11,54 @@ final class ExecutorInformation {
     private final ExecutorType type;
     private final String @Nullable [] initialLiterals;
     private final List<ArgumentInformation> arguments;
-    private final Requirement initialRequirement;
-
-    private Requirement requirement;
-    private boolean compiledRequirement = false;
+    private final List<Requirement> requirements;
 
     ExecutorInformation(
         String methodName,
         ExecutorType type,
         String @Nullable [] initialLiterals,
         List<ArgumentInformation> arguments,
-        Requirement requirement
+        List<Requirement> requirements
     ) {
         this.methodName = methodName;
         this.type = type;
         this.initialLiterals = initialLiterals;
         this.arguments = arguments;
-        this.requirement = requirement;
-        this.initialRequirement = requirement;
+        this.requirements = requirements;
     }
 
-    public void setRequirement(Requirement requirement) {
-        Preconditions.checkState(!compiledRequirement, "Cannot recompile already compiled requirements");
-        this.requirement = requirement;
-        compiledRequirement = true;
+    public String getMethodName() {
+        return methodName;
     }
 
-    public boolean isCompiledRequirement() {
-        return compiledRequirement;
+    public ExecutorType getType() {
+        return type;
+    }
+
+    public String @Nullable [] getInitialLiterals() {
+        return initialLiterals;
+    }
+
+    public List<ArgumentInformation> getArguments() {
+        return arguments;
+    }
+
+    public List<Requirement> getRequirements() {
+        return requirements;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ExecutorInformation that = (ExecutorInformation) o;
+        return Objects.equals(methodName, that.methodName) && type == that.type && Objects.deepEquals(initialLiterals, that.initialLiterals) && Objects.equals(arguments, that.arguments) && Objects.equals(requirements, that.requirements);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(methodName, type, Arrays.hashCode(initialLiterals), arguments, requirements);
     }
 
     @Override
@@ -47,54 +67,8 @@ final class ExecutorInformation {
                "methodName='" + methodName + '\'' +
                ", type=" + type +
                ", initialLiterals=" + Arrays.toString(initialLiterals) +
-               ", arguments=(" + String.join(",", arguments.stream().map(Objects::toString).toList()) + ")" +
-               ", permissionStatus=(" + requirement + ")" +
+               ", arguments=" + arguments +
+               ", requirements=" + requirements +
                '}';
     }
-
-    public String methodName() {
-        return methodName;
-    }
-
-    public ExecutorType type() {
-        return type;
-    }
-
-    public String @Nullable [] initialLiterals() {
-        return initialLiterals;
-    }
-
-    public List<ArgumentInformation> arguments() {
-        return arguments;
-    }
-
-    public Requirement requirement() {
-        return requirement;
-    }
-
-    public Requirement getInitialRequirement() {
-        return initialRequirement;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) {
-            return true;
-        }
-        if (obj == null || obj.getClass() != this.getClass()) {
-            return false;
-        }
-        var that = (ExecutorInformation) obj;
-        return Objects.equals(this.methodName, that.methodName) &&
-               Objects.equals(this.type, that.type) &&
-               Arrays.equals(this.initialLiterals, that.initialLiterals) &&
-               Objects.equals(this.arguments, that.arguments) &&
-               Objects.equals(this.requirement, that.requirement);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(methodName, type, Arrays.hashCode(initialLiterals), arguments, requirement);
-    }
-
 }

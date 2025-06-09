@@ -1,17 +1,35 @@
 package net.strokkur.commands.internal;
 
+import org.jspecify.annotations.Nullable;
+
+import java.util.List;
+
 enum ExecutorType {
-    NONE("true"),
+    NONE,
     ENTITY("stack.getExecutor() != null"),
     PLAYER("stack.getExecutor() instanceof Player");
 
-    private final String predicate;
+    private final @Nullable String predicate;
 
-    ExecutorType(String predicate) {
+    ExecutorType() {
+        this(null);
+    }
+
+    ExecutorType(@Nullable String predicate) {
         this.predicate = predicate;
     }
 
-    public String getPredicate() {
+    public @Nullable String getPredicate() {
         return predicate;
+    }
+    
+    public boolean hasPredicate() {
+        return predicate != null;
+    }
+    
+    public void addRequirement(List<Requirement> requirementList) {
+        if (hasPredicate()) {
+            requirementList.add(new Requirement(predicate));
+        }
     }
 }

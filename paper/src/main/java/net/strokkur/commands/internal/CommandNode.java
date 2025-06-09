@@ -5,8 +5,10 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 @NullMarked
@@ -16,28 +18,25 @@ class CommandNode {
 
     private final ArgumentInformation argument;
     private final String nodeName;
-    private final List<Requirement> childRequirements = new ArrayList<>();
+    private final Set<Requirement> requirements = new HashSet<>();
+    private final CommandNode rootCommandNode;
 
     private @Nullable ExecutorInformation currentExecutor = null;
-    private boolean requestsNoPermission = false;
 
-    public CommandNode(ArgumentInformation argument, String nodeName) {
+    public CommandNode(CommandNode rootCommandNode, ArgumentInformation argument, String nodeName) {
+        this.rootCommandNode = rootCommandNode;
         this.argument = argument;
         this.nodeName = nodeName;
     }
 
     public void insert(ExecutorInformation executorInformation) {
-        insert(executorInformation.arguments(), executorInformation);
+        insert(executorInformation.getArguments(), executorInformation);
     }
 
     public void insert(List<ArgumentInformation> arguments, ExecutorInformation executorInformation) {
         if (arguments.isEmpty()) {
             setCurrentExecutor(executorInformation);
-
-            if (executorInformation.getInitialRequirement() == Requirement.NONE) {
-                StrokkCommandsPreprocessor.info("{} requests no permissions.", nodeName);
-                this.setRequestsNoPermission(true);
-            }
+            getRequirements().addAll(executorInformation.getRequirements());
             return;
         }
 
@@ -46,23 +45,7 @@ class CommandNode {
             : new String[]{arguments.getFirst().argumentName()};
 
         for (String name : names) {
-            CommandNode next = childNodes.getOrDefault(name, new CommandNode(arguments.getFirst(), name));
-
-            // We "compile" our requirements as early as possible so that we can check them by reference 
-            if (!executorInformation.isCompiledRequirement()) {
-                executorInformation.setRequirement(getRequirementFor(executorInformation));
-            }
-            Requirement requirement = executorInformation.requirement();
-
-            // The 'requirement' variable has all the requirements required for executing the command.
-            // We basically just always want to add them to our tree, so that the filtering
-            // can happen on print time.
-
-            this.addChildRequirement(requirement);
-            if (executorInformation.getInitialRequirement() == Requirement.NONE) {
-                StrokkCommandsPreprocessor.info("{} requests no permissions.", nodeName);
-                this.setRequestsNoPermission(true);
-            }
+            CommandNode next = childNodes.getOrDefault(name, new CommandNode(this, arguments.getFirst(), name));
 
             List<ArgumentInformation> nextArguments = new ArrayList<>(arguments);
             nextArguments.removeFirst();
@@ -72,9 +55,17 @@ class CommandNode {
         }
     }
 
-    public void visit(Consumer<CommandNode> nodeConsumer) {
-        childNodes.values().forEach(node -> node.visit(nodeConsumer));
+    public void visitEach(Consumer<CommandNode> nodeConsumer) {
+        childNodes.values().forEach(node -> node.visitEach(nodeConsumer));
         nodeConsumer.accept(this);
+    }
+
+    public Map<String, CommandNode> getChildNodes() {
+        return childNodes;
+    }
+
+    public CommandNode getRootCommandNode() {
+        return rootCommandNode;
     }
 
     public ArgumentInformation getArgument() {
@@ -93,37 +84,12 @@ class CommandNode {
         this.currentExecutor = currentExecutor;
     }
 
-    public void setRequestsNoPermission(boolean requestsNoPermission) {
-        this.requestsNoPermission = requestsNoPermission;
+    protected Set<Requirement> getRequirements() {
+        return this.requirements;
     }
-
-    public List<Requirement> getChildRequirements() {
-        return childRequirements;
-    }
-
-    public void addChildRequirement(Requirement requirement) {
-        childRequirements.add(requirement);
-    }
-
-    public boolean requestsNoPermission() {
-        return requestsNoPermission;
-    }
-
-    protected Requirement getRequirement() {
-        if (this.currentExecutor == null) {
-            return Requirement.NONE;
-        }
-
-        return getRequirementFor(this.currentExecutor);
-    }
-
-    protected Requirement getRequirementFor(ExecutorInformation executor) {
-        Requirement out = executor.requirement();
-        switch (executor.type()) {
-            case ENTITY -> out = Requirement.combine(out, new Requirement("stack.getExecutor() != null"));
-            case PLAYER -> out = Requirement.combine(out, new Requirement("stack.getExecutor() instanceof Player"));
-        }
-        return out;
+    
+    public boolean hasExecutor() {
+        return this.currentExecutor != null;
     }
 
     protected String printAsBrigadier(int baseIndent, List<String> literalPosition) {
@@ -140,16 +106,16 @@ class CommandNode {
 
         if (this.currentExecutor != null) {
             builder.append("\n").append(indentPlus).append(".executes(ctx -> {\n");
-            builder.append(indentPlusPlus).append("INSTANCE.%s(\n".formatted(this.currentExecutor.methodName()))
+            builder.append(indentPlusPlus).append("INSTANCE.%s(\n".formatted(this.currentExecutor.getMethodName()))
                 .append(indentPlusThree).append("ctx.getSource().getSender()");
 
-            switch (this.currentExecutor.type()) {
+            switch (this.currentExecutor.getType()) {
                 case ENTITY -> builder.append(",\n").append(indentPlusThree).append("ctx.getSource().getExecutor()");
                 case PLAYER -> builder.append(",\n").append(indentPlusThree).append("(Player) ctx.getSource().getExecutor()");
             }
 
             List<String> literalsLeft = new ArrayList<>(literalPosition);
-            for (ArgumentInformation arg : this.currentExecutor.arguments()) {
+            for (ArgumentInformation arg : this.currentExecutor.getArguments()) {
                 builder.append(",\n").append(indentPlusThree);
                 if (arg instanceof RequiredArgumentInformation info) {
                     builder.append(info.type().retriever());
@@ -178,38 +144,13 @@ class CommandNode {
     }
 
     private void setRequirement(StringBuilder builder, String indentPlus) {
-        List<Requirement> allRequirements = new ArrayList<>(getChildRequirements());
-        if (this.currentExecutor != null) {
-            allRequirements.add(this.currentExecutor.requirement());
-        }
-
-        List<Requirement> allUnhandledRequirements = new ArrayList<>(allRequirements.stream()
-            .filter(req -> !req.isEmpty())
-            .filter(req -> !req.isHandled())
-            .toList());
-
-        // The following conditions have to be true if we want to print the requirements:
-        // 1. There should be requirements present
-        // 2. All of our requirements (including the child requirements and the current requirement should be **not** handled yet)
-        // 3. This node is either an executor or `this.requestsNoPermission` returns false.
-
-        if (allUnhandledRequirements.isEmpty()) {
-            StrokkCommandsPreprocessor.info("{} has no unhandled requirements!", nodeName);
+        if (getRequirements().isEmpty()) {
             return;
         }
-
-        if (this.getCurrentExecutor() != null) {
-            if (this.requestsNoPermission()) {
-                StrokkCommandsPreprocessor.info("{} has no executor and a child node requests, that permissions are kept clean!", nodeName);
-                return;
-            }
-        }
-
-        Requirement compiled = Requirement.either(allUnhandledRequirements);
+        
+        String compiled = Requirement.stringOfAll(getRequirements());
         builder.append("\n").append(indentPlus).append(".requires(stack -> ")
-            .append(compiled.getRequirementString())
+            .append(compiled)
             .append(")");
-        allUnhandledRequirements.forEach(req -> req.setHandled(true));
-        StrokkCommandsPreprocessor.info("{} has been set to '{}'", nodeName, compiled.getRequirementString());
     }
 }

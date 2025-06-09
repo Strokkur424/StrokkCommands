@@ -16,7 +16,7 @@ public class TestCmd {
     void executeOne(CommandSender sender, @Executor Player player, String stringArg) {
         sender.sendPlainMessage("One!");
     }
-    
+
     @Executes
     @Permission("permission.value")
     void execute(CommandSender sender) {

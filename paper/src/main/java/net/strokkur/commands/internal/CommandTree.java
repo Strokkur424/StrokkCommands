@@ -3,23 +3,50 @@ package net.strokkur.commands.internal;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @NullMarked
 class CommandTree extends CommandNode {
 
-    private final Requirement rootRequirement;
-
-    public CommandTree(String name, Requirement rootRequirement) {
-        super(new LiteralArgumentInformation(name, new String[]{name}), name);
-        this.rootRequirement = rootRequirement;
+    public CommandTree(String name, List<Requirement> rootRequirements) {
+        //noinspection DataFlowIssue
+        super(null, new LiteralArgumentInformation(name, new String[]{name}), name);
+        this.getRequirements().addAll(rootRequirements);
     }
 
     public String printAsBrigadier(int baseIndent) {
+        // Before we do this, move the permissions around a bit
+        this.visitEach(node -> {
+            if (node instanceof CommandTree) {
+                return;
+            }
+
+            Set<Requirement> requirements = node.getRequirements();
+            CommandNode rootNode = node.getRootCommandNode();
+
+            for (Requirement req : new HashSet<>(requirements)) {
+                if (rootNode.getChildNodes().size() == 1) {
+                    // We can just move it up since it doesn't branch
+                    // But watch out for if it is an executing node, since we cannot do that then
+
+                    if (!rootNode.hasExecutor()) {
+                        rootNode.getRequirements().add(req);
+                        requirements.remove(req);
+                    }
+                } else {
+                    // There is branching going on. Since I do not want to deal with this yet, just don't move stuff up I guess
+                    continue;
+                }
+            }
+        });
+
         return printAsBrigadier(baseIndent, new ArrayList<>());
     }
 
     @Override
-    protected Requirement getRequirementFor(ExecutorInformation executorInformation) {
-        return Requirement.combine(rootRequirement, super.getRequirementFor(executorInformation));
+    public CommandNode getRootCommandNode() {
+        throw new UnsupportedOperationException("A CommandTree has no root node.");
     }
 }
