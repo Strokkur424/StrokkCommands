@@ -2,6 +2,9 @@ plugins {
     id("xyz.jpenilla.run-paper") version "2.3.1"
 }
 
+group = rootProject.group;
+version = rootProject.version;
+
 dependencies {
     compileOnly(project(":strokk-commands"))
     annotationProcessor(project(":strokk-commands"))
@@ -12,4 +15,10 @@ dependencies {
 tasks.runServer {
     minecraftVersion("1.21.5")
     jvmArgs("-Xmx2G", "-Xms2G", "-Dcom.mojang.eula.agree=true")
+}
+
+tasks.processResources {
+    filesMatching("paper-plugin.yml") {
+        expand("version" to version)
+    }
 }
