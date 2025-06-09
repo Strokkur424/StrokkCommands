@@ -1,4 +1,4 @@
 rootProject.name = "StrokkCommands"
 
-include("paper")
-include("paper-test-plugin")
+include("strokk-commands")
+include("strokk-commands-test-plugin")

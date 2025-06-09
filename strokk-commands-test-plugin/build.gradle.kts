@@ -3,8 +3,8 @@ plugins {
 }
 
 dependencies {
-    compileOnly(project(":paper"))
-    annotationProcessor(project(":paper"))
+    compileOnly(project(":strokk-commands"))
+    annotationProcessor(project(":strokk-commands"))
     
     compileOnly("io.papermc.paper:paper-api:1.21.5-R0.1-SNAPSHOT")
 }
