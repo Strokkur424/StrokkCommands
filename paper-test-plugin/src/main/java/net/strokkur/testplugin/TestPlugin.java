@@ -5,6 +5,7 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.strokkur.testplugin.commands.EntitiesCommandBrigadier;
 import net.strokkur.testplugin.commands.LocationArgumentsCommandBrigadier;
 import net.strokkur.testplugin.commands.PrimitivesCommandBrigadier;
+import net.strokkur.testplugin.commands.RegistryArgumentsCommandBrigadier;
 import net.strokkur.testplugin.commands.TellMiniCommandBrigadier;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -18,6 +19,7 @@ public final class TestPlugin extends JavaPlugin {
             PrimitivesCommandBrigadier.register(commands);
             LocationArgumentsCommandBrigadier.register(commands);
             EntitiesCommandBrigadier.register(commands);
+            RegistryArgumentsCommandBrigadier.register(commands);
             TellMiniCommandBrigadier.register(commands);
         }));
     }
