@@ -6,6 +6,7 @@ import net.strokkur.commands.annotations.arguments.FloatArg;
 import net.strokkur.commands.annotations.arguments.IntArg;
 import net.strokkur.commands.annotations.arguments.LongArg;
 import net.strokkur.commands.annotations.arguments.StringArg;
+import net.strokkur.commands.annotations.arguments.TimeArg;
 import net.strokkur.commands.objects.arguments.StringArgType;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.NullUnmarked;
@@ -19,12 +20,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static net.strokkur.commands.internal.BrigadierArgumentConversion.RegistryEntry.registryEntry;
+import static net.strokkur.commands.internal.BrigadierArgumentConversion.SimpleEntry.simpleEntry;
 
 @NullUnmarked
 abstract class BrigadierArgumentConversion {
 
+    //<editor-fold desc="Registry Entries">
     private static final List<RegistryEntry> REGISTRY_ENTRIES = List.of(
         registryEntry("Attribute", "org.bukkit.attribute.Attribute", "ATTRIBUTE"),
         registryEntry("PatternType", "org.bukkit.block.banner.PatternType", "BANNER_PATTERN"),
@@ -58,11 +62,12 @@ abstract class BrigadierArgumentConversion {
         registryEntry("Wolf.SoundVariant", "org.bukkit.entity.Wolf", "org.bukkit.entity.Wolf.SoundVariant", "WOLF_SOUND_VARIANT"),
         registryEntry("Wolf.Variant", "org.bukkit.entity.Wolf", "org.bukkit.entity.Wolf.Variant", "WOLF_VARIANT")
     );
-    
+    //</editor-fold>
+
     private static final Map<String, BiFunction<VariableElement, String, BrigadierArgumentType>> CONVERSION_MAP = new HashMap<>();
 
     static {
-        // Primitive argument types
+        //<editor-fold desc="Primitive argument types">
         putFor((p, name) -> BrigadierArgumentType.of(
             "BoolArgumentType.bool()",
             "BoolArgumentType.getBool(ctx, \"%s\")".formatted(name),
@@ -100,8 +105,9 @@ abstract class BrigadierArgumentConversion {
             "StringArgumentType.getString(ctx, \"%s\")".formatted(name),
             "com.mojang.brigadier.arguments.StringArgumentType"
         ), "java.lang.String");
+        //</editor-fold>
 
-        // Location arguments
+        //<editor-fold desc="Location arguments">
         putFor((p, name) -> BrigadierArgumentType.of(
             "ArgumentTypes.blockPosition()",
             "ctx.getArgument(\"%s\", BlockPositionResolver.class).resolve(ctx.getSource())".formatted(name),
@@ -129,8 +135,9 @@ abstract class BrigadierArgumentConversion {
                 "org.bukkit.World"
             )
         ), "org.bukkit.World");
+        //</editor-fold>
 
-        //<editor-fold desc="Entity and Player arguments">
+        //<editor-fold desc="Entity and player arguments">
         putFor((p, name) -> BrigadierArgumentType.of(
             "ArgumentTypes.entity()",
             "ctx.getArgument(\"%s\", EntitySelectorArgumentResolver.class).resolve(ctx.getSource()).getFirst()".formatted(name),
@@ -224,11 +231,20 @@ abstract class BrigadierArgumentConversion {
             )
         ), "com.destroystokyo.paper.profile.PlayerProfile[]");
         //</editor-fold>
-        
+
         // All registry related arguments
         REGISTRY_ENTRIES.forEach(BrigadierArgumentConversion::addResourceAndResourceKeyArguments);
+        
+        // "Paper"-related arguments
+        Stream.of(
+            simpleEntry("blockState", "BlockState", "org.bukkit.block.BlockState"),
+            simpleEntry("itemStack", "ItemStack", "org.bukkit.inventory.ItemStack"),
+            simpleEntry("namespacedKey", "NamespacedKey", "org.bukkit.NamespacedKey"),
+            simpleEntry("uuid", "UUID", "java.util.UUID"),
+            simpleEntry("objectiveCriteria", "Criteria", "org.bukkit.scoreboard.Criteria")
+        ).forEach(BrigadierArgumentConversion::putSimple);
     }
-    
+
     private static void addResourceAndResourceKeyArguments(RegistryEntry entry) {
         putFor((p, name) -> BrigadierArgumentType.of(
             "ArgumentTypes.resource(RegistryKey.%s)".formatted(entry.registryKeyName()),
@@ -265,6 +281,24 @@ abstract class BrigadierArgumentConversion {
             return null;
         }
 
+        // We *have* to give the time argument precedence, since its return type is also 'int'.        
+        TimeArg timeArg = parameter.getAnnotation(TimeArg.class);
+        if (timeArg != null) {
+            if (!type.equals("int") && !type.equals("java.lang.Integer")) {
+                StrokkCommandsPreprocessor.getMessenger().ifPresent(messager -> messager.printError("An argument annotated with @TimeArg has to be of type 'int'", parameter));
+                return null;
+            }
+
+            return BrigadierArgumentType.of(
+                "ArgumentTypes.time()",
+                "IntegerArgumentType.getInteger(ctx, \"%s\")".formatted(argumentName),
+                Set.of(
+                    "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+                    "com.mojang.brigadier.arguments.IntegerArgumentType"
+                )
+            );
+        }
+
         BrigadierArgumentType out = CONVERSION_MAP.get(type).apply(parameter, argumentName);
         if (out != null) {
             return out;
@@ -272,6 +306,17 @@ abstract class BrigadierArgumentConversion {
 
         StrokkCommandsPreprocessor.getMessenger().ifPresent(messager -> messager.printError("An unexpected error occurred whilst converting type " + type + " to Brigadier equivalent.", parameter));
         return null;
+    }
+
+    private static void putSimple(SimpleEntry entry) {
+        CONVERSION_MAP.put(entry.classImport(), (p, name) -> BrigadierArgumentType.of(
+            "ArgumentTypes.%s()".formatted(entry.argumentTypeName()),
+            "ctx.getArgument(\"%s\", %s.class)".formatted(name, entry.className()),
+            Set.of(
+                "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+                entry.classImport()
+            )
+        ));
     }
 
     private static <T extends Annotation> BrigadierArgumentType annotatedOr(VariableElement parameter, Class<T> annotation, Function<T, String> withAnnotation,
@@ -293,12 +338,18 @@ abstract class BrigadierArgumentConversion {
 
         return BrigadierArgumentType.of(withAnnotation.apply(annotated), retrieval, imports);
     }
-    
+
+    record SimpleEntry(String argumentTypeName, String className, String classImport) {
+        public static SimpleEntry simpleEntry(String argumentTypeName, String className, String classImport) {
+            return new SimpleEntry(argumentTypeName, className, classImport);
+        }
+    }
+
     record RegistryEntry(String type, String typeImport, String fullType, String registryKeyName) {
         public static RegistryEntry registryEntry(String type, String typeImport, String registryKeyName) {
             return new RegistryEntry(type, typeImport, typeImport, registryKeyName);
         }
-        
+
         public static RegistryEntry registryEntry(String type, String typeImport, String fullType, String registryKeyName) {
             return new RegistryEntry(type, typeImport, fullType, registryKeyName);
         }
