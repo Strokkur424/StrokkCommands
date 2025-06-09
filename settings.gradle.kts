@@ -7,5 +7,5 @@ pluginManagement {
 
 rootProject.name = "StrokkCommands"
 
-include("strokk-commands")
-include("strokk-commands-test-plugin")
+include(":strokk-commands")
+include(":strokk-commands-test-plugin")
