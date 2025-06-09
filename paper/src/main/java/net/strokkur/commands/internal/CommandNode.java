@@ -35,6 +35,13 @@ class CommandNode {
 
     public void insert(List<ArgumentInformation> arguments, ExecutorInformation executorInformation) {
         if (arguments.isEmpty()) {
+            if (hasExecutor()) {
+                StrokkCommandsPreprocessor.getMessenger().ifPresent(messager -> messager.printError(
+                    executorInformation.getClassName() + "#" + executorInformation.getMethodName() + " has the " +
+                    "same semantic as another method. Please check your command definitions!"
+                ));
+            }
+
             setCurrentExecutor(executorInformation);
             getRequirements().addAll(executorInformation.getRequirements());
             return;
@@ -87,7 +94,7 @@ class CommandNode {
     protected Set<Requirement> getRequirements() {
         return this.requirements;
     }
-    
+
     public boolean hasExecutor() {
         return this.currentExecutor != null;
     }
@@ -121,7 +128,7 @@ class CommandNode {
                         continue;
                     }
                 }
-                
+
                 builder.append(",\n").append(indentPlusThree);
                 if (arg instanceof RequiredArgumentInformation info) {
                     builder.append(info.type().retriever());
@@ -153,7 +160,7 @@ class CommandNode {
         if (getRequirements().isEmpty()) {
             return;
         }
-        
+
         String compiled = Requirement.stringOfAll(getRequirements());
         builder.append("\n").append(indentPlus).append(".requires(stack -> ")
             .append(compiled)

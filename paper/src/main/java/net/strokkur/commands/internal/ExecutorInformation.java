@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Objects;
 
 final class ExecutorInformation {
+    private final String className;
     private final String methodName;
     private final ExecutorType type;
     private final String @Nullable [] initialLiterals;
@@ -14,17 +15,23 @@ final class ExecutorInformation {
     private final List<Requirement> requirements;
 
     ExecutorInformation(
+        String className,
         String methodName,
         ExecutorType type,
         String @Nullable [] initialLiterals,
         List<ArgumentInformation> arguments,
         List<Requirement> requirements
     ) {
+        this.className = className;
         this.methodName = methodName;
         this.type = type;
         this.initialLiterals = initialLiterals;
         this.arguments = arguments;
         this.requirements = requirements;
+    }
+
+    public String getClassName() {
+        return className;
     }
 
     public String getMethodName() {

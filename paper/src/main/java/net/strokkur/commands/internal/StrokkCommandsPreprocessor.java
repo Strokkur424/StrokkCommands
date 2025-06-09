@@ -175,7 +175,7 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
                 List<Requirement> requirements = getAnnotatedRequirements(methodElement);
                 executorType.addRequirement(requirements);
                 
-                return new ExecutorInformation(name, executorType, initialLiterals, argumentInformation, requirements);
+                return new ExecutorInformation(classElement.toString(), name, executorType, initialLiterals, argumentInformation, requirements);
             }).toList();
     }
 
@@ -241,6 +241,6 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
 
     static void info(String format, Object... arguments) {
         // We don't need this outside dev
-        getMessenger().ifPresent(e -> e.printMessage(Diagnostic.Kind.NOTE, format.replaceAll("\\{}", "%s").formatted(arguments)));
+         getMessenger().ifPresent(e -> e.printMessage(Diagnostic.Kind.NOTE, format.replaceAll("\\{}", "%s").formatted(arguments)));
     }
 }

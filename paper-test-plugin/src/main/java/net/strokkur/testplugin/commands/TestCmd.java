@@ -12,7 +12,7 @@ public class TestCmd {
         sender.sendPlainMessage("One!");
     }
 
-    @Executes("literal")
+    @Executes("literal two")
     void executeTwo(CommandSender sender) {
         sender.sendPlainMessage("Two!");
     }

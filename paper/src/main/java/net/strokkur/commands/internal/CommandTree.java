@@ -48,7 +48,7 @@ class CommandTree extends CommandNode {
     @Override
     public void insert(ExecutorInformation executorInformation) {
         if (executorInformation.getInitialLiterals() != null) {
-            for (int i = executorInformation.getArguments().size() - 1; i >= 0; i--) {
+            for (int i = executorInformation.getInitialLiterals().length - 1; i >= 0; i--) {
                 String literal = executorInformation.getInitialLiterals()[i];
                 executorInformation.getArguments().addFirst(new LiteralArgumentInformation(literal, new String[]{literal}, false));
             }
