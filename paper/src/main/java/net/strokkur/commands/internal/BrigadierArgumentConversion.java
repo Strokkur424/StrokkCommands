@@ -234,7 +234,7 @@ abstract class BrigadierArgumentConversion {
 
         // All registry related arguments
         REGISTRY_ENTRIES.forEach(BrigadierArgumentConversion::addResourceAndResourceKeyArguments);
-        
+
         // "Paper"-related arguments
         Stream.of(
             simpleEntry("blockState", "BlockState", "org.bukkit.block.BlockState"),
@@ -243,6 +243,46 @@ abstract class BrigadierArgumentConversion {
             simpleEntry("uuid", "UUID", "java.util.UUID"),
             simpleEntry("objectiveCriteria", "Criteria", "org.bukkit.scoreboard.Criteria")
         ).forEach(BrigadierArgumentConversion::putSimple);
+
+        //<editor-fold desc=Predicate arguments">
+        putFor((p, name) -> BrigadierArgumentType.of(
+            "ArgumentTypes.doubleRange()",
+            "ctx.getArgument(\"%s\", DoubleRangeProvider.class)".formatted(name),
+            Set.of(
+                "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+                "io.papermc.paper.command.brigadier.argument.range.DoubleRangeProvider"
+            )
+        ), "io.papermc.paper.command.brigadier.argument.range.DoubleRangeProvider", "io.papermc.paper.command.brigadier.argument.range.RangeProvider<java.lang.Double>");
+
+        putFor((p, name) -> BrigadierArgumentType.of(
+            "ArgumentTypes.doubleRange()",
+            "ctx.getArgument(\"%s\", DoubleRangeProvider.class).range()".formatted(name),
+            Set.of(
+                "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+                "io.papermc.paper.command.brigadier.argument.range.DoubleRangeProvider"
+            )
+        ), "com.google.common.collect.Range<java.lang.Double>");
+        
+        putFor((p, name) -> BrigadierArgumentType.of(
+            "ArgumentTypes.doubleRange()",
+            "ctx.getArgument(\"%s\", IntegerRangeProvider.class)".formatted(name),
+            Set.of(
+                "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+                "io.papermc.paper.command.brigadier.argument.range.IntegerRangeProvider"
+            )
+        ), "io.papermc.paper.command.brigadier.argument.range.IntegerRangeProvider", "io.papermc.paper.command.brigadier.argument.range.RangeProvider<java.lang.Integer>");
+
+        putFor((p, name) -> BrigadierArgumentType.of(
+            "ArgumentTypes.doubleRange()",
+            "ctx.getArgument(\"%s\", IntegerRangeProvider.class).range()".formatted(name),
+            Set.of(
+                "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+                "io.papermc.paper.command.brigadier.argument.range.IntegerRangeProvider"
+            )
+        ), "com.google.common.collect.Range<java.lang.Integer>");
+
+        putSimple(simpleEntry("itemPredicate", "ItemStackPredicate", "io.papermc.paper.command.brigadier.argument.predicate.ItemStackPredicate"));
+        //</editor-fold>
     }
 
     private static void addResourceAndResourceKeyArguments(RegistryEntry entry) {
