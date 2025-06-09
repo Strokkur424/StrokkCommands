@@ -2,6 +2,7 @@ package net.strokkur.testplugin;
 
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import net.strokkur.testplugin.commands.AdventureArgumentsCommandBrigadier;
 import net.strokkur.testplugin.commands.EntitiesCommandBrigadier;
 import net.strokkur.testplugin.commands.LocationArgumentsCommandBrigadier;
 import net.strokkur.testplugin.commands.PaperArgumentsCommandBrigadier;
@@ -24,6 +25,8 @@ public final class TestPlugin extends JavaPlugin {
             RegistryArgumentsCommandBrigadier.register(commands);
             PaperArgumentsCommandBrigadier.register(commands);
             PredicateArgumentsCommandBrigadier.register(commands);
+            AdventureArgumentsCommandBrigadier.register(commands);
+            
             TellMiniCommandBrigadier.register(commands);
         }));
     }

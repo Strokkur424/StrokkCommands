@@ -262,7 +262,7 @@ abstract class BrigadierArgumentConversion {
                 "io.papermc.paper.command.brigadier.argument.range.DoubleRangeProvider"
             )
         ), "com.google.common.collect.Range<java.lang.Double>");
-        
+
         putFor((p, name) -> BrigadierArgumentType.of(
             "ArgumentTypes.doubleRange()",
             "ctx.getArgument(\"%s\", IntegerRangeProvider.class)".formatted(name),
@@ -282,6 +282,33 @@ abstract class BrigadierArgumentConversion {
         ), "com.google.common.collect.Range<java.lang.Integer>");
 
         putSimple(simpleEntry("itemPredicate", "ItemStackPredicate", "io.papermc.paper.command.brigadier.argument.predicate.ItemStackPredicate"));
+        //</editor-fold>
+
+        //<editor-fold desc="Adventure arguments">
+        Stream.of(
+            simpleEntry("component", "Component", "net.kyori.adventure.text.Component"),
+            simpleEntry("key", "Key", "net.kyori.adventure.key.Key"),
+            simpleEntry("namedColor", "NamedTextColor", "net.kyori.adventure.text.format.NamedTextColor"),
+            simpleEntry("style", "Style", "net.kyori.adventure.text.format.Style")
+        ).forEach(BrigadierArgumentConversion::putSimple);
+        
+        CONVERSION_MAP.put("java.util.concurrent.CompletableFuture<net.kyori.adventure.chat.SignedMessage>", (p, name) -> BrigadierArgumentType.of(
+            "ArgumentTypes.signedMessage()",
+            "ctx.getArgument(\"%s\", SignedMessageResolver.class).resolveSignedMessage(\"%s\", ctx)".formatted(name, name),
+            Set.of(
+                "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+                "io.papermc.paper.command.brigadier.argument.SignedMessageResolver"
+            )
+        ));
+        
+        CONVERSION_MAP.put("io.papermc.paper.command.brigadier.argument.SignedMessageResolver", (p, name) -> BrigadierArgumentType.of(
+            "ArgumentTypes.signedMessage()",
+            "ctx.getArgument(\"%s\", SignedMessageResolver.class)".formatted(name),
+            Set.of(
+                "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+                "io.papermc.paper.command.brigadier.argument.SignedMessageResolver"
+            )
+        ));
         //</editor-fold>
     }
 
