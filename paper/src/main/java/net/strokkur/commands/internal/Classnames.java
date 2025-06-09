@@ -1,6 +1,6 @@
-package net.strokkur.commands.utils;
+package net.strokkur.commands.internal;
 
-public interface ClassnameDump {
+interface Classnames {
     String COMMAND_SENDER = "org.bukkit.command.CommandSender";
     String PLAYER = "org.bukkit.entity.Player";
     String ENTITY = "org.bukkit.entity.Entity";

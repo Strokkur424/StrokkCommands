@@ -1,4 +1,4 @@
-package net.strokkur.commands.objects;
+package net.strokkur.commands.internal;
 
 import org.jspecify.annotations.Nullable;
 
@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public record ExecutorInformation(
+record ExecutorInformation(
     String methodName,
     ExecutorType type,
     String @Nullable [] initialLiterals,

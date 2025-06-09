@@ -1,7 +1,17 @@
 package net.strokkur.commands.objects.arguments;
 
 public enum StringArgType {
-    WORD,
-    STRING,
-    GREEDY
+    WORD("word"),
+    STRING("string"),
+    GREEDY("greedyString");
+    
+    private final String brigadierType;
+
+    StringArgType(String brigadierType) {
+        this.brigadierType = brigadierType;
+    }
+
+    public String getBrigadierType() {
+        return brigadierType;
+    }
 }

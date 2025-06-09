@@ -1,21 +1,12 @@
-package net.strokkur.commands.preprocessors;
+package net.strokkur.commands.internal;
 
 import com.google.auto.service.AutoService;
-import com.google.common.base.Preconditions;
 import net.strokkur.commands.annotations.Aliases;
 import net.strokkur.commands.annotations.Command;
 import net.strokkur.commands.annotations.Description;
 import net.strokkur.commands.annotations.Executes;
 import net.strokkur.commands.annotations.Executor;
 import net.strokkur.commands.annotations.Literal;
-import net.strokkur.commands.objects.ArgumentInformation;
-import net.strokkur.commands.objects.CommandInformation;
-import net.strokkur.commands.objects.ExecutorInformation;
-import net.strokkur.commands.objects.ExecutorType;
-import net.strokkur.commands.objects.LiteralArgumentInformation;
-import net.strokkur.commands.objects.RequiredArgumentInformation;
-import net.strokkur.commands.tree.CommandTree;
-import net.strokkur.commands.utils.BrigadierUtils;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.NullUnmarked;
@@ -38,13 +29,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static net.strokkur.commands.utils.ClassnameDump.COMMAND_SENDER;
-import static net.strokkur.commands.utils.ClassnameDump.ENTITY;
-import static net.strokkur.commands.utils.ClassnameDump.PLAYER;
+import static net.strokkur.commands.internal.Classnames.COMMAND_SENDER;
+import static net.strokkur.commands.internal.Classnames.ENTITY;
+import static net.strokkur.commands.internal.Classnames.PLAYER;
 
 @NullMarked
 @AutoService(Processor.class)
-public class CommandPreprocessor extends AbstractProcessor {
+public class StrokkCommandPreprocessor extends AbstractProcessor {
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {
@@ -275,7 +266,7 @@ public class CommandPreprocessor extends AbstractProcessor {
 
                     argumentInformation.add(new RequiredArgumentInformation(
                         variableElements.get(i).toString(),
-                        BrigadierUtils.getAsArgumentType(variableElements.get(i), parameterClassNames.get(i))
+                        BrigadierArgumentConversion.getAsArgumentType(variableElements.get(i), variableElements.get(i).toString(), parameterClassNames.get(i))
                     ));
                 }
 
