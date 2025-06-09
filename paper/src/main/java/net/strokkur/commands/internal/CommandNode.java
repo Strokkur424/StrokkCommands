@@ -116,6 +116,12 @@ class CommandNode {
 
             List<String> literalsLeft = new ArrayList<>(literalPosition);
             for (ArgumentInformation arg : this.currentExecutor.getArguments()) {
+                if (arg instanceof LiteralArgumentInformation lit) {
+                    if (!lit.addToMethod()) {
+                        continue;
+                    }
+                }
+                
                 builder.append(",\n").append(indentPlusThree);
                 if (arg instanceof RequiredArgumentInformation info) {
                     builder.append(info.type().retriever());
