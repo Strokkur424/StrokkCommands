@@ -1,0 +1,305 @@
+package net.strokkur.commands.preprocessors;
+
+import com.google.auto.service.AutoService;
+import com.google.common.base.Preconditions;
+import net.strokkur.commands.annotations.Aliases;
+import net.strokkur.commands.annotations.Command;
+import net.strokkur.commands.annotations.Description;
+import net.strokkur.commands.annotations.Executes;
+import net.strokkur.commands.annotations.Executor;
+import net.strokkur.commands.annotations.Literal;
+import net.strokkur.commands.objects.ArgumentInformation;
+import net.strokkur.commands.objects.CommandInformation;
+import net.strokkur.commands.objects.ExecutorInformation;
+import net.strokkur.commands.objects.ExecutorType;
+import net.strokkur.commands.objects.LiteralArgumentInformation;
+import net.strokkur.commands.objects.RequiredArgumentInformation;
+import net.strokkur.commands.tree.CommandTree;
+import net.strokkur.commands.utils.BrigadierUtils;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.NullUnmarked;
+
+import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.Processor;
+import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.SourceVersion;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ExecutableType;
+import javax.lang.model.type.TypeMirror;
+import javax.tools.Diagnostic;
+import javax.tools.JavaFileObject;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import static net.strokkur.commands.utils.ClassnameDump.COMMAND_SENDER;
+import static net.strokkur.commands.utils.ClassnameDump.ENTITY;
+import static net.strokkur.commands.utils.ClassnameDump.PLAYER;
+
+@NullMarked
+@AutoService(Processor.class)
+public class CommandPreprocessor extends AbstractProcessor {
+
+    @Override
+    public Set<String> getSupportedAnnotationTypes() {
+        return Set.of(
+            Command.class.getCanonicalName()
+        );
+    }
+
+    @Override
+    public SourceVersion getSupportedSourceVersion() {
+        return SourceVersion.RELEASE_21;
+    }
+    
+    /*
+    @Command(...)
+    public void MyCommand {
+    
+        @Executes
+        public void execute(CommandSender sender, @Executor Player player) {
+            // logic ...
+        }
+    
+        @Executes
+        public void execute(CommandSender sender, @Executor Player player, String wordInput) {
+            // logic ...
+        }
+        
+        @Executes
+        public void execute(CommandSender sender, String wordInput, int exp) {
+            // logic ...
+        }
+    }
+    
+    <--->
+    
+    public void MyCommandBrigadierImpl {
+        
+        private static final MyCommand instance = new MyCommand();
+        
+        public static LiteralCommandNode<CommandSourceStack> build() {
+            return Commands.literal(...)
+                .requires(stack -> stack.getExecutor() instanceof Player)
+                .executes(ctx -> {
+                    instance.execute(ctx.getSource().getSender(), ctx.getSource().getExecutor());
+                    return Command.SINGLE_SUCCESS;
+                })
+            
+                .then(Commands.argument("wordInput", StringArgumentType.word())
+                    .requires(stack -> stack.getExecutor() instanceof Player)
+                    .executes(ctx -> {
+                        instance.execute(ctx.getSource().getSender(), ctx.getSource().getExecutor(), StringArgumentType.getString(ctx, "wordInput"));
+                        return Command.SINGLE_SUCCESS;
+                    })
+                )
+                
+                // This would happen twice~. We need to build up our own tree which combines these things first, so that we can build the correct
+                // Brigadier tree out of our command annotations.
+                .then(Command.argument("wordInput", StringArgumentType.word())
+                    .then(Commands.argument("exp", IntegerArgumentType.integer())
+                        .executes(ctx -> {
+                            instance.execute(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "wordInput"), IntegerArgumentType.getInt(ctx, "exp"));
+                            return Command.SINGLE_SUCCESS;
+                        })
+                    )
+                )
+                .build();
+        }
+    }
+    
+    
+    ============ Structure Update ==============
+    @Executes
+    private void noArgs(CommandSender sender, @Executor Player executor) {
+        sender.sendRichMessage("<green>Success! The executing player is " + executor.getName());
+        executor.sendRichMessage("<gradient:gold:yellow>Hehe very good!");
+    }
+    
+    @Executes("name")
+    private void nameArg(CommandSender sender, String name) {
+        sender.sendRichMessage("<green>You put in: <name>", Placeholder.unparsed("name", name));
+    }
+    
+    @Executes("float")
+    private void floatArg(CommandSender sender, float value) {
+        sender.sendRichMessage("<transition:red:blue:%s>This is some transitioning text :P (%s)".formatted(value, value));
+    }
+    
+    @Executes("literal-test")
+    private void literalTest(CommandSender sender, @Literal({"one", "two", "three"}) String literal, @IntArg(min = 1, max = 3) int value) {
+        int actual = switch (literal) {
+            case "one" -> 1;
+            case "two" -> 2;
+            case "three" -> 3;
+            default -> throw new UnsupportedOperationException("Incorrect literal");
+        };
+        
+        sender.sendPlainMessage("Your input is " + literal + ", which " + (actual == value ? "matches" : "doesn't match") + " your input value!");
+    }
+    
+    ---
+    Should convert to:
+    ---
+    
+    Commands.literal("simplecommand")
+        .requires(stack -> stack.getExecutor() instanceof Player)
+        .executes(ctx -> {
+            instance.noArgs(ctx.getSource().getSender(), (Player) ctx.getSource().getExecutor())
+            return Command.SINGLE_SUCCESS;
+        })
+        
+        .then(Commands.literal("name")
+            .then(Commands.argument("name", StringArgumentType.word())
+                .executes(ctx -> {
+                    instance.nameArg(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "name"));
+                    return Command.SINGLE_SUCCESS;
+                })
+            )
+        )
+        
+        .then(Commands.literal("float")
+            .then(Commands.argument("value", FloatArgumentType.float())
+                .executes(ctx -> {
+                    instance.floatArg(ctx.getSource().getSender(), FloatArgumentType.getFloat(ctx, "value"));
+                    return Command.SINGLE_SUCCESS;
+                })
+            )
+        )
+        
+        .then(Commands.literal("literal-test")
+            .then(Commands.literal("one")
+                .then(Commands.argument("value", IntegerArgumentType.integer(1, 3))
+                    .executes(ctx -> {
+                        instance.literalTest(ctx.getSource().getSender(), "one", IntegerArgumentType.getInteger(ctx, "value"));
+                        return Command.SINGLE_SUCCESS;
+                    });
+                )
+            )
+            .then(Commands.literal("two")
+                .then(Commands.argument("value", IntegerArgumentType.integer(1, 3))
+                    .executes(ctx -> {
+                        instance.literalTest(ctx.getSource().getSender(), "two", IntegerArgumentType.getInteger(ctx, "value"));
+                        return Command.SINGLE_SUCCESS;
+                    });
+                )
+            )
+            .then(Commands.literal("three")
+                .then(Commands.argument("value", IntegerArgumentType.integer(1, 3))
+                    .executes(ctx -> {
+                        instance.literalTest(ctx.getSource().getSender(), "three", IntegerArgumentType.getInteger(ctx, "value"));
+                        return Command.SINGLE_SUCCESS;
+                    });
+                )
+            )
+        )
+    
+    
+    
+     */
+
+    @Override
+    public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+        for (Element element : roundEnv.getElementsAnnotatedWith(Command.class)) {
+            info("Currently processing {}...", element);
+
+            CommandInformation information = getCommandInformation(element);
+            List<ExecutorInformation> executorInformation = getExecutorInformation(element);
+
+            CommandTree tree = new CommandTree(null);
+            executorInformation.forEach(tree::insert);
+            
+            info("{}'s Command Tree resolves to this: {}", information.commandName(), tree);
+
+//            info("{} declares command: {}", element, information);
+//            info("It has the following executors:");
+//            executorInformation.forEach(info -> info("- {}", info));
+        }
+
+        return true;
+    }
+
+    @NullUnmarked
+    private @NonNull CommandInformation getCommandInformation(@NonNull Element element) {
+        Command command = element.getAnnotation(Command.class);
+
+        Description description = element.getAnnotation(Description.class);
+        Aliases aliases = element.getAnnotation(Aliases.class);
+
+        return new CommandInformation(command.value(),
+            description != null ? description.value() : null,
+            aliases != null ? aliases.value() : null
+        );
+    }
+
+    @NullUnmarked
+    private @NonNull List<ExecutorInformation> getExecutorInformation(@NonNull Element classElement) {
+        return classElement.getEnclosedElements().stream()
+            .filter(element -> element.getAnnotation(Executes.class) != null)
+            .map(methodElement -> {
+                String name = methodElement.getSimpleName().toString();
+                List<? extends VariableElement> variableElements = ((ExecutableElement) methodElement).getParameters();
+                List<? extends TypeMirror> typeMirrors = ((ExecutableType) methodElement.asType()).getParameterTypes();
+                List<String> parameterClassNames = typeMirrors.stream().map(TypeMirror::toString).toList();
+                List<String> parameterSimpleClassNames = parameterClassNames.stream().map(e -> {
+                    String[] split = e.split("\\.");
+                    return split[split.length - 1];
+                }).toList();
+
+                Preconditions.checkState(!parameterClassNames.isEmpty(), "Method annotated with @Executes must at least declare a CommandSender parameter!");
+                Preconditions.checkState(parameterClassNames.getFirst().equals(COMMAND_SENDER), "The first parameter of a method annotated with @Executes must be of type CommandSender!");
+
+                ExecutorType executorType = ExecutorType.NONE;
+                if (typeMirrors.size() >= 2 && variableElements.get(1).getAnnotation(Executor.class) != null) {
+                    executorType = switch (parameterClassNames.get(1)) {
+                        case PLAYER -> ExecutorType.PLAYER;
+                        case ENTITY -> ExecutorType.ENTITY;
+                        default ->
+                            throw new UnsupportedOperationException("The executor has to be either a player or an entity. Found: " + parameterSimpleClassNames.get(1));
+                    };
+                }
+
+                List<ArgumentInformation> argumentInformation = new ArrayList<>();
+                for (int i = executorType == ExecutorType.NONE ? 1 : 2; i < typeMirrors.size(); i++) {
+                    Literal literalAnnotation = variableElements.get(i).getAnnotation(Literal.class);
+                    if (literalAnnotation != null) {
+                        argumentInformation.add(new LiteralArgumentInformation(variableElements.get(i).toString(), literalAnnotation.value()));
+                        continue;
+                    }
+
+                    argumentInformation.add(new RequiredArgumentInformation(
+                        variableElements.get(i).toString(),
+                        BrigadierUtils.getAsArgumentType(variableElements.get(i), parameterClassNames.get(i))
+                    ));
+                }
+
+                String initialLiteralsString = methodElement.getAnnotation(Executes.class).value();
+                String[] initialLiterals;
+                if (initialLiteralsString == null || initialLiteralsString.isBlank()) {
+                    initialLiterals = null;
+                } else {
+                    initialLiterals = initialLiteralsString.split(" ");
+                }
+
+                return new ExecutorInformation(name, executorType, initialLiterals, argumentInformation);
+            }).toList();
+    }
+
+    private void writeFile(String className) throws IOException {
+        JavaFileObject obj = processingEnv.getFiler().createSourceFile(className);
+
+        try (PrintWriter out = new PrintWriter(obj.openWriter())) {
+            
+        }
+    }
+
+    private void info(String format, Object... arguments) {
+        super.processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, format.replaceAll("\\{}", "%s").formatted(arguments));
+    }
+}

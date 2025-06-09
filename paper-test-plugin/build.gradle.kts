@@ -1,18 +1,15 @@
 plugins {
-    id("com.gradleup.shadow") version "9.0.0-beta12"
     id("xyz.jpenilla.run-paper") version "2.3.1"
 }
 
 dependencies {
-    implementation(project(":paper"))
+    compileOnly(project(":paper"))
+    annotationProcessor(project(":paper"))
+    
     compileOnly("io.papermc.paper:paper-api:1.21.5-R0.1-SNAPSHOT")
 }
 
 tasks.runServer {
     minecraftVersion("1.21.5")
     jvmArgs("-Xmx2G", "-Xms2G", "-Dcom.mojang.eula.agree=true")
-}
-
-tasks.build {
-    dependsOn(tasks.shadowJar)
 }

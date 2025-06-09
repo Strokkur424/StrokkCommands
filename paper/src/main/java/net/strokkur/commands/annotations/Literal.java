@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.TYPE)
-public @interface Aliases {
+@Target(ElementType.PARAMETER)
+public @interface Literal {
     String[] value();
 }
