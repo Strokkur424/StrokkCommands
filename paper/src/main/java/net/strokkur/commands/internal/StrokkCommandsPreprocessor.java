@@ -207,10 +207,7 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
         Set<String> imports = new HashSet<>(BASIC_IMPORTS);
         command.visitEach(branch -> {
             if (branch.getArgument() instanceof RequiredArgumentInformation reqInfo) {
-                String importString = reqInfo.type().importString();
-                if (importString != null) {
-                    imports.add(importString);
-                }
+                imports.addAll(reqInfo.type().imports());
             }
         });
 

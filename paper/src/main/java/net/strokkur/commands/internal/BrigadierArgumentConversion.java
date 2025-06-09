@@ -1,6 +1,7 @@
 package net.strokkur.commands.internal;
 
 import net.strokkur.commands.annotations.arguments.DoubleArg;
+import net.strokkur.commands.annotations.arguments.FinePosArg;
 import net.strokkur.commands.annotations.arguments.FloatArg;
 import net.strokkur.commands.annotations.arguments.IntArg;
 import net.strokkur.commands.annotations.arguments.LongArg;
@@ -14,6 +15,7 @@ import javax.lang.model.element.VariableElement;
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -24,7 +26,7 @@ abstract class BrigadierArgumentConversion {
 
     static {
         // Primitive argument types
-        putFor((p, name) -> new BrigadierArgumentType(
+        putFor((p, name) -> BrigadierArgumentType.of(
             "BoolArgumentType.bool()",
             "BoolArgumentType.getBool(ctx, \"%s\")".formatted(name),
             "com.mojang.brigadier.arguments.BoolArgumentType"
@@ -61,6 +63,35 @@ abstract class BrigadierArgumentConversion {
             "StringArgumentType.getString(ctx, \"%s\")".formatted(name),
             "com.mojang.brigadier.arguments.StringArgumentType"
         ), "java.lang.String");
+
+        // Location arguments
+        putFor((p, name) -> BrigadierArgumentType.of(
+            "ArgumentTypes.blockPosition()",
+            "ctx.getArgument(\"%s\", BlockPositionResolver.class).resolve(ctx.getSource())".formatted(name),
+            Set.of(
+                "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+                "io.papermc.paper.command.brigadier.argument.resolvers.BlockPositionResolver"
+            )
+        ), "io.papermc.paper.math.BlockPosition");
+
+        putFor((p, name) -> annotatedOr(p, FinePosArg.class,
+            a -> "ArgumentTypes.finePosition(%s)".formatted(a.value()),
+            "ArgumentTypes.finePosition()",
+            "ctx.getArgument(\"%s\", FinePositionResolver.class).resolve(ctx.getSource())".formatted(name),
+            Set.of(
+                "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+                "io.papermc.paper.command.brigadier.argument.resolvers.FinePositionResolver"
+            )
+        ), "io.papermc.paper.math.FinePosition");
+
+        putFor((p, name) -> BrigadierArgumentType.of(
+            "ArgumentTypes.world()",
+            "ctx.getArgument(\"%s\", World.class)".formatted(name),
+            Set.of(
+                "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+                "org.bukkit.World"
+            )
+        ), "org.bukkit.World");
     }
 
     private static void putFor(BiFunction<VariableElement, String, BrigadierArgumentType> value, String... keys) {
@@ -75,7 +106,7 @@ abstract class BrigadierArgumentConversion {
             StrokkCommandsPreprocessor.getMessenger().ifPresent(messager -> messager.printError("Cannot find Brigadier equivalent for argument of type " + type + ".", parameter));
             return null;
         }
-        
+
         BrigadierArgumentType out = CONVERSION_MAP.get(type).apply(parameter, argumentName);
         if (out != null) {
             return out;
@@ -87,16 +118,21 @@ abstract class BrigadierArgumentConversion {
 
     private static <T extends Annotation> BrigadierArgumentType annotatedOr(VariableElement parameter, Class<T> annotation, Function<T, String> withAnnotation,
                                                                             String withoutAnnotation, String retrieval) {
-        return annotatedOr(parameter, annotation, withAnnotation, withoutAnnotation, retrieval, null);
+        return annotatedOr(parameter, annotation, withAnnotation, withoutAnnotation, retrieval, Set.of());
     }
 
     private static <T extends Annotation> BrigadierArgumentType annotatedOr(VariableElement parameter, Class<T> annotation, Function<T, String> withAnnotation,
-                                                                            String withoutAnnotation, String retrieval, @Nullable String importString) {
+                                                                            String withoutAnnotation, String retrieval, String singleImport) {
+        return annotatedOr(parameter, annotation, withAnnotation, withoutAnnotation, retrieval, Set.of(singleImport));
+    }
+
+    private static <T extends Annotation> BrigadierArgumentType annotatedOr(VariableElement parameter, Class<T> annotation, Function<T, String> withAnnotation,
+                                                                            String withoutAnnotation, String retrieval, Set<String> imports) {
         T annotated = parameter.getAnnotation(annotation);
         if (annotated == null) {
-            return BrigadierArgumentType.of(withoutAnnotation, retrieval, importString);
+            return BrigadierArgumentType.of(withoutAnnotation, retrieval, imports);
         }
 
-        return BrigadierArgumentType.of(withAnnotation.apply(annotated), retrieval, importString);
+        return BrigadierArgumentType.of(withAnnotation.apply(annotated), retrieval, imports);
     }
 }
