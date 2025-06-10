@@ -25,6 +25,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeMirror;
+import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -130,65 +131,73 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
 
     @NullUnmarked
     private @NonNull List<ExecutorInformation> getExecutorInformation(@NonNull TypeElement classElement) {
-        return classElement.getEnclosedElements().stream()
+        List<ExecutorInformation> out = new ArrayList<>();
+        classElement.getEnclosedElements().stream()
             .filter(element -> element.getAnnotation(Executes.class) != null)
             .map(methodElement -> {
-                List<? extends VariableElement> variableElements = ((ExecutableElement) methodElement).getParameters();
-                List<? extends TypeMirror> typeMirrors = ((ExecutableType) methodElement.asType()).getParameterTypes();
-                List<String> parameterClassNames = typeMirrors.stream().map(TypeMirror::toString).toList();
-                List<String> parameterSimpleClassNames = parameterClassNames.stream().map(e -> {
-                    String[] split = e.split("\\.");
-                    return split[split.length - 1];
-                }).toList();
+                List<? extends VariableElement> parameters = ((ExecutableElement) methodElement).getParameters();
+                List<? extends TypeMirror> parameterTypes = ((ExecutableType) methodElement.asType()).getParameterTypes();
+                List<String> parameterClassNames = parameterTypes.stream().map(TypeMirror::toString).toList();
 
-                Preconditions.checkState(!parameterClassNames.isEmpty(), "Method annotated with @Executes must at least declare a CommandSender parameter!");
-                Preconditions.checkState(parameterClassNames.getFirst().equals(COMMAND_SENDER), "The first parameter of a method annotated with @Executes must be of type CommandSender!");
+                if (parameterClassNames.isEmpty()) {
+                    StrokkCommandsPreprocessor.getMessenger().ifPresent(messager -> messager.printError("Method annotated with @Executes must at least declare a CommandSender parameter!", methodElement));
+                    return null;
+                }
+
+                if (!parameterClassNames.getFirst().equals(COMMAND_SENDER)) {
+                    StrokkCommandsPreprocessor.getMessenger().ifPresent(messager -> messager.printError("The first parameter of a method annotated with @Executes must be of type CommandSender!", methodElement));
+                    return null;
+                }
 
                 ExecutorType executorType = ExecutorType.NONE;
-                if (typeMirrors.size() >= 2 && variableElements.get(1).getAnnotation(Executor.class) != null) {
+                if (parameterTypes.size() >= 2 && parameters.get(1).getAnnotation(Executor.class) != null) {
                     executorType = switch (parameterClassNames.get(1)) {
                         case PLAYER -> ExecutorType.PLAYER;
                         case ENTITY -> ExecutorType.ENTITY;
-                        default ->
-                            throw new UnsupportedOperationException("The executor has to be either a player or an entity. Found: " + parameterSimpleClassNames.get(1));
+                        default -> null;
                     };
                 }
 
-                List<ArgumentInformation> argumentInformation = new ArrayList<>();
-                for (int i = executorType == ExecutorType.NONE ? 1 : 2; i < typeMirrors.size(); i++) {
-                    Literal literalAnnotation = variableElements.get(i).getAnnotation(Literal.class);
+                if (executorType == null) {
+                    StrokkCommandsPreprocessor.getMessenger().ifPresent(messager -> messager.printError("The executor has to be either an org.bukkit.entity.Player or an org.bukkit.entity.Entity!", parameters.get(1)));
+                    return null;
+                }
+
+                MultiLiteralsTree tree = MultiLiteralsTree.create();
+                String initialLiteralsString = methodElement.getAnnotation(Executes.class).value();
+                if (initialLiteralsString != null && !initialLiteralsString.isBlank()) {
+                    for (String literals : initialLiteralsString.split(" ")) {
+                        tree.insert(new LiteralArgumentInfoImpl(literals, methodElement, literals, false));
+                    }
+                }
+
+                for (int i = executorType == ExecutorType.NONE ? 1 : 2; i < parameterTypes.size(); i++) {
+                    Literal literalAnnotation = parameters.get(i).getAnnotation(Literal.class);
                     if (literalAnnotation != null) {
-                        argumentInformation.add(new LiteralArgumentInformation(
-                            variableElements.get(i).toString(),
-                            variableElements.get(i),
-                            literalAnnotation.value())
-                        );
+                        tree.insert(new LiteralArgumentInfoImpl(parameters.get(i).toString(), parameters.get(i), ""), List.of(literalAnnotation.value()));
                         continue;
                     }
 
-                    BrigadierArgumentType asBrigadier = BrigadierArgumentConversion.getAsArgumentType(variableElements.get(i), variableElements.get(i).toString(), parameterClassNames.get(i));
+                    BrigadierArgumentType asBrigadier = BrigadierArgumentConversion.getAsArgumentType(parameters.get(i), parameters.get(i).toString(), parameterClassNames.get(i));
                     if (asBrigadier == null) {
                         return null;
                     }
 
-                    argumentInformation.add(new RequiredArgumentInformation(variableElements.get(i).toString(), variableElements.get(i), asBrigadier));
-                }
-
-                String initialLiteralsString = methodElement.getAnnotation(Executes.class).value();
-                String[] initialLiterals;
-                if (initialLiteralsString == null || initialLiteralsString.isBlank()) {
-                    initialLiterals = null;
-                } else {
-                    initialLiterals = initialLiteralsString.split(" ");
+                    tree.insert(new RequiredArgumentInformation(parameters.get(i).toString(), parameters.get(i), asBrigadier));
                 }
 
                 List<Requirement> requirements = getAnnotatedRequirements(methodElement);
                 executorType.addRequirement(requirements);
 
-                return new ExecutorInformation(classElement, (ExecutableElement) methodElement, executorType, initialLiterals, argumentInformation, requirements);
+                final ExecutorType finalExecutorType = executorType;
+                return tree.flatten().stream()
+                    .map(arguments -> new ExecutorInformation(classElement, (ExecutableElement) methodElement, finalExecutorType, arguments, requirements))
+                    .toList();
             })
             .filter(Objects::nonNull)
-            .toList();
+            .forEach(out::addAll);
+        
+        return out;
     }
 
     private void createBrigadierSourceFile(String commandClassName, CommandInformation info, CommandTree command) throws IOException {

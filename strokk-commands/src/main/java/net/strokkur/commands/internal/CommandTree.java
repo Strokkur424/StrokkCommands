@@ -1,7 +1,6 @@
 package net.strokkur.commands.internal;
 
 import javax.lang.model.element.Element;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -10,11 +9,11 @@ class CommandTree extends CommandNode {
 
     public CommandTree(String name, Element classElement, List<Requirement> rootRequirements) {
         //noinspection DataFlowIssue
-        super(null, new LiteralArgumentInformation(name, classElement, new String[]{name}), name);
+        super(null, new LiteralArgumentInfoImpl(name, classElement, name, false), name);
         this.getRequirements().addAll(rootRequirements);
     }
 
-    public String printAsBrigadier(int baseIndent) {
+    public String printTreeAsBrigadier(int baseIndent) {
         // Before we do this, move the permissions around a bit
         this.visitEach(node -> {
             if (node instanceof CommandTree) {
@@ -40,18 +39,11 @@ class CommandTree extends CommandNode {
             }
         });
 
-        return printAsBrigadier(baseIndent, new ArrayList<>());
+        return printAsBrigadier(baseIndent);
     }
 
     @Override
     public void insert(ExecutorInformation executorInformation) {
-        if (executorInformation.initialLiterals() != null) {
-            for (int i = executorInformation.initialLiterals().length - 1; i >= 0; i--) {
-                String literal = executorInformation.initialLiterals()[i];
-                executorInformation.arguments().addFirst(new LiteralArgumentInformation(literal, executorInformation.methodElement(), new String[]{literal}, false));
-            }
-        }
-
         super.insert(executorInformation);
     }
 

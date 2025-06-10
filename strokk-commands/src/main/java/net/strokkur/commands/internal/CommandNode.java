@@ -47,30 +47,27 @@ class CommandNode {
             getRequirements().addAll(executorInformation.requirements());
             return;
         }
+        
+        ArgumentInformation first = arguments.getFirst();
 
-        String[] names = arguments.getFirst() instanceof LiteralArgumentInformation literalArgument
-            ? literalArgument.literals()
-            : new String[]{arguments.getFirst().argumentName()};
+        String name = first instanceof LiteralArgumentInfo lit ? lit.literal() : first.argumentName();
+        CommandNode next = childNodes.getOrDefault(name, new CommandNode(this, first, name));
+        List<ArgumentInformation> nextArguments = new ArrayList<>(arguments);
 
-        for (String name : names) {
-            CommandNode next = childNodes.getOrDefault(name, new CommandNode(this, arguments.getFirst(), name));
-            List<ArgumentInformation> nextArguments = new ArrayList<>(arguments);
-
-            if (!next.getArgument().equals(nextArguments.getFirst())) {
-                StrokkCommandsPreprocessor.getMessenger().ifPresent(messager -> {
-                    next.getArgument().element();
-                    messager.printError(
-                        "Found argument of same name but different type! Duplicate argument found at: " + next.getArgument().element(),
-                        nextArguments.getFirst().element()
-                    );
-                });
-            }
-
-            nextArguments.removeFirst();
-            next.insert(nextArguments, executorInformation);
-
-            childNodes.put(name, next);
+        if (!next.getArgument().equals(nextArguments.getFirst())) {
+            StrokkCommandsPreprocessor.getMessenger().ifPresent(messager -> {
+                next.getArgument().element();
+                messager.printError(
+                    "Found argument of same name but different type! Duplicate argument found at: " + next.getArgument().element(),
+                    nextArguments.getFirst().element()
+                );
+            });
         }
+
+        nextArguments.removeFirst();
+        next.insert(nextArguments, executorInformation);
+
+        childNodes.put(name, next);
     }
 
     public void visitEach(Consumer<CommandNode> nodeConsumer) {
@@ -110,7 +107,7 @@ class CommandNode {
         return this.currentExecutor != null;
     }
 
-    protected String printAsBrigadier(int baseIndent, List<String> literalPosition) {
+    protected String printAsBrigadier(int baseIndent) {
         String indent = "    ".repeat(baseIndent);
         String indentPlus = "    ".repeat(baseIndent + 1);
         String indentPlusPlus = "    ".repeat(baseIndent + 2);
@@ -132,34 +129,30 @@ class CommandNode {
                 case PLAYER -> builder.append(",\n").append(indentPlusThree).append("(Player) ctx.getSource().getExecutor()");
             }
 
-            List<String> literalsLeft = new ArrayList<>(literalPosition);
             for (ArgumentInformation arg : this.currentExecutor.arguments()) {
-                if (arg instanceof LiteralArgumentInformation lit) {
-                    if (!lit.addToMethod()) {
-                        continue;
+                if (arg instanceof LiteralArgumentInfoImpl info) {
+                    if (info.addToMethod()) {
+                        builder.append(",\n").append(indentPlusThree);
+                        builder.append('"').append(info.literal()).append('"');
                     }
+                    continue;
                 }
 
-                builder.append(",\n").append(indentPlusThree);
                 if (arg instanceof RequiredArgumentInformation info) {
+                    builder.append(",\n").append(indentPlusThree);
                     builder.append(info.type().retriever());
-                } else if (arg instanceof LiteralArgumentInformation) {
-                    builder.append('"').append(literalsLeft.removeFirst()).append('"');
                 }
             }
+
             builder.append("\n").append(indentPlusPlus).append(");\n");
 
             builder.append(indentPlusPlus).append("return Command.SINGLE_SUCCESS;\n");
             builder.append(indent).append("    })");
         }
 
-        if (argument instanceof LiteralArgumentInformation) {
-            literalPosition.add(this.nodeName);
-        }
-
         childNodes.values()
             .stream()
-            .map(cmdTree -> cmdTree.printAsBrigadier(baseIndent + 1, literalPosition))
+            .map(cmdTree -> cmdTree instanceof CommandTree tree ? tree.printTreeAsBrigadier(baseIndent + 1) : cmdTree.printAsBrigadier(baseIndent + 1))
             .forEach(branch -> builder.append("\n").append(indent).append("    ")
                 .append(".then(").append(branch)
                 .append("\n").append(indent).append("    ").append(")"));
