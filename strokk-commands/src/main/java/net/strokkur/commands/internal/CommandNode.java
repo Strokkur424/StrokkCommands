@@ -50,16 +50,16 @@ class CommandNode {
         
         ArgumentInformation first = arguments.getFirst();
 
-        String name = first instanceof LiteralArgumentInfo lit ? lit.literal() : first.argumentName();
+        String name = first instanceof LiteralArgumentInfo lit ? lit.getLiteral() : first.getArgumentName();
         CommandNode next = childNodes.getOrDefault(name, new CommandNode(this, first, name));
         List<ArgumentInformation> nextArguments = new ArrayList<>(arguments);
 
         if (!next.getArgument().equals(nextArguments.getFirst())) {
             StrokkCommandsPreprocessor.getMessenger().ifPresent(messager -> {
-                next.getArgument().element();
+                next.getArgument().getElement();
                 messager.printError(
-                    "Found argument of same name but different type! Duplicate argument found at: " + next.getArgument().element(),
-                    nextArguments.getFirst().element()
+                    "Found argument of same name but different type! Duplicate argument found at: " + next.getArgument().getElement(),
+                    nextArguments.getFirst().getElement()
                 );
             });
         }
@@ -114,10 +114,14 @@ class CommandNode {
         String indentPlusThree = "    ".repeat(baseIndent + 3);
 
         StringBuilder builder = new StringBuilder(argument instanceof RequiredArgumentInformation req
-            ? "Commands.argument(\"%s\", %s)".formatted(this.argument.argumentName(), req.type().initializer())
+            ? "Commands.argument(\"%s\", %s)".formatted(this.argument.getArgumentName(), req.type().initializer())
             : "Commands.literal(\"%s\")".formatted(this.nodeName));
 
         setRequirement(builder, indentPlus);
+        
+        if (argument.getSuggestionProvider() != null) {
+            builder.append("\n").append(indentPlus).append(".suggests(").append(argument.getSuggestionProvider().get()).append(")");
+        }
 
         if (this.currentExecutor != null) {
             builder.append("\n").append(indentPlus).append(".executes(ctx -> {\n");
@@ -133,7 +137,7 @@ class CommandNode {
                 if (arg instanceof LiteralArgumentInfoImpl info) {
                     if (info.addToMethod()) {
                         builder.append(",\n").append(indentPlusThree);
-                        builder.append('"').append(info.literal()).append('"');
+                        builder.append('"').append(info.getLiteral()).append('"');
                     }
                     continue;
                 }

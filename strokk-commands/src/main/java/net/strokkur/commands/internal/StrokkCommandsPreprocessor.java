@@ -1,6 +1,7 @@
 package net.strokkur.commands.internal;
 
 import com.google.auto.service.AutoService;
+import jdk.jfr.AnnotationElement;
 import net.strokkur.commands.annotations.Aliases;
 import net.strokkur.commands.annotations.Command;
 import net.strokkur.commands.annotations.Description;
@@ -9,6 +10,9 @@ import net.strokkur.commands.annotations.Executor;
 import net.strokkur.commands.annotations.Literal;
 import net.strokkur.commands.annotations.Permission;
 import net.strokkur.commands.annotations.RequiresOP;
+import net.strokkur.commands.annotations.SuggestionField;
+import net.strokkur.commands.annotations.SuggestionMethod;
+import net.strokkur.commands.annotations.SuggestionClass;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.NullUnmarked;
@@ -78,7 +82,11 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
 
     static void info(String format, Object... arguments) {
         // We don't need this outside dev
-        //getMessenger().ifPresent(e -> e.printMessage(Diagnostic.Kind.NOTE, format.replaceAll("\\{}", "%s").formatted(arguments)));
+//        getMessenger().ifPresent(e -> e.printMessage(Diagnostic.Kind.NOTE, format.replaceAll("\\{}", "%s").formatted(arguments)));
+    }
+    
+    static void infoElement(String format, Element element, Object... arguments) {
+//        getMessenger().ifPresent(e -> e.printMessage(Diagnostic.Kind.NOTE, format.replaceAll("\\{}", "%s").formatted(arguments), element));
     }
 
     @Override
@@ -183,7 +191,9 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
                         return null;
                     }
 
-                    tree.insert(new RequiredArgumentInformation(parameters.get(i).toString(), parameters.get(i), asBrigadier));
+                    RequiredArgumentInformation argument = new RequiredArgumentInformation(parameters.get(i).toString(), parameters.get(i), asBrigadier);
+                    argument.updateSuggestionProvider(classElement, parameters.get(i));
+                    tree.insert(argument);
                 }
 
                 List<Requirement> requirements = getAnnotatedRequirements(methodElement);
@@ -196,7 +206,7 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
             })
             .filter(Objects::nonNull)
             .forEach(out::addAll);
-        
+
         return out;
     }
 

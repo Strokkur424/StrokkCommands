@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "net.strokkur"
-version = "1.0.1"
+version = "1.1.0"
 
 subprojects {
     plugins.apply("java-library")

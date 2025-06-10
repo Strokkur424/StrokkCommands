@@ -6,4 +6,6 @@ module StrokkCommands {
     requires com.google.auto.service;
     requires java.compiler;
     requires org.jspecify;
+    requires org.jetbrains.annotations;
+    requires jdk.jfr;
 }

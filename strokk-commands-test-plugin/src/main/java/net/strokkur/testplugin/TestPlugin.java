@@ -1,5 +1,9 @@
 package net.strokkur.testplugin;
 
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.tree.LiteralCommandNode;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.strokkur.testplugin.commands.AdventureArgumentsCommandBrigadier;
@@ -11,6 +15,7 @@ import net.strokkur.testplugin.commands.PredicateArgumentsCommandBrigadier;
 import net.strokkur.testplugin.commands.PrimitivesCommandBrigadier;
 import net.strokkur.testplugin.commands.RegistryArgumentsCommandBrigadier;
 import net.strokkur.testplugin.commands.TellMiniCommandBrigadier;
+import net.strokkur.testplugin.suggestions.CommandWithSuggestionsBrigadier;
 import org.bukkit.plugin.java.JavaPlugin;
 
 @SuppressWarnings("UnstableApiUsage")
@@ -20,6 +25,9 @@ public final class TestPlugin extends JavaPlugin {
     public void onLoad() {
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS.newHandler(event -> {
             Commands commands = event.registrar();
+
+            CommandWithSuggestionsBrigadier.register(commands);
+
             PrimitivesCommandBrigadier.register(commands);
             LocationArgumentsCommandBrigadier.register(commands);
             EntitiesCommandBrigadier.register(commands);
@@ -28,7 +36,6 @@ public final class TestPlugin extends JavaPlugin {
             PredicateArgumentsCommandBrigadier.register(commands);
             AdventureArgumentsCommandBrigadier.register(commands);
             LiteralsCommandBrigadier.register(commands);
-
             TellMiniCommandBrigadier.register(commands);
         }));
     }
