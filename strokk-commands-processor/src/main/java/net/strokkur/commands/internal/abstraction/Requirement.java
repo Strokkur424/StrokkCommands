@@ -1,13 +1,10 @@
-package net.strokkur.commands.internal;
-
-import org.jspecify.annotations.NullMarked;
+package net.strokkur.commands.internal.abstraction;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
-@NullMarked
-final class Requirement {
+public final class Requirement {
 
     public static final Requirement IS_OP = new Requirement("stack.getSender().isOp()");
 

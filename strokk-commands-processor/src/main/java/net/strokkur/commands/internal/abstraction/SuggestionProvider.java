@@ -1,11 +1,9 @@
-package net.strokkur.commands.internal;
+package net.strokkur.commands.internal.abstraction;
 
 import javax.lang.model.type.TypeMirror;
 
 @FunctionalInterface
 public interface SuggestionProvider {
-    String get();
-
     static SuggestionProvider ofClass(TypeMirror implementingClass) {
         return () -> "new " + implementingClass + "()";
     }
@@ -21,4 +19,6 @@ public interface SuggestionProvider {
     static SuggestionProvider ofField(String fieldName, String baseClass) {
         return () -> baseClass + "." + fieldName;
     }
+
+    String get();
 }

@@ -1,18 +1,20 @@
-package net.strokkur.commands.internal;
+package net.strokkur.commands.internal.arguments;
 
+import net.strokkur.commands.internal.abstraction.SuggestionProvider;
 import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.VariableElement;
 import java.util.Objects;
 
-final class RequiredArgumentInformation implements ArgumentInformation {
+public final class RequiredArgumentInformation implements ArgumentInformation {
+
     private final String getArgumentName;
     private final VariableElement getElement;
     private final BrigadierArgumentType type;
 
     private @Nullable SuggestionProvider suggestionProvider = null;
 
-    RequiredArgumentInformation(String getArgumentName, VariableElement getElement, BrigadierArgumentType type) {
+    public RequiredArgumentInformation(String getArgumentName, VariableElement getElement, BrigadierArgumentType type) {
         this.getArgumentName = getArgumentName;
         this.getElement = getElement;
         this.type = type;
@@ -41,12 +43,18 @@ final class RequiredArgumentInformation implements ArgumentInformation {
     }
 
     @Override
-    public String getArgumentName() {return getArgumentName;}
+    public String getArgumentName() {
+        return getArgumentName;
+    }
 
     @Override
-    public VariableElement getElement() {return getElement;}
+    public VariableElement getElement() {
+        return getElement;
+    }
 
-    public BrigadierArgumentType type() {return type;}
+    public BrigadierArgumentType type() {
+        return type;
+    }
 
     @Override
     @Nullable
@@ -55,7 +63,7 @@ final class RequiredArgumentInformation implements ArgumentInformation {
     }
 
     @Override
-    public void setSuggestionProvider(SuggestionProvider suggestionProvider) {
+    public void setSuggestionProvider(@Nullable SuggestionProvider suggestionProvider) {
         this.suggestionProvider = suggestionProvider;
     }
 }

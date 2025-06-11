@@ -1,12 +1,14 @@
-package net.strokkur.commands.internal;
+package net.strokkur.commands.internal.abstraction;
+
+import net.strokkur.commands.internal.arguments.ArgumentInformation;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import java.util.List;
 import java.util.Objects;
 
-record ExecutorInformation(TypeElement classElement, ExecutableElement methodElement, ExecutorType type,
-                           List<ArgumentInformation> arguments, List<Requirement> requirements) {
+public record ExecutorInformation(TypeElement classElement, ExecutableElement methodElement, ExecutorType type,
+                                  List<ArgumentInformation> arguments, List<Requirement> requirements) {
 
     public String className() {
         return classElement.getSimpleName().toString();

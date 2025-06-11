@@ -6,16 +6,23 @@ import net.strokkur.commands.annotations.Description;
 import net.strokkur.commands.annotations.Executes;
 import net.strokkur.commands.annotations.Executor;
 import net.strokkur.commands.annotations.Literal;
-import net.strokkur.commands.annotations.Permission;
-import net.strokkur.commands.annotations.RequiresOP;
+import net.strokkur.commands.internal.abstraction.CommandInformation;
+import net.strokkur.commands.internal.abstraction.CommandTree;
+import net.strokkur.commands.internal.abstraction.ExecutorInformation;
+import net.strokkur.commands.internal.abstraction.ExecutorType;
+import net.strokkur.commands.internal.abstraction.Requirement;
+import net.strokkur.commands.internal.arguments.BrigadierArgumentConversion;
+import net.strokkur.commands.internal.arguments.BrigadierArgumentType;
+import net.strokkur.commands.internal.arguments.LiteralArgumentInfoImpl;
+import net.strokkur.commands.internal.arguments.RequiredArgumentInformation;
+import net.strokkur.commands.internal.multiliterals.MultiLiteralsTree;
+import net.strokkur.commands.internal.util.MessagerWrapper;
+import net.strokkur.commands.internal.util.Utils;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.NullUnmarked;
-import org.jspecify.annotations.Nullable;
 
 import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.Messager;
-import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
@@ -31,12 +38,11 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 
-import static net.strokkur.commands.internal.Classnames.COMMAND_SENDER;
-import static net.strokkur.commands.internal.Classnames.ENTITY;
-import static net.strokkur.commands.internal.Classnames.PLAYER;
+import static net.strokkur.commands.internal.util.Classes.COMMAND_SENDER;
+import static net.strokkur.commands.internal.util.Classes.ENTITY;
+import static net.strokkur.commands.internal.util.Classes.PLAYER;
 
 @NullMarked
 public class StrokkCommandsPreprocessor extends AbstractProcessor {
@@ -52,41 +58,9 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
         "java.util.List"
     );
 
-    private static @Nullable Messager MESSENGER = null;
-
-    static Optional<Messager> getMessenger() {
-        return Optional.ofNullable(MESSENGER);
-    }
-
-    @NullUnmarked
-    private static @NonNull List<Requirement> getAnnotatedRequirements(@NonNull Element element) {
-        Permission permission = element.getAnnotation(Permission.class);
-        RequiresOP requiresOP = element.getAnnotation(RequiresOP.class);
-
-        List<Requirement> requirements = new ArrayList<>(2);
-        if (permission != null) {
-            requirements.add(Requirement.ofPermission(permission.value()));
-        }
-        if (requiresOP != null) {
-            requirements.add(Requirement.IS_OP);
-        }
-        return requirements;
-    }
-
-    static void info(String format, Object... arguments) {
-        // We don't need this outside dev
-//        getMessenger().ifPresent(e -> e.printMessage(Diagnostic.Kind.NOTE, format.replaceAll("\\{}", "%s").formatted(arguments)));
-    }
-    
-    static void infoElement(String format, Element element, Object... arguments) {
-//        getMessenger().ifPresent(e -> e.printMessage(Diagnostic.Kind.NOTE, format.replaceAll("\\{}", "%s").formatted(arguments), element));
-    }
-
     @Override
     public Set<String> getSupportedAnnotationTypes() {
-        return Set.of(
-            Command.class.getCanonicalName()
-        );
+        return Set.of(Command.class.getCanonicalName());
     }
 
     @Override
@@ -97,18 +71,18 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
     @Override
     @NullUnmarked
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        MESSENGER = super.processingEnv.getMessager();
+        final MessagerWrapper messagerWrapper = MessagerWrapper.wrap(super.processingEnv.getMessager());
 
         for (Element element : roundEnv.getElementsAnnotatedWith(Command.class)) {
-            info("Currently processing {}...", element);
+            messagerWrapper.info("Currently processing {}...", element);
 
             CommandInformation information = getCommandInformation(element);
-            List<ExecutorInformation> executorInformation = getExecutorInformation((TypeElement) element);
+            List<ExecutorInformation> executorInformation = getExecutorInformation((TypeElement) element, messagerWrapper);
 
-            CommandTree tree = new CommandTree(information.commandName(), element, getAnnotatedRequirements(element));
-            executorInformation.forEach(tree::insert);
+            CommandTree tree = new CommandTree(information.commandName(), element, Utils.getAnnotatedRequirements(element));
+            executorInformation.forEach(info -> tree.insert(info, messagerWrapper));
             try {
-                createBrigadierSourceFile(element.toString(), information, tree);
+                createBrigadierSourceFile(element.toString(), information, tree, messagerWrapper);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -131,7 +105,7 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
     }
 
     @NullUnmarked
-    private @NonNull List<ExecutorInformation> getExecutorInformation(@NonNull TypeElement classElement) {
+    private @NonNull List<ExecutorInformation> getExecutorInformation(@NonNull TypeElement classElement, MessagerWrapper messager) {
         List<ExecutorInformation> out = new ArrayList<>();
         classElement.getEnclosedElements().stream()
             .filter(element -> element.getAnnotation(Executes.class) != null)
@@ -141,12 +115,12 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
                 List<String> parameterClassNames = parameterTypes.stream().map(TypeMirror::toString).toList();
 
                 if (parameterClassNames.isEmpty()) {
-                    StrokkCommandsPreprocessor.getMessenger().ifPresent(messager -> messager.printError("Method annotated with @Executes must at least declare a CommandSender parameter!", methodElement));
+                    messager.errorElement("Method annotated with @Executes must at least declare a CommandSender parameter!", methodElement);
                     return null;
                 }
 
                 if (!parameterClassNames.getFirst().equals(COMMAND_SENDER)) {
-                    StrokkCommandsPreprocessor.getMessenger().ifPresent(messager -> messager.printError("The first parameter of a method annotated with @Executes must be of type CommandSender!", methodElement));
+                    messager.errorElement("The first parameter of a method annotated with @Executes must be of type CommandSender!", methodElement);
                     return null;
                 }
 
@@ -160,13 +134,13 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
                 }
 
                 if (executorType == null) {
-                    StrokkCommandsPreprocessor.getMessenger().ifPresent(messager -> messager.printError("The executor has to be either an org.bukkit.entity.Player or an org.bukkit.entity.Entity!", parameters.get(1)));
+                    messager.errorElement("The executor has to be either an org.bukkit.entity.Player or an org.bukkit.entity.Entity!", parameters.get(1));
                     return null;
                 }
 
                 MultiLiteralsTree tree = MultiLiteralsTree.create();
                 String initialLiteralsString = methodElement.getAnnotation(Executes.class).value();
-                if (initialLiteralsString != null && !initialLiteralsString.isBlank()) {
+                if (!initialLiteralsString.isBlank()) {
                     for (String literals : initialLiteralsString.split(" ")) {
                         tree.insert(new LiteralArgumentInfoImpl(literals, methodElement, literals, false));
                     }
@@ -179,17 +153,17 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
                         continue;
                     }
 
-                    BrigadierArgumentType asBrigadier = BrigadierArgumentConversion.getAsArgumentType(parameters.get(i), parameters.get(i).toString(), parameterClassNames.get(i));
+                    BrigadierArgumentType asBrigadier = BrigadierArgumentConversion.getAsArgumentType(parameters.get(i), parameters.get(i).toString(), parameterClassNames.get(i), messager);
                     if (asBrigadier == null) {
                         return null;
                     }
 
                     RequiredArgumentInformation argument = new RequiredArgumentInformation(parameters.get(i).toString(), parameters.get(i), asBrigadier);
-                    argument.updateSuggestionProvider(classElement, parameters.get(i));
+                    argument.updateSuggestionProvider(classElement, parameters.get(i), messager);
                     tree.insert(argument);
                 }
 
-                List<Requirement> requirements = getAnnotatedRequirements(methodElement);
+                List<Requirement> requirements = Utils.getAnnotatedRequirements(methodElement);
                 executorType.addRequirement(requirements);
 
                 final ExecutorType finalExecutorType = executorType;
@@ -203,10 +177,10 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
         return out;
     }
 
-    private void createBrigadierSourceFile(String commandClassName, CommandInformation info, CommandTree command) throws IOException {
+    private void createBrigadierSourceFile(String commandClassName, CommandInformation info, CommandTree command, MessagerWrapper messager) throws IOException {
         String newClassPackageName = commandClassName + "Brigadier";
 
-        info("Printing class file for {}", newClassPackageName);
+        messager.info("Printing class file for {}", newClassPackageName);
         JavaFileObject obj = processingEnv.getFiler().createSourceFile(newClassPackageName);
 
         List<String> packagesAndClass = new ArrayList<>(List.of(commandClassName.split("\\.")));

@@ -1,14 +1,14 @@
-package net.strokkur.commands.internal;
+package net.strokkur.commands.internal.arguments;
 
 import java.util.Objects;
 import java.util.Set;
 
-record BrigadierArgumentType(String initializer, String retriever, Set<String> imports) {
+public record BrigadierArgumentType(String initializer, String retriever, Set<String> imports) {
 
     public static BrigadierArgumentType of(String initializer, String retriever) {
         return new BrigadierArgumentType(initializer, retriever, Set.of());
     }
-    
+
     public static BrigadierArgumentType of(String initializer, String retriever, String singleImport) {
         return new BrigadierArgumentType(initializer, retriever, Set.of(singleImport));
     }
@@ -22,7 +22,7 @@ record BrigadierArgumentType(String initializer, String retriever, Set<String> i
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        
+
         BrigadierArgumentType that = (BrigadierArgumentType) o;
         return Objects.equals(retriever(), that.retriever()) && Objects.equals(initializer(), that.initializer()) && Objects.equals(imports(), that.imports());
     }

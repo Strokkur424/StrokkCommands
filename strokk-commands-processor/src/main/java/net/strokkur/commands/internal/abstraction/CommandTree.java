@@ -1,11 +1,14 @@
-package net.strokkur.commands.internal;
+package net.strokkur.commands.internal.abstraction;
+
+import net.strokkur.commands.internal.arguments.LiteralArgumentInfoImpl;
+import net.strokkur.commands.internal.util.MessagerWrapper;
 
 import javax.lang.model.element.Element;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-class CommandTree extends CommandNode {
+public class CommandTree extends CommandNode {
 
     public CommandTree(String name, Element classElement, List<Requirement> rootRequirements) {
         //noinspection DataFlowIssue
@@ -43,8 +46,8 @@ class CommandTree extends CommandNode {
     }
 
     @Override
-    public void insert(ExecutorInformation executorInformation) {
-        super.insert(executorInformation);
+    public void insert(ExecutorInformation executorInformation, MessagerWrapper messager) {
+        super.insert(executorInformation, messager);
     }
 
     @Override

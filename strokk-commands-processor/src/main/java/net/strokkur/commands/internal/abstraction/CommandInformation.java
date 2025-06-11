@@ -1,10 +1,10 @@
-package net.strokkur.commands.internal;
+package net.strokkur.commands.internal.abstraction;
 
 import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
 
-record CommandInformation(
+public record CommandInformation(
     String commandName,
     @Nullable String description,
     String @Nullable [] aliases

@@ -1,5 +1,6 @@
-package net.strokkur.commands.internal;
+package net.strokkur.commands.internal.arguments;
 
+import net.strokkur.commands.StringArgType;
 import net.strokkur.commands.annotations.arguments.CustomArg;
 import net.strokkur.commands.annotations.arguments.DoubleArg;
 import net.strokkur.commands.annotations.arguments.FinePosArg;
@@ -8,10 +9,8 @@ import net.strokkur.commands.annotations.arguments.IntArg;
 import net.strokkur.commands.annotations.arguments.LongArg;
 import net.strokkur.commands.annotations.arguments.StringArg;
 import net.strokkur.commands.annotations.arguments.TimeArg;
+import net.strokkur.commands.internal.util.MessagerWrapper;
 import net.strokkur.commands.internal.util.Utils;
-import net.strokkur.commands.StringArgType;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.VariableElement;
@@ -25,11 +24,10 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static net.strokkur.commands.internal.BrigadierArgumentConversion.RegistryEntry.registryEntry;
-import static net.strokkur.commands.internal.BrigadierArgumentConversion.SimpleEntry.simpleEntry;
+import static net.strokkur.commands.internal.arguments.BrigadierArgumentConversion.RegistryEntry.registryEntry;
+import static net.strokkur.commands.internal.arguments.BrigadierArgumentConversion.SimpleEntry.simpleEntry;
 
-@NullUnmarked
-abstract class BrigadierArgumentConversion {
+public abstract class BrigadierArgumentConversion {
 
     //<editor-fold desc="Registry Entries">
     private static final List<RegistryEntry> REGISTRY_ENTRIES = List.of(
@@ -294,7 +292,7 @@ abstract class BrigadierArgumentConversion {
             simpleEntry("namedColor", "NamedTextColor", "net.kyori.adventure.text.format.NamedTextColor"),
             simpleEntry("style", "Style", "net.kyori.adventure.text.format.Style")
         ).forEach(BrigadierArgumentConversion::putSimple);
-        
+
         CONVERSION_MAP.put("java.util.concurrent.CompletableFuture<net.kyori.adventure.chat.SignedMessage>", (p, name) -> BrigadierArgumentType.of(
             "ArgumentTypes.signedMessage()",
             "ctx.getArgument(\"%s\", SignedMessageResolver.class).resolveSignedMessage(\"%s\", ctx)".formatted(name, name),
@@ -303,7 +301,7 @@ abstract class BrigadierArgumentConversion {
                 "io.papermc.paper.command.brigadier.argument.SignedMessageResolver"
             )
         ));
-        
+
         CONVERSION_MAP.put("io.papermc.paper.command.brigadier.argument.SignedMessageResolver", (p, name) -> BrigadierArgumentType.of(
             "ArgumentTypes.signedMessage()",
             "ctx.getArgument(\"%s\", SignedMessageResolver.class)".formatted(name),
@@ -345,19 +343,19 @@ abstract class BrigadierArgumentConversion {
     }
 
     @Nullable
-    public static BrigadierArgumentType getAsArgumentType(@NonNull VariableElement parameter, @NonNull String argumentName, @NonNull String type) {
+    public static BrigadierArgumentType getAsArgumentType(VariableElement parameter, String argumentName, String type, MessagerWrapper messager) {
         CustomArg customArg = parameter.getAnnotation(CustomArg.class);
         if (customArg != null) {
             TypeMirror mirror = Utils.getAnnotationMirror(parameter, CustomArg.class, "value");
             if (mirror != null) {
                 return new BrigadierArgumentType("new " + mirror + "()", "ctx.getArgument(\"" + argumentName + "\", " + type + ".class)", Set.of());
             } else {
-                StrokkCommandsPreprocessor.getMessenger().ifPresent(messager -> messager.printError("Invalid value for @CustomArg annotation.", parameter));
+                messager.errorElement("Invalid value for @CustomArg annotation.", parameter);
             }
         }
-                
+
         if (!CONVERSION_MAP.containsKey(type)) {
-            StrokkCommandsPreprocessor.getMessenger().ifPresent(messager -> messager.printError("Cannot find Brigadier equivalent for argument of type " + type + ".", parameter));
+            messager.errorElement("Cannot find Brigadier equivalent for argument of type {}.", parameter, type);
             return null;
         }
 
@@ -365,7 +363,7 @@ abstract class BrigadierArgumentConversion {
         TimeArg timeArg = parameter.getAnnotation(TimeArg.class);
         if (timeArg != null) {
             if (!type.equals("int") && !type.equals("java.lang.Integer")) {
-                StrokkCommandsPreprocessor.getMessenger().ifPresent(messager -> messager.printError("An argument annotated with @TimeArg has to be of type 'int'", parameter));
+                messager.errorElement("An argument annotated with @TimeArg has to be of type 'int'", parameter);
                 return null;
             }
 
@@ -384,7 +382,7 @@ abstract class BrigadierArgumentConversion {
             return out;
         }
 
-        StrokkCommandsPreprocessor.getMessenger().ifPresent(messager -> messager.printError("An unexpected error occurred whilst converting type " + type + " to Brigadier equivalent.", parameter));
+        messager.errorElement("An unexpected error occurred whilst converting type {} to Brigadier equivalent.", parameter, type);
         return null;
     }
 

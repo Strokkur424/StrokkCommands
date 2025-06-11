@@ -1,5 +1,7 @@
-package net.strokkur.commands.internal;
+package net.strokkur.commands.internal.multiliterals;
 
+import net.strokkur.commands.internal.arguments.ArgumentInformation;
+import net.strokkur.commands.internal.arguments.LiteralArgumentInfo;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -7,7 +9,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-class MultiLiteralsTreeImpl implements MultiLiteralsTree {
+public class MultiLiteralsTreeImpl implements MultiLiteralsTree {
 
     private final ArgumentNode rootNode;
 

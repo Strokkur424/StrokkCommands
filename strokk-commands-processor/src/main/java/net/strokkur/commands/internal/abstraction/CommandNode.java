@@ -1,5 +1,10 @@
-package net.strokkur.commands.internal;
+package net.strokkur.commands.internal.abstraction;
 
+import net.strokkur.commands.internal.arguments.ArgumentInformation;
+import net.strokkur.commands.internal.arguments.LiteralArgumentInfo;
+import net.strokkur.commands.internal.arguments.LiteralArgumentInfoImpl;
+import net.strokkur.commands.internal.arguments.RequiredArgumentInformation;
+import net.strokkur.commands.internal.util.MessagerWrapper;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -12,7 +17,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 @NullMarked
-class CommandNode {
+public class CommandNode {
 
     private final Map<String, CommandNode> childNodes = new HashMap<>();
 
@@ -29,25 +34,23 @@ class CommandNode {
         this.nodeName = nodeName;
     }
 
-    public void insert(ExecutorInformation executorInformation) {
-        insert(executorInformation.arguments(), executorInformation);
+    public void insert(ExecutorInformation executorInformation, MessagerWrapper messager) {
+        insert(executorInformation.arguments(), executorInformation, messager);
     }
 
-    public void insert(List<ArgumentInformation> arguments, ExecutorInformation executorInformation) {
+    public void insert(List<ArgumentInformation> arguments, ExecutorInformation executorInformation, MessagerWrapper messager) {
         if (arguments.isEmpty()) {
             if (hasExecutor()) {
-                StrokkCommandsPreprocessor.getMessenger().ifPresent(messager -> messager.printError(
-                    "The defined command clashes with the command defined in '"
-                    + (getCurrentExecutor() != null ? getCurrentExecutor().methodElement() : null)
-                    + "'", executorInformation.methodElement()
-                ));
+                messager.errorElement("The defined command clashes with the command defined in '{}'!", executorInformation.methodElement(),
+                    (getCurrentExecutor() != null ? getCurrentExecutor().methodElement() : "<unknown>")
+                );
             }
 
             setCurrentExecutor(executorInformation);
             getRequirements().addAll(executorInformation.requirements());
             return;
         }
-        
+
         ArgumentInformation first = arguments.getFirst();
 
         String name = first instanceof LiteralArgumentInfo lit ? lit.getLiteral() : first.getArgumentName();
@@ -55,17 +58,14 @@ class CommandNode {
         List<ArgumentInformation> nextArguments = new ArrayList<>(arguments);
 
         if (!next.getArgument().equals(nextArguments.getFirst())) {
-            StrokkCommandsPreprocessor.getMessenger().ifPresent(messager -> {
-                next.getArgument().getElement();
-                messager.printError(
-                    "Found argument of same name but different type! Duplicate argument found at: " + next.getArgument().getElement(),
-                    nextArguments.getFirst().getElement()
-                );
-            });
+            messager.errorElement("Found argument of same name but different type! Duplicate argument found at: {}",
+                nextArguments.getFirst().getElement(),
+                next.getArgument().getElement()
+            );
         }
 
         nextArguments.removeFirst();
-        next.insert(nextArguments, executorInformation);
+        next.insert(nextArguments, executorInformation, messager);
 
         childNodes.put(name, next);
     }
@@ -107,7 +107,7 @@ class CommandNode {
         return this.currentExecutor != null;
     }
 
-    protected String printAsBrigadier(int baseIndent) {
+    public String printAsBrigadier(int baseIndent) {
         String indent = "    ".repeat(baseIndent);
         String indentPlus = "    ".repeat(baseIndent + 1);
         String indentPlusPlus = "    ".repeat(baseIndent + 2);
@@ -118,7 +118,7 @@ class CommandNode {
             : "Commands.literal(\"%s\")".formatted(this.nodeName));
 
         setRequirement(builder, indentPlus);
-        
+
         if (argument.getSuggestionProvider() != null) {
             builder.append("\n").append(indentPlus).append(".suggests(").append(argument.getSuggestionProvider().get()).append(")");
         }

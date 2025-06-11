@@ -1,10 +1,10 @@
-package net.strokkur.commands.internal;
+package net.strokkur.commands.internal.abstraction;
 
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
-enum ExecutorType {
+public enum ExecutorType {
     NONE,
     ENTITY("stack.getExecutor() != null"),
     PLAYER("stack.getExecutor() instanceof Player");

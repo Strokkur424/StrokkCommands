@@ -1,11 +1,12 @@
-package net.strokkur.commands.internal;
+package net.strokkur.commands.internal.arguments;
 
+import net.strokkur.commands.internal.abstraction.SuggestionProvider;
 import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Element;
 import java.util.Objects;
 
-final class LiteralArgumentInfoImpl implements LiteralArgumentInfo {
+public final class LiteralArgumentInfoImpl implements LiteralArgumentInfo {
     private final String argumentName;
     private final Element element;
     private final String literal;
@@ -13,14 +14,14 @@ final class LiteralArgumentInfoImpl implements LiteralArgumentInfo {
     private boolean addToMethod;
     private @Nullable SuggestionProvider suggestionProvider;
 
-    LiteralArgumentInfoImpl(String argumentName, Element element, String literal, boolean addToMethod) {
+    public LiteralArgumentInfoImpl(String argumentName, Element element, String literal, boolean addToMethod) {
         this.argumentName = argumentName;
         this.element = element;
         this.literal = literal;
         this.addToMethod = addToMethod;
     }
 
-    LiteralArgumentInfoImpl(String argumentName, Element element, String literal) {
+    public LiteralArgumentInfoImpl(String argumentName, Element element, String literal) {
         this(argumentName, element, literal, true);
     }
 
@@ -84,7 +85,7 @@ final class LiteralArgumentInfoImpl implements LiteralArgumentInfo {
     }
 
     @Override
-    public void setSuggestionProvider(SuggestionProvider suggestionProvider) {
+    public void setSuggestionProvider(@Nullable SuggestionProvider suggestionProvider) {
         this.suggestionProvider = suggestionProvider;
     }
 }
