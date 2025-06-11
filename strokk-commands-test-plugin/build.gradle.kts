@@ -2,9 +2,6 @@ plugins {
     id("xyz.jpenilla.run-paper") version "2.3.1"
 }
 
-group = rootProject.group;
-version = rootProject.version;
-
 dependencies {
     compileOnly(project(":strokk-commands-annotations"))
     annotationProcessor(project(":strokk-commands-processor"))
