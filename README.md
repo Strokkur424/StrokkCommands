@@ -1,8 +1,6 @@
 # StrokkCommands
 [Shortcut: Adding the Dependency](#adding-the-dependency).
 
-*<p>From the makers of the Paper Brigadier docs...</p>*
-
 **StrokkCommands** is a very simple and lightweight compile-time library for generating Brigadier command trees
 from annotation! Have **you** ever though: "Oh boy, my command is far too hard to read to maintain"? Well,
 **this** is the **solution**!!!
@@ -39,7 +37,11 @@ take up so much space? **I don't know**! And that is why I created **StrokkComma
 class AdventureArgumentsCommand {
 
     @Executes("send message")
-    void executes(CommandSender sender, @StringArg(STRING) String message, @Literal("with") String $with, @Literal("color") String $color, NamedTextColor color) {
+    void executes(CommandSender sender,
+                  @StringArg(STRING) String message,
+                  @Literal("with") String $with,
+                  @Literal("color") String $color,
+                  NamedTextColor color) {
         // Your command logic
     }
 }
@@ -57,8 +59,8 @@ repositories {
 }
 
 dependencies {
-    compileOnly("net.strokkur", "strokk-commands", "1.0.0-SNAPSHOT")
-    annotationProcessor("net.strokkur", "strokk-commands", "1.0.0-SNAPSHOT")
+    compileOnly("net.strokkur", "strokk-commands-annotations", "1.2.0-SNAPSHOT")
+    annotationProcessor("net.strokkur", "strokk-commands-processor", "1.2.0-SNAPSHOT")
 }
 ```
 
@@ -77,11 +79,13 @@ Next up, `@Executes`. This one declares a method which declares the command. Eac
 to have its first parameter as a `CommandSender`. You can then, optionally, declare an executor (either a `Player`
 or an `Entity`) with `@Executor`. The difference? Well, let's explain it with a section from my Paper docs:
 
-> For the target of a command, you should use getExecutor(), which is relevant, if the command was ran via
+> For the target of a command, you should use getExecutor(), which is relevant if the command was run via
 > /execute as <entity> run <our_command>. It is not necessarily required, but is seen as good practice.
 
-Hope that clears things up. It's just good practise instead of casting a `CommandSender` to a `Player`.
-Anyway, the rest of the parameters for our method are just the arguments for our command. A command
+Hope that clears things up.
+It's just good practice instead of casting a `CommandSender` to a `Player`.
+Anyway, the rest of the parameters for our method are just the arguments for our command.
+A command
 `/helpme <message>` might look like this:
 ```java
 @Command("helpme")
@@ -115,8 +119,9 @@ You can also have more complicated arguments, which are noted down here:
 - https://docs.papermc.io/paper/dev/command-api/arguments/minecraft/
 
 > [!NOTE]
-> Most arguments come pre-resolved. Everything which has "resolver" in the name only requires that you
-> enter the resolved type as a parameter. A.e. for a `BlockPosition`, just use `BlockPosition` (NOT `BlockPositionResolver`),
+> Most arguments come pre-resolved.
+> Everything that has "resolver" in the name only requires that you enter the resolved type as a parameter.
+> A.e: for a `BlockPosition`, just use `BlockPosition` (NOT `BlockPositionResolver`),
 > like this:
 > ```java
 > @Executes
@@ -128,15 +133,15 @@ You can also have more complicated arguments, which are noted down here:
 > You can use the finished type as your method parameter. (Or, if you want to get the `TypedKey` for whatever reason,
 > just use that as your parameter type).
 
-All the notes and information from the official Paper docs (did I notice that I wrote them? *hehe*) also apply
+All the notes and information from the official Paper docs (did I mention that I wrote them? *hehe*) also apply
 here. So it does make sense to give them a read, even if you might not understand all of it.
 
 ### Registering commands
 This step works 1:1 the same as written in the [Paper docs about command registration](https://docs.papermc.io/paper/dev/command-api/basics/registration/).
 But what do you register? After you build your command and are happy with it, **before** you can register it, you
-have to **compile the project first**. This allows the annotation preprocessor to run and generate a file.
-The **class name of this file will be &lt;YourCommandClass&gt;Brigadier.java**. You can then register it
-using the exposed `#register(Commands)` method.
+have to compile the project first. This allows the annotation preprocessor to run and generate a file.
+The class name of this file will be &lt;YourCommandClass&gt;Brigadier. You can then register it
+using the static `#register(Commands)` method.
 
 As example:
 ```java
