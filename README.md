@@ -59,8 +59,8 @@ repositories {
 }
 
 dependencies {
-    compileOnly("net.strokkur", "strokk-commands-annotations", "1.2.0-SNAPSHOT")
-    annotationProcessor("net.strokkur", "strokk-commands-processor", "1.2.0-SNAPSHOT")
+    compileOnly("net.strokkur", "strokk-commands-annotations", "1.2.3-SNAPSHOT")
+    annotationProcessor("net.strokkur", "strokk-commands-processor", "1.2.3-SNAPSHOT")
 }
 ```
 
