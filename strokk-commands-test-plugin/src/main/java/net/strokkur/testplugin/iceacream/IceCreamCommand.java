@@ -15,4 +15,9 @@ class IceCreamCommand {
             Placeholder.unparsed("icecream", iceCream.toString())
         );
     }
+    
+//    @Executes("invalid")
+    void invalid(CommandSender sender, @CustomArg(String.class) String invalid) {
+        
+    }
 }

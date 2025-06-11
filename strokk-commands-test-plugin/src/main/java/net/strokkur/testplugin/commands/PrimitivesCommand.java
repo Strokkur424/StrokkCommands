@@ -7,8 +7,8 @@ import net.strokkur.commands.annotations.Executes;
 import net.strokkur.commands.annotations.arguments.StringArg;
 import org.bukkit.command.CommandSender;
 
-import static net.strokkur.commands.objects.arguments.StringArgType.GREEDY;
-import static net.strokkur.commands.objects.arguments.StringArgType.STRING;
+import static net.strokkur.commands.StringArgType.GREEDY;
+import static net.strokkur.commands.StringArgType.STRING;
 
 @Command("primitive")
 class PrimitivesCommand {

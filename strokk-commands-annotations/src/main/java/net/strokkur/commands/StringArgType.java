@@ -1,4 +1,4 @@
-package net.strokkur.commands.objects.arguments;
+package net.strokkur.commands;
 
 public enum StringArgType {
     WORD("word"),

@@ -10,6 +10,7 @@ subprojects {
     
     repositories {
         mavenCentral()
+        mavenLocal()
         maven("https://repo.papermc.io/repository/maven-public/")
     }
 }

@@ -15,7 +15,7 @@ import org.bukkit.entity.Player;
 
 import java.util.concurrent.CompletableFuture;
 
-import static net.strokkur.commands.objects.arguments.StringArgType.STRING;
+import static net.strokkur.commands.StringArgType.STRING;
 
 @Command("adventure")
 class AdventureArgumentsCommand {

@@ -6,8 +6,8 @@ group = rootProject.group;
 version = rootProject.version;
 
 dependencies {
-    compileOnly(project(":strokk-commands"))
-    annotationProcessor(project(":strokk-commands"))
+    compileOnly(project(":strokk-commands-annotations"))
+    annotationProcessor(project(":strokk-commands-processor"))
     
     compileOnly("io.papermc.paper:paper-api:1.21.5-R0.1-SNAPSHOT")
 }

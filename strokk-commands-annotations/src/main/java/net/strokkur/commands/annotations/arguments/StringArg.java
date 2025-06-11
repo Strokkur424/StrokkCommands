@@ -1,6 +1,6 @@
 package net.strokkur.commands.annotations.arguments;
 
-import net.strokkur.commands.objects.arguments.StringArgType;
+import net.strokkur.commands.StringArgType;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

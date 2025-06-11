@@ -9,7 +9,7 @@ import net.strokkur.commands.annotations.arguments.StringArg;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 
-import static net.strokkur.commands.objects.arguments.StringArgType.GREEDY;
+import static net.strokkur.commands.StringArgType.GREEDY;
 
 @Command("tellmini")
 @RequiresOP
