@@ -1,5 +1,6 @@
 package net.strokkur.commands.internal;
 
+import net.strokkur.commands.annotations.arguments.CustomArg;
 import net.strokkur.commands.annotations.arguments.DoubleArg;
 import net.strokkur.commands.annotations.arguments.FinePosArg;
 import net.strokkur.commands.annotations.arguments.FloatArg;
@@ -13,6 +14,7 @@ import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.List;
@@ -343,6 +345,16 @@ abstract class BrigadierArgumentConversion {
 
     @Nullable
     public static BrigadierArgumentType getAsArgumentType(@NonNull VariableElement parameter, @NonNull String argumentName, @NonNull String type) {
+        CustomArg customArg = parameter.getAnnotation(CustomArg.class);
+        if (customArg != null) {
+            TypeMirror mirror = Utils.getAnnotationMirror(parameter, CustomArg.class, "value");
+            if (mirror != null) {
+                return new BrigadierArgumentType("new " + mirror + "()", "ctx.getArgument(\"" + argumentName + "\", " + type + ".class)", Set.of());
+            } else {
+                StrokkCommandsPreprocessor.getMessenger().ifPresent(messager -> messager.printError("Invalid value for @CustomArg annotation.", parameter));
+            }
+        }
+                
         if (!CONVERSION_MAP.containsKey(type)) {
             StrokkCommandsPreprocessor.getMessenger().ifPresent(messager -> messager.printError("Cannot find Brigadier equivalent for argument of type " + type + ".", parameter));
             return null;

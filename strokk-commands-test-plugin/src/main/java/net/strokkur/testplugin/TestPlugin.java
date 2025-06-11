@@ -15,6 +15,7 @@ import net.strokkur.testplugin.commands.PredicateArgumentsCommandBrigadier;
 import net.strokkur.testplugin.commands.PrimitivesCommandBrigadier;
 import net.strokkur.testplugin.commands.RegistryArgumentsCommandBrigadier;
 import net.strokkur.testplugin.commands.TellMiniCommandBrigadier;
+import net.strokkur.testplugin.iceacream.IceCreamCommandBrigadier;
 import net.strokkur.testplugin.suggestions.CommandWithSuggestionsBrigadier;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -27,6 +28,7 @@ public final class TestPlugin extends JavaPlugin {
             Commands commands = event.registrar();
 
             CommandWithSuggestionsBrigadier.register(commands);
+            IceCreamCommandBrigadier.register(commands);
 
             PrimitivesCommandBrigadier.register(commands);
             LocationArgumentsCommandBrigadier.register(commands);
