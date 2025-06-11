@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "net.strokkur"
-version = "1.2.0"
+version = "1.2.2"
 
 fun IndraSpotlessLicenserExtension.apply() {
     licenseHeaderFile(rootProject.file("HEADER"))
