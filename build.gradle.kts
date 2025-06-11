@@ -1,71 +1,76 @@
-import de.chojo.PublishDataExtension
-import net.kyori.indra.licenser.spotless.IndraSpotlessLicenserExtension
+import com.diffplug.gradle.spotless.SpotlessPlugin
+import de.chojo.PublishData
 
 plugins {
     id("java-library")
     id("maven-publish")
     id("de.chojo.publishdata") version "1.4.0"
-    id("net.kyori.indra.licenser.spotless") version "3.1.3"
+    id("com.diffplug.spotless") version "7.0.2"
 }
 
 group = "net.strokkur"
-version = "1.2.2"
+version = "1.2.3"
 
-fun IndraSpotlessLicenserExtension.apply() {
-    licenseHeaderFile(rootProject.file("HEADER"))
-}
-
-fun PublishDataExtension.apply() {
-    useEldoNexusRepos(true)
-    publishComponent("java")
-}
-
-publishData.apply()
-
-fun PublishingExtension.apply() {
-    repositories {
-        maven {
-            authentication {
-                credentials(PasswordCredentials::class) {
-                    username = System.getenv("NEXUS_USERNAME")
-                    password = System.getenv("NEXUS_PASSWORD")
-                }
-            }
-
-            name = "EldoNexus"
-            setUrl(publishData.getRepository())
+allprojects {
+    apply {
+        plugin<SpotlessPlugin>()
+        plugin<PublishData>()
+    }
+    
+    spotless {
+        java {
+            licenseHeaderFile(rootProject.file("HEADER"))
+            target("**/*.java")
         }
     }
 
-    publications.create<MavenPublication>("maven") {
-        publishData.configurePublication(this)
+    publishData {
+        useEldoNexusRepos(true)
+        publishComponent("java")
     }
 }
 
 subprojects {
-    plugins.apply("java-library")
-    plugins.apply("net.kyori.indra.licenser.spotless")
+    apply {
+        plugin<JavaLibraryPlugin>()
+    }
 
     repositories {
         mavenCentral()
         mavenLocal()
         maven("https://repo.papermc.io/repository/maven-public/")
     }
-    
+
     version = rootProject.version
     group = rootProject.group
 
-    indraSpotlessLicenser.apply()
-
     if (name.contains("processor") || name.contains("annotations")) {
-        plugins.apply("de.chojo.publishdata")
-        plugins.apply("maven-publish")
-        publishData.apply()
-        publishing.apply()
+        apply {
+            plugin<PublishData>()
+            plugin<MavenPublishPlugin>()
+        }
+
+        publishing {
+            repositories {
+                maven {
+                    authentication {
+                        credentials(PasswordCredentials::class) {
+                            username = System.getenv("NEXUS_USERNAME")
+                            password = System.getenv("NEXUS_PASSWORD")
+                        }
+                    }
+
+                    name = "EldoNexus"
+                    setUrl(publishData.getRepository())
+                }
+            }
+
+            publications.create<MavenPublication>("maven") {
+                publishData.configurePublication(this)
+            }
+        }
     }
 }
-
-indraSpotlessLicenser.apply()
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))
