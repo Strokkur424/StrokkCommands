@@ -1,11 +1,10 @@
-package net.strokkur.commands.internal.abstraction;
+package net.strokkur.commands.internal.intermediate;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
 public final class Requirement {
-
     public static final Requirement IS_OP = new Requirement("stack.getSender().isOp()");
 
     private final String requirementString;

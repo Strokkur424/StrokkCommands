@@ -1,6 +1,6 @@
 package net.strokkur.commands.internal.arguments;
 
-import net.strokkur.commands.internal.abstraction.SuggestionProvider;
+import net.strokkur.commands.internal.intermediate.SuggestionProvider;
 import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Element;

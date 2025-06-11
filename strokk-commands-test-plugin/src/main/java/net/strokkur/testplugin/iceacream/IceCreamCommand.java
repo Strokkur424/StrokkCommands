@@ -8,16 +8,11 @@ import org.bukkit.command.CommandSender;
 
 @Command("icecream")
 class IceCreamCommand {
-    
+
     @Executes("lick")
     void onLick(CommandSender sender, @CustomArg(IceCreamArgument.class) IceCreamType iceCream) {
         sender.sendRichMessage("<rainbow><b>YUMMY!</rainbow> You just had a scoop of <color:#7925ab><icecream></color>!",
             Placeholder.unparsed("icecream", iceCream.toString())
         );
-    }
-    
-//    @Executes("invalid")
-    void invalid(CommandSender sender, @CustomArg(String.class) String invalid) {
-        
     }
 }

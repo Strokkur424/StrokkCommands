@@ -1,4 +1,4 @@
-package net.strokkur.commands.internal.abstraction;
+package net.strokkur.commands.internal.intermediate;
 
 import net.strokkur.commands.internal.arguments.LiteralArgumentInfoImpl;
 import net.strokkur.commands.internal.util.MessagerWrapper;

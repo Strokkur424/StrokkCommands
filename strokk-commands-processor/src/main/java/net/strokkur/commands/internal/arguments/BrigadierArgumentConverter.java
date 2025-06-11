@@ -24,10 +24,10 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static net.strokkur.commands.internal.arguments.BrigadierArgumentConversion.RegistryEntry.registryEntry;
-import static net.strokkur.commands.internal.arguments.BrigadierArgumentConversion.SimpleEntry.simpleEntry;
+import static net.strokkur.commands.internal.arguments.BrigadierArgumentConverter.RegistryEntry.registryEntry;
+import static net.strokkur.commands.internal.arguments.BrigadierArgumentConverter.SimpleEntry.simpleEntry;
 
-public abstract class BrigadierArgumentConversion {
+public class BrigadierArgumentConverter {
 
     //<editor-fold desc="Registry Entries">
     private static final List<RegistryEntry> REGISTRY_ENTRIES = List.of(
@@ -234,7 +234,7 @@ public abstract class BrigadierArgumentConversion {
         //</editor-fold>
 
         // All registry related arguments
-        REGISTRY_ENTRIES.forEach(BrigadierArgumentConversion::addResourceAndResourceKeyArguments);
+        REGISTRY_ENTRIES.forEach(BrigadierArgumentConverter::addResourceAndResourceKeyArguments);
 
         // "Paper"-related arguments
         Stream.of(
@@ -243,7 +243,7 @@ public abstract class BrigadierArgumentConversion {
             simpleEntry("namespacedKey", "NamespacedKey", "org.bukkit.NamespacedKey"),
             simpleEntry("uuid", "UUID", "java.util.UUID"),
             simpleEntry("objectiveCriteria", "Criteria", "org.bukkit.scoreboard.Criteria")
-        ).forEach(BrigadierArgumentConversion::putSimple);
+        ).forEach(BrigadierArgumentConverter::putSimple);
 
         //<editor-fold desc=Predicate arguments">
         putFor((p, name) -> BrigadierArgumentType.of(
@@ -291,7 +291,7 @@ public abstract class BrigadierArgumentConversion {
             simpleEntry("key", "Key", "net.kyori.adventure.key.Key"),
             simpleEntry("namedColor", "NamedTextColor", "net.kyori.adventure.text.format.NamedTextColor"),
             simpleEntry("style", "Style", "net.kyori.adventure.text.format.Style")
-        ).forEach(BrigadierArgumentConversion::putSimple);
+        ).forEach(BrigadierArgumentConverter::putSimple);
 
         CONVERSION_MAP.put("java.util.concurrent.CompletableFuture<net.kyori.adventure.chat.SignedMessage>", (p, name) -> BrigadierArgumentType.of(
             "ArgumentTypes.signedMessage()",
@@ -311,6 +311,12 @@ public abstract class BrigadierArgumentConversion {
             )
         ));
         //</editor-fold>
+    }
+
+    private final MessagerWrapper messagerWrapper;
+
+    public BrigadierArgumentConverter(MessagerWrapper messagerWrapper) {
+        this.messagerWrapper = messagerWrapper;
     }
 
     private static void addResourceAndResourceKeyArguments(RegistryEntry entry) {
@@ -342,20 +348,46 @@ public abstract class BrigadierArgumentConversion {
         }
     }
 
+    private static void putSimple(SimpleEntry entry) {
+        CONVERSION_MAP.put(entry.classImport(), (p, name) -> BrigadierArgumentType.of(
+            "ArgumentTypes.%s()".formatted(entry.argumentTypeName()),
+            "ctx.getArgument(\"%s\", %s.class)".formatted(name, entry.className()),
+            Set.of(
+                "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+                entry.classImport()
+            )
+        ));
+    }
+
+    private static <T extends Annotation> BrigadierArgumentType annotatedOr(VariableElement parameter, Class<T> annotation, Function<T, String> withAnnotation,
+                                                                            String withoutAnnotation, String retrieval, String singleImport) {
+        return annotatedOr(parameter, annotation, withAnnotation, withoutAnnotation, retrieval, Set.of(singleImport));
+    }
+
+    private static <T extends Annotation> BrigadierArgumentType annotatedOr(VariableElement parameter, Class<T> annotation, Function<T, String> withAnnotation,
+                                                                            String withoutAnnotation, String retrieval, Set<String> imports) {
+        T annotated = parameter.getAnnotation(annotation);
+        if (annotated == null) {
+            return BrigadierArgumentType.of(withoutAnnotation, retrieval, imports);
+        }
+
+        return BrigadierArgumentType.of(withAnnotation.apply(annotated), retrieval, imports);
+    }
+
     @Nullable
-    public static BrigadierArgumentType getAsArgumentType(VariableElement parameter, String argumentName, String type, MessagerWrapper messager) {
+    public BrigadierArgumentType getAsArgumentType(VariableElement parameter, String argumentName, String type) {
         CustomArg customArg = parameter.getAnnotation(CustomArg.class);
         if (customArg != null) {
             TypeMirror mirror = Utils.getAnnotationMirror(parameter, CustomArg.class, "value");
             if (mirror != null) {
                 return new BrigadierArgumentType("new " + mirror + "()", "ctx.getArgument(\"" + argumentName + "\", " + type + ".class)", Set.of());
             } else {
-                messager.errorElement("Invalid value for @CustomArg annotation.", parameter);
+                messagerWrapper.errorElement("Invalid value for @CustomArg annotation.", parameter);
             }
         }
 
         if (!CONVERSION_MAP.containsKey(type)) {
-            messager.errorElement("Cannot find Brigadier equivalent for argument of type {}.", parameter, type);
+            messagerWrapper.errorElement("Cannot find Brigadier equivalent for argument of type {}.", parameter, type);
             return null;
         }
 
@@ -363,7 +395,7 @@ public abstract class BrigadierArgumentConversion {
         TimeArg timeArg = parameter.getAnnotation(TimeArg.class);
         if (timeArg != null) {
             if (!type.equals("int") && !type.equals("java.lang.Integer")) {
-                messager.errorElement("An argument annotated with @TimeArg has to be of type 'int'", parameter);
+                messagerWrapper.errorElement("An argument annotated with @TimeArg has to be of type 'int'", parameter);
                 return null;
             }
 
@@ -382,39 +414,8 @@ public abstract class BrigadierArgumentConversion {
             return out;
         }
 
-        messager.errorElement("An unexpected error occurred whilst converting type {} to Brigadier equivalent.", parameter, type);
+        messagerWrapper.errorElement("An unexpected error occurred whilst converting type {} to Brigadier equivalent.", parameter, type);
         return null;
-    }
-
-    private static void putSimple(SimpleEntry entry) {
-        CONVERSION_MAP.put(entry.classImport(), (p, name) -> BrigadierArgumentType.of(
-            "ArgumentTypes.%s()".formatted(entry.argumentTypeName()),
-            "ctx.getArgument(\"%s\", %s.class)".formatted(name, entry.className()),
-            Set.of(
-                "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
-                entry.classImport()
-            )
-        ));
-    }
-
-    private static <T extends Annotation> BrigadierArgumentType annotatedOr(VariableElement parameter, Class<T> annotation, Function<T, String> withAnnotation,
-                                                                            String withoutAnnotation, String retrieval) {
-        return annotatedOr(parameter, annotation, withAnnotation, withoutAnnotation, retrieval, Set.of());
-    }
-
-    private static <T extends Annotation> BrigadierArgumentType annotatedOr(VariableElement parameter, Class<T> annotation, Function<T, String> withAnnotation,
-                                                                            String withoutAnnotation, String retrieval, String singleImport) {
-        return annotatedOr(parameter, annotation, withAnnotation, withoutAnnotation, retrieval, Set.of(singleImport));
-    }
-
-    private static <T extends Annotation> BrigadierArgumentType annotatedOr(VariableElement parameter, Class<T> annotation, Function<T, String> withAnnotation,
-                                                                            String withoutAnnotation, String retrieval, Set<String> imports) {
-        T annotated = parameter.getAnnotation(annotation);
-        if (annotated == null) {
-            return BrigadierArgumentType.of(withoutAnnotation, retrieval, imports);
-        }
-
-        return BrigadierArgumentType.of(withAnnotation.apply(annotated), retrieval, imports);
     }
 
     record SimpleEntry(String argumentTypeName, String className, String classImport) {

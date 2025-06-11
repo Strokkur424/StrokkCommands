@@ -6,15 +6,15 @@ import net.strokkur.commands.annotations.Description;
 import net.strokkur.commands.annotations.Executes;
 import net.strokkur.commands.annotations.Executor;
 import net.strokkur.commands.annotations.Literal;
-import net.strokkur.commands.internal.abstraction.CommandInformation;
-import net.strokkur.commands.internal.abstraction.CommandTree;
-import net.strokkur.commands.internal.abstraction.ExecutorInformation;
-import net.strokkur.commands.internal.abstraction.ExecutorType;
-import net.strokkur.commands.internal.abstraction.Requirement;
-import net.strokkur.commands.internal.arguments.BrigadierArgumentConversion;
+import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentType;
 import net.strokkur.commands.internal.arguments.LiteralArgumentInfoImpl;
 import net.strokkur.commands.internal.arguments.RequiredArgumentInformation;
+import net.strokkur.commands.internal.intermediate.CommandInformation;
+import net.strokkur.commands.internal.intermediate.CommandTree;
+import net.strokkur.commands.internal.intermediate.ExecutorInformation;
+import net.strokkur.commands.internal.intermediate.ExecutorType;
+import net.strokkur.commands.internal.intermediate.Requirement;
 import net.strokkur.commands.internal.multiliterals.MultiLiteralsTree;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 import net.strokkur.commands.internal.util.Utils;
@@ -107,6 +107,8 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
     @NullUnmarked
     private @NonNull List<ExecutorInformation> getExecutorInformation(@NonNull TypeElement classElement, MessagerWrapper messager) {
         List<ExecutorInformation> out = new ArrayList<>();
+        BrigadierArgumentConverter converter = new BrigadierArgumentConverter(messager);
+
         classElement.getEnclosedElements().stream()
             .filter(element -> element.getAnnotation(Executes.class) != null)
             .map(methodElement -> {
@@ -153,7 +155,7 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
                         continue;
                     }
 
-                    BrigadierArgumentType asBrigadier = BrigadierArgumentConversion.getAsArgumentType(parameters.get(i), parameters.get(i).toString(), parameterClassNames.get(i), messager);
+                    BrigadierArgumentType asBrigadier = converter.getAsArgumentType(parameters.get(i), parameters.get(i).toString(), parameterClassNames.get(i));
                     if (asBrigadier == null) {
                         return null;
                     }

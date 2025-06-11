@@ -1,4 +1,4 @@
-package net.strokkur.commands.internal.abstraction;
+package net.strokkur.commands.internal.intermediate;
 
 import org.jspecify.annotations.Nullable;
 

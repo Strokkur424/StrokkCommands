@@ -1,4 +1,4 @@
-package net.strokkur.commands.internal.abstraction;
+package net.strokkur.commands.internal.intermediate;
 
 import javax.lang.model.type.TypeMirror;
 

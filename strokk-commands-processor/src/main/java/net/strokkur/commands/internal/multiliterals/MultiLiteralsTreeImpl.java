@@ -10,7 +10,6 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 public class MultiLiteralsTreeImpl implements MultiLiteralsTree {
-
     private final ArgumentNode rootNode;
 
     public MultiLiteralsTreeImpl() {

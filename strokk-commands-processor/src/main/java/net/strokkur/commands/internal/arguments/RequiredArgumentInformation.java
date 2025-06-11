@@ -1,13 +1,12 @@
 package net.strokkur.commands.internal.arguments;
 
-import net.strokkur.commands.internal.abstraction.SuggestionProvider;
+import net.strokkur.commands.internal.intermediate.SuggestionProvider;
 import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.VariableElement;
 import java.util.Objects;
 
 public final class RequiredArgumentInformation implements ArgumentInformation {
-
     private final String getArgumentName;
     private final VariableElement getElement;
     private final BrigadierArgumentType type;

@@ -2,7 +2,7 @@ package net.strokkur.commands.internal.util;
 
 import net.strokkur.commands.annotations.Permission;
 import net.strokkur.commands.annotations.RequiresOP;
-import net.strokkur.commands.internal.abstraction.Requirement;
+import net.strokkur.commands.internal.intermediate.Requirement;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;

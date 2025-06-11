@@ -4,7 +4,8 @@ import javax.annotation.processing.Messager;
 import javax.lang.model.element.Element;
 
 class MessagerWrapperImpl implements MessagerWrapper {
-
+    private static final boolean OUTPUT_INFO = false;
+    
     private final Messager messager;
 
     public MessagerWrapperImpl(Messager messager) {
@@ -13,12 +14,16 @@ class MessagerWrapperImpl implements MessagerWrapper {
 
     @Override
     public void info(String format, Object... arguments) {
-        messager.printNote(format.replaceAll("\\{}", "%s").formatted(arguments));
+        if (OUTPUT_INFO) {
+            messager.printNote(format.replaceAll("\\{}", "%s").formatted(arguments));
+        }
     }
 
     @Override
     public void infoElement(String format, Element element, Object... arguments) {
-        messager.printNote(format.replaceAll("\\{}", "%s").formatted(arguments), element);
+        if (OUTPUT_INFO) {
+            messager.printNote(format.replaceAll("\\{}", "%s").formatted(arguments), element);
+        }
     }
 
     @Override

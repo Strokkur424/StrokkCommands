@@ -3,7 +3,7 @@ package net.strokkur.commands.internal.arguments;
 import net.strokkur.commands.annotations.SuggestionClass;
 import net.strokkur.commands.annotations.SuggestionField;
 import net.strokkur.commands.annotations.SuggestionMethod;
-import net.strokkur.commands.internal.abstraction.SuggestionProvider;
+import net.strokkur.commands.internal.intermediate.SuggestionProvider;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 import net.strokkur.commands.internal.util.Utils;
 import org.jspecify.annotations.NonNull;

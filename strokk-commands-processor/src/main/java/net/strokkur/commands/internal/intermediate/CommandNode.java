@@ -1,4 +1,4 @@
-package net.strokkur.commands.internal.abstraction;
+package net.strokkur.commands.internal.intermediate;
 
 import net.strokkur.commands.internal.arguments.ArgumentInformation;
 import net.strokkur.commands.internal.arguments.LiteralArgumentInfo;
@@ -18,7 +18,6 @@ import java.util.function.Consumer;
 
 @NullMarked
 public class CommandNode {
-
     private final Map<String, CommandNode> childNodes = new HashMap<>();
 
     private final ArgumentInformation argument;
