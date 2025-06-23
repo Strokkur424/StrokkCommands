@@ -167,5 +167,13 @@ Where did the file come from? Don't question it, just accept it. (Or if you *do*
 And that's it! You are completely done. You don't have to see one of those pesky Brigadier trees ever again.
 Make sure to give the project a **star**, I would really appreciate it!
 
+### Star History
+
+<picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Strokkur424/StrokkCommands&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Strokkur424/StrokkCommands&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Strokkur424/StrokkCommands&type=Date" />
+</picture>
+
 ## How does it all work?
 // I will explain this later, at the time of writing, I have been coding on this for 14 hours straight, so please be patient ^-^
