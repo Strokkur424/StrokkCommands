@@ -283,7 +283,7 @@ public class BrigadierArgumentConverter {
         ), "com.google.common.collect.Range<java.lang.Double>");
 
         putFor((p, name) -> BrigadierArgumentType.of(
-            "ArgumentTypes.doubleRange()",
+            "ArgumentTypes.integerRange()",
             "ctx.getArgument(\"%s\", IntegerRangeProvider.class)".formatted(name),
             Set.of(
                 "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
@@ -292,7 +292,7 @@ public class BrigadierArgumentConverter {
         ), "io.papermc.paper.command.brigadier.argument.range.IntegerRangeProvider", "io.papermc.paper.command.brigadier.argument.range.RangeProvider<java.lang.Integer>");
 
         putFor((p, name) -> BrigadierArgumentType.of(
-            "ArgumentTypes.doubleRange()",
+            "ArgumentTypes.integerRange()",
             "ctx.getArgument(\"%s\", IntegerRangeProvider.class).range()".formatted(name),
             Set.of(
                 "io.papermc.paper.command.brigadier.argument.ArgumentTypes",

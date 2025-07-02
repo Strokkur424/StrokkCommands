@@ -19,6 +19,7 @@ package net.strokkur.testplugin.commands;
 
 import com.google.common.collect.Range;
 import io.papermc.paper.command.brigadier.argument.predicate.ItemStackPredicate;
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.strokkur.commands.annotations.Command;
@@ -42,10 +43,19 @@ public class PredicateArgumentsCommand {
 
     @Executes("number")
     void executor(CommandSender sender, double value, @Literal("fit") String $fit, @Literal("into") String $into, Range<Double> range) {
+        checkNumberInRange(sender, value, range);
+    }
+    
+    @Executes("int-range")
+    void executor(CommandSender sender, int value, @Literal("fit") String $fit, @Literal("into") String $into, Range<Integer> range) {
+        checkNumberInRange(sender, value, range);
+    }
+
+    <T extends Comparable> void checkNumberInRange(Audience audience, T value, Range<T> range) {
         if (range.contains(value)) {
-            sender.sendMessage(Component.text("Yes it does, open your eyes.", NamedTextColor.GREEN));
+            audience.sendMessage(Component.text("Yes it does, open your eyes.", NamedTextColor.GREEN));
         } else {
-            sender.sendMessage(Component.text("W... why the hell would it???", NamedTextColor.RED));
+            audience.sendMessage(Component.text("W... why the hell would it???", NamedTextColor.RED));
         }
     }
 }
