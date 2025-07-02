@@ -52,4 +52,11 @@ class EntitiesCommand {
             Placeholder.unparsed("profiles", String.join(", ", Arrays.stream(profiles).map(PlayerProfile::getName).toList()))
         );
     }
+    
+    @Executes("one-player-profile")
+    void execute(CommandSender sender, PlayerProfile profile) {
+        sender.sendRichMessage("<green>Found player: <gradient:aqua:blue><profile>",
+            Placeholder.unparsed("profile", profile.getName())
+        );
+    }
 }
