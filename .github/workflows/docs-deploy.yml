@@ -1,0 +1,66 @@
+name: 'Docs: Deploy to Cloudflare Pages (Production)'
+
+env:
+  BASE_DIR: docs
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      deployments: write
+      pull-requests: write
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+          package_json_file: '${{ env.BASE_DIR }}/package.json'
+          
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: '${{ env.BASE_DIR }}/pnpm-lock.yaml'
+          
+      - name: Install dependencies
+        working-directory: ${{ env.BASE_DIR }}
+        run: pnpm install --frozen-lockfile
+        
+      - name: Build
+        working-directory: ${{ env.BASE_DIR }}
+        run: pnpm build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Copy cloudflare configuration files to build directory
+        working-directory: ${{ env.BASE_DIR }}
+        run: |
+          cp _headers dist/
+          cp _redirects dist/
+          
+      - name: Publish (push)
+        working-directory: ${{ env.BASE_DIR }}
+        id: cloudflare-publish
+        uses: AdrianGonz97/refined-cf-pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: "strokkcommands"
+          deploymentName: "Production"
+          directory: "dist"
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
