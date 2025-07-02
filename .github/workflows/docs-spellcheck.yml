@@ -1,0 +1,16 @@
+name: 'Docs: Spell Check'
+
+on: [ pull_request ]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest    
+    defaults:
+      run:
+        working-directory: ./docs
+        
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Spell check
+        uses: crate-ci/typos@v1.32.0

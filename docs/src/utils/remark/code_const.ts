@@ -9,20 +9,20 @@ import { visit } from "unist-util-visit";
 // expression format: \{CONSTANT_NAME}
 
 interface Options {
-    constants: Record<string, string>;
+  constants: Record<string, string>;
 }
 
 const plugin: RemarkPlugin = ({ constants }: Options) => {
-    return (tree) => {
-        visit(tree, ["code", "inlineCode"], (node) => {
-            if (node.type === "code" && !node.meta?.includes("replace")) {
-                return;
-            }
+  return (tree) => {
+    visit(tree, ["code", "inlineCode"], (node) => {
+      if (node.type === "code" && !node.meta?.includes("replace")) {
+        return;
+      }
 
-            const code = node as Literal;
-            code.value = code.value.replace(/\\\{([^}]+?)}/g, (_, name) => constants[name] ?? name);
-        });
-    };
+      const code = node as Literal;
+      code.value = code.value.replace(/\\\{([^}]+?)}/g, (_, name) => constants[name] ?? name);
+    });
+  };
 };
 
 export default plugin;
