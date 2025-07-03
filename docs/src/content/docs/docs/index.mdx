@@ -3,3 +3,31 @@ title: Introduction
 description: An introduction to StrokkCommands.
 ---
 
+## What is StrokkCommands?
+StrokkCommands is an **annotation-based command library**. You declare commands by using annotations (a.e. `@Command`)
+on classes or methods. It is created for the [Paper](https://github.com/PaperMC/Paper) server software, but probably
+also works fine on most of its fork, unless they mess with the command system.
+
+StrokkCommands has every single natively available argument type implemented. All you need to is add whichever
+type you need to your executor method and StrokkCommands will take care of the rest!
+
+## What differentiates StrokkCommands from existing frameworks?
+This is a very typical and often asked question. The primary difference is how lightweight it is.
+
+Now, that's something basically all libraries say. But here I actually mean it. StrokkCommands
+adds precisely **0 bytes** of library code to your plugin! **How is this possible?**, I hear you ask.
+
+Well, StrokkCommands is an annotation **processor** based library, to be even more precise.
+This means that by adding annotations to your code, the processor, which is a separate Java
+program which automatically runs each time you build your project, **generates** all required
+source files right inside your project (or more specifically, in a separate 'generated' sources root).
+
+This effectively provides you with three advantages:
+1. You have zero overhead compared to other (potentially reflection-based) library frameworks which might
+   be abstracted away behind very complex structures.
+2. You can look at the generated source and very easily see whether it fits what you had in mind, which also
+   greatly improves the debuggability and doesn't hide everything behind library-internal logic.
+3. Your commands are fully version-independent. As the generated code is based around Paper's exposed command API,
+   there is close to no risk of updates to both Paper or StrokkCommands breaking the generated command.
+
+Please refer to the **direct comparison page** for more information regarding different command frameworks: *Coming soon...*

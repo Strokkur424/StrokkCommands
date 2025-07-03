@@ -32,6 +32,8 @@ import net.strokkur.testplugin.iceacream.IceCreamCommandBrigadier;
 import net.strokkur.testplugin.suggestions.CommandWithSuggestionsBrigadier;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.IdentityHashMap;
+
 @SuppressWarnings("UnstableApiUsage")
 public final class TestPlugin extends JavaPlugin {
 
