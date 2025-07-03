@@ -1,0 +1,44 @@
+name: "🐛 Bug"
+description: Report unexpected behavior.
+labels: 
+  - "awaiting response"
+  - "bug"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before submitting this issue, please ensure the following:
+
+        1. You are using the latest version of StrokkCommands (check https://commands.strokkur.net/docs/dependency for the latest dependency).
+        2. You have searched to confirm there isn’t [an existing open issue](https://github.com/Strokkur424/StrokkCommmands/issues?q=is%3Aissue%20state%3Aopen%20type%3ABug) on this topic.
+        3. You are running an updated version of Paper.
+
+  - type: textarea
+    attributes:
+      label: Expected behavior
+      description: What you expected to see.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Observed/Actual behavior
+      description: What you actually saw.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Steps/models to reproduce
+      description: If applicable, please include a test repository where you can reproduce this issue.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Other
+      description: |
+        Please include other helpful information below.
+        The more information we receive, the quicker and more effective we can be at finding the solution to the issue.
+    validations:
+      required: false
