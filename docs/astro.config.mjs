@@ -13,7 +13,7 @@ export default defineConfig({
       sidebar: [
         {
           label: "Documentation",
-          items: [{ slug: "docs" }, { slug: "docs/adding-the-dependency" }],
+          items: [{ slug: "docs" }, { slug: "docs/dependency" }],
         },
       ],
     }),
