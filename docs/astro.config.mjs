@@ -15,6 +15,9 @@ export default defineConfig({
       expressiveCode: {
         themes: ["dark-plus", "light-plus"],
       },
+      components: {
+        Footer: "/src/components/overrides/Footer.astro"
+      },
       sidebar: [
         {
           label: "Documentation",
