@@ -62,5 +62,5 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: "strokkcommands"
           deploymentName: "Production"
-          directory: "dist"
+          directory: "docs/dist"
           githubToken: ${{ secrets.GITHUB_TOKEN }}
