@@ -5,20 +5,24 @@ description: In-depth explanation about adding StrokkCommands to your plugin.
 
 import {TabItem, Tabs} from "@astrojs/starlight/components";
 
-StrokkCommands is hosted on the [eldonexus](https://eldonexus.de). It is split in two separate modules:
+StrokkCommands is hosted on the [eldonexus](https://eldonexus.de). It is split into two separate modules:
 
-| Module Name                 | Description                                                                                                |
-|-----------------------------|------------------------------------------------------------------------------------------------------------|
-| strokk-commands-annotations | This module only holds the annotations for you to add in your source code                                  |
-| strokk-commands-processor   | This module is not intended to be added as a compile-time dependency, as it holds the annotation processor |
+| Module Name                 | Description                                                           |
+|-----------------------------|-----------------------------------------------------------------------|
+| strokk-commands-annotations | This module holds the annotations for you to add in your source code. |
+| strokk-commands-processor   | This module only holds the annotation processor.                      |
+
+This separation is made with a very specific purpose in mind: To include only the most necessary classes in your
+project classpath. Since the `processor` module only contains internal logic classes (which can have similar
+names as Brigadier itself), having them included in the classpath would make development experience very annoying.
 
 <br/>
 
 Therefore, adding the dependency would look like this, depending on your build-system.
-The versions are automatically fetched and thus always up to date.
+The versions here are automatically fetched and thus always up to date.
 
 ## Adding the repository
-First we have to add the eldonexus repository:
+First, we have to add the repository:
 
 <Tabs syncKey="build-system">
     <TabItem label="Gradle">
@@ -44,12 +48,12 @@ First we have to add the eldonexus repository:
 </Tabs>
 
 <br/>
-Next up we add the dependency.
+Next up we add the dependency:
 
 <Tabs syncKey="build-system">
     <TabItem label="Gradle">
         For Gradle, we simply add the annotations module as a `compileOnly` and the processor module as a `annotationProcessor` dependency.
-        
+
         ```kts replace
         dependencies {
           compileOnly("net.strokkur:strokk-commands-annotations:\{LATEST_COMMANDS_RELEASE}-SNAPSHOT")
@@ -60,7 +64,7 @@ Next up we add the dependency.
     <TabItem label="Maven">
         For Maven, we first have to add the annotation module as a dependency, with scope `provided` so that
         the annotations do not get included in the output jar.
-        
+
         ```xml replace
         <dependencies>
           <dependency>
@@ -71,8 +75,8 @@ Next up we add the dependency.
           </dependency>
         </dependencies>
         ```
-        
-        Finally, we have to modify the compiler plugin to add a new annotation processor path for our processor module.
+
+        Finally, we modify the compiler plugin and add a new annotation processor path for our processor module.
         ```xml replace
         <pluginManagement>
           <plugins>
