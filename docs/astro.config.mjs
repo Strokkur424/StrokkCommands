@@ -11,6 +11,10 @@ export default defineConfig({
       title: "StrokkCommands",
       favicon: "/patchnotes.png",
       social: [{ icon: "github", label: "GitHub", href: "https://github.com/Strokkur424/StrokkCommands" }],
+      customCss: ["/src/styles/custom.css"],
+      expressiveCode: {
+        themes: ["dark-plus", "light-plus"],
+      },
       sidebar: [
         {
           label: "Documentation",
