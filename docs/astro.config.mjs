@@ -16,8 +16,10 @@ export default defineConfig({
         themes: ["dark-plus", "light-plus"],
       },
       components: {
-        Footer: "/src/components/overrides/Footer.astro"
+        Footer: "/src/components/overrides/Footer.astro",
+        LastUpdated: "/src/components/overrides/LastUpdated.astro",
       },
+      lastUpdated: true,
       sidebar: [
         {
           label: "Documentation",
