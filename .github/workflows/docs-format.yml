@@ -9,29 +9,25 @@ jobs:
   format:
     runs-on: ubuntu-latest
     
+    defaults:
+      run:
+        working-directory: ${{ env.BASE_DIR }}
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
         with:
-          run_install: false
-          package_json_file: '${{ env.BASE_DIR }}/package.json'
-
-      - name: Setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-          cache-dependency-path: '${{ env.BASE_DIR }}/pnpm-lock.yaml'
+          bun-version-file: 'package.json'
 
       - name: Install dependencies
-        working-directory: ${{ env.BASE_DIR }}
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
         
       - name: Check format
-        working-directory: ${{ env.BASE_DIR }}
-        run: pnpm format:check
+        run: bun format:check
