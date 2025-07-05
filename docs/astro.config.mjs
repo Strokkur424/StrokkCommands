@@ -13,7 +13,7 @@ export default defineConfig({
       sidebar: [
         {
           label: "Documentation",
-          items: [{ slug: "docs" }, { slug: "docs/dependency" }, { slug: "docs/commands" }, { slug: "docs/arguments" }],
+          items: [{ slug: "docs" }, { slug: "docs/dependency" }, { slug: "docs/commands" }, { slug: "docs/arguments" }, { slug: "docs/permissions" }],
         },
       ],
     }),
