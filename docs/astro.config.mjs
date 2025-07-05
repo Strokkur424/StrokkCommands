@@ -9,6 +9,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: "StrokkCommands",
+      favicon: "/patchnotes.png",
       social: [{ icon: "github", label: "GitHub", href: "https://github.com/Strokkur424/StrokkCommands" }],
       sidebar: [
         {
