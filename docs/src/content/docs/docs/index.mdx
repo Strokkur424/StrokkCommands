@@ -5,11 +5,11 @@ description: An introduction to StrokkCommands.
 
 ## What is StrokkCommands?
 StrokkCommands is an **annotation-based command library**. You declare commands by using annotations (a.e. `@Command`)
-on classes or methods. It is created for the [Paper](https://github.com/PaperMC/Paper) server software, but probably
-also works fine on most of its fork, unless they mess with the command system.
+on classes or methods. It was created for the [Paper](https://github.com/PaperMC/Paper) server software, but
+also works fine on its forks, unless they mess with the command system.
 
-StrokkCommands has every single natively available argument type implemented. All you need to is add whichever
-type you need to your executor method and StrokkCommands will take care of the rest!
+StrokkCommands has every natively available argument type implemented. All you need to, is add whichever
+type you need to your command method and StrokkCommands will take care of the rest!
 
 ## What differentiates StrokkCommands from existing frameworks?
 This is a very typical and often asked question. The primary difference is how lightweight it is.
@@ -31,3 +31,18 @@ This effectively provides you with three advantages:
    there is close to no risk of updates to both Paper or StrokkCommands breaking the generated command.
 
 Please refer to the **direct comparison page** for more information regarding different command frameworks: *Coming soon...*
+
+## What are important design principles of StrokkCommands?
+StrokkCommands takes care to do these things:
+
+### No shading
+You will never, ever have to shade anything into your plugin jar for it to work.
+
+This has the advantage of being straightforward to set up, doesn't cause any
+conflicts when two plugins have the same dependency, but different versions,
+and keeps your plugin jar nice and light (the mentioned 0 bytes of library code).
+
+## No reflection
+**During runtime**, no reflection calls are performed. This results in some light limitations
+with the visibility of certain classes/methods not being allowed to be private, but as they can be
+package-private instead, this should rarely ever be a real issue.
