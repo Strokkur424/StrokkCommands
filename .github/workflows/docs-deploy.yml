@@ -17,44 +17,44 @@ jobs:
       contents: read
       deployments: write
       pull-requests: write
+    
+    defaults:
+      run:
+        working-directory: ${{ env.BASE_DIR }}
       
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
         with:
-          run_install: false
-          package_json_file: '${{ env.BASE_DIR }}/package.json'
-          
-      - name: Setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-          cache-dependency-path: '${{ env.BASE_DIR }}/pnpm-lock.yaml'
-          
+          bun-version-file: 'package.json'
+
       - name: Install dependencies
-        working-directory: ${{ env.BASE_DIR }}
-        run: pnpm install --frozen-lockfile
-        
+        run: bun install --frozen-lockfile
+
       - name: Build
-        working-directory: ${{ env.BASE_DIR }}
-        run: pnpm build
+        run: bun run build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
+
       - name: Copy cloudflare configuration files to build directory
-        working-directory: ${{ env.BASE_DIR }}
         run: |
           cp _headers dist/
           cp _redirects dist/
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-build
+          path: dist
           
       - name: Publish (push)
-        working-directory: ${{ env.BASE_DIR }}
         id: cloudflare-publish
         uses: AdrianGonz97/refined-cf-pages-action@v1
         with:
