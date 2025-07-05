@@ -1,0 +1,93 @@
+---
+title: Adding permissions
+description: A guide to permissions in StrokkCommands.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+Permissions are a very substantial part of making sure that a command is not executed by people
+who should not execute the command. For this, StrokkCommands provides you with two additional
+annotations: `@Permission` and `@RequiresOP`.
+
+## Applying requirement annotation
+The permission annotations are also refer to as "requirement annotations", since they add a `.requires` clause
+to the command tree.
+
+You can add requirement annotations to either an executing method or to the command class itself.
+So either of these works fine:
+
+```java
+@RequiresOP
+@Command("deopme")
+class DeopMeCommand {
+
+    @Executes
+    @RequiresOP
+    void execute(CommandSender sender) {
+        sender.setOp(false);
+    }
+}
+```
+
+### Subcommand annotations
+StrokkCommands automatically does some moving around of the permission.
+For example, if we have a command `/gui [admin]`, where all users should be able to execute `/gui`, but only
+operators `/gui admin`, you can register the command as follows:
+
+```java
+@Command("gui")
+class GuiCommand {
+
+    @Executes
+    void executeUser(CommandSender sender, @Executor Player player) {
+        /* ... */
+    }
+
+    // Only /gui admin requires op!
+    @RequiresOP
+    @Executes("admin")
+    void executeAdmin(CommandSender sender, @Executor Player player) {
+        /* ... */
+    }
+}
+```
+
+### Merging requirements
+<Aside type="danger" title="Known issues (as of 1.2.4)">
+  The algorithm for moving the requirements is currently not working as intended.
+  The issue is tracked in [StrokkCommands#4](https://github.com/Strokkur424/StrokkCommands/issues/4).
+
+  The following documentation shows it is *intended* to work.
+</Aside>
+
+If your command has exactly two paths: `/trigger off` and `/trigger on`, where both should have different permissions
+(`yourplugin.commands.trigger.off` and `yourplugin.commands.trigger.on`), StrokkCommands automatically adds a requirement to `/trigger`, in
+which you need to have **either** the `on` or `off` permissions to run the command. This ensures that regular players
+do not have a random `/trigger` command floating around which they cannot use.
+
+## Using permissions instead of op status
+Instead of relying on `@RequiresOP`, you should almost always define a permission using `@Permission("...")` instead.
+You can declare the permission in your `(paper-)plugin.yml` and set the default to `op`.
+
+```yml title=(paper-)plugin.yml
+permissions:
+  yourplugin.commands.trigger.on:
+    default: op
+    description: Permission for /trigger on
+  yourplugin.commands.trigger.off:
+    default: op
+    description: Permission for /trigger off
+```
+
+This ensures that server owners have full customizability over which commands users can execute.
+
+The same principle also applies to commands which you think should be accessible by everyone. Always put
+permissions on your commands and subcommands! Whilst your intended defaults might be good defaults,
+they might not fit every server owner's use case. You can always define a permission to be `true` by default.
+
+```yml title=(paper-)plugin.yml
+permissions:
+  yourplugin.commands.customaction:
+    default: true
+    description: Permission for /customaction on
+```
