@@ -28,11 +28,10 @@ import net.strokkur.testplugin.commands.PredicateArgumentsCommandBrigadier;
 import net.strokkur.testplugin.commands.PrimitivesCommandBrigadier;
 import net.strokkur.testplugin.commands.RegistryArgumentsCommandBrigadier;
 import net.strokkur.testplugin.commands.TellMiniCommandBrigadier;
+import net.strokkur.testplugin.docs.MyFirstCommandBrigadier;
 import net.strokkur.testplugin.iceacream.IceCreamCommandBrigadier;
 import net.strokkur.testplugin.suggestions.CommandWithSuggestionsBrigadier;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import java.util.IdentityHashMap;
 
 @SuppressWarnings("UnstableApiUsage")
 public final class TestPlugin extends JavaPlugin {
@@ -54,6 +53,10 @@ public final class TestPlugin extends JavaPlugin {
             AdventureArgumentsCommandBrigadier.register(commands);
             LiteralsCommandBrigadier.register(commands);
             TellMiniCommandBrigadier.register(commands);
+        }));
+
+        this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS.newHandler(event -> {
+            MyFirstCommandBrigadier.register(event.registrar());
         }));
     }
 }
