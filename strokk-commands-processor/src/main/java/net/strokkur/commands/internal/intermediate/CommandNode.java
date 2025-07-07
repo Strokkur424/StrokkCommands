@@ -130,7 +130,7 @@ public class CommandNode {
         String indentPlusThree = "    ".repeat(baseIndent + 3);
 
         StringBuilder builder = new StringBuilder(argument instanceof RequiredArgumentInformation req
-            ? "Commands.argument(\"%s\", %s)".formatted(this.argument.getArgumentName(), req.type().initializer())
+            ? "Commands.argument(\"%s\", %s)".formatted(this.argument.getArgumentName(), req.getType().initializer())
             : "Commands.literal(\"%s\")".formatted(this.nodeName));
 
         setRequirement(builder, indentPlus);
@@ -160,7 +160,7 @@ public class CommandNode {
 
                 if (arg instanceof RequiredArgumentInformation info) {
                     builder.append(",\n").append(indentPlusThree);
-                    builder.append(info.type().retriever());
+                    builder.append(info.getType().retriever());
                 }
             }
 

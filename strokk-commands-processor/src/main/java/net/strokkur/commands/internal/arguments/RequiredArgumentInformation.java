@@ -24,22 +24,22 @@ import javax.lang.model.element.VariableElement;
 import java.util.Objects;
 
 public final class RequiredArgumentInformation implements ArgumentInformation {
-    private final String getArgumentName;
-    private final VariableElement getElement;
+    private final String argumentName;
+    private final VariableElement element;
     private final BrigadierArgumentType type;
 
     private @Nullable SuggestionProvider suggestionProvider = null;
 
-    public RequiredArgumentInformation(String getArgumentName, VariableElement getElement, BrigadierArgumentType type) {
-        this.getArgumentName = getArgumentName;
-        this.getElement = getElement;
+    public RequiredArgumentInformation(String argumentName, VariableElement element, BrigadierArgumentType type) {
+        this.argumentName = argumentName;
+        this.element = element;
         this.type = type;
     }
 
     @Override
     public String toString() {
         return "RequiredArgumentInformation{" +
-               "argumentName='" + getArgumentName + '\'' +
+               "argumentName='" + argumentName + '\'' +
                ", type=" + type +
                '}';
     }
@@ -50,25 +50,25 @@ public final class RequiredArgumentInformation implements ArgumentInformation {
             return false;
         }
         RequiredArgumentInformation that = (RequiredArgumentInformation) o;
-        return Objects.equals(getArgumentName(), that.getArgumentName()) && Objects.equals(type(), that.type());
+        return Objects.equals(getArgumentName(), that.getArgumentName()) && Objects.equals(getType(), that.getType());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getArgumentName(), type());
+        return Objects.hash(getArgumentName(), getType());
     }
 
     @Override
     public String getArgumentName() {
-        return getArgumentName;
+        return argumentName;
     }
 
     @Override
     public VariableElement getElement() {
-        return getElement;
+        return element;
     }
 
-    public BrigadierArgumentType type() {
+    public BrigadierArgumentType getType() {
         return type;
     }
 
