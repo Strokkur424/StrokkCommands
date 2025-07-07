@@ -42,7 +42,7 @@ This has the advantage of being straightforward to set up, doesn't cause any
 conflicts when two plugins have the same dependency, but different versions,
 and keeps your plugin jar nice and light (the mentioned 0 bytes of library code).
 
-## No reflection
+### No reflection
 **During runtime**, no reflection calls are performed. This results in some light limitations
 with the visibility of certain classes/methods not being allowed to be private, but as they can be
 package-private instead, this should rarely ever be a real issue.
