@@ -34,7 +34,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static net.strokkur.commands.StringArgType.STRING;
 
-@Command("adventure")
+//@Command("adventure")
 class AdventureArgumentsCommand {
 
     @Executes("send message")
