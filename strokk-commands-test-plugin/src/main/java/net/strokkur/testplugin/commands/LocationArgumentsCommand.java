@@ -27,7 +27,7 @@ import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 
 @SuppressWarnings("UnstableApiUsage")
-@Command("locationargs")
+//@Command("locationargs")
 class LocationArgumentsCommand {
     
     @Executes("blockpos")

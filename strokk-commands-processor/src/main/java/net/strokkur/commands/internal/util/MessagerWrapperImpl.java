@@ -21,7 +21,7 @@ import javax.annotation.processing.Messager;
 import javax.lang.model.element.Element;
 
 class MessagerWrapperImpl implements MessagerWrapper {
-    private static final boolean OUTPUT_INFO = false;
+    private static final boolean OUTPUT_INFO = true;
     
     private final Messager messager;
 
