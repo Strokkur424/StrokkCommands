@@ -10,7 +10,10 @@ export default defineConfig({
     starlight({
       title: "StrokkCommands",
       favicon: "/patchnotes.png",
-      social: [{ icon: "github", label: "GitHub", href: "https://github.com/Strokkur424/StrokkCommands" }],
+      social: [
+        { icon: "github", label: "GitHub", href: "https://github.com/Strokkur424/StrokkCommands" },
+        { icon: "discord", label: "Discord", href: "https://discord.gg/C3bWEYrtSA"}
+      ],
       customCss: ["/src/styles/custom.css"],
       expressiveCode: {
         themes: ["dark-plus", "light-plus"],
