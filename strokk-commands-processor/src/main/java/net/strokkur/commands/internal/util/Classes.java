@@ -31,4 +31,7 @@ public interface Classes {
     String LITERAL_COMMAND_NODE = "com.mojang.brigadier.tree.LiteralCommandNode";
     String COMMAND_SOURCE_STACK = "io.papermc.paper.command.brigadier.CommandSourceStack";
     String COMMANDS = "io.papermc.paper.command.brigadier.Commands";
+
+    // Other
+    String NULL_MARKED = "org.jspecify.annotations.NullMarked";
 }

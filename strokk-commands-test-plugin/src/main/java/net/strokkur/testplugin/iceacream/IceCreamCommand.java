@@ -23,7 +23,7 @@ import net.strokkur.commands.annotations.Executes;
 import net.strokkur.commands.annotations.arguments.CustomArg;
 import org.bukkit.command.CommandSender;
 
-//@Command("icecream")
+@Command("icecream")
 public class IceCreamCommand {
 
     @Executes("lick")

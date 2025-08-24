@@ -29,7 +29,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.inventory.ItemStack;
 
 @SuppressWarnings("UnstableApiUsage")
-//@Command("does")
+@Command("does")
 public class PredicateArgumentsCommand {
 
     @Executes("item")

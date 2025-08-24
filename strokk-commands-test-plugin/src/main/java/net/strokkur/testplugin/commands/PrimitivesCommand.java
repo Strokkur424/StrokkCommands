@@ -27,7 +27,7 @@ import org.bukkit.command.CommandSender;
 import static net.strokkur.commands.StringArgType.GREEDY;
 import static net.strokkur.commands.StringArgType.STRING;
 
-//@Command("primitive")
+@Command("primitive")
 class PrimitivesCommand {
 
     @Executes("bool")

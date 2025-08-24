@@ -30,7 +30,7 @@ import org.bukkit.entity.memory.MemoryKey;
 import org.bukkit.inventory.ItemType;
 
 @SuppressWarnings("UnstableApiUsage")
-//@Command("registryarg")
+@Command("registryarg")
 class RegistryArgumentsCommand {
     
     @Executes("itemtype")

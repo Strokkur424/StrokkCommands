@@ -26,7 +26,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
-//@Command("firstcommand")
+@Command("firstcommand")
 @Aliases("fc")
 @Description("My first StrokkCommands-command!")
 class MyFirstCommand {

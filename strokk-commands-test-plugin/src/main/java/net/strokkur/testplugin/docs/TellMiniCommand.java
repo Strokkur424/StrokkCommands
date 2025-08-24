@@ -29,7 +29,7 @@ import java.util.List;
 
 import static net.strokkur.commands.StringArgType.GREEDY;
 
-//@Command("tellmini")
+@Command("tellmini")
 public class TellMiniCommand {
     
     @Executes

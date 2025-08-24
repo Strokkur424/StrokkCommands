@@ -35,7 +35,7 @@ import org.jspecify.annotations.NullMarked;
 
 import java.util.concurrent.CompletableFuture;
 
-//@Command("withsuggestions")
+@Command("withsuggestions")
 @NullMarked
 class CommandWithSuggestions {
 

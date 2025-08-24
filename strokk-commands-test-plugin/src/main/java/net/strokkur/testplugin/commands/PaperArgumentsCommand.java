@@ -28,7 +28,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-//@Command("paperargs")
+@Command("paperargs")
 class PaperArgumentsCommand {
 
     @Executes("time")

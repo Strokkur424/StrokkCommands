@@ -34,7 +34,8 @@ public final class CommandTreePrinter extends AbstractPrinter {
         Classes.LITERAL_COMMAND_NODE,
         Classes.COMMAND_SOURCE_STACK,
         Classes.COMMANDS,
-        Classes.LIST
+        Classes.LIST,
+        Classes.NULL_MARKED
     );
 
     private final CommandPath<?> commandPath;
@@ -119,7 +120,8 @@ public final class CommandTreePrinter extends AbstractPrinter {
                  * @version {}
                  * @see #create() Creating the LiteralArgumentNode.
                  * @see #register(Commands) Registering the command.
-                 */""",
+                 */
+                @NullMarked""",
             commandInformation.classElement().getSimpleName().toString(),
             BuildConstants.VERSION
         );
@@ -183,6 +185,19 @@ public final class CommandTreePrinter extends AbstractPrinter {
         decrementIndent();
         decrementIndent();
         println("}");
+        println();
+
+        printBlock("""
+                /**
+                 * The constructor is not accessible. There is no need for an instance
+                 * to be created, as no state is stored, and all methods are static.
+                 * @throws IllegalAccessException
+                 */
+                private {}() throws IllegalAccessException {
+                    throw new IllegalAccessException("Cannot create instance of static class.");
+                }
+                """,
+            brigadierClassName);
 
         decrementIndent();
         println("}");

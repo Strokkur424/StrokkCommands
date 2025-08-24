@@ -29,7 +29,7 @@ import org.bukkit.entity.Player;
 import java.util.Arrays;
 import java.util.Collection;
 
-//@Command("entityargs")
+@Command("entityargs")
 class EntitiesCommand {
 
     @Executes("entity")
