@@ -19,18 +19,67 @@ package net.strokkur.commands.internal.util;
 
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.Element;
+import javax.tools.Diagnostic.Kind;
 
 public interface MessagerWrapper {
+
+    String DEBUG_SYSTEM_PROPERTY = "strokk.commands.debug";
 
     static MessagerWrapper wrap(Messager messager) {
         return new MessagerWrapperImpl(messager);
     }
 
-    void info(String format, Object... arguments);
+    /**
+     * Prints a formatted message to the {@link Kind#OTHER} channel.
+     * <p>
+     * The message is silently discarded unless the system property {@code -Dstrokk.command.debug} is set.
+     */
+    default void debug(String format, Object... args) {
+        if (System.getProperty(DEBUG_SYSTEM_PROPERTY) != null) {
+            print(Kind.OTHER, format, args);
+        }
+    }
 
-    void infoElement(String format, Element element, Object... arguments);
+    /**
+     * Prints a formatted message about this element to the {@link Kind#OTHER} channel.
+     * <p>
+     * The message is silently discarded unless the system property {@code -Dstrokk.command.debug} is set.
+     */
+    default void debugElement(String format, Element element, Object... args) {
+        if (System.getProperty(DEBUG_SYSTEM_PROPERTY) != null) {
+            printElement(Kind.OTHER, format, element, args);
+        }
+    }
 
-    void error(String format, Object... arguments);
+    /**
+     * Prints a formatted message to the {@link Kind#NOTE} channel.
+     */
+    default void info(String format, Object... arguments) {
+        print(Kind.NOTE, format, arguments);
+    }
 
-    void errorElement(String format, Element element, Object... arguments);
+    /**
+     * Prints a formatted message about this element to the {@link Kind#NOTE} channel.
+     */
+    default void infoElement(String format, Element element, Object... arguments) {
+        printElement(Kind.NOTE, format, element, arguments);
+    }
+
+    /**
+     * Prints a formatted message to the {@link Kind#ERROR} channel.
+     */
+    default void error(String format, Object... arguments) {
+        print(Kind.ERROR, format, arguments);
+    }
+
+    /**
+     * Prints a formatted message about this element to the {@link Kind#ERROR} channel.
+     */
+    default void errorElement(String format, Element element, Object... arguments) {
+        printElement(Kind.ERROR, format, element, arguments);
+    }
+
+    void print(Kind kind, String format, Object... arguments);
+
+    void printElement(Kind kind, String format, Element element, Object... arguments);
 }

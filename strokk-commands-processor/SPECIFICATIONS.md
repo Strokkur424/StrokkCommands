@@ -1,6 +1,6 @@
 # Annotation Processor Specifications (inner classes)
 *This document is meant as a reference for how the annotation processors processes
-methods into a Brigadier source tree, with focus on inner classes-*
+methods into a Brigadier source tree, with focus on inner classes.*
 
 ## Different types of nodes
 Crudely said, there are three types of ways to add nested nodes:
@@ -254,3 +254,35 @@ track of a magnitude of variables for each path:
   - If yes, keep track of the arguments relevant to construct a record instance. 
   - If yes, keep track of its inner classes relevant for the path, as they will need to be constructed live.
 - Method parameters of the `@Executes` annotated method.
+
+For the source file printer, a command tree has to be constructed in greatly simplify the Brigadier tree printing.
+Instead of keeping track of nodes in a traditional sense, we can put the paths into the tree directly.
+
+For our `visualize` command structure, the tree might look like this:
+
+<p align="center">
+
+![](./public/diagram-3.svg)
+
+</p>
+
+The horizontal rectangle nodes here describe non-executable paths and ruby-shaped
+nodes describe executable paths.
+
+There is only one problem remaining: What if there are two nodes which start with the same
+path, but finally divert? A.e.:
+- `<root> run <target>`
+- `<root> run <target> stop`
+
+As could be declared by these methods:
+```java
+@Executes
+void run(CommandSender sender, Player target);
+
+@Executes
+void runStop(CommandSender sender, Player target, @Literal String stop);
+```
+
+The answer here is quite simple: We have to keep two information:
+1. We need the argument information for the method.
+2. We split/combine paths in order to cleanly fit into the tree.

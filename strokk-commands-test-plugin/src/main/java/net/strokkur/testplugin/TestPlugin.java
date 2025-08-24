@@ -21,6 +21,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.strokkur.testplugin.docs.MyFirstCommandBrigadier;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.slf4j.Logger;
 
 @SuppressWarnings("UnstableApiUsage")
 public final class TestPlugin extends JavaPlugin {
@@ -43,6 +44,8 @@ public final class TestPlugin extends JavaPlugin {
 //            LiteralsCommandBrigadier.register(commands);
 //            TellMiniCommandBrigadier.register(commands);
         }));
+
+        this.getSLF4JLogger().debug("35");
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS.newHandler(event -> {
             MyFirstCommandBrigadier.register(event.registrar());

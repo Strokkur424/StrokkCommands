@@ -19,37 +19,17 @@ package net.strokkur.commands.internal.util;
 
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.Element;
+import javax.tools.Diagnostic;
 
-class MessagerWrapperImpl implements MessagerWrapper {
-    private static final boolean OUTPUT_INFO = true;
-    
-    private final Messager messager;
+record MessagerWrapperImpl(Messager messager) implements MessagerWrapper {
 
-    public MessagerWrapperImpl(Messager messager) {
-        this.messager = messager;
+    @Override
+    public void print(final Diagnostic.Kind kind, final String format, final Object... arguments) {
+        messager.printMessage(kind, format.replaceAll("\\{}", "%s").formatted(arguments));
     }
 
     @Override
-    public void info(String format, Object... arguments) {
-        if (OUTPUT_INFO) {
-            messager.printNote(format.replaceAll("\\{}", "%s").formatted(arguments));
-        }
-    }
-
-    @Override
-    public void infoElement(String format, Element element, Object... arguments) {
-        if (OUTPUT_INFO) {
-            messager.printNote(format.replaceAll("\\{}", "%s").formatted(arguments), element);
-        }
-    }
-
-    @Override
-    public void error(String format, Object... arguments) {
-        messager.printError(format.replaceAll("\\{}", "%s").formatted(arguments));
-    }
-
-    @Override
-    public void errorElement(String format, Element element, Object... arguments) {
-        messager.printError(format.replaceAll("\\{}", "%s").formatted(arguments), element);
+    public void printElement(final Diagnostic.Kind kind, final String format, final Element element, final Object... arguments) {
+        messager.printMessage(kind, format.replaceAll("\\{}", "%s").formatted(arguments), element);
     }
 }

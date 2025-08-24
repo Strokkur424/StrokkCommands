@@ -20,7 +20,6 @@ package net.strokkur.commands.internal.util;
 import net.strokkur.commands.annotations.Permission;
 import net.strokkur.commands.annotations.RequiresOP;
 import net.strokkur.commands.internal.intermediate.Requirement;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
@@ -56,7 +55,7 @@ public interface Utils {
     }
 
     @NullUnmarked
-    static @NonNull List<Requirement> getAnnotatedRequirements(@NonNull Element element) {
+    static List<Requirement> getAnnotatedRequirements(Element element) {
         Permission permission = element.getAnnotation(Permission.class);
         RequiresOP requiresOP = element.getAnnotation(RequiresOP.class);
 

@@ -1,8 +1,6 @@
 package net.strokkur.commands.internal;
 
-import net.strokkur.commands.internal.arguments.RequiredArgumentInformation;
 import net.strokkur.commands.internal.intermediate.CommandInformation;
-import net.strokkur.commands.internal.intermediate.CommandTree;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 
 import javax.annotation.processing.Filer;
