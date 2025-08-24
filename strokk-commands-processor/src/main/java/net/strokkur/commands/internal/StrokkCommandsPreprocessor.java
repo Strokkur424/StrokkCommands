@@ -22,6 +22,8 @@ import net.strokkur.commands.annotations.Command;
 import net.strokkur.commands.annotations.Description;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
 import net.strokkur.commands.internal.intermediate.CommandInformation;
+import net.strokkur.commands.internal.intermediate.ExecutorType;
+import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
 import net.strokkur.commands.internal.parsing.CommandParser;
 import net.strokkur.commands.internal.parsing.CommandParserImpl;
@@ -75,6 +77,11 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
                 messagerWrapper.debug(commandPath.toString());
             }
 
+            // Before we print the paths, we do a step I like to refer to as "flattening".
+            // This does not actually change the structure of the paths, but it moves up any attributes
+            // relevant for certain things to print correctly (a.e. executor requirements).
+            flattenPath(commandPath);
+
             try {
                 final CommandTreePrinter printer = new CommandTreePrinter(0, null, commandPath, commandInformation);
                 final JavaFileObject obj = processingEnv.getFiler().createSourceFile(printer.getPackageName() + "." + printer.getBrigadierClassName());
@@ -102,5 +109,84 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
             description != null ? description.value() : null,
             aliases != null ? aliases.value() : null
         );
+    }
+
+    private void flattenPath(CommandPath<?> path) {
+        // Depth first.
+        path.getChildren().forEach(this::flattenPath);
+
+        // The relevant attributes are the 'permission', 'requires_op', 'executor, and 'requirement'
+        // attributes, since these add some sort of `.requires` clause, which works the best the higher
+        // up it is in the tree. Certain attribute values also cause the parent value to be written to
+        // explicitly in order to **avoid** merging values. A.e. a NONE executor will force itself to
+        // the parent in order to avoid being  swallowed by a sister path, which may have an executor requirement.
+
+        // Due to the way some attributes are ordered, certain attributes must be set from the parent, whilst
+        // others are set from the children. Each attribute will have a short description of the order.
+
+        // Once an attribute is passed on, it will be removed from the child node in order to help the
+        // source file printer a bit.
+
+        // REQUIRES_OP - This attribute is set from the parent. It is only set if **all children**
+        // have this attribute set as well.
+        if (!path.hasAttribute(AttributeKey.REQUIRES_OP)) {
+            boolean mayRequireOp = true;
+            boolean childRequiresOp = false;
+            for (final CommandPath<?> child : path.getChildren()) {
+                if (child.hasAttribute(AttributeKey.REQUIRES_OP)) {
+                    childRequiresOp = true;
+                } else {
+                    mayRequireOp = false;
+                    break;
+                }
+            }
+
+            if (mayRequireOp && childRequiresOp) {
+                path.setAttribute(AttributeKey.REQUIRES_OP, true);
+                for (final CommandPath<?> child : path.getChildren()) {
+                    child.removeAttribute(AttributeKey.REQUIRES_OP);
+                }
+            }
+        }
+
+        // EXECUTOR - Here, the case is similar to the REQUIRES_OP attribute, which the slight difference that
+        // the **minimum requirement** will be used, meaning if a child has an ENTITY, and another a PLAYER
+        // executor requirement, the parent path will declare an ENTITY executor requirement as well.
+        {
+            boolean nodesHaveExecutorRequirement = false;
+            ExecutorType relevantExecutorType = ExecutorType.PLAYER;
+            for (final CommandPath<?> child : path.getChildren()) {
+                if (!child.hasAttribute(AttributeKey.EXECUTOR_TYPE)) {
+                    // If a child node doesn't have a req, neither will the parent node.
+                    relevantExecutorType = ExecutorType.NONE;
+                    break;
+                }
+
+                nodesHaveExecutorRequirement = true;
+                final ExecutorType executorType = child.getAttribute(AttributeKey.EXECUTOR_TYPE);
+                if (relevantExecutorType == ExecutorType.PLAYER && executorType == ExecutorType.ENTITY) {
+                    relevantExecutorType = ExecutorType.ENTITY;
+                }
+
+                if (executorType == ExecutorType.NONE) {
+                    relevantExecutorType = ExecutorType.NONE;
+                    break;
+                }
+            }
+
+            if (relevantExecutorType != ExecutorType.NONE && nodesHaveExecutorRequirement) {
+                path.setAttribute(AttributeKey.EXECUTOR_TYPE, relevantExecutorType);
+                for (final CommandPath<?> child : path.getChildren()) {
+                    // Because the executor attribute works a bit differently than just a normal requirement,
+                    // the attribute itself cannot be removed. Instead, we can set the EXECUTOR_HANDLED
+                    // attribute to tell the printer to **not** print the requirement.
+                    child.setAttribute(AttributeKey.EXECUTOR_HANDLED, true);
+                }
+            }
+        }
+
+        // PERMISSION - not implemented
+
+        // REQUIREMENT - not implemented
     }
 }

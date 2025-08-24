@@ -18,10 +18,12 @@
 package net.strokkur.commands.internal.intermediate.paths;
 
 import net.strokkur.commands.internal.arguments.CommandArgument;
+import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import org.jetbrains.annotations.UnmodifiableView;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface CommandPath<S extends CommandArgument> {
 
@@ -39,6 +41,15 @@ public interface CommandPath<S extends CommandArgument> {
     void removeChild(CommandPath<?> child);
 
     void addChild(CommandPath<?> child);
+
+    @Nullable
+    <T> T getAttribute(AttributeKey<T> key);
+
+    <T> void setAttribute(AttributeKey<T> key, T value);
+
+    void removeAttribute(AttributeKey<?> key);
+
+    boolean hasAttribute(AttributeKey<?> key);
 
     /**
      * Splits the argument path of this path and returns an instance of the first half of the split

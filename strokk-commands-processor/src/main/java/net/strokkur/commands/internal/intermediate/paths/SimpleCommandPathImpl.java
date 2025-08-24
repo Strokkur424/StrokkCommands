@@ -18,18 +18,24 @@
 package net.strokkur.commands.internal.intermediate.paths;
 
 import net.strokkur.commands.internal.arguments.CommandArgument;
+import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import org.jetbrains.annotations.UnmodifiableView;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.TreeMap;
 
 abstract class SimpleCommandPathImpl<S extends CommandArgument> implements CommandPath<S> {
 
     protected final List<CommandPath<?>> children;
     protected @Nullable CommandPath<?> parent;
     protected List<S> arguments;
+    protected Map<String, Object> attributes = new TreeMap<>();
 
     public SimpleCommandPathImpl(final List<S> arguments) {
         this.children = new ArrayList<>();
@@ -77,10 +83,37 @@ abstract class SimpleCommandPathImpl<S extends CommandArgument> implements Comma
     }
 
     @Override
+    @Nullable
+    public <T> T getAttribute(final AttributeKey<T> key) {
+        if (attributes.containsKey(key.key())) {
+            return (T) attributes.get(key.key());
+        } else {
+            return key.defaultValue();
+        }
+    }
+
+    @Override
+    public <T> void setAttribute(final AttributeKey<T> key, final T value) {
+        attributes.put(key.key(), value);
+    }
+
+    @Override
+    public void removeAttribute(final AttributeKey<?> key) {
+        attributes.remove(key.key());
+    }
+
+    @Override
+    public boolean hasAttribute(final AttributeKey<?> key) {
+        return attributes.containsKey(key.key());
+    }
+
+    @Override
     public CommandPath<S> splitPath(final int index) {
         List<S> left = new ArrayList<>(arguments.subList(0, index));
         arguments = new ArrayList<>(arguments.subList(index, arguments.size()));
-        SimpleCommandPathImpl<S> leftPath = createLeftSplit(left);
+
+        final SimpleCommandPathImpl<S> leftPath = createLeftSplit(left);
+        leftPath.attributes = new HashMap<>(attributes);
 
         if (this.parent != null) {
             this.parent.removeChild(this);

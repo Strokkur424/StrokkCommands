@@ -21,6 +21,9 @@ import net.strokkur.commands.annotations.Aliases;
 import net.strokkur.commands.annotations.Command;
 import net.strokkur.commands.annotations.Description;
 import net.strokkur.commands.annotations.Executes;
+import net.strokkur.commands.annotations.Executor;
+import net.strokkur.commands.annotations.Permission;
+import net.strokkur.commands.annotations.RequiresOP;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
@@ -31,12 +34,14 @@ import org.bukkit.util.Vector;
 class MyFirstCommand {
 
     @Executes("two three four")
-    void onExecute(CommandSender sender) {
+    @RequiresOP
+    void onExecute(CommandSender sender, @Executor Player player) {
         sender.sendRichMessage("<#f29def>Hey there! You just executed your first command ^-^");
     }
 
     @Executes("fling")
-    void onFling(CommandSender sender, /* @Executor */ Player player) {
+    @Permission("some.permission")
+    void onFling(CommandSender sender, @Executor Player player) {
         player.setVelocity(player.getVelocity().add(new Vector(0, 10, 0)));
         player.sendRichMessage("<b><#c4e6ff>WOOSH</b> <#c4fffd>You've been flung!");
     }

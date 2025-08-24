@@ -23,8 +23,8 @@ import java.util.List;
 
 public enum ExecutorType {
     NONE,
-    ENTITY("stack.getExecutor() != null"),
-    PLAYER("stack.getExecutor() instanceof Player");
+    ENTITY("source.getExecutor() != null"),
+    PLAYER("source.getExecutor() instanceof Player");
 
     private final @Nullable String predicate;
 

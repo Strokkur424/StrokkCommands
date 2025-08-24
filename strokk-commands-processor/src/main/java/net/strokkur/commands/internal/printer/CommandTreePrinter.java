@@ -22,6 +22,8 @@ import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
 import net.strokkur.commands.internal.intermediate.CommandInformation;
+import net.strokkur.commands.internal.intermediate.ExecutorType;
+import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
 import net.strokkur.commands.internal.intermediate.paths.ExecutablePath;
 import net.strokkur.commands.internal.intermediate.paths.LiteralCommandPath;
@@ -41,6 +43,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -208,6 +211,7 @@ public final class CommandTreePrinter extends AbstractPrinter {
                 /**
                  * The constructor is not accessible. There is no need for an instance
                  * to be created, as no state is stored, and all methods are static.
+                 *
                  * @throws IllegalAccessException
                  */
                 private {}() throws IllegalAccessException {
@@ -246,6 +250,13 @@ public final class CommandTreePrinter extends AbstractPrinter {
                     imports.addAll(requiredArgument.getArgumentType().imports());
                 }
             }
+        }
+
+        final ExecutorType executorType = commandPath.getAttribute(AttributeKey.EXECUTOR_TYPE);
+        if (executorType == ExecutorType.PLAYER) {
+            imports.add(Classes.PLAYER);
+        } else if (executorType == ExecutorType.ENTITY) {
+            imports.add(Classes.ENTITY);
         }
 
         for (final CommandPath<?> child : commandPath.getChildren()) {
@@ -346,12 +357,28 @@ public final class CommandTreePrinter extends AbstractPrinter {
     }
 
     private void printExecutesArguments(ExecutablePath path) throws IOException {
-        if (path.getArguments().isEmpty()) {
+        final ExecutorType executorType = Objects.requireNonNull(path.getAttribute(AttributeKey.EXECUTOR_TYPE));
+        if (path.getArguments().isEmpty() && executorType == ExecutorType.NONE) {
             println("ctx.getSource().getSender()");
             return;
         }
 
         println("ctx.getSource().getSender(),");
+        if (executorType != ExecutorType.NONE) {
+            printIndent();
+            switch (executorType) {
+                case ENTITY -> print("ctx.getSource().getExecutor()");
+                case PLAYER -> print("(Player) ctx.getSource().getExecutor()");
+            }
+
+            if (path.getArguments().isEmpty()) {
+                println();
+                return;
+            }
+
+            print(",");
+            println();
+        }
         printExecutorArguments(path.getArguments());
     }
 
@@ -393,7 +420,28 @@ public final class CommandTreePrinter extends AbstractPrinter {
         );
     }
 
-    private <T extends CommandArgument> void printArguments(List<T> arguments, InsidePrinter insidePrinter, boolean noStartingThen) throws IOException {
+    private void printRequires(@Nullable CommandPath<?> path) throws IOException {
+        if (path != null) {
+            final List<String> requirements = new ArrayList<>();
+
+            if (path.getAttribute(AttributeKey.REQUIRES_OP)) {
+                requirements.add("source.getSender().isOp()");
+            }
+
+            final ExecutorType executorType = path.getAttribute(AttributeKey.EXECUTOR_TYPE);
+            if (!path.getAttribute(AttributeKey.EXECUTOR_HANDLED) && executorType != ExecutorType.NONE) {
+                requirements.add(executorType.getPredicate());
+            }
+
+            if (!requirements.isEmpty()) {
+                println();
+                printIndent();
+                print(".requires(source -> {})", String.join(" && ", requirements));
+            }
+        }
+    }
+
+    private <T extends CommandArgument> void printArguments(List<T> arguments, @Nullable CommandPath<?> printRequirements, InsidePrinter insidePrinter, boolean noStartingThen) throws IOException {
         if (arguments.isEmpty()) {
             insidePrinter.print();
             return;
@@ -408,7 +456,9 @@ public final class CommandTreePrinter extends AbstractPrinter {
 
         printArgument(arg);
         incrementIndent();
-        printArguments(arguments, insidePrinter, false);
+
+        printRequires(printRequirements);
+        printArguments(arguments, null, insidePrinter, false);
         decrementIndent();
 
         if (!noStartingThen) {
@@ -417,7 +467,7 @@ public final class CommandTreePrinter extends AbstractPrinter {
     }
 
     private <T extends CommandArgument> void printGenericPath(CommandPath<T> path, InsidePrinter insidePrinter) throws IOException {
-        printArguments(new ArrayList<>(path.getArguments()), () -> {
+        printArguments(new ArrayList<>(path.getArguments()), path, () -> {
             for (final CommandPath<?> child : path.getChildren()) {
                 printPath(child);
             }

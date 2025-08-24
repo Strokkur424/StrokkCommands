@@ -19,19 +19,25 @@ package net.strokkur.commands.internal.parsing;
 
 import net.strokkur.commands.annotations.Command;
 import net.strokkur.commands.annotations.Executes;
+import net.strokkur.commands.annotations.Executor;
 import net.strokkur.commands.annotations.Literal;
+import net.strokkur.commands.annotations.Permission;
+import net.strokkur.commands.annotations.RequiresOP;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentType;
 import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgumentImpl;
 import net.strokkur.commands.internal.exceptions.HandledConversionException;
+import net.strokkur.commands.internal.intermediate.ExecutorType;
+import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
 import net.strokkur.commands.internal.intermediate.paths.ExecutablePath;
 import net.strokkur.commands.internal.intermediate.paths.ExecutablePathImpl;
 import net.strokkur.commands.internal.intermediate.paths.LiteralCommandPath;
 import net.strokkur.commands.internal.intermediate.paths.RecordPath;
 import net.strokkur.commands.internal.intermediate.paths.RecordPathImpl;
+import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 
@@ -118,22 +124,40 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
                         rootPath.addChild(path);
                     }
                 }
+
+                populateRequirements(element, executeRoots);
             }
         }
 
+        populateRequirements(typeElement, List.of(literalPath));
         return literalPath;
     }
 
     private List<ExecutablePath> getExecutablePath(final ExecutableElement executableElement) {
-        final var argsList = toArguments(executableElement.getParameters(), 1);
+        ExecutorType type = ExecutorType.NONE;
+        if (executableElement.getParameters().size() >= 2) {
+            final Element potentialExecutor = executableElement.getParameters().get(1);
+            if (potentialExecutor.getAnnotation(Executor.class) != null) {
+                if (potentialExecutor.asType().toString().equals(Classes.PLAYER)) {
+                    type = ExecutorType.PLAYER;
+                } else if (potentialExecutor.asType().toString().equals(Classes.ENTITY)) {
+                    type = ExecutorType.ENTITY;
+                }
+            }
+        }
+
+        final List<List<CommandArgument>> argsList = toArguments(executableElement.getParameters(), type == ExecutorType.NONE ? 1 : 2);
         if (argsList.isEmpty()) {
             return List.of(new ExecutablePathImpl(List.of(), executableElement));
         }
 
         final List<ExecutablePath> out = new ArrayList<>();
         for (final List<CommandArgument> args : argsList) {
-            out.add(new ExecutablePathImpl(args, executableElement));
+            final ExecutablePath path = new ExecutablePathImpl(args, executableElement);
+            path.setAttribute(AttributeKey.EXECUTOR_TYPE, type);
+            out.add(path);
         }
+
         return out;
     }
 
@@ -195,6 +219,17 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
         }
 
         return arguments;
+    }
+
+    private void populateRequirements(Element element, List<? extends CommandPath<?>> paths) {
+        if (element.getAnnotation(RequiresOP.class) != null) {
+            paths.forEach(path -> path.setAttribute(AttributeKey.REQUIRES_OP, true));
+        }
+
+        final Permission permission = element.getAnnotation(Permission.class);
+        if (permission != null) {
+            paths.forEach(path -> path.setAttribute(AttributeKey.PERMISSION, permission.value()));
+        }
     }
 
     @Override
