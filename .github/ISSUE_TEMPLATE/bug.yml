@@ -1,6 +1,6 @@
 name: "🐛 Bug"
 description: Report unexpected behavior.
-labels: 
+labels:
   - "awaiting response"
   - "bug"
 body:

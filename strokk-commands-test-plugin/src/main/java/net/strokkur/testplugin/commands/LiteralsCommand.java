@@ -30,7 +30,7 @@ public class LiteralsCommand {
                   @Literal({"are", "am"}) String first,
                   @Literal({"you", "I"}) String second,
                   @Literal("doing?") String $doing) {
-        
+
         if (first.equals("are") && second.equals("you")) {
             sender.sendMessage("I am doing great, thanks for asking :)");
         } else if (first.equals("am") && second.equals("I")) {

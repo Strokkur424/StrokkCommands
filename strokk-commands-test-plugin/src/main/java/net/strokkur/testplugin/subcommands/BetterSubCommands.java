@@ -21,22 +21,11 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.strokkur.commands.annotations.Command;
 import net.strokkur.commands.annotations.Executes;
 import net.strokkur.commands.annotations.RequiresOP;
-import net.strokkur.testplugin.iceacream.IceCreamArgument;
-import net.strokkur.testplugin.iceacream.IceCreamCommand;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 @Command("subcommands")
 public class BetterSubCommands {
-
-    @Command("help")
-    class Help {
-
-        @Executes
-        void help(CommandSender sender) {
-            sender.sendRichMessage("Not a help message.");
-        }
-    }
 
     @Command("give")
     record Give(Player target) {
@@ -51,7 +40,7 @@ public class BetterSubCommands {
 
         }
     }
-    
+
     @Command("kill")
     @RequiresOP
     record Kill(Player target, String reason) {
@@ -66,11 +55,20 @@ public class BetterSubCommands {
             if (!force) {
                 return;
             }
-            
+
             target.setHealth(0d);
             sender.sendRichMessage("<red>Successfully killed <target>",
                 Placeholder.component("target", target.displayName())
             );
+        }
+    }
+
+    @Command("help")
+    class Help {
+
+        @Executes
+        void help(CommandSender sender) {
+            sender.sendRichMessage("Not a help message.");
         }
     }
 }

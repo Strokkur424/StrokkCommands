@@ -21,7 +21,6 @@ import com.destroystokyo.paper.profile.PlayerProfile;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.strokkur.commands.annotations.Command;
 import net.strokkur.commands.annotations.Executes;
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -52,7 +51,7 @@ class EntitiesCommand {
             Placeholder.unparsed("profiles", String.join(", ", Arrays.stream(profiles).map(PlayerProfile::getName).toList()))
         );
     }
-    
+
     @Executes("one-player-profile")
     void execute(CommandSender sender, PlayerProfile profile) {
         sender.sendRichMessage("<green>Found player: <gradient:aqua:blue><profile>",

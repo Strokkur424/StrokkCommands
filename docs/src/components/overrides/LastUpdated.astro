@@ -1,9 +1,9 @@
 ---
 // Borrowed from the PaperMC documentation.
 // https://github.com/PaperMC/docs.
-import { REPO, getCommitInfo } from "/src/utils/git";
+import {REPO, getCommitInfo} from "/src/utils/git";
 
-const { lang, lastUpdated } = Astro.locals.starlightRoute;
+const {lang, lastUpdated} = Astro.locals.starlightRoute;
 const filePath = Astro.locals.starlightRoute.entry.filePath;
 
 const info = await getCommitInfo(filePath);
@@ -11,7 +11,7 @@ const info = await getCommitInfo(filePath);
 
 {
   lastUpdated && (
-    <p>
+  <p>
       <span class="nowrap">
         Last updated:
         <time datetime={lastUpdated.toISOString()}>
@@ -21,15 +21,15 @@ const info = await getCommitInfo(filePath);
           })}
         </time>
       </span>{" "}
-      {info && (
-        <span class="nowrap">
+    {info && (
+      <span class="nowrap">
           by <a href={info.committer.href}>{info.committer.name}</a>
           in <a href={`https://github.com/${REPO}/commit/${info.hash}`}>{info.hash.substring(0, 7)}</a>
         </span>
-      )}
-    </p>
-  )
-}
+    )}
+  </p>
+    )
+  }
 
 <style>
   a,

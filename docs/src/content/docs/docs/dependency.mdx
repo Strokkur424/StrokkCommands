@@ -3,6 +3,7 @@ title: Adding the dependency
 description: In-depth explanation about adding StrokkCommands to your plugin.
 ---
 
+
 import {TabItem, Tabs} from "@astrojs/starlight/components";
 
 StrokkCommands is hosted on the [eldonexus](https://eldonexus.de). It is split into two separate modules:
@@ -25,78 +26,79 @@ The versions here are automatically fetched and thus always up to date.
 First, we have to add the repository:
 
 <Tabs syncKey="build-system">
-    <TabItem label="Gradle">
-        ```kts
-        repositories {
-          maven {
-            id = "eldonexus"
-            url = "https://eldonexus.de/repository/maven-public/"
-          }
-        }
-        ```
-    </TabItem>
-    <TabItem label="Maven">
-        ```xml
-        <repositories>
-          <repository>
-            <id>eldonexus</id>
-            <url>https://eldonexus.de/repository/maven-public/</url>
-          </repository>
-        </repositories>
-        ```
-    </TabItem>
+  <TabItem label="Gradle">
+    ```kts
+    repositories {
+    maven {
+    id = "eldonexus"
+    url = "https://eldonexus.de/repository/maven-public/"
+  }
+  }
+    ```
+  </TabItem>
+  <TabItem label="Maven">
+    ```xml
+    <repositories>
+      <repository>
+        <id>eldonexus</id>
+        <url>https://eldonexus.de/repository/maven-public/</url>
+      </repository>
+    </repositories>
+    ```
+  </TabItem>
 </Tabs>
 
 <br/>
 Next up we add the dependency:
 
 <Tabs syncKey="build-system">
-    <TabItem label="Gradle">
-        For Gradle, we simply add the annotations module as a `compileOnly` and the processor module as a `annotationProcessor` dependency.
+  <TabItem label="Gradle">
+    For Gradle, we simply add the annotations module as a `compileOnly` and the processor module as a
+    `annotationProcessor` dependency.
 
-        ```kts replace
-        dependencies {
-          compileOnly("net.strokkur:strokk-commands-annotations:\{LATEST_COMMANDS_RELEASE}-SNAPSHOT")
-          annotationProcessor("net.strokkur:strokk-commands-processor:\{LATEST_COMMANDS_RELEASE}-SNAPSHOT")
-        }
-        ```
-    </TabItem>
-    <TabItem label="Maven">
-        For Maven, we first have to add the annotation module as a dependency, with scope `provided` so that
-        the annotations do not get included in the output jar.
+    ```kts replace
+    dependencies {
+    compileOnly("net.strokkur:strokk-commands-annotations:\{LATEST_COMMANDS_RELEASE}-SNAPSHOT")
+    annotationProcessor("net.strokkur:strokk-commands-processor:\{LATEST_COMMANDS_RELEASE}-SNAPSHOT")
+  }
+    ```
+  </TabItem>
+  <TabItem label="Maven">
+    For Maven, we first have to add the annotation module as a dependency, with scope `provided` so that
+    the annotations do not get included in the output jar.
 
-        ```xml replace
-        <dependencies>
-          <dependency>
-            <group>net.strokkur</group>
-            <artifactId>strokk-commands-annotations</artifactId>
-            <version>\{LATEST_COMMANDS_RELEASE}-SNAPSHOT</version>
-            <scope>provided</scope>
-          </dependency>
-        </dependencies>
-        ```
+    ```xml replace
+    <dependencies>
+      <dependency>
+        <group>net.strokkur</group>
+        <artifactId>strokk-commands-annotations</artifactId>
+        <version>\{LATEST_COMMANDS_RELEASE}-SNAPSHOT</version>
+        <scope>provided</scope>
+      </dependency>
+    </dependencies>
+    ```
 
-        Finally, we modify the compiler plugin and add a new annotation processor path for our processor module.
-        ```xml replace
-        <pluginManagement>
-          <plugins>
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-compiler-plugin</artifactId>
-              <version>3.6.1</version>
-              <configuration>
-                <annotationProcessorPaths>
-                  <!-- Add annotation processor -->
-                  <annotationProcessorPath>
-                    <group>net.strokkur</group>
-                    <artifactId>strokk-commands-processor</artifactId>
-                    <version>\{LATEST_COMMANDS_RELEASE}-SNAPSHOT</version>
-                  </annotationProcessorPath>
-                </annotationProcessorPaths>
-              </configuration>
-            </plugin>
-          </plugins>
-        </pluginManagement>
-        ```
-    </TabItem>
+    Finally, we modify the compiler plugin and add a new annotation processor path for our processor module.
+    ```xml replace
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.6.1</version>
+          <configuration>
+            <annotationProcessorPaths>
+              <!-- Add annotation processor -->
+              <annotationProcessorPath>
+                <group>net.strokkur</group>
+                <artifactId>strokk-commands-processor</artifactId>
+                <version>\{LATEST_COMMANDS_RELEASE}-SNAPSHOT</version>
+              </annotationProcessorPath>
+            </annotationProcessorPaths>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    ```
+  </TabItem>
 </Tabs>

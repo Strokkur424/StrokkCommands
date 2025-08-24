@@ -1,9 +1,9 @@
 // Borrowed from the PaperMC docs.
 // https://github.com/PaperMC/docs
 
-import type { RemarkPlugin } from "@astrojs/markdown-remark";
-import type { Literal } from "mdast";
-import { visit } from "unist-util-visit";
+import type {RemarkPlugin} from "@astrojs/markdown-remark";
+import type {Literal} from "mdast";
+import {visit} from "unist-util-visit";
 
 // replaces constants in code blocks
 // expression format: \{CONSTANT_NAME}
@@ -12,7 +12,7 @@ interface Options {
   constants: Record<string, string>;
 }
 
-const plugin: RemarkPlugin = ({ constants }: Options) => {
+const plugin: RemarkPlugin = ({constants}: Options) => {
   return (tree) => {
     visit(tree, ["code", "inlineCode"], (node) => {
       if (node.type === "code" && !node.meta?.includes("replace")) {

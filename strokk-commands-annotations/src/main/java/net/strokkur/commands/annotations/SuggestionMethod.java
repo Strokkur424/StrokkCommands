@@ -28,6 +28,6 @@ public @interface SuggestionMethod {
     String method();
 
     Class<?> base() default Class.class;
-    
+
     boolean reference() default true;
 }

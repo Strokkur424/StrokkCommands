@@ -5,10 +5,13 @@ from annotation! Have **you** ever though: "Oh boy, my command is far too hard t
 **this** is the **solution**!!!
 
 ## Documentation
+
 You can read the documentation at https://commands.strokkur.net!
 
 ## Example
+
 Talking doesn't cut it, so why don't I show you? Here is a Brigadier command:
+
 ```java
 public static LiteralCommandNode<CommandSourceStack> create() {
     return Commands.literal("adventure")

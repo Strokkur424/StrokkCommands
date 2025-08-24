@@ -2,7 +2,7 @@ name: 'Docs: Publish Docs Preview Deployment'
 
 on:
   workflow_run:
-    workflows: ["Build Preview Deployment"]
+    workflows: [ "Build Preview Deployment" ]
     types:
       - completed
 
@@ -27,7 +27,7 @@ jobs:
           path: dist
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
-          
+
       - name: Deploy to Cloudflare Pages
         uses: AdrianGonz97/refined-cf-pages-action@v1
         with:

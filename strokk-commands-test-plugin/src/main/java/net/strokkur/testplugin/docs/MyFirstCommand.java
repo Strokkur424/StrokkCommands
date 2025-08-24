@@ -21,7 +21,6 @@ import net.strokkur.commands.annotations.Aliases;
 import net.strokkur.commands.annotations.Command;
 import net.strokkur.commands.annotations.Description;
 import net.strokkur.commands.annotations.Executes;
-import net.strokkur.commands.annotations.Executor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
@@ -35,7 +34,7 @@ class MyFirstCommand {
     void onExecute(CommandSender sender) {
         sender.sendRichMessage("<#f29def>Hey there! You just executed your first command ^-^");
     }
-    
+
     @Executes("fling")
     void onFling(CommandSender sender, /* @Executor */ Player player) {
         player.setVelocity(player.getVelocity().add(new Vector(0, 10, 0)));
