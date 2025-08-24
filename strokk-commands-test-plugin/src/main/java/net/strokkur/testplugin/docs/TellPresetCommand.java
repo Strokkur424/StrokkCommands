@@ -23,7 +23,7 @@ import net.strokkur.commands.annotations.Literal;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-@Command("tellpreset")
+//@Command("tellpreset")
 public class TellPresetCommand {
 
     @Executes

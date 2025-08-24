@@ -108,7 +108,7 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
     }
 
     private List<ExecutablePath> getExecutablePath(final ExecutableElement executableElement) {
-        final var argsList = toArguments(executableElement.getParameters());
+        final var argsList = toArguments(executableElement.getParameters(), 1);
         if (argsList.isEmpty()) {
             return List.of(new ExecutablePathImpl(List.of(), executableElement));
         }
@@ -122,17 +122,17 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
 
     private List<RecordPath> getRecordPath(final TypeMirror recordTypeMirror, final List<? extends VariableElement> parameters) {
         final List<RecordPath> out = new ArrayList<>();
-        for (final List<CommandArgument> args : toArguments(parameters)) {
+        for (final List<CommandArgument> args : toArguments(parameters, 0)) {
             out.add(new RecordPathImpl(args, recordTypeMirror));
         }
         return out;
     }
 
-    private List<List<CommandArgument>> toArguments(final List<? extends VariableElement> parameters) {
+    private List<List<CommandArgument>> toArguments(final List<? extends VariableElement> parameters, int startIndex) {
         final List<List<CommandArgument>> arguments = new ArrayList<>();
         arguments.add(new ArrayList<>());
 
-        for (int i = 1, parametersSize = parameters.size(); i < parametersSize; i++) {
+        for (int i = startIndex, parametersSize = parameters.size(); i < parametersSize; i++) {
             final VariableElement parameter = parameters.get(i);
             debug("| Parsing parameter: " + parameter.getSimpleName());
 

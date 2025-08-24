@@ -13,6 +13,8 @@ import net.strokkur.commands.internal.util.Classes;
 import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import java.io.IOException;
@@ -171,11 +173,7 @@ public final class CommandTreePrinter extends AbstractPrinter {
         );
         incrementIndent();
 
-        println("final {} {} = new {}();",
-            getTypeName(commandInformation.classElement()),
-            getTypeVariableName(commandInformation.classElement()),
-            getTypeName(commandInformation.classElement())
-        );
+        printInstanceFields(commandInformation.classElement());
 
         printIndent();
         print("return ");
@@ -190,7 +188,7 @@ public final class CommandTreePrinter extends AbstractPrinter {
         println("}");
     }
 
-    public void printImports(Set<String> imports) throws IOException {
+    private void printImports(Set<String> imports) throws IOException {
         Map<Boolean, List<String>> splitImports = imports.stream()
             .sorted()
             .collect(Collectors.partitioningBy(str -> str.startsWith("java")));
@@ -220,6 +218,30 @@ public final class CommandTreePrinter extends AbstractPrinter {
 
         for (final CommandPath<?> child : commandPath.getChildren()) {
             gatherImports(imports, child);
+        }
+    }
+
+    private void printInstanceFields(TypeElement typeElement) throws IOException {
+        final String varType = getTypeName(typeElement);
+        final String varName = getTypeVariableName(typeElement);
+
+        final String constructor;
+        if (typeElement.getModifiers().contains(Modifier.STATIC) || !typeElement.getNestingKind().isNested()) {
+            constructor = "new " + varType;
+        } else {
+            constructor = getTypeVariableName(typeElement.getEnclosingElement()) + ".new " + typeElement.getSimpleName();
+        }
+
+        println("final {} {} = {}();",
+            varType,
+            varName,
+            constructor
+        );
+
+        for (final Element element : typeElement.getEnclosedElements()) {
+            if (element instanceof TypeElement type && type.getKind() != ElementKind.RECORD) {
+                printInstanceFields(type);
+            }
         }
     }
 
@@ -276,10 +298,12 @@ public final class CommandTreePrinter extends AbstractPrinter {
     }
 
     private void printWithRecord(ExecutablePath path, RecordPath recordPath) throws IOException {
+        final String typeName = getTypeName(path.getExecutesMethod().getEnclosingElement());
+
         if (recordPath.getArguments().isEmpty()) {
-            println("{} executorClass = new {}();");
+            println("final {} executorClass = new {}();", typeName, typeName);
         } else {
-            println("{} executorClass = new {}(");
+            println("final {} executorClass = new {}(", typeName, typeName);
             incrementIndent();
             printExecutorArguments(recordPath.getArguments());
             decrementIndent();
