@@ -11,6 +11,7 @@ import net.strokkur.commands.internal.intermediate.paths.LiteralCommandPath;
 import net.strokkur.commands.internal.intermediate.paths.RecordPath;
 import net.strokkur.commands.internal.util.Classes;
 import org.jetbrains.annotations.UnmodifiableView;
+import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
@@ -37,10 +38,18 @@ public class CommandTreePrinter extends AbstractPrinter {
     private final CommandPath<?> commandPath;
     private final CommandInformation commandInformation;
 
-    public CommandTreePrinter(final int indent, final Writer writer, final CommandPath<?> commandPath, final CommandInformation commandInformation) {
+    public CommandTreePrinter(final int indent, final @Nullable Writer writer, final CommandPath<?> commandPath, final CommandInformation commandInformation) {
         super(indent, writer);
         this.commandPath = commandPath;
         this.commandInformation = commandInformation;
+    }
+
+    public String getPackageName() {
+        return ((PackageElement) commandInformation.classElement().getEnclosingElement()).getQualifiedName().toString();
+    }
+
+    public String getBrigadierClassName() {
+        return getTypeName(commandInformation.classElement()) + "Brigadier";
     }
 
     private String getTypeVariableName(Element type) {
@@ -78,8 +87,8 @@ public class CommandTreePrinter extends AbstractPrinter {
         final Set<String> imports = new HashSet<>(STANDARD_IMPORTS);
         gatherImports(imports, commandPath);
 
-        final String packageName = ((PackageElement) commandInformation.classElement().getEnclosingElement()).getQualifiedName().toString();
-        final String brigadierClassName = getTypeName(commandInformation.classElement()) + "Brigadier";
+        final String packageName = getPackageName();
+        final String brigadierClassName = getBrigadierClassName();
 
         final String description = commandInformation.description() == null ? "null" : commandInformation.description();
         final String aliases = commandInformation.aliases() == null ? "" : '"' + String.join("\", \"", List.of(commandInformation.aliases())) + '"';
@@ -202,15 +211,7 @@ public class CommandTreePrinter extends AbstractPrinter {
     }
 
     private void printExecutablePath(ExecutablePath path) throws IOException {
-        printGenericPath(path, arg -> {
-            if (arg instanceof RequiredCommandArgument requiredArgument) {
-                printRequiredArg(requiredArgument);
-            } else if (arg instanceof LiteralCommandArgument literalArgument) {
-                printLiteral(literalArgument);
-            } else {
-                throw new IllegalArgumentException("Unknown argument type: " + arg.getClass());
-            }
-        }, () -> {
+        printGenericPath(path, this::printArgument, () -> {
             // print the .executes method
             println(".executes(ctx -> {");
             incrementIndent();
@@ -298,12 +299,20 @@ public class CommandTreePrinter extends AbstractPrinter {
         printGenericPath(literalPath, this::printLiteral);
     }
 
-    private void printRecordPath(RecordPath recordPath) throws IOException {
-        printGenericPath(recordPath, this::printRequiredArg);
+    private void printRecordPath(CommandPath<CommandArgument> recordPath) throws IOException {
+        this.printGenericPath(recordPath, this::printArgument);
+    }
+
+    private void printArgument(CommandArgument argument) throws IOException {
+        switch (argument) {
+            case LiteralCommandArgument literalArgument -> printLiteral(literalArgument);
+            case RequiredCommandArgument  requiredArgument -> printRequiredArg(requiredArgument);
+            default -> throw new IllegalStateException("Unknown argument: " + argument);
+        }
     }
 
     private void printLiteral(LiteralCommandArgument literalArg) throws IOException {
-        print("Commands.literal(\"{}\")", literalArg.getLiteral());
+        print("Commands.literal(\"{}\")", literalArg.literal());
     }
 
     private void printRequiredArg(RequiredCommandArgument requiredArg) throws IOException {

@@ -1,21 +1,21 @@
 package net.strokkur.commands.internal.intermediate.paths;
 
-import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
+import net.strokkur.commands.internal.arguments.CommandArgument;
 
 import javax.lang.model.type.TypeMirror;
 import java.util.List;
 
-public class RecordPathImpl extends SimpleCommandPathImpl<RequiredCommandArgument> implements RecordPath {
+public class RecordPathImpl extends SimpleCommandPathImpl<CommandArgument> implements RecordPath {
 
     private final TypeMirror recordType;
 
-    public RecordPathImpl(final List<RequiredCommandArgument> arguments, final TypeMirror recordType) {
+    public RecordPathImpl(final List<CommandArgument> arguments, final TypeMirror recordType) {
         super(arguments);
         this.recordType = recordType;
     }
 
     @Override
-    SimpleCommandPathImpl<RequiredCommandArgument> createLeftSplit(final List<RequiredCommandArgument> args) {
+    SimpleCommandPathImpl<CommandArgument> createLeftSplit(final List<CommandArgument> args) {
         return new RecordPathImpl(args, recordType);
     }
 

@@ -393,7 +393,10 @@ public class BrigadierArgumentConverter {
         return BrigadierArgumentType.of(withAnnotation.apply(annotated), retrieval, imports);
     }
 
-    public BrigadierArgumentType getAsArgumentType(VariableElement parameter, String argumentName, String type) throws HandledConversionException {
+    public BrigadierArgumentType getAsArgumentType(VariableElement parameter) throws HandledConversionException {
+        final String argumentName = parameter.getSimpleName().toString();
+        final String type = parameter.asType().toString();
+
         CustomArg customArg = parameter.getAnnotation(CustomArg.class);
         if (customArg != null) {
             TypeMirror mirror = Utils.getAnnotationMirror(parameter, CustomArg.class, "value");

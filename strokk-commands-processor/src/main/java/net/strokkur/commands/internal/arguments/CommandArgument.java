@@ -6,5 +6,5 @@ public interface CommandArgument {
 
     String getName();
 
-    Element getElement();
+    Element element();
 }
