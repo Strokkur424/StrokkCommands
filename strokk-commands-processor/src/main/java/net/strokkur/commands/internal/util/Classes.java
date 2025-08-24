@@ -23,6 +23,9 @@ public interface Classes {
     String PLAYER = "org.bukkit.entity.Player";
     String ENTITY = "org.bukkit.entity.Entity";
 
+    // Java types
+    String LIST = "java.util.List";
+
     // Brigadier types
     String COMMAND = "com.mojang.brigadier.Command";
     String LITERAL_COMMAND_NODE = "com.mojang.brigadier.tree.LiteralCommandNode";

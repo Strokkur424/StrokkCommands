@@ -25,7 +25,7 @@ import org.bukkit.entity.Player;
 
 @Command("tellpreset")
 public class TellPresetCommand {
-    
+
     @Executes
     void executeTellPreset(CommandSender sender,
                            Player player,
@@ -37,7 +37,7 @@ public class TellPresetCommand {
             // This will never happen
             default -> throw new IllegalStateException("Illegal literal.");
         };
-        
+
         player.sendPlainMessage(message);
     }
 }

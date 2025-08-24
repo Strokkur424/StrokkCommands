@@ -31,13 +31,13 @@ import org.bukkit.util.Vector;
 @Description("My first StrokkCommands-command!")
 class MyFirstCommand {
 
-    @Executes
+    @Executes("two three four")
     void onExecute(CommandSender sender) {
         sender.sendRichMessage("<#f29def>Hey there! You just executed your first command ^-^");
     }
     
     @Executes("fling")
-    void onFling(CommandSender sender, @Executor Player player) {
+    void onFling(CommandSender sender, /* @Executor */ Player player) {
         player.setVelocity(player.getVelocity().add(new Vector(0, 10, 0)));
         player.sendRichMessage("<b><#c4e6ff>WOOSH</b> <#c4fffd>You've been flung!");
     }

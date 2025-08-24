@@ -14,14 +14,14 @@ public interface CommandPath<S extends CommandArgument> {
     @Nullable
     CommandPath<?> getParent();
 
+    void setParent(@Nullable CommandPath<?> parent);
+
     @UnmodifiableView
     List<CommandPath<?>> getChildren();
 
     void removeChild(CommandPath<?> child);
 
     void addChild(CommandPath<?> child);
-
-    void setParent(@Nullable CommandPath<?> parent);
 
     /**
      * Splits the argument path of this path and returns an instance of the first half of the split
@@ -31,6 +31,11 @@ public interface CommandPath<S extends CommandArgument> {
      * @return the new, left side instance of the split
      */
     CommandPath<S> splitPath(int index);
+
+    /**
+     * Debug method.
+     */
+    String toString(int indent);
 
     /**
      * Returns the number of same arguments at the start of this and the provided path.

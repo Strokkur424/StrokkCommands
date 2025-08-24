@@ -10,7 +10,6 @@ import net.strokkur.commands.internal.intermediate.paths.ExecutablePath;
 import net.strokkur.commands.internal.intermediate.paths.LiteralCommandPath;
 import net.strokkur.commands.internal.intermediate.paths.RecordPath;
 import net.strokkur.commands.internal.util.Classes;
-import org.jetbrains.annotations.UnmodifiableView;
 import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Element;
@@ -26,13 +25,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class CommandTreePrinter extends AbstractPrinter {
+public final class CommandTreePrinter extends AbstractPrinter {
 
     private static final Set<String> STANDARD_IMPORTS = Set.of(
         Classes.COMMAND,
         Classes.LITERAL_COMMAND_NODE,
         Classes.COMMAND_SOURCE_STACK,
-        Classes.COMMANDS
+        Classes.COMMANDS,
+        Classes.LIST
     );
 
     private final CommandPath<?> commandPath;
@@ -49,7 +49,7 @@ public class CommandTreePrinter extends AbstractPrinter {
     }
 
     public String getBrigadierClassName() {
-        return getTypeName(commandInformation.classElement()) + "Brigadier";
+        return commandInformation.classElement().getSimpleName().toString() + "Brigadier";
     }
 
     private String getTypeVariableName(Element type) {
@@ -61,8 +61,13 @@ public class CommandTreePrinter extends AbstractPrinter {
         } while (type instanceof TypeElement);
 
         final StringBuilder builder = new StringBuilder();
-        for (final String name : names.reversed()) {
-            builder.append(name).append("_");
+        List<String> reversed = names.reversed();
+        for (int i = 0, reversedSize = reversed.size(); i < reversedSize; i++) {
+            final String name = reversed.get(i);
+            builder.append(name);
+            if (i + 1 < reversedSize) {
+                builder.append("_");
+            }
         }
         return builder.toString();
     }
@@ -76,8 +81,13 @@ public class CommandTreePrinter extends AbstractPrinter {
         } while (type instanceof TypeElement);
 
         final StringBuilder builder = new StringBuilder();
-        for (final String name : names.reversed()) {
-            builder.append(name).append(".");
+        List<String> reversed = names.reversed();
+        for (int i = 0, reversedSize = reversed.size(); i < reversedSize; i++) {
+            final String name = reversed.get(i);
+            builder.append(name);
+            if (i + 1 < reversedSize) {
+                builder.append(".");
+            }
         }
         return builder.toString();
     }
@@ -90,7 +100,7 @@ public class CommandTreePrinter extends AbstractPrinter {
         final String packageName = getPackageName();
         final String brigadierClassName = getBrigadierClassName();
 
-        final String description = commandInformation.description() == null ? "null" : commandInformation.description();
+        final String description = commandInformation.description() == null ? "null" : '"' + commandInformation.description() + '"';
         final String aliases = commandInformation.aliases() == null ? "" : '"' + String.join("\", \"", List.of(commandInformation.aliases())) + '"';
 
         println("package {};", packageName);
@@ -101,13 +111,14 @@ public class CommandTreePrinter extends AbstractPrinter {
         printBlock("""
                 /**
                  * A class holding the Brigadier source tree generated from
-                 * {@link {}} using <a href="https://commands.strokkur.net>StrokkCommands</a>.
+                 * {@link {}} using <a href="https://commands.strokkur.net">StrokkCommands</a>.
                  *
                  * @author Strokkur24 - StrokkCommands
                  * @version {}
                  * @see #create() Creating the LiteralArgumentNode.
                  * @see #register(Commands) Registering the command.
                  */""",
+            commandInformation.classElement().getSimpleName().toString(),
             BuildConstants.VERSION
         );
 
@@ -124,7 +135,7 @@ public class CommandTreePrinter extends AbstractPrinter {
                  * <h3>Registering the command</h3>
                  * <p>
                  * This method can safely be called either in your plugin bootstrapper's
-                 * {@link io.papermc.paper.plugin.bootstrap.PluginBootstrap#bootstrap(BootstrapContext)}, your main
+                 * {@link io.papermc.paper.plugin.bootstrap.PluginBootstrap#bootstrap(io.papermc.paper.plugin.bootstrap.BootstrapContext)}, your main
                  * class' {@link org.bukkit.plugin.java.JavaPlugin#onLoad()} or {@link org.bukkit.plugin.java.JavaPlugin#onEnable()}
                  * method.
                  * <p>
@@ -140,7 +151,7 @@ public class CommandTreePrinter extends AbstractPrinter {
                  * }</pre>
                  */
                 public static void register(Commands commands) {
-                    commands.register(create(), {}, {});
+                    commands.register(create(), {}, List.of({}));
                 }""",
             brigadierClassName,
             description,
@@ -150,16 +161,28 @@ public class CommandTreePrinter extends AbstractPrinter {
         println();
 
         printBlock("""
-            /**
-             * A method for creating a Brigadier command node which denotes the declared command
-             * in {@link {}). You can either retrieve the unregistered node with this method
-             * or register it directly with {@link #register(Commands)}.
-             */
-            public static LiteralCommandNode<CommandSourceStack> create() {""");
+                /**
+                 * A method for creating a Brigadier command node which denotes the declared command
+                 * in {@link {}}. You can either retrieve the unregistered node with this method
+                 * or register it directly with {@link #register(Commands)}.
+                 */
+                public static LiteralCommandNode<CommandSourceStack> create() {""",
+            commandInformation.classElement().getSimpleName().toString()
+        );
         incrementIndent();
+
+        println("final {} {} = new {}();",
+            getTypeName(commandInformation.classElement()),
+            getTypeVariableName(commandInformation.classElement()),
+            getTypeName(commandInformation.classElement())
+        );
+
+        printIndent();
         print("return ");
         printPath(commandPath);
-        println(";");
+        incrementIndent();
+        println(".build();");
+        decrementIndent();
         decrementIndent();
         println("}");
 
@@ -203,16 +226,15 @@ public class CommandTreePrinter extends AbstractPrinter {
     //<editor-fold name="Command Tree Printing Methods">
     private void printPath(CommandPath<?> path) throws IOException {
         switch (path) {
-            case RecordPath recordPath -> printRecordPath(recordPath);
             case ExecutablePath executablePath -> printExecutablePath(executablePath);
-            case LiteralCommandPath literalPath -> printLiteralPath(literalPath);
-            default -> throw new IllegalStateException("Unknown path: " + path);
+            default -> printGenericPath(path, () -> {});
         }
     }
 
     private void printExecutablePath(ExecutablePath path) throws IOException {
-        printGenericPath(path, this::printArgument, () -> {
+        this.printGenericPath(path, () -> {
             // print the .executes method
+            println();
             println(".executes(ctx -> {");
             incrementIndent();
 
@@ -231,8 +253,8 @@ public class CommandTreePrinter extends AbstractPrinter {
                 printWithInstance(path);
             }
 
-            decrementIndent();
             println("return Command.SINGLE_SUCCESS;");
+            decrementIndent();
             println("})");
         });
     }
@@ -259,7 +281,7 @@ public class CommandTreePrinter extends AbstractPrinter {
         } else {
             println("{} executorClass = new {}(");
             incrementIndent();
-            printArguments(recordPath.getArguments());
+            printExecutorArguments(recordPath.getArguments());
             decrementIndent();
             println(");");
         }
@@ -274,13 +296,14 @@ public class CommandTreePrinter extends AbstractPrinter {
         }
 
         println("ctx.getSource().getSender(),");
-        printArguments(path.getArguments());
+        printExecutorArguments(path.getArguments());
     }
 
-    private void printArguments(List<? extends CommandArgument> arguments) throws IOException {
+    private void printExecutorArguments(List<? extends CommandArgument> arguments) throws IOException {
         for (int i = 0, argumentsSize = arguments.size(); i < argumentsSize; i++) {
             final CommandArgument argument = arguments.get(i);
 
+            printIndent();
             if (argument instanceof RequiredCommandArgument requiredArgument) {
                 print(requiredArgument.getArgumentType().retriever());
             } else {
@@ -288,25 +311,17 @@ public class CommandTreePrinter extends AbstractPrinter {
             }
 
             if (i + 1 < argumentsSize) {
-                println(",");
-            } else {
-                println();
+                print(",");
             }
+
+            println();
         }
-    }
-
-    private void printLiteralPath(CommandPath<LiteralCommandArgument> literalPath) throws IOException {
-        printGenericPath(literalPath, this::printLiteral);
-    }
-
-    private void printRecordPath(CommandPath<CommandArgument> recordPath) throws IOException {
-        this.printGenericPath(recordPath, this::printArgument);
     }
 
     private void printArgument(CommandArgument argument) throws IOException {
         switch (argument) {
             case LiteralCommandArgument literalArgument -> printLiteral(literalArgument);
-            case RequiredCommandArgument  requiredArgument -> printRequiredArg(requiredArgument);
+            case RequiredCommandArgument requiredArgument -> printRequiredArg(requiredArgument);
             default -> throw new IllegalStateException("Unknown argument: " + argument);
         }
     }
@@ -322,45 +337,42 @@ public class CommandTreePrinter extends AbstractPrinter {
         );
     }
 
-    private <T extends CommandArgument> void printGenericPath(CommandPath<T> path, PathPrinter<T> printer, InsidePrinter insidePrinter) throws IOException {
-        @UnmodifiableView List<T> arguments = path.getArguments();
-        for (int i = 0, argumentsSize = arguments.size(); i < argumentsSize; i++) {
-            final T arg = arguments.get(i);
-
-            printer.print(arg);
-            println();
-            incrementIndent();
-
-            if (i + 1 < argumentsSize) {
-                print(".then(");
-            }
+    private <T extends CommandArgument> void printArguments(List<T> arguments, InsidePrinter insidePrinter, boolean noStartingThen) throws IOException {
+        if (arguments.isEmpty()) {
+            insidePrinter.print();
+            return;
         }
 
-        for (final CommandPath<?> child : path.getChildren()) {
-            printPath(child);
+        T arg = arguments.removeFirst();
+        if (!noStartingThen) {
+            println();
+            printIndent();
+            print(".then(");
         }
 
-        insidePrinter.print();
+        printArgument(arg);
+        incrementIndent();
+        printArguments(arguments, insidePrinter, false);
+        decrementIndent();
 
-        for (int i = 1, argumentsSize = arguments.size(); i < argumentsSize; i++) {
-            println();
-            decrementIndent();
-            print(")");
+        if (!noStartingThen) {
+            println(")");
         }
     }
 
-    private <T extends CommandArgument> void printGenericPath(CommandPath<T> path, PathPrinter<T> printer) throws IOException {
-        printGenericPath(path, printer, () -> {});
+    private <T extends CommandArgument> void printGenericPath(CommandPath<T> path, InsidePrinter insidePrinter) throws IOException {
+        printArguments(new ArrayList<>(path.getArguments()), () -> {
+            for (final CommandPath<?> child : path.getChildren()) {
+                printPath(child);
+            }
+
+            insidePrinter.print();
+        }, path.getParent() == null);
     }
     //</editor-fold>
 
     @FunctionalInterface
     private interface InsidePrinter {
         void print() throws IOException;
-    }
-
-    @FunctionalInterface
-    private interface PathPrinter<T extends CommandArgument> {
-        void print(T argument) throws IOException;
     }
 }

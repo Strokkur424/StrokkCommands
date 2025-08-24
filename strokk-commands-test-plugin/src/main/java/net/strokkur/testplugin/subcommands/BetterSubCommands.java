@@ -9,7 +9,7 @@ import net.strokkur.testplugin.iceacream.IceCreamCommand;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-@Command("subcommands")
+//@Command("subcommands")
 public class BetterSubCommands {
 
     @Command("help")

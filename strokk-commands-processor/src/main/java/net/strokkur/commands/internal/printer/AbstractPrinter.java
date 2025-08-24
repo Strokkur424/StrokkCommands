@@ -23,24 +23,16 @@ public abstract class AbstractPrinter implements SourcePrinter {
     }
 
     @Override
-    @Nullable
-    public Writer getWriter() {
-        return this.writer;
-    }
-
-    @Override
     public void setWriter(@Nullable Writer writer) {
         this.writer = writer;
     }
 
-    @Override
-    public void incrementIndent() {
+    protected void incrementIndent() {
         this.indent++;
         this.indentString = INDENTATION.repeat(this.indent);
     }
 
-    @Override
-    public void decrementIndent() {
+    protected void decrementIndent() {
         if (indent == 0) {
             return;
         }
@@ -49,8 +41,7 @@ public abstract class AbstractPrinter implements SourcePrinter {
         this.indentString = INDENTATION.repeat(this.indent);
     }
 
-    @Override
-    public void print(String message, Object... format) throws IOException {
+    protected void print(String message, Object... format) throws IOException {
         if (writer == null) {
             throw new IOException("No writer set.");
         }
@@ -58,8 +49,15 @@ public abstract class AbstractPrinter implements SourcePrinter {
         writer.append(message.replace("{}", "%s").formatted(format));
     }
 
-    @Override
-    public void println(String message, Object... format) throws IOException {
+    protected void printIndent() throws IOException {
+        if (writer == null) {
+            throw new IOException("No writer set.");
+        }
+
+        writer.append(indentString);
+    }
+
+    protected void println(String message, Object... format) throws IOException {
         if (writer == null) {
             throw new IOException("No writer set.");
         }
@@ -72,8 +70,7 @@ public abstract class AbstractPrinter implements SourcePrinter {
         writer.append("\n");
     }
 
-    @Override
-    public void println() throws IOException {
+    protected void println() throws IOException {
         if (writer == null) {
             throw new IOException("No writer set.");
         }
@@ -81,8 +78,7 @@ public abstract class AbstractPrinter implements SourcePrinter {
         writer.append("\n");
     }
 
-    @Override
-    public void printBlock(String block, Object... format) throws IOException {
+    protected void printBlock(String block, Object... format) throws IOException {
         if (writer == null) {
             throw new IOException("No writer set.");
         }

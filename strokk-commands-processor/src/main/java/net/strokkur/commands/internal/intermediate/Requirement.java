@@ -94,8 +94,8 @@ public final class Requirement {
     @Override
     public String toString() {
         return "Requirement{" +
-               "requirementString='" + requirementString + '\'' +
-               '}';
+            "requirementString='" + requirementString + '\'' +
+            '}';
     }
 
     @Override

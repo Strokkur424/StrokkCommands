@@ -29,6 +29,10 @@ public interface MessagerWrapper {
         return new MessagerWrapperImpl(messager);
     }
 
+    void print(Kind kind, String format, Object... arguments);
+
+    void printElement(Kind kind, String format, Element element, Object... arguments);
+
     /**
      * Prints a formatted message to the {@link Kind#OTHER} channel.
      * <p>
@@ -78,8 +82,4 @@ public interface MessagerWrapper {
     default void errorElement(String format, Element element, Object... arguments) {
         printElement(Kind.ERROR, format, element, arguments);
     }
-
-    void print(Kind kind, String format, Object... arguments);
-
-    void printElement(Kind kind, String format, Element element, Object... arguments);
 }

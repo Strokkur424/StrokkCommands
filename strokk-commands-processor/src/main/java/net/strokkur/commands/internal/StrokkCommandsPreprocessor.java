@@ -70,6 +70,11 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
             final CommandInformation commandInformation = getCommandInformation(typeElement);
             final CommandPath<?> commandPath = parser.parseElement(typeElement);
 
+            if (System.getProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY) != null) {
+                // debug log all paths.
+                messagerWrapper.debug(commandPath.toString());
+            }
+
             try {
                 final CommandTreePrinter printer = new CommandTreePrinter(0, null, commandPath, commandInformation);
                 final JavaFileObject obj = processingEnv.getFiler().createSourceFile(printer.getPackageName() + "." + printer.getBrigadierClassName());

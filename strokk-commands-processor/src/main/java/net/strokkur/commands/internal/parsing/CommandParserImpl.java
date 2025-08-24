@@ -1,8 +1,10 @@
 package net.strokkur.commands.internal.parsing;
 
 import net.strokkur.commands.annotations.Command;
+import net.strokkur.commands.annotations.Executes;
 import net.strokkur.commands.annotations.Literal;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
+import net.strokkur.commands.internal.arguments.BrigadierArgumentType;
 import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgumentImpl;
@@ -38,6 +40,7 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
 
     @Override
     public LiteralCommandPath parseElement(final TypeElement typeElement) {
+        debug("Parsing " + typeElement.getQualifiedName());
         final String commandName = typeElement.getAnnotation(Command.class).value();
         final List<LiteralCommandArgument> literals = Arrays.stream(commandName.split(" "))
             .map(literal -> LiteralCommandArgument.literal(literal, typeElement))
@@ -70,9 +73,31 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
                     rootPath.addChild(parsed);
                 }
             } else if (element.getKind() == ElementKind.METHOD) {
+                debug("Found executes method element: " + element.getSimpleName());
                 final ExecutableElement executableElement = (ExecutableElement) element;
+                final Executes executesAnnotation = executableElement.getAnnotation(Executes.class);
+                if (executesAnnotation == null) {
+                    continue;
+                }
+
+                final List<? extends CommandPath<?>> executeRoots;
+                if (executesAnnotation.value().isBlank()) {
+                    executeRoots = rootPaths;
+                } else {
+                    final List<LiteralCommandArgument> subcommandLiterals = new ArrayList<>();
+                    for (final String subcommand : executesAnnotation.value().split(" ")) {
+                        subcommandLiterals.add(LiteralCommandArgument.literal(subcommand, executableElement));
+                    }
+
+                    final LiteralCommandPath subcommandLiteralPath = new LiteralCommandPath(subcommandLiterals);
+                    rootPaths.forEach(root -> root.addChild(subcommandLiteralPath));
+                    executeRoots = List.of(subcommandLiteralPath);
+                }
+
                 for (final ExecutablePath path : getExecutablePath(executableElement)) {
-                    for (final CommandPath<?> rootPath : rootPaths) {
+                    debug("| Generated path:");
+                    debug(path.toString(2));
+                    for (final CommandPath<?> rootPath : executeRoots) {
                         rootPath.addChild(path);
                     }
                 }
@@ -83,8 +108,13 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
     }
 
     private List<ExecutablePath> getExecutablePath(final ExecutableElement executableElement) {
+        final var argsList = toArguments(executableElement.getParameters());
+        if (argsList.isEmpty()) {
+            return List.of(new ExecutablePathImpl(List.of(), executableElement));
+        }
+
         final List<ExecutablePath> out = new ArrayList<>();
-        for (final List<CommandArgument> args : toArguments(executableElement.getParameters())) {
+        for (final List<CommandArgument> args : argsList) {
             out.add(new ExecutablePathImpl(args, executableElement));
         }
         return out;
@@ -100,8 +130,12 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
 
     private List<List<CommandArgument>> toArguments(final List<? extends VariableElement> parameters) {
         final List<List<CommandArgument>> arguments = new ArrayList<>();
+        arguments.add(new ArrayList<>());
 
-        for (final VariableElement parameter : parameters) {
+        for (int i = 1, parametersSize = parameters.size(); i < parametersSize; i++) {
+            final VariableElement parameter = parameters.get(i);
+            debug("| Parsing parameter: " + parameter.getSimpleName());
+
             final Literal literal = parameter.getAnnotation(Literal.class);
             if (literal != null) {
                 final String[] declared = literal.value();
@@ -128,12 +162,18 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
                 continue;
             }
 
+            final BrigadierArgumentType argumentType;
             try {
-                for (final List<CommandArgument> argument : arguments) {
-                    argument.add(new RequiredCommandArgumentImpl(converter.getAsArgumentType(parameter), parameter.getSimpleName().toString(), parameter));
-                }
+                argumentType = converter.getAsArgumentType(parameter);
             } catch (HandledConversionException e) {
-                // handled
+                debug("  | Due to an handled exception, the parameter parsing has beeen cancelled.");
+                continue;
+            }
+
+            debug("  | Successfully found Brigadier type: {}", argumentType);
+            final String name = parameter.getSimpleName().toString();
+            for (final List<CommandArgument> argument : arguments) {
+                argument.add(new RequiredCommandArgumentImpl(argumentType, name, parameter));
             }
         }
 

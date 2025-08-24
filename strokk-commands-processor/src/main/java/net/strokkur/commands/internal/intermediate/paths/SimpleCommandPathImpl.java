@@ -33,6 +33,11 @@ abstract class SimpleCommandPathImpl<S extends CommandArgument> implements Comma
     }
 
     @Override
+    public void setParent(final @Nullable CommandPath<?> parent) {
+        this.parent = parent;
+    }
+
+    @Override
     public @UnmodifiableView List<CommandPath<?>> getChildren() {
         return Collections.unmodifiableList(children);
     }
@@ -55,11 +60,6 @@ abstract class SimpleCommandPathImpl<S extends CommandArgument> implements Comma
     }
 
     @Override
-    public void setParent(final @Nullable CommandPath<?> parent) {
-        this.parent = parent;
-    }
-
-    @Override
     public CommandPath<S> splitPath(final int index) {
         List<S> left = new ArrayList<>(arguments.subList(0, index));
         arguments = new ArrayList<>(arguments.subList(index, arguments.size()));
@@ -74,5 +74,31 @@ abstract class SimpleCommandPathImpl<S extends CommandArgument> implements Comma
         leftPath.addChild(this);
 
         return leftPath;
+    }
+
+    @Override
+    public String toString() {
+        return toString(0);
+    }
+
+    @Override
+    public String toString(int indent) {
+        final StringBuilder builder = new StringBuilder();
+        builder.append("| ".repeat(indent));
+
+        if (this.arguments.isEmpty() && this.children.isEmpty()) {
+            return builder.append("<empty>").toString();
+        }
+
+        for (final S argument : this.arguments) {
+            builder.append(argument.getName()).append(" ");
+        }
+
+        for (final CommandPath<?> child : this.children) {
+            builder.append("\n");
+            builder.append(child.toString(indent + 1));
+        }
+
+        return builder.toString();
     }
 }
