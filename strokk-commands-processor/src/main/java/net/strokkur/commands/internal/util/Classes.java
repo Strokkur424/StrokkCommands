@@ -18,7 +18,14 @@
 package net.strokkur.commands.internal.util;
 
 public interface Classes {
+    // Paper types
     String COMMAND_SENDER = "org.bukkit.command.CommandSender";
     String PLAYER = "org.bukkit.entity.Player";
     String ENTITY = "org.bukkit.entity.Entity";
+
+    // Brigadier types
+    String COMMAND = "com.mojang.brigadier.Command";
+    String LITERAL_COMMAND_NODE = "com.mojang.brigadier.tree.LiteralCommandNode";
+    String COMMAND_SOURCE_STACK = "io.papermc.paper.command.brigadier.CommandSourceStack";
+    String COMMANDS = "io.papermc.paper.command.brigadier.Commands";
 }

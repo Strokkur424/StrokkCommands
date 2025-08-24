@@ -19,19 +19,10 @@ package net.strokkur.commands.internal.intermediate;
 
 import org.jspecify.annotations.Nullable;
 
-import java.util.Arrays;
+import javax.lang.model.element.TypeElement;
 
 public record CommandInformation(
-    String commandName,
+    TypeElement classElement,
     @Nullable String description,
     String @Nullable [] aliases
-) {
-    @Override
-    public String toString() {
-        return "CommandInformation{" +
-               "commandName='" + commandName + '\'' +
-               ", description='" + description + '\'' +
-               ", aliases=" + Arrays.toString(aliases) +
-               '}';
-    }
-}
+) {}

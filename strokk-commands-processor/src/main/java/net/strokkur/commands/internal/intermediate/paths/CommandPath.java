@@ -1,7 +1,6 @@
 package net.strokkur.commands.internal.intermediate.paths;
 
 import net.strokkur.commands.internal.arguments.CommandArgument;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.UnmodifiableView;
 import org.jspecify.annotations.Nullable;
 
