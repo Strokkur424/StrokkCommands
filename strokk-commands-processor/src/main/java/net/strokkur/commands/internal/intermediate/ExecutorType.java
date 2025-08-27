@@ -37,9 +37,9 @@ public enum ExecutorType {
     }
 
     /**
-     * {@return if this executor is more restrictive than another}
+     * {@return if this executor is more restrictive or equal than another}
      */
-    public boolean isMoreRestrictiveThan(ExecutorType other) {
-        return this.ordinal() > other.ordinal();
+    public boolean isMoreRestrictiveOrEqualThan(ExecutorType other) {
+        return this.ordinal() >= other.ordinal();
     }
 }

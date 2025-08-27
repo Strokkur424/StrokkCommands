@@ -22,6 +22,7 @@ public interface Classes {
     String COMMAND_SENDER = "org.bukkit.command.CommandSender";
     String PLAYER = "org.bukkit.entity.Player";
     String ENTITY = "org.bukkit.entity.Entity";
+    String COMPONENT = "net.kyori.adventure.text.Component";
 
     // Java types
     String LIST = "java.util.List";
@@ -31,6 +32,8 @@ public interface Classes {
     String LITERAL_COMMAND_NODE = "com.mojang.brigadier.tree.LiteralCommandNode";
     String COMMAND_SOURCE_STACK = "io.papermc.paper.command.brigadier.CommandSourceStack";
     String COMMANDS = "io.papermc.paper.command.brigadier.Commands";
+    String SIMPLE_COMMAND_EXCEPTION_TYPE = "com.mojang.brigadier.exceptions.SimpleCommandExceptionType";
+    String MESSAGE_COMPONENT_SERIALIZER = "io.papermc.paper.command.brigadier.MessageComponentSerializer";
 
     // Other
     String NULL_MARKED = "org.jspecify.annotations.NullMarked";

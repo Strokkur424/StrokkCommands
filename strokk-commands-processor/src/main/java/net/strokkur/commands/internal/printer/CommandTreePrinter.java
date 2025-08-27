@@ -44,7 +44,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -260,6 +259,12 @@ public final class CommandTreePrinter extends AbstractPrinter {
             imports.add(Classes.ENTITY);
         }
 
+        if (executorType != ExecutorType.NONE) {
+            imports.add(Classes.SIMPLE_COMMAND_EXCEPTION_TYPE);
+            imports.add(Classes.MESSAGE_COMPONENT_SERIALIZER);
+            imports.add(Classes.COMPONENT);
+        }
+
         for (final CommandPath<?> child : commandPath.getChildren()) {
             gatherImports(imports, child);
         }
@@ -303,6 +308,21 @@ public final class CommandTreePrinter extends AbstractPrinter {
             println();
             println(".executes(ctx -> {");
             incrementIndent();
+
+            final ExecutorType executorType = path.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE);
+            if (executorType != ExecutorType.NONE) {
+                printBlock("""
+                        if (!(ctx.getSource().getExecutor() instanceof {} executor)) {
+                            throw new SimpleCommandExceptionType(MessageComponentSerializer.message().serialize(
+                                Component.text("This command requires {} {} executor!")
+                            )).create();
+                        }""",
+                    executorType.toString().charAt(0) + executorType.toString().toLowerCase().substring(1),
+                    executorType == ExecutorType.ENTITY ? "an" : "a",
+                    executorType.toString().toLowerCase()
+                );
+                println();
+            }
 
             boolean instancePrint = true;
             CommandPath<?> parentPath = path;
@@ -358,7 +378,7 @@ public final class CommandTreePrinter extends AbstractPrinter {
     }
 
     private void printExecutesArguments(ExecutablePath path) throws IOException {
-        final ExecutorType executorType = Objects.requireNonNull(path.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE));
+        final ExecutorType executorType = path.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE);
         if (path.getArguments().isEmpty() && executorType == ExecutorType.NONE) {
             println("ctx.getSource().getSender()");
             return;
@@ -368,8 +388,7 @@ public final class CommandTreePrinter extends AbstractPrinter {
         if (executorType != ExecutorType.NONE) {
             printIndent();
             switch (executorType) {
-                case ENTITY -> print("ctx.getSource().getExecutor()");
-                case PLAYER -> print("(Player) ctx.getSource().getExecutor()");
+                case ENTITY, PLAYER -> print("executor");
             }
 
             if (path.getArguments().isEmpty()) {
@@ -428,7 +447,7 @@ public final class CommandTreePrinter extends AbstractPrinter {
             final boolean operator = path.getAttributeNotNull(AttributeKey.REQUIRES_OP);
             final ExecutorType executorType;
 
-            if (!path.hasAttribute(AttributeKey.EXECUTOR_TYPE)) {
+            if (path.hasAttribute(AttributeKey.EXECUTOR_TYPE) && !path.getAttributeNotNull(AttributeKey.EXECUTOR_HANDLED)) {
                 executorType = path.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE);
             } else {
                 executorType = ExecutorType.NONE;

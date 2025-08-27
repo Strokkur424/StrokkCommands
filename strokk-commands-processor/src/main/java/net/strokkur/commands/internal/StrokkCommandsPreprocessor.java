@@ -25,6 +25,7 @@ import net.strokkur.commands.internal.intermediate.CommandInformation;
 import net.strokkur.commands.internal.intermediate.ExecutorType;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
+import net.strokkur.commands.internal.intermediate.paths.ExecutablePath;
 import net.strokkur.commands.internal.parsing.CommandParser;
 import net.strokkur.commands.internal.parsing.CommandParserImpl;
 import net.strokkur.commands.internal.printer.CommandTreePrinter;
@@ -64,16 +65,29 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
         final BrigadierArgumentConverter converter = new BrigadierArgumentConverter(messagerWrapper);
         final CommandParser parser = new CommandParserImpl(messagerWrapper, converter);
 
+        final String debugOnly = System.getProperty(MessagerWrapper.DEBUG_ONLY_SYSTEM_PROPERTY);
+        boolean debug = System.getProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY) != null;
+
         for (Element element : roundEnv.getElementsAnnotatedWith(Command.class)) {
             if (!(element instanceof TypeElement typeElement) || typeElement.getEnclosingElement().getKind() != ElementKind.PACKAGE) {
                 // Element is not a top-level class
                 continue;
             }
 
+            if (debugOnly != null) {
+                debug = typeElement.getQualifiedName().toString().contains(debugOnly);
+
+                if (debug) {
+                    System.setProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY, "true");
+                } else {
+                    System.clearProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY);
+                }
+            }
+
             final CommandInformation commandInformation = getCommandInformation(typeElement);
             final CommandPath<?> commandPath = parser.parseElement(typeElement);
 
-            if (System.getProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY) != null) {
+            if (debug) {
                 // debug log all paths.
                 messagerWrapper.debug("Before flatten: \n{}\n ", commandPath.toString());
             }
@@ -83,7 +97,7 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
             // relevant for certain things to print correctly (a.e. executor requirements).
             flattenPath(commandPath);
 
-            if (System.getProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY) != null) {
+            if (debug) {
                 // debug log all paths.
                 messagerWrapper.debug("After flatten: \n{}\n ", commandPath.toString());
             }
@@ -137,34 +151,37 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
         // the **minimum requirement** will be used, meaning if a child has an ENTITY, and another a PLAYER
         // executor requirement, the parent path will declare an ENTITY executor requirement as well.
         {
-            boolean nodesHaveExecutorRequirement = false;
-            ExecutorType relevantExecutorType = ExecutorType.PLAYER;
+            ExecutorType lowestRequirement = path.hasAttribute(AttributeKey.EXECUTOR_TYPE) ? path.getAttribute(AttributeKey.EXECUTOR_TYPE) : null;
             for (final CommandPath<?> child : path.getChildren()) {
-                if (!child.hasAttribute(AttributeKey.EXECUTOR_TYPE)) {
-                    // If a child node doesn't have a req, neither will the parent node.
-                    relevantExecutorType = ExecutorType.NONE;
-                    break;
+                final ExecutorType childExecutorType = child.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE);
+
+                if (lowestRequirement == null) {
+                    lowestRequirement = childExecutorType;
+                    continue;
                 }
 
-                nodesHaveExecutorRequirement = true;
-                final ExecutorType executorType = child.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE);
-                if (relevantExecutorType == ExecutorType.PLAYER && executorType == ExecutorType.ENTITY) {
-                    relevantExecutorType = ExecutorType.ENTITY;
+                if (childExecutorType == ExecutorType.NONE) {
+                    lowestRequirement = ExecutorType.NONE;
+                    break; // We cannot set an executor requirement on the parent node
                 }
 
-                if (executorType == ExecutorType.NONE) {
-                    relevantExecutorType = ExecutorType.NONE;
-                    break;
+                if (lowestRequirement.isMoreRestrictiveOrEqualThan(childExecutorType)) {
+                    lowestRequirement = childExecutorType;
                 }
             }
 
-            if (relevantExecutorType != ExecutorType.NONE && nodesHaveExecutorRequirement) {
-                path.setAttribute(AttributeKey.EXECUTOR_TYPE, relevantExecutorType);
+            if (lowestRequirement == ExecutorType.NONE || lowestRequirement == null) {
+                path.removeAttribute(AttributeKey.EXECUTOR_TYPE);
+            } else {
+                path.setAttribute(AttributeKey.EXECUTOR_TYPE, lowestRequirement);
                 for (final CommandPath<?> child : path.getChildren()) {
-                    // Because the executor attribute works a bit differently than just a normal requirement,
-                    // the attribute itself cannot be removed. Instead, we can set the EXECUTOR_HANDLED
-                    // attribute to tell the printer to **not** print the requirement.
-                    child.setAttribute(AttributeKey.EXECUTOR_HANDLED, true);
+                    if (lowestRequirement.isMoreRestrictiveOrEqualThan(child.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE))) {
+                        if (child instanceof ExecutablePath) {
+                            child.setAttribute(AttributeKey.EXECUTOR_HANDLED, true);
+                        } else {
+                            child.removeAttribute(AttributeKey.EXECUTOR_TYPE);
+                        }
+                    }
                 }
             }
         }

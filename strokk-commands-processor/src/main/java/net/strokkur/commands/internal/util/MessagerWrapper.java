@@ -24,6 +24,7 @@ import javax.tools.Diagnostic.Kind;
 public interface MessagerWrapper {
 
     String DEBUG_SYSTEM_PROPERTY = "strokk.commands.debug";
+    String DEBUG_ONLY_SYSTEM_PROPERTY = "strokk.commands.debug.only";
 
     static MessagerWrapper wrap(Messager messager) {
         return new MessagerWrapperImpl(messager);
