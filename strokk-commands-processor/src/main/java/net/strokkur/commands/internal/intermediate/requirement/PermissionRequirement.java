@@ -1,5 +1,7 @@
 package net.strokkur.commands.internal.intermediate.requirement;
 
+import net.strokkur.commands.internal.intermediate.ExecutorType;
+
 class PermissionRequirement implements Requirement {
 
     private final String permission;
@@ -13,8 +15,14 @@ class PermissionRequirement implements Requirement {
     }
 
     @Override
-    public String getRequirementString() {
-        return "source.hasPermission(\"" + permission + "\")";
+    public String getRequirementString(final boolean operator, final ExecutorType executorType) {
+        final String defaultReq = Requirement.getDefaultRequirement(operator, executorType);
+        final String permissionString = "source.getSender().hasPermission(\"%s\")".formatted(permission);
+
+        if (defaultReq.isEmpty()) {
+            return permissionString;
+        }
+        return defaultReq + " && " + permissionString;
     }
 
     @Override

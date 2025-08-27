@@ -6,6 +6,10 @@ import net.strokkur.commands.internal.intermediate.requirement.Requirement;
 import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.Nullable;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.Supplier;
+
 public interface AttributeKey<T> {
 
     AttributeKey<ExecutorType> EXECUTOR_TYPE = create("executor_type", ExecutorType.NONE);
@@ -13,7 +17,7 @@ public interface AttributeKey<T> {
     AttributeKey<Requirement> REQUIREMENT = create("requirement", Requirement.EMPTY);
     AttributeKey<SuggestionProvider> SUGGESTION_PROVIDER = create("suggestion_provider", null);
     AttributeKey<Boolean> REQUIRES_OP = create("requires_op", false);
-    AttributeKey<String> PERMISSION = create("permission", null);
+    AttributeKey<Set<String>> PERMISSIONS = createDynamic("permission", HashSet::new);
 
     @Contract(pure = true)
     String key();
@@ -23,6 +27,10 @@ public interface AttributeKey<T> {
     T defaultValue();
 
     static <T> AttributeKey<T> create(String key, @Nullable T defaultValue) {
-        return new AttributeKeyImpl<>(key, defaultValue);
+        return new StaticAttributeKey<>(key, defaultValue);
+    }
+
+    static <T> AttributeKey<T> createDynamic(String key, Supplier<@Nullable T> defaultValue) {
+        return new DynamicAttributeKey<>(key, defaultValue);
     }
 }

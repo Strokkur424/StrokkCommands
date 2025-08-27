@@ -2,7 +2,6 @@ package net.strokkur.commands.internal.intermediate.requirement;
 
 import net.strokkur.commands.internal.intermediate.ExecutorType;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -15,59 +14,44 @@ class CombinedRequirement implements Requirement {
         this.requirements = requirements;
     }
 
-    private List<Requirement> flatten() {
-        final List<Requirement> flattenedRequirements = new ArrayList<>();
-
-        for (final Requirement child : requirements) {
-            if (child instanceof CombinedRequirement combined) {
-                flattenedRequirements.addAll(combined.flatten());
-            } else {
-                flattenedRequirements.add(child);
+    public static void concatPermissions(Requirement req, Set<String> handled) {
+        if (req instanceof CombinedRequirement comb) {
+            for (final Requirement requirement : comb.requirements) {
+                concatPermissions(requirement, handled);
             }
         }
 
-        return flattenedRequirements;
+        if (req instanceof PermissionRequirement permissionRequirement) {
+            handled.add(permissionRequirement.getPermission());
+        }
     }
 
     @Override
-    public String getRequirementString() {
+    public String getRequirementString(boolean operator, ExecutorType executorType) {
         final Set<String> permissions = new HashSet<>();
-        ExecutorRequirement relevantExecutor = null;
-        boolean operator = false;
+        concatPermissions(this, permissions);
 
-        for (final Requirement req : flatten()) {
-            switch (req) {
-                case ExecutorRequirement executorRequirement -> {
-                    if (relevantExecutor == null || executorRequirement.getExecutorType() == ExecutorType.NONE) {
-                        continue;
-                    }
-
-                    if (executorRequirement.getExecutorType().isMoreRestrictiveThan(relevantExecutor.getExecutorType())) {
-                        relevantExecutor = executorRequirement;
-                    }
-                }
-                case OperatorRequirement ignored -> operator = true;
-                case PermissionRequirement permissionRequirement -> permissions.add(permissionRequirement.getPermission());
-                default -> {}
-            }
+        final String defaultReq = Requirement.getDefaultRequirement(operator, executorType);
+        if (permissions.isEmpty()) {
+            return defaultReq;
         }
 
-        final List<String> requirements = new ArrayList<>();
-        if (relevantExecutor != null) {
-            requirements.add(relevantExecutor.getRequirementString());
+        final String permissionsString = String.join(" || ", permissions.stream()
+            .map("source.getSender().hasPermission(\"%s\")"::formatted)
+            .toList());
+
+        if (defaultReq.isBlank()) {
+            return permissionsString;
         }
 
-        if (operator) {
-            requirements.add(OperatorRequirement.OP_REQUIREMENT);
-        }
-
+        final String paranthesisPermissionString;
         if (permissions.size() == 1) {
-            requirements.add(permissions.iterator().next());
-        } else if (permissions.size() > 1) {
-            requirements.add("(" + String.join(" || ", permissions) + ")");
+            paranthesisPermissionString = permissionsString;
+        } else {
+            paranthesisPermissionString = "(" + permissionsString + ")";
         }
 
-        return String.join(" && ", requirements);
+        return defaultReq + " && " + paranthesisPermissionString;
     }
 
     @Override

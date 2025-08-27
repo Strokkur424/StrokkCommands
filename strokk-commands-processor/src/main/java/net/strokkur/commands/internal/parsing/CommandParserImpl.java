@@ -51,6 +51,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapper {
 
@@ -157,8 +158,16 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
         final List<ExecutablePath> out = new ArrayList<>();
         for (final List<CommandArgument> args : argsList) {
             final ExecutablePath path = new ExecutablePathImpl(args, executableElement);
-            path.setAttribute(AttributeKey.EXECUTOR_TYPE, type);
-            path.setAttribute(AttributeKey.PERMISSION, permission);
+
+            if (type != ExecutorType.NONE) {
+                path.setAttribute(AttributeKey.EXECUTOR_TYPE, type);
+            }
+
+            if (permission != null) {
+                final Set<String> perms = path.getAttributeNotNull(AttributeKey.PERMISSIONS);
+                perms.add(permission);
+                path.setAttribute(AttributeKey.PERMISSIONS, perms);
+            }
             out.add(path);
         }
 
@@ -232,7 +241,11 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
 
         final Permission permission = element.getAnnotation(Permission.class);
         if (permission != null) {
-            paths.forEach(path -> path.setAttribute(AttributeKey.PERMISSION, permission.value()));
+            paths.forEach(path -> {
+                final Set<String> perms = path.getAttributeNotNull(AttributeKey.PERMISSIONS);
+                perms.add(permission.value());
+                path.setAttribute(AttributeKey.PERMISSIONS, perms);
+            });
         }
     }
 

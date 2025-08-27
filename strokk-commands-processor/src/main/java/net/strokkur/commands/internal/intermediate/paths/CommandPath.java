@@ -24,6 +24,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public interface CommandPath<S extends CommandArgument> {
 
@@ -54,6 +55,15 @@ public interface CommandPath<S extends CommandArgument> {
     void removeAttribute(AttributeKey<?> key);
 
     boolean hasAttribute(AttributeKey<?> key);
+
+    default void forEachChild(Consumer<CommandPath<?>> action) {
+        this.getChildren().forEach(child -> child.forEachChildAccept(action));
+    }
+
+    default void forEachChildAccept(Consumer<CommandPath<?>> action) {
+        this.getChildren().forEach(child -> child.forEachChildAccept(action));
+        action.accept(this);
+    }
 
     /**
      * Splits the argument path of this path and returns an instance of the first half of the split

@@ -6,15 +6,9 @@ import java.util.List;
 
 public interface Requirement {
 
-    Requirement OPERATOR = new OperatorRequirement();
+    Requirement EMPTY = (op, executorType) -> "Not handled anywhere, should not show up either.";
 
-    Requirement EMPTY = () -> "";
-
-    String getRequirementString();
-
-    static Requirement executor(ExecutorType executor) {
-        return new ExecutorRequirement(executor);
-    }
+    String getRequirementString(boolean operator, ExecutorType executorType);
 
     static Requirement permission(String permission) {
         return new PermissionRequirement(permission);
@@ -27,4 +21,22 @@ public interface Requirement {
     static Requirement combine(Requirement... requirements) {
         return new CombinedRequirement(List.of(requirements));
     }
+
+    //<editor-fold name="Utility Method"
+    static String getDefaultRequirement(boolean operator, ExecutorType executorType) {
+        if (!operator && executorType == ExecutorType.NONE) {
+            return "";
+        }
+
+        if (operator && executorType == ExecutorType.NONE) {
+            return "source.getSender().isOp()";
+        }
+
+        if (!operator) {
+            return executorType.getPredicate();
+        }
+
+        return "source.getSender().isOp() && " + executorType.getPredicate();
+    }
+    //</editor-fold>
 }

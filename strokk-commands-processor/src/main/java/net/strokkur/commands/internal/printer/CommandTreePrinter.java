@@ -424,13 +424,14 @@ public final class CommandTreePrinter extends AbstractPrinter {
     private void printRequires(@Nullable CommandPath<?> path) throws IOException {
         if (path != null) {
             final List<Requirement> requirements = new ArrayList<>();
-            if (path.getAttributeNotNull(AttributeKey.REQUIRES_OP)) {
-                requirements.add(Requirement.OPERATOR);
-            }
 
-            final ExecutorType executorType = path.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE);
-            if (!path.getAttributeNotNull(AttributeKey.EXECUTOR_HANDLED)) {
-                requirements.add(Requirement.executor(executorType));
+            final boolean operator = path.getAttributeNotNull(AttributeKey.REQUIRES_OP);
+            final ExecutorType executorType;
+
+            if (!path.hasAttribute(AttributeKey.EXECUTOR_TYPE)) {
+                executorType = path.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE);
+            } else {
+                executorType = ExecutorType.NONE;
             }
 
             final Requirement req = path.getAttribute(AttributeKey.REQUIREMENT);
@@ -438,8 +439,13 @@ public final class CommandTreePrinter extends AbstractPrinter {
                 requirements.add(req);
             }
 
+            requirements.addAll(path.getAttributeNotNull(AttributeKey.PERMISSIONS)
+                .stream()
+                .map(Requirement::permission)
+                .toList());
+
             if (!requirements.isEmpty()) {
-                final String requirementString = Requirement.combine(requirements).getRequirementString();
+                final String requirementString = Requirement.combine(requirements).getRequirementString(operator, executorType);
                 if (!requirementString.isEmpty()) {
                     println();
                     printIndent();

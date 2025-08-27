@@ -25,7 +25,6 @@ import net.strokkur.commands.internal.intermediate.CommandInformation;
 import net.strokkur.commands.internal.intermediate.ExecutorType;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
-import net.strokkur.commands.internal.intermediate.requirement.Requirement;
 import net.strokkur.commands.internal.parsing.CommandParser;
 import net.strokkur.commands.internal.parsing.CommandParserImpl;
 import net.strokkur.commands.internal.printer.CommandTreePrinter;
@@ -43,7 +42,6 @@ import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
 import java.io.PrintWriter;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 @NullMarked
@@ -77,13 +75,18 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
 
             if (System.getProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY) != null) {
                 // debug log all paths.
-                messagerWrapper.debug(commandPath.toString());
+                messagerWrapper.debug("Before flatten: \n{}\n ", commandPath.toString());
             }
 
             // Before we print the paths, we do a step I like to refer to as "flattening".
             // This does not actually change the structure of the paths, but it moves up any attributes
             // relevant for certain things to print correctly (a.e. executor requirements).
             flattenPath(commandPath);
+
+            if (System.getProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY) != null) {
+                // debug log all paths.
+                messagerWrapper.debug("After flatten: \n{}\n ", commandPath.toString());
+            }
 
             try {
                 final CommandTreePrinter printer = new CommandTreePrinter(0, null, commandPath, commandInformation);
@@ -130,28 +133,6 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
         // Once an attribute is passed on, it will be removed from the child node in order to help the
         // source file printer a bit.
 
-        // REQUIRES_OP - This attribute is set from the parent. It is only set if **all children**
-        // have this attribute set as well.
-        if (!path.hasAttribute(AttributeKey.REQUIRES_OP)) {
-            boolean mayRequireOp = true;
-            boolean childRequiresOp = false;
-            for (final CommandPath<?> child : path.getChildren()) {
-                if (child.hasAttribute(AttributeKey.REQUIRES_OP)) {
-                    childRequiresOp = true;
-                } else {
-                    mayRequireOp = false;
-                    break;
-                }
-            }
-
-            if (mayRequireOp && childRequiresOp) {
-                path.setAttribute(AttributeKey.REQUIRES_OP, true);
-                for (final CommandPath<?> child : path.getChildren()) {
-                    child.removeAttribute(AttributeKey.REQUIRES_OP);
-                }
-            }
-        }
-
         // EXECUTOR - Here, the case is similar to the REQUIRES_OP attribute, which the slight difference that
         // the **minimum requirement** will be used, meaning if a child has an ENTITY, and another a PLAYER
         // executor requirement, the parent path will declare an ENTITY executor requirement as well.
@@ -188,19 +169,60 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
             }
         }
 
-        // REQUIREMENTS - Thanks to my very nicely coded requirements system, this is
-        // as simple as combining subpermissions and subrequirements together.
+        // REQUIREMENTS, PERMISSIONS, and OPERATOR - These all fall under the 'requirement' category.
         {
-            final Requirement requirements = Requirement.combine(path.getChildren().stream()
-                .map(child -> child.getAttribute(AttributeKey.REQUIREMENT))
-                .filter(Objects::nonNull)
-                .toList()
-            );
+            // OPERATOR - We will start with the operator one, as that shows what we have to do very nicely.
+            if (!path.hasAttribute(AttributeKey.REQUIRES_OP)) {
+                final List<CommandPath<?>> children = path.getChildren();
 
-            path.setAttribute(AttributeKey.REQUIREMENT,Requirement.combine(
-                path.getAttributeNotNull(AttributeKey.REQUIREMENT),
-                requirements
-            ));
+                if (children.size() == 1) {
+                    if (children.getFirst().getAttributeNotNull(AttributeKey.REQUIRES_OP)) {
+                        path.setAttribute(AttributeKey.REQUIRES_OP, true);
+                        path.forEachChild(child -> child.removeAttribute(AttributeKey.REQUIRES_OP));
+                    }
+                } else if (children.size() > 1) {
+                    boolean allOfThemAreTrue = false;
+                    for (CommandPath<?> child : children) {
+                        if (child.getAttributeNotNull(AttributeKey.REQUIRES_OP)) {
+                            allOfThemAreTrue = true;
+                        } else {
+                            allOfThemAreTrue = false;
+                            break;
+                        }
+                    }
+
+                    if (allOfThemAreTrue) {
+                        path.setAttribute(AttributeKey.REQUIRES_OP, true);
+                        path.forEachChild(child -> child.removeAttribute(AttributeKey.REQUIRES_OP));
+                    }
+                }
+            }
+
+            // PERMISSION - Same thing as above, where we add to the parent node if it is unset and not empty.
+            // The only difference is that we do not operate on the parent element, instead on the element itself
+            // in order to ensure that no permissions override an explicitly parent set permission.
+            if (!path.hasAttribute(AttributeKey.PERMISSIONS)) {
+                final Set<String> thisPermissions = path.getAttributeNotNull(AttributeKey.PERMISSIONS);
+                final List<CommandPath<?>> children = path.getChildren();
+
+                for (final CommandPath<?> child : path.getChildren()) {
+                    if (!child.hasAttribute(AttributeKey.PERMISSIONS)) {
+                        // If a child doesn't have permissions, do not set any permissions for the parent
+                        thisPermissions.clear();
+                        break;
+                    }
+
+                    thisPermissions.addAll(child.getAttributeNotNull(AttributeKey.PERMISSIONS));
+                    if (children.size() == 1) {
+                        // We only remove the permissions if this path only has one child, meaning no cross-merging happens.
+                        child.removeAttribute(AttributeKey.PERMISSIONS);
+                    }
+                }
+
+                if (!thisPermissions.isEmpty()) {
+                    path.setAttribute(AttributeKey.PERMISSIONS, thisPermissions);
+                }
+            }
         }
     }
 }
