@@ -76,26 +76,40 @@ public final class CommandTreePrinter extends AbstractPrinter {
     }
 
     private String getTypeVariableName(Element type) {
-        final List<String> names = new ArrayList<>(16);
-
-        do {
-            names.add(type.getSimpleName().toString().toUpperCase(Locale.ROOT));
-            type = type.getEnclosingElement();
-        } while (type instanceof TypeElement);
+        if (commandInformation.classElement() == type) {
+            return "instance";
+        }
 
         final StringBuilder builder = new StringBuilder();
-        List<String> reversed = names.reversed();
-        for (int i = 0, reversedSize = reversed.size(); i < reversedSize; i++) {
-            final String name = reversed.get(i);
-            builder.append(name);
-            if (i + 1 < reversedSize) {
-                builder.append("_");
+        final List<String> names = getNestedClassNames(type);
+
+        for (int i = 0, size = names.size(); i < size; i++) {
+            final String name = names.get(i);
+
+            if (i == 0) {
+                builder.append(Character.toLowerCase(name.charAt(0))).append(name.substring(1));
+            } else {
+                builder.append(name);
             }
         }
         return builder.toString();
     }
 
     private String getTypeName(Element type) {
+        final StringBuilder builder = new StringBuilder();
+        final List<String> names = getNestedClassNames(type);
+
+        for (int i = 0, size = names.size(); i < size; i++) {
+            final String name = names.get(i);
+            builder.append(name);
+            if (i + 1 < size) {
+                builder.append(".");
+            }
+        }
+        return builder.toString();
+    }
+
+    private List<String> getNestedClassNames(Element type) {
         final List<String> names = new ArrayList<>(16);
 
         do {
@@ -103,16 +117,7 @@ public final class CommandTreePrinter extends AbstractPrinter {
             type = type.getEnclosingElement();
         } while (type instanceof TypeElement);
 
-        final StringBuilder builder = new StringBuilder();
-        List<String> reversed = names.reversed();
-        for (int i = 0, reversedSize = reversed.size(); i < reversedSize; i++) {
-            final String name = reversed.get(i);
-            builder.append(name);
-            if (i + 1 < reversedSize) {
-                builder.append(".");
-            }
-        }
-        return builder.toString();
+        return names.reversed();
     }
 
     @Override
@@ -196,6 +201,7 @@ public final class CommandTreePrinter extends AbstractPrinter {
         incrementIndent();
 
         printInstanceFields(commandInformation.classElement());
+        println();
 
         printIndent();
         print("return ");
