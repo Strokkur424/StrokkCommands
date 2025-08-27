@@ -25,6 +25,7 @@ import net.strokkur.commands.internal.intermediate.CommandInformation;
 import net.strokkur.commands.internal.intermediate.ExecutorType;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
+import net.strokkur.commands.internal.intermediate.requirement.Requirement;
 import net.strokkur.commands.internal.parsing.CommandParser;
 import net.strokkur.commands.internal.parsing.CommandParserImpl;
 import net.strokkur.commands.internal.printer.CommandTreePrinter;
@@ -41,6 +42,8 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
 import java.io.PrintWriter;
+import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 @NullMarked
@@ -163,7 +166,7 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
                 }
 
                 nodesHaveExecutorRequirement = true;
-                final ExecutorType executorType = child.getAttribute(AttributeKey.EXECUTOR_TYPE);
+                final ExecutorType executorType = child.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE);
                 if (relevantExecutorType == ExecutorType.PLAYER && executorType == ExecutorType.ENTITY) {
                     relevantExecutorType = ExecutorType.ENTITY;
                 }
@@ -185,8 +188,19 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
             }
         }
 
-        // PERMISSION - not implemented
+        // REQUIREMENTS - Thanks to my very nicely coded requirements system, this is
+        // as simple as combining subpermissions and subrequirements together.
+        {
+            final Requirement requirements = Requirement.combine(path.getChildren().stream()
+                .map(child -> child.getAttribute(AttributeKey.REQUIREMENT))
+                .filter(Objects::nonNull)
+                .toList()
+            );
 
-        // REQUIREMENT - not implemented
+            path.setAttribute(AttributeKey.REQUIREMENT,Requirement.combine(
+                path.getAttributeNotNull(AttributeKey.REQUIREMENT),
+                requirements
+            ));
+        }
     }
 }

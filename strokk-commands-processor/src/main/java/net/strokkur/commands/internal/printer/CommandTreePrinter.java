@@ -28,6 +28,7 @@ import net.strokkur.commands.internal.intermediate.paths.CommandPath;
 import net.strokkur.commands.internal.intermediate.paths.ExecutablePath;
 import net.strokkur.commands.internal.intermediate.paths.LiteralCommandPath;
 import net.strokkur.commands.internal.intermediate.paths.RecordPath;
+import net.strokkur.commands.internal.intermediate.requirement.Requirement;
 import net.strokkur.commands.internal.util.Classes;
 import org.jspecify.annotations.Nullable;
 
@@ -252,7 +253,7 @@ public final class CommandTreePrinter extends AbstractPrinter {
             }
         }
 
-        final ExecutorType executorType = commandPath.getAttribute(AttributeKey.EXECUTOR_TYPE);
+        final ExecutorType executorType = commandPath.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE);
         if (executorType == ExecutorType.PLAYER) {
             imports.add(Classes.PLAYER);
         } else if (executorType == ExecutorType.ENTITY) {
@@ -357,7 +358,7 @@ public final class CommandTreePrinter extends AbstractPrinter {
     }
 
     private void printExecutesArguments(ExecutablePath path) throws IOException {
-        final ExecutorType executorType = Objects.requireNonNull(path.getAttribute(AttributeKey.EXECUTOR_TYPE));
+        final ExecutorType executorType = Objects.requireNonNull(path.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE));
         if (path.getArguments().isEmpty() && executorType == ExecutorType.NONE) {
             println("ctx.getSource().getSender()");
             return;
@@ -422,21 +423,28 @@ public final class CommandTreePrinter extends AbstractPrinter {
 
     private void printRequires(@Nullable CommandPath<?> path) throws IOException {
         if (path != null) {
-            final List<String> requirements = new ArrayList<>();
-
-            if (path.getAttribute(AttributeKey.REQUIRES_OP)) {
-                requirements.add("source.getSender().isOp()");
+            final List<Requirement> requirements = new ArrayList<>();
+            if (path.getAttributeNotNull(AttributeKey.REQUIRES_OP)) {
+                requirements.add(Requirement.OPERATOR);
             }
 
-            final ExecutorType executorType = path.getAttribute(AttributeKey.EXECUTOR_TYPE);
-            if (!path.getAttribute(AttributeKey.EXECUTOR_HANDLED) && executorType != ExecutorType.NONE) {
-                requirements.add(executorType.getPredicate());
+            final ExecutorType executorType = path.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE);
+            if (!path.getAttributeNotNull(AttributeKey.EXECUTOR_HANDLED)) {
+                requirements.add(Requirement.executor(executorType));
+            }
+
+            final Requirement req = path.getAttribute(AttributeKey.REQUIREMENT);
+            if (req != null) {
+                requirements.add(req);
             }
 
             if (!requirements.isEmpty()) {
-                println();
-                printIndent();
-                print(".requires(source -> {})", String.join(" && ", requirements));
+                final String requirementString = Requirement.combine(requirements).getRequirementString();
+                if (!requirementString.isEmpty()) {
+                    println();
+                    printIndent();
+                    print(".requires(source -> {})", requirementString);
+                }
             }
         }
     }

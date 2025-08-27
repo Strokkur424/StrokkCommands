@@ -17,36 +17,29 @@
  */
 package net.strokkur.commands.internal.intermediate;
 
-import org.jspecify.annotations.Nullable;
-
-import java.util.List;
-
 public enum ExecutorType {
     NONE,
     ENTITY("source.getExecutor() != null"),
     PLAYER("source.getExecutor() instanceof Player");
 
-    private final @Nullable String predicate;
+    private final String predicate;
 
     ExecutorType() {
-        this(null);
+        this("true");
     }
 
-    ExecutorType(@Nullable String predicate) {
+    ExecutorType(String predicate) {
         this.predicate = predicate;
     }
 
-    public @Nullable String getPredicate() {
+    public String getPredicate() {
         return predicate;
     }
 
-    public boolean hasPredicate() {
-        return predicate != null;
-    }
-
-    public void addRequirement(List<Requirement> requirementList) {
-        if (hasPredicate()) {
-            requirementList.add(new Requirement(predicate));
-        }
+    /**
+     * {@return if this executor is more restrictive than another}
+     */
+    public boolean isMoreRestrictiveThan(ExecutorType other) {
+        return this.ordinal() > other.ordinal();
     }
 }

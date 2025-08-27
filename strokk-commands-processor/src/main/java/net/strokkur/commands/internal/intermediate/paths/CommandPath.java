@@ -23,7 +23,7 @@ import org.jetbrains.annotations.UnmodifiableView;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
 
 public interface CommandPath<S extends CommandArgument> {
 
@@ -41,6 +41,10 @@ public interface CommandPath<S extends CommandArgument> {
     void removeChild(CommandPath<?> child);
 
     void addChild(CommandPath<?> child);
+
+    default <T> T getAttributeNotNull(AttributeKey<T> key) {
+        return Objects.requireNonNull(getAttribute(key), "Attribute key " + key + " is null");
+    }
 
     @Nullable
     <T> T getAttribute(AttributeKey<T> key);

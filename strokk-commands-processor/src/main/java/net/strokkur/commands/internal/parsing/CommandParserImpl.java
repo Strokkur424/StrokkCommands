@@ -50,6 +50,7 @@ import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapper {
 
@@ -151,10 +152,13 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
             return List.of(new ExecutablePathImpl(List.of(), executableElement));
         }
 
+        final String permission = Optional.ofNullable(executableElement.getAnnotation(Permission.class)).map(Permission::value).orElse(null);
+
         final List<ExecutablePath> out = new ArrayList<>();
         for (final List<CommandArgument> args : argsList) {
             final ExecutablePath path = new ExecutablePathImpl(args, executableElement);
             path.setAttribute(AttributeKey.EXECUTOR_TYPE, type);
+            path.setAttribute(AttributeKey.PERMISSION, permission);
             out.add(path);
         }
 
