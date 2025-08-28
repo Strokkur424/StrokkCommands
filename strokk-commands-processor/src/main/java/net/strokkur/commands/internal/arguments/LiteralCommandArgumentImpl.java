@@ -18,5 +18,21 @@
 package net.strokkur.commands.internal.arguments;
 
 import javax.lang.model.element.Element;
+import java.util.Objects;
 
-record LiteralCommandArgumentImpl(String literal, Element element) implements LiteralCommandArgument {}
+record LiteralCommandArgumentImpl(String literal, Element element) implements LiteralCommandArgument {
+
+    @Override
+    public boolean equals(final Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final LiteralCommandArgumentImpl that = (LiteralCommandArgumentImpl) o;
+        return Objects.equals(literal(), that.literal());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(literal());
+    }
+}

@@ -27,7 +27,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.TreeMap;
 
 abstract class SimpleCommandPathImpl<S extends CommandArgument> implements CommandPath<S> {
@@ -116,13 +115,13 @@ abstract class SimpleCommandPathImpl<S extends CommandArgument> implements Comma
         leftPath.attributes = new HashMap<>(attributes);
 
         if (this.parent != null) {
-            this.parent.removeChild(this);
-            this.parent.addChild(leftPath);
+            final CommandPath<?> parent = this.parent;
+            parent.removeChild(this);
+            parent.addChild(leftPath);
         }
 
         leftPath.children.clear();
         leftPath.addChild(this);
-
         return leftPath;
     }
 
@@ -156,6 +155,25 @@ abstract class SimpleCommandPathImpl<S extends CommandArgument> implements Comma
         for (final CommandPath<?> child : this.children) {
             builder.append("\n");
             builder.append(child.toString(indent + 1));
+        }
+
+        return builder.toString();
+    }
+
+    @Override
+    public String toStringNoChildren() {
+        final StringBuilder builder = new StringBuilder();
+
+        if (this.arguments.isEmpty() && this.children.isEmpty()) {
+            return builder.append("<empty_args>").toString();
+        }
+
+        for (int i = 0, aSize = this.arguments.size(); i < aSize; i++) {
+            final S argument = this.arguments.get(i);
+            builder.append(argument.getName());
+            if (i + 1 < aSize) {
+                builder.append(" ");
+            }
         }
 
         return builder.toString();

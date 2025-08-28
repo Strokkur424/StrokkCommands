@@ -18,6 +18,7 @@
 package net.strokkur.commands.internal.arguments;
 
 import javax.lang.model.element.Element;
+import java.util.Objects;
 
 public class RequiredCommandArgumentImpl implements RequiredCommandArgument {
 
@@ -44,5 +45,19 @@ public class RequiredCommandArgumentImpl implements RequiredCommandArgument {
     @Override
     public Element element() {
         return element;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final RequiredCommandArgumentImpl that = (RequiredCommandArgumentImpl) o;
+        return Objects.equals(argumentType, that.argumentType) && Objects.equals(name, that.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(argumentType, name);
     }
 }

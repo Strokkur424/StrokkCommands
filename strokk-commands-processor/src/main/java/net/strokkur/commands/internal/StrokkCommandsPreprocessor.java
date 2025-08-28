@@ -22,10 +22,8 @@ import net.strokkur.commands.annotations.Command;
 import net.strokkur.commands.annotations.Description;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
 import net.strokkur.commands.internal.intermediate.CommandInformation;
-import net.strokkur.commands.internal.intermediate.ExecutorType;
-import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
-import net.strokkur.commands.internal.intermediate.paths.ExecutablePath;
+import net.strokkur.commands.internal.intermediate.paths.PathFlattener;
 import net.strokkur.commands.internal.parsing.CommandParser;
 import net.strokkur.commands.internal.parsing.CommandParserImpl;
 import net.strokkur.commands.internal.printer.CommandTreePrinter;
@@ -38,11 +36,9 @@ import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
 import java.io.PrintWriter;
-import java.util.List;
 import java.util.Set;
 
 @NullMarked
@@ -64,59 +60,72 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
         final MessagerWrapper messagerWrapper = MessagerWrapper.wrap(super.processingEnv.getMessager());
         final BrigadierArgumentConverter converter = new BrigadierArgumentConverter(messagerWrapper);
         final CommandParser parser = new CommandParserImpl(messagerWrapper, converter);
+        final PathFlattener pathFlattener = new PathFlattener(messagerWrapper);
 
         final String debugOnly = System.getProperty(MessagerWrapper.DEBUG_ONLY_SYSTEM_PROPERTY);
-        boolean debug = System.getProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY) != null;
+        if (debugOnly != null) {
+            System.setProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY, "true");
+        }
 
         for (Element element : roundEnv.getElementsAnnotatedWith(Command.class)) {
-            if (!(element instanceof TypeElement typeElement) || typeElement.getEnclosingElement().getKind() != ElementKind.PACKAGE) {
+            if (!(element instanceof TypeElement typeElement) || typeElement.getNestingKind().isNested()) {
                 // Element is not a top-level class
                 continue;
             }
 
-            if (debugOnly != null) {
-                debug = typeElement.getQualifiedName().toString().contains(debugOnly);
-
-                if (debug) {
-                    System.setProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY, "true");
-                } else {
-                    System.clearProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY);
-                }
-            }
-
-            final CommandInformation commandInformation = getCommandInformation(typeElement);
-            final CommandPath<?> commandPath = parser.parseElement(typeElement);
-
-            if (debug) {
-                // debug log all paths.
-                messagerWrapper.debug("Before flatten: \n{}\n ", commandPath.toString());
-            }
-
-            // Before we print the paths, we do a step I like to refer to as "flattening".
-            // This does not actually change the structure of the paths, but it moves up any attributes
-            // relevant for certain things to print correctly (a.e. executor requirements).
-            flattenPath(commandPath);
-
-            if (debug) {
-                // debug log all paths.
-                messagerWrapper.debug("After flatten: \n{}\n ", commandPath.toString());
+            if (debugOnly != null && !typeElement.getQualifiedName().toString().contains(debugOnly)) {
+                continue;
             }
 
             try {
-                final CommandTreePrinter printer = new CommandTreePrinter(0, null, commandPath, commandInformation);
-                final JavaFileObject obj = processingEnv.getFiler().createSourceFile(printer.getPackageName() + "." + printer.getBrigadierClassName());
+                processElement(typeElement, messagerWrapper, parser, pathFlattener);
+            } catch (Exception e) {
+                messagerWrapper.errorElement("An error occurred: {}", typeElement, e.getMessage());
+                e.printStackTrace(new PrintWriter(System.out));
+            }
 
-                try (PrintWriter out = new PrintWriter(obj.openWriter())) {
-                    printer.setWriter(out);
-                    printer.print();
-                }
-            } catch (Exception ex) {
-                messagerWrapper.errorElement("A fatal exception occurred whilst printing source file: {}", typeElement, ex.getMessage());
-                ex.printStackTrace();
+            if (debugOnly != null) {
+                break;
             }
         }
 
         return true;
+    }
+
+    private void processElement(TypeElement typeElement, MessagerWrapper messagerWrapper, CommandParser parser, PathFlattener pathFlattener) {
+        boolean debug = System.getProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY) != null;
+
+        final CommandInformation commandInformation = getCommandInformation(typeElement);
+        final CommandPath<?> commandPath = parser.parseElement(typeElement);
+
+        if (debug) {
+            // debug log all paths.
+            messagerWrapper.debug("Before flatten: \n{}\n ", commandPath.toString());
+        }
+
+        // Before we print the paths, we do a step I like to refer to as "flattening".
+        // This does not actually change the structure of the paths, but it moves up any attributes
+        // relevant for certain things to print correctly (a.e. executor requirements).
+        pathFlattener.cleanupPath(commandPath);
+        pathFlattener.flattenPath(commandPath);
+
+        if (debug) {
+            // debug log all paths.
+            messagerWrapper.debug("After flatten: \n{}\n ", commandPath.toString());
+        }
+
+        try {
+            final CommandTreePrinter printer = new CommandTreePrinter(0, null, commandPath, commandInformation);
+            final JavaFileObject obj = processingEnv.getFiler().createSourceFile(printer.getPackageName() + "." + printer.getBrigadierClassName());
+
+            try (PrintWriter out = new PrintWriter(obj.openWriter())) {
+                printer.setWriter(out);
+                printer.print();
+            }
+        } catch (Exception ex) {
+            messagerWrapper.errorElement("A fatal exception occurred whilst printing source file: {}", typeElement, ex.getMessage());
+            ex.printStackTrace(new PrintWriter(System.out));
+        }
     }
 
     @NullUnmarked
@@ -129,117 +138,5 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
             description != null ? description.value() : null,
             aliases != null ? aliases.value() : null
         );
-    }
-
-    private void flattenPath(CommandPath<?> path) {
-        // Depth first.
-        path.getChildren().forEach(this::flattenPath);
-
-        // The relevant attributes are the 'permission', 'requires_op', 'executor, and 'requirement'
-        // attributes, since these add some sort of `.requires` clause, which works the best the higher
-        // up it is in the tree. Certain attribute values also cause the parent value to be written to
-        // explicitly in order to **avoid** merging values. A.e. a NONE executor will force itself to
-        // the parent in order to avoid being  swallowed by a sister path, which may have an executor requirement.
-
-        // Due to the way some attributes are ordered, certain attributes must be set from the parent, whilst
-        // others are set from the children. Each attribute will have a short description of the order.
-
-        // Once an attribute is passed on, it will be removed from the child node in order to help the
-        // source file printer a bit.
-
-        // EXECUTOR - Here, the case is similar to the REQUIRES_OP attribute, which the slight difference that
-        // the **minimum requirement** will be used, meaning if a child has an ENTITY, and another a PLAYER
-        // executor requirement, the parent path will declare an ENTITY executor requirement as well.
-        {
-            ExecutorType lowestRequirement = path.hasAttribute(AttributeKey.EXECUTOR_TYPE) ? path.getAttribute(AttributeKey.EXECUTOR_TYPE) : null;
-            for (final CommandPath<?> child : path.getChildren()) {
-                final ExecutorType childExecutorType = child.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE);
-
-                if (lowestRequirement == null) {
-                    lowestRequirement = childExecutorType;
-                    continue;
-                }
-
-                if (childExecutorType == ExecutorType.NONE) {
-                    lowestRequirement = ExecutorType.NONE;
-                    break; // We cannot set an executor requirement on the parent node
-                }
-
-                if (lowestRequirement.isMoreRestrictiveOrEqualThan(childExecutorType)) {
-                    lowestRequirement = childExecutorType;
-                }
-            }
-
-            if (lowestRequirement == ExecutorType.NONE || lowestRequirement == null) {
-                path.removeAttribute(AttributeKey.EXECUTOR_TYPE);
-            } else {
-                path.setAttribute(AttributeKey.EXECUTOR_TYPE, lowestRequirement);
-                for (final CommandPath<?> child : path.getChildren()) {
-                    if (lowestRequirement.isMoreRestrictiveOrEqualThan(child.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE))) {
-                        if (child instanceof ExecutablePath) {
-                            child.setAttribute(AttributeKey.EXECUTOR_HANDLED, true);
-                        } else {
-                            child.removeAttribute(AttributeKey.EXECUTOR_TYPE);
-                        }
-                    }
-                }
-            }
-        }
-
-        // REQUIREMENTS, PERMISSIONS, and OPERATOR - These all fall under the 'requirement' category.
-        {
-            // OPERATOR - We will start with the operator one, as that shows what we have to do very nicely.
-            if (!path.hasAttribute(AttributeKey.REQUIRES_OP)) {
-                final List<CommandPath<?>> children = path.getChildren();
-
-                if (children.size() == 1) {
-                    if (children.getFirst().getAttributeNotNull(AttributeKey.REQUIRES_OP)) {
-                        path.setAttribute(AttributeKey.REQUIRES_OP, true);
-                        path.forEachChild(child -> child.removeAttribute(AttributeKey.REQUIRES_OP));
-                    }
-                } else if (children.size() > 1) {
-                    boolean allOfThemAreTrue = false;
-                    for (CommandPath<?> child : children) {
-                        if (child.getAttributeNotNull(AttributeKey.REQUIRES_OP)) {
-                            allOfThemAreTrue = true;
-                        } else {
-                            allOfThemAreTrue = false;
-                            break;
-                        }
-                    }
-
-                    if (allOfThemAreTrue) {
-                        path.setAttribute(AttributeKey.REQUIRES_OP, true);
-                        path.forEachChild(child -> child.removeAttribute(AttributeKey.REQUIRES_OP));
-                    }
-                }
-            }
-
-            // PERMISSION - Same thing as above, where we add to the parent node if it is unset and not empty.
-            // The only difference is that we do not operate on the parent element, instead on the element itself
-            // in order to ensure that no permissions override an explicitly parent set permission.
-            if (!path.hasAttribute(AttributeKey.PERMISSIONS)) {
-                final Set<String> thisPermissions = path.getAttributeNotNull(AttributeKey.PERMISSIONS);
-                final List<CommandPath<?>> children = path.getChildren();
-
-                for (final CommandPath<?> child : path.getChildren()) {
-                    if (!child.hasAttribute(AttributeKey.PERMISSIONS)) {
-                        // If a child doesn't have permissions, do not set any permissions for the parent
-                        thisPermissions.clear();
-                        break;
-                    }
-
-                    thisPermissions.addAll(child.getAttributeNotNull(AttributeKey.PERMISSIONS));
-                    if (children.size() == 1) {
-                        // We only remove the permissions if this path only has one child, meaning no cross-merging happens.
-                        child.removeAttribute(AttributeKey.PERMISSIONS);
-                    }
-                }
-
-                if (!thisPermissions.isEmpty()) {
-                    path.setAttribute(AttributeKey.PERMISSIONS, thisPermissions);
-                }
-            }
-        }
     }
 }

@@ -42,7 +42,6 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -302,10 +301,12 @@ public final class CommandTreePrinter extends AbstractPrinter {
 
     //<editor-fold name="Command Tree Printing Methods">
     private void printPath(CommandPath<?> path) throws IOException {
-        switch (path) {
-            case ExecutablePath executablePath -> printExecutablePath(executablePath);
-            default -> printGenericPath(path, () -> {});
+        if (path instanceof ExecutablePath executablePath && !executablePath.getAttributeNotNull(AttributeKey.SPLIT_EXECUTOR)) {
+            printExecutablePath(executablePath);
+            return;
         }
+
+        printGenericPath(path, () -> {});
     }
 
     private void printExecutablePath(ExecutablePath path) throws IOException {
@@ -375,7 +376,7 @@ public final class CommandTreePrinter extends AbstractPrinter {
         } else {
             println("final {} executorClass = new {}(", typeName, typeName);
             incrementIndent();
-            printExecutorArguments(recordPath.getArguments());
+            printExecutorArguments(recordPath, false);
             decrementIndent();
             println(");");
         }
@@ -405,10 +406,15 @@ public final class CommandTreePrinter extends AbstractPrinter {
             print(",");
             println();
         }
-        printExecutorArguments(path.getArguments());
+        printExecutorArguments(path, false);
     }
 
-    private void printExecutorArguments(List<? extends CommandArgument> arguments) throws IOException {
+    private void printExecutorArguments(final CommandPath<?> path, boolean forceTrailingComma) throws IOException {
+        if (path.getAttributeNotNull(AttributeKey.INHERIT_PARENT_ARGS) && path.getParent() != null) {
+            printExecutorArguments(path.getParent(), true);
+        }
+
+        final List<? extends CommandArgument> arguments = path.getArguments();
         for (int i = 0, argumentsSize = arguments.size(); i < argumentsSize; i++) {
             final CommandArgument argument = arguments.get(i);
 
@@ -419,7 +425,7 @@ public final class CommandTreePrinter extends AbstractPrinter {
                 print("\"{}\"", argument.getName());
             }
 
-            if (i + 1 < argumentsSize) {
+            if (i + 1 < argumentsSize || forceTrailingComma) {
                 print(",");
             }
 

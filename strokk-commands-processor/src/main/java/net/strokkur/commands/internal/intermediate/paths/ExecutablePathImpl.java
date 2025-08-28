@@ -18,6 +18,7 @@
 package net.strokkur.commands.internal.intermediate.paths;
 
 import net.strokkur.commands.internal.arguments.CommandArgument;
+import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -35,6 +36,16 @@ public class ExecutablePathImpl extends SimpleCommandPathImpl<CommandArgument> i
     @Override
     public Element getExecutesMethod() {
         return executesMethod;
+    }
+
+    @Override
+    public CommandPath<CommandArgument> splitPath(final int index) {
+        final CommandPath<CommandArgument> leftPath = super.splitPath(index);
+
+        leftPath.setAttribute(AttributeKey.SPLIT_EXECUTOR, true);
+        this.setAttribute(AttributeKey.INHERIT_PARENT_ARGS, true);
+
+        return leftPath;
     }
 
     @Override

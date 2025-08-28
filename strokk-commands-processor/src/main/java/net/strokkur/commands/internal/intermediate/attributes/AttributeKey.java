@@ -14,10 +14,15 @@ public interface AttributeKey<T> {
 
     AttributeKey<ExecutorType> EXECUTOR_TYPE = create("executor_type", ExecutorType.NONE);
     AttributeKey<Boolean> EXECUTOR_HANDLED = create("executor_handled", false);
-    AttributeKey<Requirement> REQUIREMENT = create("requirement", Requirement.EMPTY);
     AttributeKey<SuggestionProvider> SUGGESTION_PROVIDER = create("suggestion_provider", null);
+
+    AttributeKey<Requirement> REQUIREMENT = create("requirement", Requirement.EMPTY);
     AttributeKey<Boolean> REQUIRES_OP = create("requires_op", false);
     AttributeKey<Set<String>> PERMISSIONS = createDynamic("permission", HashSet::new);
+
+    // Splitting
+    AttributeKey<Boolean> INHERIT_PARENT_ARGS = create("inherit_parent_args", false);
+    AttributeKey<Boolean> SPLIT_EXECUTOR = create("split_executor", false);
 
     @Contract(pure = true)
     String key();
