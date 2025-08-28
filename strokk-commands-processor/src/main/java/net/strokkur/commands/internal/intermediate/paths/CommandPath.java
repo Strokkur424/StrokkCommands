@@ -43,10 +43,6 @@ public interface CommandPath<S extends CommandArgument> {
 
     void addChild(CommandPath<?> child);
 
-    default <T> T getAttributeNotNull(AttributeKey<T> key) {
-        return Objects.requireNonNull(getAttribute(key), "Attribute key " + key + " is null");
-    }
-
     @Nullable
     <T> T getAttribute(AttributeKey<T> key);
 
@@ -55,15 +51,6 @@ public interface CommandPath<S extends CommandArgument> {
     void removeAttribute(AttributeKey<?> key);
 
     boolean hasAttribute(AttributeKey<?> key);
-
-    default void forEachChild(Consumer<CommandPath<?>> action) {
-        this.getChildren().forEach(child -> child.forEachChildAccept(action));
-    }
-
-    default void forEachChildAccept(Consumer<CommandPath<?>> action) {
-        this.getChildren().forEach(child -> child.forEachChildAccept(action));
-        action.accept(this);
-    }
 
     /**
      * Splits the argument path of this path and returns an instance of the first half of the split
@@ -80,6 +67,19 @@ public interface CommandPath<S extends CommandArgument> {
     String toString(int indent);
 
     String toStringNoChildren();
+
+    default <T> T getAttributeNotNull(AttributeKey<T> key) {
+        return Objects.requireNonNull(getAttribute(key), "Attribute key " + key + " is null");
+    }
+
+    default void forEachChild(Consumer<CommandPath<?>> action) {
+        this.getChildren().forEach(child -> child.forEachChildAccept(action));
+    }
+
+    default void forEachChildAccept(Consumer<CommandPath<?>> action) {
+        this.getChildren().forEach(child -> child.forEachChildAccept(action));
+        action.accept(this);
+    }
 
     /**
      * Returns the number of same arguments at the start of this and the provided path.
