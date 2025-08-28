@@ -175,8 +175,9 @@ public final class CommandTreePrinter extends AbstractPrinter {
         );
         incrementIndent();
 
-        printInstanceFields(commandInformation.classElement());
-        println();
+        if (printInstanceFields(commandInformation.classElement())) {
+            println();
+        }
 
         printIndent();
         print("return ");
@@ -278,7 +279,11 @@ public final class CommandTreePrinter extends AbstractPrinter {
         }
     }
 
-    private void printInstanceFields(TypeElement typeElement) throws IOException {
+    private boolean printInstanceFields(TypeElement typeElement) throws IOException {
+        if (typeElement.getKind() == ElementKind.RECORD) {
+            return false;
+        }
+
         final String varType = Utils.getTypeName(typeElement);
         final String varName = getTypeVariableName(typeElement);
 
@@ -300,6 +305,8 @@ public final class CommandTreePrinter extends AbstractPrinter {
                 printInstanceFields(type);
             }
         }
+
+        return true;
     }
 
     //<editor-fold name="Command Tree Printing Methods">
