@@ -15,27 +15,35 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate;
+package net.strokkur.commands.internal.intermediate.suggestions;
 
+import org.jspecify.annotations.Nullable;
+
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 
-@FunctionalInterface
 public interface SuggestionProvider {
+
     static SuggestionProvider ofClass(TypeMirror implementingClass) {
-        return () -> "new " + implementingClass + "()";
+        return new ClassSuggestionProvider(implementingClass);
     }
 
-    static SuggestionProvider ofMethodReference(String methodName, String baseClass) {
-        return () -> baseClass + "::" + methodName;
+    static SuggestionProvider ofMethodReference(TypeMirror classElement, String methodName) {
+        return new MethodReferenceSuggestionProvider(classElement, methodName);
     }
 
-    static SuggestionProvider ofMethod(String methodName, String baseClass) {
-        return () -> baseClass + "." + methodName + "()";
+    static SuggestionProvider ofMethod(TypeMirror classElement, String methodName) {
+        return new MethodSuggestionProvider(classElement, methodName);
     }
 
-    static SuggestionProvider ofField(String fieldName, String baseClass) {
-        return () -> baseClass + "." + fieldName;
+    static SuggestionProvider ofField(TypeMirror classElement, String fieldName) {
+        return new FieldSuggestionProvider(classElement, fieldName);
     }
 
-    String get();
+    String getProvider();
+
+    @Nullable
+    default TypeElement getClassElement() {
+        return null;
+    }
 }

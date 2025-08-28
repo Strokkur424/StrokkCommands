@@ -18,6 +18,7 @@
 package net.strokkur.commands.internal.printer;
 
 import net.strokkur.commands.internal.BuildConstants;
+import net.strokkur.commands.internal.StrokkCommandsPreprocessor;
 import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
@@ -30,6 +31,7 @@ import net.strokkur.commands.internal.intermediate.paths.LiteralCommandPath;
 import net.strokkur.commands.internal.intermediate.paths.RecordPath;
 import net.strokkur.commands.internal.intermediate.requirement.Requirement;
 import net.strokkur.commands.internal.util.Classes;
+import net.strokkur.commands.internal.util.Utils;
 import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Element;
@@ -80,7 +82,7 @@ public final class CommandTreePrinter extends AbstractPrinter {
         }
 
         final StringBuilder builder = new StringBuilder();
-        final List<String> names = getNestedClassNames(type);
+        final List<String> names = Utils.getNestedClassNames(type);
 
         for (int i = 0, size = names.size(); i < size; i++) {
             final String name = names.get(i);
@@ -94,35 +96,9 @@ public final class CommandTreePrinter extends AbstractPrinter {
         return builder.toString();
     }
 
-    private String getTypeName(Element type) {
-        final StringBuilder builder = new StringBuilder();
-        final List<String> names = getNestedClassNames(type);
-
-        for (int i = 0, size = names.size(); i < size; i++) {
-            final String name = names.get(i);
-            builder.append(name);
-            if (i + 1 < size) {
-                builder.append(".");
-            }
-        }
-        return builder.toString();
-    }
-
-    private List<String> getNestedClassNames(Element type) {
-        final List<String> names = new ArrayList<>(16);
-
-        do {
-            names.add(type.getSimpleName().toString());
-            type = type.getEnclosingElement();
-        } while (type instanceof TypeElement);
-
-        return names.reversed();
-    }
-
     @Override
     public void print() throws IOException {
-        final Set<String> imports = new HashSet<>(STANDARD_IMPORTS);
-        gatherImports(imports, commandPath);
+        final Set<String> imports = getImports();
 
         final String packageName = getPackageName();
         final String brigadierClassName = getBrigadierClassName();
@@ -248,11 +224,38 @@ public final class CommandTreePrinter extends AbstractPrinter {
         }
     }
 
+    private Set<String> getImports() {
+        final Set<String> imports = new HashSet<>(STANDARD_IMPORTS);
+        gatherImports(imports, commandPath);
+
+        imports.removeIf(importString -> {
+            if (importString.startsWith("java.lang")) {
+                return true;
+            }
+
+            final TypeElement element = StrokkCommandsPreprocessor.getElements().getTypeElement(importString);
+            if (element == null) {
+                return false;
+            }
+
+            return Utils.getPackageElement(element) == Utils.getPackageElement(commandInformation.classElement());
+        });
+
+        return imports;
+    }
+
     private void gatherImports(Set<String> imports, CommandPath<?> commandPath) {
         if (!(commandPath instanceof LiteralCommandPath)) {
             for (final CommandArgument arg : commandPath.getArguments()) {
                 if (arg instanceof RequiredCommandArgument requiredArgument) {
                     imports.addAll(requiredArgument.getArgumentType().imports());
+
+                    if (requiredArgument.getSuggestionProvider() != null) {
+                        final TypeElement suggestionsTypeElement = requiredArgument.getSuggestionProvider().getClassElement();
+                        if (suggestionsTypeElement != null) {
+                            imports.add(suggestionsTypeElement.getQualifiedName().toString());
+                        }
+                    }
                 }
             }
         }
@@ -276,7 +279,7 @@ public final class CommandTreePrinter extends AbstractPrinter {
     }
 
     private void printInstanceFields(TypeElement typeElement) throws IOException {
-        final String varType = getTypeName(typeElement);
+        final String varType = Utils.getTypeName(typeElement);
         final String varName = getTypeVariableName(typeElement);
 
         final String constructor;
@@ -369,7 +372,7 @@ public final class CommandTreePrinter extends AbstractPrinter {
     }
 
     private void printWithRecord(ExecutablePath path, RecordPath recordPath) throws IOException {
-        final String typeName = getTypeName(path.getExecutesMethod().getEnclosingElement());
+        final String typeName = Utils.getTypeName(path.getExecutesMethod().getEnclosingElement());
 
         if (recordPath.getArguments().isEmpty()) {
             println("final {} executorClass = new {}();", typeName, typeName);
@@ -450,6 +453,14 @@ public final class CommandTreePrinter extends AbstractPrinter {
             requiredArg.getName(),
             requiredArg.getArgumentType().initializer()
         );
+
+        if (requiredArg.getSuggestionProvider() != null) {
+            incrementIndent();
+            println();
+            printIndent();
+            print(".suggests(" + requiredArg.getSuggestionProvider().getProvider() + ")");
+            decrementIndent();
+        }
     }
 
     private void printRequires(@Nullable CommandPath<?> path) throws IOException {

@@ -17,6 +17,9 @@
  */
 package net.strokkur.commands.internal.arguments;
 
+import net.strokkur.commands.internal.intermediate.suggestions.SuggestionProvider;
+import org.jspecify.annotations.Nullable;
+
 import javax.lang.model.element.Element;
 import java.util.Objects;
 
@@ -25,11 +28,20 @@ public class RequiredCommandArgumentImpl implements RequiredCommandArgument {
     private final BrigadierArgumentType argumentType;
     private final String name;
     private final Element element;
+    private final @Nullable SuggestionProvider suggestionProvider;
 
     public RequiredCommandArgumentImpl(final BrigadierArgumentType argumentType, final String name, final Element element) {
         this.argumentType = argumentType;
         this.name = name;
         this.element = element;
+        this.suggestionProvider = null;
+    }
+
+    public RequiredCommandArgumentImpl(final BrigadierArgumentType argumentType, final String name, final Element element, final SuggestionProvider suggestionProvider) {
+        this.argumentType = argumentType;
+        this.name = name;
+        this.element = element;
+        this.suggestionProvider = suggestionProvider;
     }
 
     @Override
@@ -45,6 +57,12 @@ public class RequiredCommandArgumentImpl implements RequiredCommandArgument {
     @Override
     public Element element() {
         return element;
+    }
+
+    @Override
+    @Nullable
+    public SuggestionProvider getSuggestionProvider() {
+        return suggestionProvider;
     }
 
     @Override

@@ -31,18 +31,33 @@ import net.strokkur.commands.internal.util.MessagerWrapper;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import javax.tools.JavaFileObject;
 import java.io.PrintWriter;
+import java.util.Objects;
 import java.util.Set;
 
 @NullMarked
 public class StrokkCommandsPreprocessor extends AbstractProcessor {
+
+    private static @Nullable Types types = null;
+    private static @Nullable Elements elements = null;
+
+    public static Types getTypes() {
+        return Objects.requireNonNull(types, "types is null");
+    }
+
+    public static Elements getElements() {
+        return Objects.requireNonNull(elements, "elements is null");
+    }
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {
@@ -57,6 +72,9 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
     @Override
     @NullUnmarked
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+        types = processingEnv.getTypeUtils();
+        elements = processingEnv.getElementUtils();
+
         final MessagerWrapper messagerWrapper = MessagerWrapper.wrap(super.processingEnv.getMessager());
         final BrigadierArgumentConverter converter = new BrigadierArgumentConverter(messagerWrapper);
         final CommandParser parser = new CommandParserImpl(messagerWrapper, converter);
@@ -89,6 +107,8 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
             }
         }
 
+        types = null;
+        elements = null;
         return true;
     }
 

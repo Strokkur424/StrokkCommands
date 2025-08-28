@@ -17,6 +17,12 @@
  */
 package net.strokkur.commands.internal.arguments;
 
+import net.strokkur.commands.internal.intermediate.suggestions.SuggestionProvider;
+import org.jspecify.annotations.Nullable;
+
 public interface RequiredCommandArgument extends CommandArgument {
     BrigadierArgumentType getArgumentType();
+
+    @Nullable
+    SuggestionProvider getSuggestionProvider();
 }

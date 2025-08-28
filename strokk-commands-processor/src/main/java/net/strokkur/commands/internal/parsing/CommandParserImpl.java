@@ -23,6 +23,7 @@ import net.strokkur.commands.annotations.Executor;
 import net.strokkur.commands.annotations.Literal;
 import net.strokkur.commands.annotations.Permission;
 import net.strokkur.commands.annotations.RequiresOP;
+import net.strokkur.commands.annotations.Suggestion;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentType;
 import net.strokkur.commands.internal.arguments.CommandArgument;
@@ -37,9 +38,12 @@ import net.strokkur.commands.internal.intermediate.paths.ExecutablePathImpl;
 import net.strokkur.commands.internal.intermediate.paths.LiteralCommandPath;
 import net.strokkur.commands.internal.intermediate.paths.RecordPath;
 import net.strokkur.commands.internal.intermediate.paths.RecordPathImpl;
+import net.strokkur.commands.internal.intermediate.suggestions.SuggestionProvider;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.commands.internal.util.MessagerWrapper;
+import net.strokkur.commands.internal.util.Utils;
+import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -83,7 +87,7 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
                 }
             }
 
-            rootPaths = getRecordPath(typeElement.asType(), recordComponents);
+            rootPaths = getRecordPath(typeElement, recordComponents);
             for (final CommandPath<?> path : rootPaths) {
                 literalPath.addChild(path);
             }
@@ -119,7 +123,7 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
                     executeRoots = List.of(subcommandLiteralPath);
                 }
 
-                for (final ExecutablePath path : getExecutablePath(executableElement)) {
+                for (final ExecutablePath path : getExecutablePath(typeElement, executableElement)) {
                     debug("| Generated path:");
                     debug(path.toString(2));
                     for (final CommandPath<?> rootPath : executeRoots) {
@@ -135,7 +139,7 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
         return literalPath;
     }
 
-    private List<ExecutablePath> getExecutablePath(final ExecutableElement executableElement) {
+    private List<ExecutablePath> getExecutablePath(final TypeElement typeElement, final ExecutableElement executableElement) {
         ExecutorType type = ExecutorType.NONE;
         if (executableElement.getParameters().size() >= 2) {
             final Element potentialExecutor = executableElement.getParameters().get(1);
@@ -148,7 +152,7 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
             }
         }
 
-        final List<List<CommandArgument>> argsList = toArguments(executableElement.getParameters(), type == ExecutorType.NONE ? 1 : 2);
+        final List<List<CommandArgument>> argsList = toArguments(typeElement, executableElement.getParameters(), type == ExecutorType.NONE ? 1 : 2);
         if (argsList.isEmpty()) {
             return List.of(new ExecutablePathImpl(List.of(), executableElement));
         }
@@ -174,15 +178,60 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
         return out;
     }
 
-    private List<RecordPath> getRecordPath(final TypeMirror recordTypeMirror, final List<? extends VariableElement> parameters) {
+    @Nullable
+    private SuggestionProvider getSuggestionProvider(final TypeElement classElement, final VariableElement parameter) {
+        final Suggestion suggestion = parameter.getAnnotation(Suggestion.class);
+        if (suggestion == null) {
+            return null;
+        }
+
+        final TypeMirror baseClass;
+        try {
+            final TypeMirror base = Utils.getAnnotationMirror(parameter, Suggestion.class, "base");
+
+            if (base == null) {
+                baseClass = classElement.asType();
+            } else {
+                baseClass = base;
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw ex;
+        }
+
+        if (suggestion.method().isBlank() && suggestion.field().isBlank()) {
+            if (baseClass == null) {
+                infoElement("@Suggestion annotation was used, but no parameters were passed.", parameter);
+                return null;
+            }
+
+            return SuggestionProvider.ofClass(baseClass);
+        }
+
+        if (!suggestion.method().isBlank()) {
+            if (suggestion.reference()) {
+                return SuggestionProvider.ofMethodReference(baseClass, suggestion.method());
+            }
+            return SuggestionProvider.ofMethod(baseClass, suggestion.method());
+        }
+
+        if (!suggestion.field().isBlank()) {
+            return SuggestionProvider.ofField(baseClass, suggestion.field());
+        }
+
+        errorElement("Internal exception: Suggestion annotation is not null, but no provider was found. Please report this at https://discord.strokkur.net.", parameter);
+        return null;
+    }
+
+    private List<RecordPath> getRecordPath(final TypeElement recordElement, final List<? extends VariableElement> parameters) {
         final List<RecordPath> out = new ArrayList<>();
-        for (final List<CommandArgument> args : toArguments(parameters, 0)) {
-            out.add(new RecordPathImpl(args, recordTypeMirror));
+        for (final List<CommandArgument> args : toArguments(recordElement, parameters, 0)) {
+            out.add(new RecordPathImpl(args, recordElement.asType()));
         }
         return out;
     }
 
-    private List<List<CommandArgument>> toArguments(final List<? extends VariableElement> parameters, int startIndex) {
+    private List<List<CommandArgument>> toArguments(final TypeElement typeElement, final List<? extends VariableElement> parameters, int startIndex) {
         final List<List<CommandArgument>> arguments = new ArrayList<>();
         arguments.add(new ArrayList<>());
 
@@ -220,14 +269,20 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
             try {
                 argumentType = converter.getAsArgumentType(parameter);
             } catch (HandledConversionException e) {
-                debug("  | Due to an handled exception, the parameter parsing has beeen cancelled.");
+                debug("  | Due to an handled exception, the parameter parsing has been cancelled.");
                 continue;
             }
 
             debug("  | Successfully found Brigadier type: {}", argumentType);
+
+            final SuggestionProvider suggestionProvider = getSuggestionProvider(typeElement, parameter);
+            if (suggestionProvider != null) {
+                debug("  | Suggestion provider: {}", suggestionProvider);
+            }
+
             final String name = parameter.getSimpleName().toString();
             for (final List<CommandArgument> argument : arguments) {
-                argument.add(new RequiredCommandArgumentImpl(argumentType, name, parameter));
+                argument.add(new RequiredCommandArgumentImpl(argumentType, name, parameter, suggestionProvider));
             }
         }
 
