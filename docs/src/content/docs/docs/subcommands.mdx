@@ -1,0 +1,103 @@
+---
+title: Subcommands
+description: A guide to subcommands
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+Subcommands are a feature introduced with [StrokkCommands v1.3.0](https://github.com/Strokkur424/StrokkCommands/releases/tag/v1.3.0),
+which allow you to nest classes, annotated with the `@Command` annotation in order to add preceding literals to
+any executors (or further nested classes!) inside the nested class.
+
+## Syntax
+The syntax is very simple. An example nested command might look like this:
+
+```java title="FlyCommand.java"
+@Command("fly")
+class FlyCommand {
+
+	@Command("enable")
+	static class EnableSub {
+
+		@Executes
+		void enableSelf(CommandSender sender, @Executor Player player) {
+      // Enable flight for the player
+		}
+
+    @Executes
+    void enableOther(CommandSender sender, Player target) {
+      // Enable flight for the target
+    }
+	}
+}
+```
+
+<Aside>
+  Inner classes **do not** have to be declared static. It is perfectly fine and acceptable to omit the `static` keyword here.
+</Aside>
+
+This same command could also be written like this:
+
+```java title="FlyCommand.java"
+@Command("fly")
+class FlyCommand {
+
+  @Executes("enable")
+  void enableSelf(CommandSender sender, @Executor Player player) {
+    // Enable flight for the player
+  }
+
+  @Executes("enable")
+  void enableOther(CommandSender sender, Player target) {
+    // Enable flight for the target
+  }
+}
+```
+
+Or like this:
+
+```java title="FlyCommand.java"
+@Command("fly")
+class FlyCommand {
+
+  @Executes
+  void enableSelf(CommandSender sender, @Literal String enable, @Executor Player player) {
+    // Enable flight for the player
+  }
+
+  @Executes
+  void enableOther(CommandSender sender, @Literal String enable, Player target) {
+    // Enable flight for the target
+  }
+}
+```
+
+There are numerous ways to write a command. Nested/inner classes (as they are called officially) are just another
+instrument to reach the same solution. The advantage of inner classes is that they reduce repetition (defining the enable literal)
+and improve clarity on which executors are together.
+
+## Inner records
+The more interesting use case of subcommands like this are inner records. With records, you can also define arguments.
+
+A nice use case for this could be the replication of a `/give item <target> <item> [<count>]` command, where you always have a target player and the
+item stack, but also an optional count argument:
+
+```java title="GiveCommand.java"
+@Command("give")
+class GiveCommand {
+
+	@Command("item")
+	record ItemSub(Player target, ItemStack item) {
+
+		@Executes
+		void giveDefault(CommandSender sender) {
+      giveCount(sender, 1);
+		}
+
+    @Executes
+    void giveCount(CommandSender sender, int count) {
+      // Give count amount of item to target
+    }
+	}
+}
+```

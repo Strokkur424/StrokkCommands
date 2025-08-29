@@ -3,8 +3,6 @@ title: Adding the dependency
 description: In-depth explanation about adding StrokkCommands to your plugin.
 ---
 
-
-
 import {TabItem, Tabs} from "@astrojs/starlight/components";
 
 StrokkCommands is hosted on the [eldonexus](https://eldonexus.de). It is split into two separate modules:
@@ -30,11 +28,11 @@ First, we have to add the repository:
   <TabItem label="Gradle">
     ```kts
     repositories {
-    maven {
-    id = "eldonexus"
-    url = "https://eldonexus.de/repository/maven-public/"
-  }
-  }
+      maven {
+        id = "eldonexus"
+        url = "https://eldonexus.de/repository/maven-public/"
+      }
+    }
     ```
   </TabItem>
   <TabItem label="Maven">
@@ -59,9 +57,9 @@ Next up we add the dependency:
 
     ```kts replace
     dependencies {
-    compileOnly("net.strokkur:strokk-commands-annotations:\{LATEST_COMMANDS_RELEASE}-SNAPSHOT")
-    annotationProcessor("net.strokkur:strokk-commands-processor:\{LATEST_COMMANDS_RELEASE}-SNAPSHOT")
-  }
+      compileOnly("net.strokkur:strokk-commands-annotations:\{LATEST_COMMANDS_RELEASE}-SNAPSHOT")
+      annotationProcessor("net.strokkur:strokk-commands-processor:\{LATEST_COMMANDS_RELEASE}-SNAPSHOT")
+    }
     ```
   </TabItem>
   <TabItem label="Maven">

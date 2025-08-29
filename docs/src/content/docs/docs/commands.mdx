@@ -3,8 +3,6 @@ title: Creating your first command
 description: A guide to creating simple commands.
 ---
 
-
-
 import FirstCommandMp4 from "./assets/firstcommand.mp4";
 
 import Video from "/src/components/Video.astro";
@@ -45,10 +43,10 @@ looks like this:
   @Description("My first StrokkCommands-command!")
   class MyFirstCommand {
 
-+     @Executes
-+     void onExecute(CommandSender sender) {
-+         sender.sendRichMessage("<#f29def>Hey there! You just executed your first command ^-^");
-+     }
++   @Executes
++   void onExecute(CommandSender sender) {
++     sender.sendRichMessage("<#f29def>Hey there! You just executed your first command ^-^");
++   }
   }
 ```
 
@@ -63,12 +61,12 @@ If your command requires a player to execute it, you have two ways to get it:
 ```java
 @Executes
 void onExecute(CommandSender sender) {
-    if (!(sender instanceof Player player)) {
-        sender.sendRichMessage("<red>This command requires a player!");
-        return;
-    }
+  if (!(sender instanceof Player player)) {
+    sender.sendRichMessage("<red>This command requires a player!");
+    return;
+  }
 
-    player.sendRichMessage("<#f29def>Hey there! You just executed your first command ^-^");
+  player.sendRichMessage("<#f29def>Hey there! You just executed your first command ^-^");
 }
    ```
 2. Add an `Player` parameter using the `@Executor` annotation:
@@ -76,9 +74,9 @@ void onExecute(CommandSender sender) {
 ```java
 @Executes
 void onExecute(CommandSender sender, @Executor Player player) {
-   player.sendRichMessage("<#f29def>Hey there! You just executed your first command ^-^");
+    player.sendRichMessage("<#f29def>Hey there! You just executed your first command ^-^");
 }
-   ```
+ ```
 
 Whilst both ways are acceptable, the second approach is the more 'correct' way.
 The reason is that instead of casting the command sender, you directly get the `Player` entity with executed the command.
@@ -98,16 +96,16 @@ If you want a path called `/fc fling`, you'd add this method:
   @Description("My first StrokkCommands-command!")
   class MyFirstCommand {
 
-      @Executes
-      void onExecute(CommandSender sender) {
-          sender.sendRichMessage("<#f29def>Hey there! You just executed your first command ^-^");
-      }
+    @Executes
+    void onExecute(CommandSender sender) {
+      sender.sendRichMessage("<#f29def>Hey there! You just executed your first command ^-^");
+    }
 
-+     @Executes("fling")
-+     void onFling(CommandSender sender, @Executor Player player) {
-+         player.setVelocity(player.getVelocity().add(new Vector(0, 10, 0)));
-+         player.sendRichMessage("<b><#c4e6ff>WOOSH</b> <#c4fffd>You've been flung!");
-+     }
++   @Executes("fling")
++   void onFling(CommandSender sender, @Executor Player player) {
++     player.setVelocity(player.getVelocity().add(new Vector(0, 10, 0)));
++     player.sendRichMessage("<b><#c4e6ff>WOOSH</b> <#c4fffd>You've been flung!");
++   }
   }
 ```
 
@@ -139,13 +137,13 @@ Wherever you want to register your command, you can get the lifecycle event mana
 new commands event handler. For the plugin's main class, this would look like this:
 ```java title="YourPlugin.java"
 public void onLoad() {
-    this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS.newHandler(event -> {
-        // Register the command with the description and aliases declared as annotations:
-        MyFirstCommandBrigadier.register(event.registrar());
+  this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS.newHandler(event -> {
+    // Register the command with the description and aliases declared as annotations:
+    MyFirstCommandBrigadier.register(event.registrar());
 
-        // Register the command with your own provided description and aliases:
-        event.registrar().register(MyFirstCommandBrigadier.create(), "description", List.of(/* aliases */));
-    }));
+    // Register the command with your own provided description and aliases:
+    event.registrar().register(MyFirstCommandBrigadier.create(), "description", List.of(/* aliases */));
+  }));
 }
 ```
 

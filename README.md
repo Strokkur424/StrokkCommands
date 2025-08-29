@@ -1,8 +1,7 @@
 # StrokkCommands
 
 **StrokkCommands** is a very simple and lightweight compile-time library for generating Brigadier command trees
-from annotation! Have **you** ever though: "Oh boy, my command is far too hard to read to maintain"? Well,
-**this** is the **solution**!!!
+from annotation! It is written for the Paper server software and fully supports all arguments exposed in the API.
 
 ## Documentation
 
@@ -10,52 +9,67 @@ You can read the documentation at https://commands.strokkur.net!
 
 ## Example
 
-Talking doesn't cut it, so why don't I show you? Here is a Brigadier command:
+Here is a pretty typical Brigadier command:
 
 ```java
 public static LiteralCommandNode<CommandSourceStack> create() {
-    return Commands.literal("adventure")
-        .then(Commands.literal("send")
-            .then(Commands.literal("message")
-                .then(Commands.argument("message", StringArgumentType.string())
-                    .then(Commands.literal("with")
-                        .then(Commands.literal("color")
-                            .then(Commands.argument("color", ArgumentTypes.namedColor())
-                                .executes(ctx -> {
-                                    // Your command logic
-                                    return Command.SINGLE_SUCCESS;
-                                })
-                            )
-                        )
+    return Commands.literal("fillblock")
+        .then(Commands.argument("pos1", ArgumentTypes.blockPosition())
+            .then(Commands.argument("pos2", ArgumentTypes.blockPosition())
+                .then(Commands.argument("state", ArgumentTypes.blockState())
+                    .executes(ctx -> {
+                        // fill blocks with default perTick value
+                        return Command.SINGLE_SUCCESS;
+                    })
+    
+                    .then(Commands.argument("perTick", IntegerArgumentType.integer())
+                        .executes(ctx -> {
+                            // fill blocks with specified perTick value
+                            return Command.SINGLE_SUCCESS;
+                        })
                     )
                 )
             )
-        ).build();
+        )
+        .build();
 }
 ```
 
-Ugly, isn't it? This denotes the command `/adventure send message <message> with color <color>`. Why does this
-take up so much space? **I don't know**! And that is why I created **StrokkCommands**! Let's take a look:
+This is really hard to read. In order to combat this, I've created **StrokkCommands**. This is the same command,
+but declared using annotations (and the abuse of some Java language features):
 
 ```java
-@Command("adventure")
-class AdventureArgumentsCommand {
+@Command("fillblock")
+record FillBlockCommand(BlockPosition pos1, BlockPosition pos2, BlockState state) {
 
-    @Executes("send message")
-    void executes(CommandSender sender,
-                  @StringArg(STRING) String message,
-                  @Literal("with") String $with,
-                  @Literal("color") String $color,
-                  NamedTextColor color) {
-        // Your command logic
+    @Executes
+    void execute(CommandSender sender) {
+        execute(sender, 1000);
+    }
+
+    @Executes
+    void execute(CommandSender sender, int perTick) {
+        // fill blocks with specified perTick value
     }
 }
 ```
 
-Tiny, isn't it?
+Whoah, that's so much shorter! I hope this makes the use case of this library very clear, so just right in by
+[adding the dependency](https://commands.strokkur.net/docs/dependency/) and creating your own tiny commands.
 
-### Star History
+## What is the difference to other command frameworks (like cloud)?
+StrokkCommands and cloud both solve completely different problems: Whilst cloud primarily markets itself as a full-blown
+command framework, StrokkCommands simply allows a developer to generate Brigadier trees. It does not handle any complex
+logic expected from a conventional framework. It does **not extend** the feature set of Brigadier in any way, only
+providing **quality of life** improvements to the existing system.
 
+The primary reason for StrokkCommands existence is the lack of an **ultra-lightweight** Brigadier command library which
+simply takes away the complexity from Brigadier. For many developers, the feature set of most command frameworks is just
+not required and just increases your plugin jar's file size for very little reasons.
+
+BONUS POINT: Annotation processors (and code generation as a whole) is cool 😎.
+
+## Star History
 <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Strokkur424/StrokkCommands&type=Date&theme=dark" />
     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Strokkur424/StrokkCommands&type=Date" />

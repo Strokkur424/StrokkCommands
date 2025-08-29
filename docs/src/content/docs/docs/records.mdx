@@ -1,0 +1,87 @@
+---
+title: Using records
+description: A guide to using record classes to represent commands.
+---
+
+In Java, records are a type of `static` class, which hold an immutable set of `final` fields.
+With StrokkCommands, you can use records to add arguments to a group of inner executor methods.
+
+## An example command with normal classes
+The standard approach to making a command `/fillblock <pos1> <pos2> <block_state>` could look like this:
+
+```java title="FillBlockCommand.java"
+@Command("fillblock")
+class FillBlockCommand {
+
+  @Executes
+  void execute(CommandSender sender, BlockPosition pos1, BlockPosition pos2, BlockState state) {
+    // ...
+  }
+}
+```
+
+This is perfectly fine an acceptable. The issues here start when you want to add more arguments. For example,
+if you want to add another int argument, which limits the number of placed blocks per ticks, the command would
+quickly grow to this:
+
+```java title="FillBlockCommand.java"
+@Command("fillblock")
+class FillBlockCommand {
+
+  @Executes
+  void execute(CommandSender sender, BlockPosition pos1, BlockPosition pos2, BlockState state) {
+    execute(sender, pos1, pos2, state, Integer.MAX_VALUE);
+  }
+
+  @Executes
+  void execute(CommandSender sender, BlockPosition pos1, BlockPosition pos2, BlockState state, int perTick) {
+    // ...
+  }
+}
+```
+
+And suddenly you got a lot of code repetition which seems unnecessary. So what is the solution?
+
+The solution are records!
+
+## Using records
+Generally, records behave the same way as normal classes. They can be used as a drop in replacement:
+
+```diff lang=java title="FillBlockCommand.java"
+  @Command("fillblock")
+- class FillBlockCommand {
++ record FillBlockCommand() {
+
+    @Executes
+    void execute(CommandSender sender, BlockPosition pos1, BlockPosition pos2, BlockState state) {
+      execute(sender, pos1, pos2, state, Integer.MAX_VALUE);
+    }
+
+    @Executes
+    void execute(CommandSender sender, BlockPosition pos1, BlockPosition pos2, BlockState state, int perTick) {
+      // ...
+    }
+  }
+```
+
+But that's boring. The real fun starts with the fact that you can **offload** common arguments to the components
+of the record, like this:
+
+```java title="FillBlockCommand.java"
+@Command("fillblock")
+record FillBlockCommand(BlockPosition pos1, BlockPosition pos2, BlockState state) {
+
+  @Executes
+  void execute(CommandSender sender) {
+    execute(sender, Integer.MAX_VALUE);
+  }
+
+  @Executes
+  void execute(CommandSender sender, int perTick) {
+    // ...
+  }
+}
+```
+
+It is (hopefully) not hard to see how much power records hold. You can avoid a lot of code repetition, primarily
+when working with commands with a lot of arguments and one or two optional arguments.
