@@ -3,10 +3,6 @@ title: Adding permissions
 description: A guide to permissions in StrokkCommands.
 ---
 
-
-
-import {Aside} from "@astrojs/starlight/components";
-
 Permissions are a very substantial part of making sure that a command is not executed by people
 who should not execute the command. For this, StrokkCommands provides you with two additional
 annotations: `@Permission` and `@RequiresOP`.
@@ -23,11 +19,11 @@ So either of these works fine:
 @Command("deopme")
 class DeopMeCommand {
 
-    @Executes
-    @RequiresOP
-    void execute(CommandSender sender) {
-        sender.setOp(false);
-    }
+  @Executes
+  @RequiresOP
+  void execute(CommandSender sender) {
+    sender.setOp(false);
+  }
 }
 ```
 
@@ -40,28 +36,21 @@ operators `/gui admin`, you can register the command as follows:
 @Command("gui")
 class GuiCommand {
 
-    @Executes
-    void executeUser(CommandSender sender, @Executor Player player) {
-        /* ... */
-    }
+  @Executes
+  void executeUser(CommandSender sender, @Executor Player player) {
+    /* ... */
+  }
 
-    // Only /gui admin requires op!
-    @RequiresOP
-    @Executes("admin")
-    void executeAdmin(CommandSender sender, @Executor Player player) {
-        /* ... */
-    }
+  // Only /gui admin requires op!
+  @RequiresOP
+  @Executes("admin")
+  void executeAdmin(CommandSender sender, @Executor Player player) {
+    /* ... */
+  }
 }
 ```
 
 ### Merging requirements
-<Aside type="danger" title="Known issues (as of 1.2.4)">
-  The algorithm for moving the requirements is currently not working as intended.
-  The issue is tracked in [StrokkCommands#4](https://github.com/Strokkur424/StrokkCommands/issues/4).
-
-  The following documentation shows it is *intended* to work.
-</Aside>
-
 If your command has exactly two paths: `/trigger off` and `/trigger on`, where both should have different permissions
 (`yourplugin.commands.trigger.off` and `yourplugin.commands.trigger.on`), StrokkCommands automatically adds a requirement to `/trigger`, in
 which you need to have **either** the `on` or `off` permissions to run the command. This ensures that regular players
