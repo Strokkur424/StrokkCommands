@@ -2,8 +2,8 @@
 // Borrowed from the PaperMC documentation:
 // https://github.com/PaperMC/docs
 
-import {Icon} from "@astrojs/starlight/components";
-import type {ComponentProps} from "astro/types";
+import { Icon } from "@astrojs/starlight/components";
+import type { ComponentProps } from "astro/types";
 
 interface Props {
   icon?: ComponentProps<typeof Icon>["name"];
@@ -12,20 +12,18 @@ interface Props {
   destructive?: boolean;
 }
 
-const {icon, title, href, destructive} = Astro.props;
+const { icon, title, href, destructive } = Astro.props;
 ---
 
 <a href={href} class:list={["not-content", "card", destructive && "card-destructive"]}>
   <article class="sl-flex">
     <div class="title sl-flex">
-      {icon &&
-        <Icon name={icon} class="icon" size="1.333em"/>}
-      <span set:html={title}/>
-      {destructive &&
-        <Icon name="warning" class="warning-icon"/>}
+      {icon && <Icon name={icon} class="icon" size="1.333em" />}
+      <span set:html={title} />
+      {destructive && <Icon name="warning" class="warning-icon" />}
     </div>
     <div class="body">
-      <slot/>
+      <slot />
     </div>
   </article>
 </a>
@@ -40,9 +38,10 @@ const {icon, title, href, destructive} = Astro.props;
     padding: clamp(1rem, calc(0.125rem + 3vw), 2.5rem);
     border-radius: 0.25rem;
     text-decoration: none;
-    transition: border-color 0.3s ease,
-    background-color 0.3s ease,
-    box-shadow 0.3s ease;
+    transition:
+      border-color 0.3s ease,
+      background-color 0.3s ease,
+      box-shadow 0.3s ease;
   }
 
   .card article {

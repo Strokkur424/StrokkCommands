@@ -1,7 +1,7 @@
 // Borrowed from the PaperMC docs.
 // https://github.com/PaperMC/docs
 
-import {GITHUB_OPTIONS} from "./git";
+import { GITHUB_OPTIONS } from "./git";
 
 // this is resolved on build-time, not by the client
 
@@ -48,7 +48,7 @@ const commandsVersions: string[] = await fetch(
   "https://api.github.com/repos/Strokkur424/StrokkCommands/tags",
   GITHUB_OPTIONS
 )
-  .then((r) => (r.ok ? r.json() : [{name: "v0.0.0"}]))
+  .then((r) => (r.ok ? r.json() : [{ name: "v0.0.0" }]))
   .then((tags: Tag[]) => tags.map((t) => t.name.substring(1)));
 
 export const LATEST_COMMANDS_RELEASE = commandsVersions[0];
