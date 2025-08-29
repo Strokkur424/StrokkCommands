@@ -7,6 +7,10 @@ from annotation! It is written for the Paper server software and fully supports 
 
 You can read the documentation at https://commands.strokkur.net!
 
+## Discord
+
+For questions, update announcements, and general chatter, make sure to join the Discord server: https://discord.strokkur.net.
+
 ## Example
 
 Here is a pretty typical Brigadier command:
