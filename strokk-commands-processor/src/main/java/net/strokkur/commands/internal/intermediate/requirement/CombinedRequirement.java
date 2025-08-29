@@ -61,14 +61,14 @@ class CombinedRequirement implements Requirement {
             return permissionsString;
         }
 
-        final String paranthesisPermissionString;
+        final String parenthesisPermissionString;
         if (permissions.size() == 1) {
-            paranthesisPermissionString = permissionsString;
+            parenthesisPermissionString = permissionsString;
         } else {
-            paranthesisPermissionString = "(" + permissionsString + ")";
+            parenthesisPermissionString = "(" + permissionsString + ")";
         }
 
-        return defaultReq + " && " + paranthesisPermissionString;
+        return defaultReq + " && " + parenthesisPermissionString;
     }
 
     @Override
