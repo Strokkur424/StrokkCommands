@@ -26,5 +26,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.PARAMETER)
 public @interface LongArg {
     long max() default Long.MAX_VALUE;
+
     long min() default Long.MIN_VALUE;
 }

@@ -12,7 +12,7 @@ export default defineConfig({
       favicon: "/patchnotes.png",
       social: [
         { icon: "github", label: "GitHub", href: "https://github.com/Strokkur424/StrokkCommands" },
-        { icon: "discord", label: "Discord", href: "https://discord.gg/C3bWEYrtSA"}
+        { icon: "discord", label: "Discord", href: "https://discord.gg/C3bWEYrtSA" },
       ],
       customCss: ["/src/styles/custom.css"],
       expressiveCode: {

@@ -32,7 +32,7 @@ import org.bukkit.inventory.ItemType;
 @SuppressWarnings("UnstableApiUsage")
 @Command("registryarg")
 class RegistryArgumentsCommand {
-    
+
     @Executes("itemtype")
     void execute(CommandSender sender, @Executor Player player, ItemType type) {
         execute(sender, player, type, 1);
@@ -47,21 +47,21 @@ class RegistryArgumentsCommand {
             Placeholder.component("type", Component.translatable(type))
         );
     }
-    
+
     @Executes("cow-variant")
     void execute(CommandSender sender, Cow.Variant cowVariant) {
         sender.sendRichMessage("<green>You selected <white><variant></white>!",
             Placeholder.unparsed("variant", cowVariant.key().asString())
         );
     }
-    
+
     @Executes("memory-key")
     void execute(CommandSender sender, MemoryKey<?> memoryKey) {
         sender.sendRichMessage("<green>You selected <white><variant></white>!",
             Placeholder.unparsed("variant", memoryKey.key().asString())
         );
     }
-    
+
     @SuppressWarnings("removal")
     @Executes("play-sound")
     void execute(CommandSender sender, Sound sound) {

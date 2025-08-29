@@ -15,22 +15,24 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.multiliterals;
+package net.strokkur.commands.internal.arguments;
 
-import net.strokkur.commands.internal.arguments.ArgumentInformation;
-import net.strokkur.commands.internal.arguments.LiteralArgumentInfo;
+import javax.lang.model.element.Element;
+import java.util.Objects;
 
-import java.util.List;
+record LiteralCommandArgumentImpl(String literal, Element element) implements LiteralCommandArgument {
 
-public interface MultiLiteralsTree {
-
-    static MultiLiteralsTree create() {
-        return new MultiLiteralsTreeImpl();
+    @Override
+    public boolean equals(final Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final LiteralCommandArgumentImpl that = (LiteralCommandArgumentImpl) o;
+        return Objects.equals(literal(), that.literal());
     }
 
-    void insert(ArgumentInformation single);
-
-    void insert(LiteralArgumentInfo base, List<String> literals);
-
-    List<List<ArgumentInformation>> flatten();
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(literal());
+    }
 }

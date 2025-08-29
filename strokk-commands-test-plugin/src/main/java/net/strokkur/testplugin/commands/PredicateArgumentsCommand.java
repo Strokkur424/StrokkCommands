@@ -45,7 +45,7 @@ public class PredicateArgumentsCommand {
     void executor(CommandSender sender, double value, @Literal("fit") String $fit, @Literal("into") String $into, Range<Double> range) {
         checkNumberInRange(sender, value, range);
     }
-    
+
     @Executes("int-range")
     void executor(CommandSender sender, int value, @Literal("fit") String $fit, @Literal("into") String $into, Range<Integer> range) {
         checkNumberInRange(sender, value, range);

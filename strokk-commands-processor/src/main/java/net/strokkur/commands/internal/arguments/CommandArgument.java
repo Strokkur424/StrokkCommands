@@ -15,27 +15,13 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate;
+package net.strokkur.commands.internal.arguments;
 
-import javax.lang.model.type.TypeMirror;
+import javax.lang.model.element.Element;
 
-@FunctionalInterface
-public interface SuggestionProvider {
-    static SuggestionProvider ofClass(TypeMirror implementingClass) {
-        return () -> "new " + implementingClass + "()";
-    }
+public interface CommandArgument {
 
-    static SuggestionProvider ofMethodReference(String methodName, String baseClass) {
-        return () -> baseClass + "::" + methodName;
-    }
+    String getName();
 
-    static SuggestionProvider ofMethod(String methodName, String baseClass) {
-        return () -> baseClass + "." + methodName + "()";
-    }
-
-    static SuggestionProvider ofField(String fieldName, String baseClass) {
-        return () -> baseClass + "." + fieldName;
-    }
-
-    String get();
+    Element element();
 }

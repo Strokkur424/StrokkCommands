@@ -4,8 +4,8 @@ import de.chojo.PublishData
 plugins {
     id("java-library")
     id("maven-publish")
-    id("de.chojo.publishdata") version "1.4.0"
-    id("com.diffplug.spotless") version "7.0.2"
+    alias(libs.plugins.publishdata)
+    alias(libs.plugins.spotless)
 }
 
 group = "net.strokkur"
@@ -16,7 +16,7 @@ allprojects {
         plugin<SpotlessPlugin>()
         plugin<PublishData>()
     }
-    
+
     spotless {
         java {
             licenseHeaderFile(rootProject.file("HEADER"))

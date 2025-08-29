@@ -22,7 +22,7 @@ interface Manifest {
 
 // prettier-ignore
 const manifest: Manifest = await fetch("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json")
-    .then((r) => r.json());
+  .then((r) => r.json());
 
 export const LATEST_MC_RELEASE = manifest.latest.release;
 

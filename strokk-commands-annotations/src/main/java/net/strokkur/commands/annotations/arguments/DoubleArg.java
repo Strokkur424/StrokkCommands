@@ -26,5 +26,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.PARAMETER)
 public @interface DoubleArg {
     double min() default Double.MIN_VALUE;
+
     double max() default Double.MAX_VALUE;
 }

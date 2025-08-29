@@ -3,7 +3,9 @@ title: Adding arguments
 description: A guide to adding command arguments.
 ---
 
-import { Aside } from "@astrojs/starlight/components";
+
+
+import {Aside} from "@astrojs/starlight/components";
 
 You can add arguments just by adding parameters to your execute methods.
 
@@ -17,10 +19,10 @@ void tellMini(CommandSender sender, List<Player> players, @StringArg(GREEDY) Str
 ```
 
 <Aside type="tip">
-The `GREEDY` inside the `@StringArg` annotation is a statically imported enum constant:
-```java
-import static net.strokkur.commands.StringArgType.GREEDY;
-```
+  The `GREEDY` inside the `@StringArg` annotation is a statically imported enum constant:
+  ```java
+  import static net.strokkur.commands.StringArgType.GREEDY;
+  ```
 </Aside>
 
 What this does on Brigadier terms is add two new arguments: `ArgumentTypes.players()` and `StringArgumentType.greedy()`.
@@ -71,38 +73,38 @@ This will generate the following Brigadier command tree:
 
   ```java title="TellPresetCommandBrigadier.java"
   return Commands.literal("tellpreset")
-      .then(Commands.argument("player", ArgumentTypes.player())
-          .then(Commands.literal("last")
-              .executes(ctx -> {
-                  INSTANCE.executeTellPreset(
-                      ctx.getSource().getSender(),
-                      ctx.getArgument("player", PlayerSelectorArgumentResolver.class).resolve(ctx.getSource()).getFirst(),
-                      "last"
-                  );
-                  return Command.SINGLE_SUCCESS;
-              })
-          )
-          .then(Commands.literal("first")
-              .executes(ctx -> {
-                  INSTANCE.executeTellPreset(
-                      ctx.getSource().getSender(),
-                      ctx.getArgument("player", PlayerSelectorArgumentResolver.class).resolve(ctx.getSource()).getFirst(),
-                      "first"
-                  );
-                  return Command.SINGLE_SUCCESS;
-              })
-          )
-          .then(Commands.literal("second")
-              .executes(ctx -> {
-                  INSTANCE.executeTellPreset(
-                      ctx.getSource().getSender(),
-                      ctx.getArgument("player", PlayerSelectorArgumentResolver.class).resolve(ctx.getSource()).getFirst(),
-                      "second"
-                  );
-                  return Command.SINGLE_SUCCESS;
-              })
-          )
-      );
+  .then(Commands.argument("player", ArgumentTypes.player())
+  .then(Commands.literal("last")
+  .executes(ctx -> {
+  INSTANCE.executeTellPreset(
+    ctx.getSource().getSender(),
+    ctx.getArgument("player", PlayerSelectorArgumentResolver.class).resolve(ctx.getSource()).getFirst(),
+    "last"
+  );
+  return Command.SINGLE_SUCCESS;
+})
+  )
+  .then(Commands.literal("first")
+  .executes(ctx -> {
+  INSTANCE.executeTellPreset(
+    ctx.getSource().getSender(),
+    ctx.getArgument("player", PlayerSelectorArgumentResolver.class).resolve(ctx.getSource()).getFirst(),
+    "first"
+  );
+  return Command.SINGLE_SUCCESS;
+})
+  )
+  .then(Commands.literal("second")
+  .executes(ctx -> {
+  INSTANCE.executeTellPreset(
+    ctx.getSource().getSender(),
+    ctx.getArgument("player", PlayerSelectorArgumentResolver.class).resolve(ctx.getSource()).getFirst(),
+    "second"
+  );
+  return Command.SINGLE_SUCCESS;
+})
+  )
+  );
   ```
 </details>
 

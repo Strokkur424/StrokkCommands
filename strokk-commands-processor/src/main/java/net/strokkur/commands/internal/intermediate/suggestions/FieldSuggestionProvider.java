@@ -15,12 +15,25 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.arguments;
+package net.strokkur.commands.internal.intermediate.suggestions;
 
-public interface LiteralArgumentInfo extends ArgumentInformation {
-    String getLiteral();
+import net.strokkur.commands.internal.StrokkCommandsPreprocessor;
+import net.strokkur.commands.internal.util.Utils;
+import org.jspecify.annotations.Nullable;
 
-    boolean addToMethod();
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 
-    LiteralArgumentInfo withLiteral(String literal);
+public record FieldSuggestionProvider(TypeMirror classElement, String field) implements SuggestionProvider {
+
+    @Override
+    public String getProvider() {
+        return Utils.getTypeName(StrokkCommandsPreprocessor.getTypes().asElement(classElement)) + "." + field;
+    }
+
+    @Override
+    @Nullable
+    public TypeElement getClassElement() {
+        return (TypeElement) StrokkCommandsPreprocessor.getTypes().asElement(classElement);
+    }
 }

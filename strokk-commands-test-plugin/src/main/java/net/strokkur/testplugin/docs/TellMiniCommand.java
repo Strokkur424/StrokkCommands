@@ -31,7 +31,7 @@ import static net.strokkur.commands.StringArgType.GREEDY;
 
 @Command("tellmini")
 public class TellMiniCommand {
-    
+
     @Executes
     void tellMini(CommandSender sender, List<Player> players, @StringArg(GREEDY) String message) {
         Component component = MiniMessage.miniMessage().deserialize(message);

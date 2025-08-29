@@ -17,15 +17,12 @@
  */
 package net.strokkur.commands.internal.util;
 
-import net.strokkur.commands.annotations.Permission;
-import net.strokkur.commands.annotations.RequiresOP;
-import net.strokkur.commands.internal.intermediate.Requirement;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.NestingKind;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import java.lang.annotation.Annotation;
@@ -55,18 +52,36 @@ public interface Utils {
             .orElse(null);
     }
 
-    @NullUnmarked
-    static @NonNull List<Requirement> getAnnotatedRequirements(@NonNull Element element) {
-        Permission permission = element.getAnnotation(Permission.class);
-        RequiresOP requiresOP = element.getAnnotation(RequiresOP.class);
+    static PackageElement getPackageElement(TypeElement typeElement) {
+        if (typeElement.getNestingKind() == NestingKind.TOP_LEVEL) {
+            return (PackageElement) typeElement.getEnclosingElement();
+        }
 
-        List<Requirement> requirements = new ArrayList<>(2);
-        if (permission != null) {
-            requirements.add(Requirement.ofPermission(permission.value()));
+        return getPackageElement((TypeElement) typeElement.getEnclosingElement());
+    }
+
+    static String getTypeName(Element type) {
+        final StringBuilder builder = new StringBuilder();
+        final List<String> names = getNestedClassNames(type);
+
+        for (int i = 0, size = names.size(); i < size; i++) {
+            final String name = names.get(i);
+            builder.append(name);
+            if (i + 1 < size) {
+                builder.append(".");
+            }
         }
-        if (requiresOP != null) {
-            requirements.add(Requirement.IS_OP);
-        }
-        return requirements;
+        return builder.toString();
+    }
+
+    static List<String> getNestedClassNames(Element type) {
+        final List<String> names = new ArrayList<>(16);
+
+        do {
+            names.add(type.getSimpleName().toString());
+            type = type.getEnclosingElement();
+        } while (type instanceof TypeElement);
+
+        return names.reversed();
     }
 }

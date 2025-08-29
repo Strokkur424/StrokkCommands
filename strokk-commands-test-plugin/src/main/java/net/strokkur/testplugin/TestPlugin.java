@@ -19,18 +19,6 @@ package net.strokkur.testplugin;
 
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import net.strokkur.testplugin.commands.AdventureArgumentsCommandBrigadier;
-import net.strokkur.testplugin.commands.EntitiesCommandBrigadier;
-import net.strokkur.testplugin.commands.LiteralsCommandBrigadier;
-import net.strokkur.testplugin.commands.LocationArgumentsCommandBrigadier;
-import net.strokkur.testplugin.commands.PaperArgumentsCommandBrigadier;
-import net.strokkur.testplugin.commands.PredicateArgumentsCommandBrigadier;
-import net.strokkur.testplugin.commands.PrimitivesCommandBrigadier;
-import net.strokkur.testplugin.commands.RegistryArgumentsCommandBrigadier;
-import net.strokkur.testplugin.commands.TellMiniCommandBrigadier;
-import net.strokkur.testplugin.docs.MyFirstCommandBrigadier;
-import net.strokkur.testplugin.iceacream.IceCreamCommandBrigadier;
-import net.strokkur.testplugin.suggestions.CommandWithSuggestionsBrigadier;
 import org.bukkit.plugin.java.JavaPlugin;
 
 @SuppressWarnings("UnstableApiUsage")
@@ -41,22 +29,24 @@ public final class TestPlugin extends JavaPlugin {
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS.newHandler(event -> {
             Commands commands = event.registrar();
 
-            CommandWithSuggestionsBrigadier.register(commands);
-            IceCreamCommandBrigadier.register(commands);
-
-            PrimitivesCommandBrigadier.register(commands);
-            LocationArgumentsCommandBrigadier.register(commands);
-            EntitiesCommandBrigadier.register(commands);
-            RegistryArgumentsCommandBrigadier.register(commands);
-            PaperArgumentsCommandBrigadier.register(commands);
-            PredicateArgumentsCommandBrigadier.register(commands);
-            AdventureArgumentsCommandBrigadier.register(commands);
-            LiteralsCommandBrigadier.register(commands);
-            TellMiniCommandBrigadier.register(commands);
+//            CommandWithSuggestionsBrigadier.register(commands);
+//            IceCreamCommandBrigadier.register(commands);
+//
+//            PrimitivesCommandBrigadier.register(commands);
+//            LocationArgumentsCommandBrigadier.register(commands);
+//            EntitiesCommandBrigadier.register(commands);
+//            RegistryArgumentsCommandBrigadier.register(commands);
+//            PaperArgumentsCommandBrigadier.register(commands);
+//            PredicateArgumentsCommandBrigadier.register(commands);
+//            AdventureArgumentsCommandBrigadier.register(commands);
+//            LiteralsCommandBrigadier.register(commands);
+//            TellMiniCommandBrigadier.register(commands);
         }));
 
+        this.getSLF4JLogger().debug("35");
+
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS.newHandler(event -> {
-            MyFirstCommandBrigadier.register(event.registrar());
+//            MyFirstCommandBrigadier.register(event.registrar());
         }));
     }
 }

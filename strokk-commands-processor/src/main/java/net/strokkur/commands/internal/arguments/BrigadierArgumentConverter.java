@@ -26,14 +26,13 @@ import net.strokkur.commands.annotations.arguments.IntArg;
 import net.strokkur.commands.annotations.arguments.LongArg;
 import net.strokkur.commands.annotations.arguments.StringArg;
 import net.strokkur.commands.annotations.arguments.TimeArg;
+import net.strokkur.commands.internal.exceptions.HandledConversionException;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 import net.strokkur.commands.internal.util.Utils;
-import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import java.lang.annotation.Annotation;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -392,8 +391,10 @@ public class BrigadierArgumentConverter {
         return BrigadierArgumentType.of(withAnnotation.apply(annotated), retrieval, imports);
     }
 
-    @Nullable
-    public BrigadierArgumentType getAsArgumentType(VariableElement parameter, String argumentName, String type) {
+    public BrigadierArgumentType getAsArgumentType(VariableElement parameter) throws HandledConversionException {
+        final String argumentName = parameter.getSimpleName().toString();
+        final String type = parameter.asType().toString();
+
         CustomArg customArg = parameter.getAnnotation(CustomArg.class);
         if (customArg != null) {
             TypeMirror mirror = Utils.getAnnotationMirror(parameter, CustomArg.class, "value");
@@ -406,7 +407,7 @@ public class BrigadierArgumentConverter {
 
         if (!CONVERSION_MAP.containsKey(type)) {
             messagerWrapper.errorElement("Cannot find Brigadier equivalent for argument of type {}.", parameter, type);
-            return null;
+            throw new HandledConversionException();
         }
 
         // We *have* to give the time argument precedence, since its return type is also 'int'.        
@@ -414,7 +415,7 @@ public class BrigadierArgumentConverter {
         if (timeArg != null) {
             if (!type.equals("int") && !type.equals("java.lang.Integer")) {
                 messagerWrapper.errorElement("An argument annotated with @TimeArg has to be of type 'int'", parameter);
-                return null;
+                throw new HandledConversionException();
             }
 
             return BrigadierArgumentType.of(
@@ -433,7 +434,7 @@ public class BrigadierArgumentConverter {
         }
 
         messagerWrapper.errorElement("An unexpected error occurred whilst converting type {} to Brigadier equivalent.", parameter, type);
-        return null;
+        throw new HandledConversionException();
     }
 
     record SimpleEntry(String argumentTypeName, String className, String classImport) {

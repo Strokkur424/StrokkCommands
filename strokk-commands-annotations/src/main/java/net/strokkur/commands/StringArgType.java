@@ -21,7 +21,7 @@ public enum StringArgType {
     WORD("word"),
     STRING("string"),
     GREEDY("greedyString");
-    
+
     private final String brigadierType;
 
     StringArgType(String brigadierType) {

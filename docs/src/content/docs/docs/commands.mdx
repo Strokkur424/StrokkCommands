@@ -3,6 +3,8 @@ title: Creating your first command
 description: A guide to creating simple commands.
 ---
 
+
+
 import FirstCommandMp4 from "./assets/firstcommand.mp4";
 
 import Video from "/src/components/Video.astro";
@@ -58,24 +60,24 @@ from calling `ctx.getSource().getSender()`.
 If your command requires a player to execute it, you have two ways to get it:
 1. `instanceof`-cast the sender:
 
-   ```java
-   @Executes
-   void onExecute(CommandSender sender) {
-       if (!(sender instanceof Player player)) {
-           sender.sendRichMessage("<red>This command requires a player!");
-           return;
-       }
+```java
+@Executes
+void onExecute(CommandSender sender) {
+    if (!(sender instanceof Player player)) {
+        sender.sendRichMessage("<red>This command requires a player!");
+        return;
+    }
 
-       player.sendRichMessage("<#f29def>Hey there! You just executed your first command ^-^");
-   }
+    player.sendRichMessage("<#f29def>Hey there! You just executed your first command ^-^");
+}
    ```
 2. Add an `Player` parameter using the `@Executor` annotation:
 
-   ```java
-   @Executes
-   void onExecute(CommandSender sender, @Executor Player player) {
-      player.sendRichMessage("<#f29def>Hey there! You just executed your first command ^-^");
-   }
+```java
+@Executes
+void onExecute(CommandSender sender, @Executor Player player) {
+   player.sendRichMessage("<#f29def>Hey there! You just executed your first command ^-^");
+}
    ```
 
 Whilst both ways are acceptable, the second approach is the more 'correct' way.
@@ -153,4 +155,4 @@ it. It is up to you which approach you prefer, either work just fine.
 ## Testing the command out in-game
 You should now be able to spin up a test server with your plugin and see your command in action!
 
-<Video src={FirstCommandMp4} />
+<Video src={FirstCommandMp4}/>

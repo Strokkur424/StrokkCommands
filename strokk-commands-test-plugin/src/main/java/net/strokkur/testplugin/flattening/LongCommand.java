@@ -15,19 +15,17 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.annotations;
+package net.strokkur.testplugin.flattening;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import net.strokkur.commands.annotations.Command;
+import net.strokkur.commands.annotations.Executes;
+import org.bukkit.command.CommandSender;
 
-@Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.PARAMETER)
-public @interface SuggestionMethod {
-    String method();
+@Command("this is a long command")
+class LongCommand {
 
-    Class<?> base() default Class.class;
-    
-    boolean reference() default true;
+    @Executes
+    void execute(CommandSender sender) {
+        sender.sendMessage("This is a long command");
+    }
 }

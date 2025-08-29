@@ -31,7 +31,6 @@ import net.kyori.adventure.text.Component;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-@SuppressWarnings("UnstableApiUsage")
 public class IceCreamArgument implements CustomArgumentType.Converted<IceCreamType, String> {
 
     private static final List<IceCreamType> TYPES = List.of(IceCreamType.values());

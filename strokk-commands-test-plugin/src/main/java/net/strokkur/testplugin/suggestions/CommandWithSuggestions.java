@@ -24,9 +24,7 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.strokkur.commands.annotations.Command;
 import net.strokkur.commands.annotations.Executes;
-import net.strokkur.commands.annotations.SuggestionClass;
-import net.strokkur.commands.annotations.SuggestionField;
-import net.strokkur.commands.annotations.SuggestionMethod;
+import net.strokkur.commands.annotations.Suggestion;
 import net.strokkur.commands.annotations.arguments.IntArg;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -56,22 +54,22 @@ class CommandWithSuggestions {
     }
 
     @Executes("field")
-    void executesField(CommandSender sender, @SuggestionField(base = SuggestionsRepository.class, field = "STATIC_FIELD") String value) {
+    void executesField(CommandSender sender, @Suggestion(base = SuggestionsRepository.class, field = "STATIC_FIELD") String value) {
         // ...
     }
 
     @Executes("methodRef")
-    void executesMethodRef(CommandSender sender, @SuggestionMethod(method = "mySuggestions") String value) {
+    void executesMethodRef(CommandSender sender, @Suggestion(method = "mySuggestions") String value) {
         // ...
     }
 
     @Executes("method")
-    void executesMethod(CommandSender sender, @SuggestionMethod(method = "mySuggestions", reference = false) String value) {
+    void executesMethod(CommandSender sender, @Suggestion(method = "mySuggestions", reference = false) String value) {
         // ...
     }
 
     @Executes("class")
-    void executesClass(CommandSender sender, @SuggestionClass(SuggestionsRepository.SomeClass.class) @IntArg(min = 1, max = 64) int value) {
+    void executesClass(CommandSender sender, @Suggestion(base = SuggestionsRepository.SomeClass.class) @IntArg(min = 1, max = 64) int value) {
         // ...
     }
 }

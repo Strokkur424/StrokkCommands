@@ -15,17 +15,8 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.annotations;
+package net.strokkur.commands.internal.intermediate.attributes;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import org.jspecify.annotations.Nullable;
 
-@Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.PARAMETER)
-public @interface SuggestionField {
-    String field();
-
-    Class<?> base() default Class.class;
-}
+public record StaticAttributeKey<T>(String key, @Nullable T defaultValue) implements AttributeKey<T> {}

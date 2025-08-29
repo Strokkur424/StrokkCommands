@@ -24,7 +24,7 @@ import net.strokkur.commands.annotations.arguments.CustomArg;
 import org.bukkit.command.CommandSender;
 
 @Command("icecream")
-class IceCreamCommand {
+public class IceCreamCommand {
 
     @Executes("lick")
     void onLick(CommandSender sender, @CustomArg(IceCreamArgument.class) IceCreamType iceCream) {

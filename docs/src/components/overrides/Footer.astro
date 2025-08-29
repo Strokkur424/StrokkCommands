@@ -5,7 +5,9 @@ import Default from "@astrojs/starlight/components/Footer.astro";
 import { Icon } from "@astrojs/starlight/components";
 ---
 
-<Default><slot /></Default>
+<Default>
+  <slot />
+</Default>
 <div>
   <p class="footer-item">
     Copyright © {new Date().getFullYear()} Strokkur24.

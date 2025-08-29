@@ -25,5 +25,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.PARAMETER)
 public @interface Literal {
-    String[] value();
+    String[] value() default {};
 }
