@@ -37,7 +37,7 @@ class ClassTransform implements PathTransform, ForwardingMessagerWrapper {
         final List<CommandPath<?>> relevant = parseRecordComponents(thisPath, element);
 
         for (final Element enclosed : element.getEnclosedElements()) {
-            if (enclosed.getKind() == ElementKind.METHOD || enclosed.getKind() == ElementKind.FIELD) {
+            if (enclosed.getKind() == ElementKind.METHOD || enclosed.getKind() == ElementKind.FIELD || enclosed.getKind() == ElementKind.CLASS || enclosed.getKind() == ElementKind.RECORD) {
                 for (final CommandPath<?> recordPath : relevant) {
                     thisPath.addChild(recordPath);
                     this.parser.populateRequirements(recordPath, element);
