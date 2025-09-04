@@ -93,7 +93,6 @@ public interface CommandPath<S extends CommandArgument> {
         final int min = Math.min(arguments.size(), otherArguments.size());
 
         for (int i = 0; i < min; i++) {
-            System.out.println("Checking whether '%s' and '%s' are the same fucking thing".formatted(arguments.get(i), otherArguments.get(i)));
             if (!arguments.get(i).equals(otherArguments.get(i))) {
                 return i;
             }
