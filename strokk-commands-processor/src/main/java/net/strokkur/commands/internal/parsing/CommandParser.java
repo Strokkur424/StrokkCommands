@@ -33,7 +33,7 @@ import java.util.function.Function;
 
 public interface CommandParser {
 
-    LiteralCommandPath createCommandTree(TypeElement typeElement);
+    CommandPath<?> createCommandTree(TypeElement typeElement);
 
     void parse(CommandPath<?> path, Element element);
 

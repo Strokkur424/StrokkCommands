@@ -30,7 +30,6 @@ import net.strokkur.commands.internal.exceptions.HandledConversionException;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
 import net.strokkur.commands.internal.intermediate.paths.EmptyCommandPath;
-import net.strokkur.commands.internal.intermediate.paths.LiteralCommandPath;
 import net.strokkur.commands.internal.intermediate.suggestions.SuggestionProvider;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.commands.internal.util.MessagerWrapper;
@@ -63,12 +62,10 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
     }
 
     @Override
-    public LiteralCommandPath createCommandTree(final TypeElement typeElement) {
+    public CommandPath<?> createCommandTree(final TypeElement typeElement) {
         final CommandPath<?> empty = new EmptyCommandPath();
         parse(empty, typeElement);
-        final LiteralCommandPath out = (LiteralCommandPath) empty.getChildren().getFirst();
-        out.setParent(null);
-        return out;
+        return empty.getChildren().getFirst();
     }
 
     @Override

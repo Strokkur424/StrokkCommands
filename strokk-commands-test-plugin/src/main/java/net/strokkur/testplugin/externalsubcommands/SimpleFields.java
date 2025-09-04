@@ -4,12 +4,11 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.strokkur.commands.annotations.Command;
 import net.strokkur.commands.annotations.Executes;
 import net.strokkur.commands.annotations.Subcommand;
 import org.bukkit.command.CommandSender;
 
-@Command("simplefields")
+//@Command("simplefields")
 class SimpleFields {
 
     @Subcommand

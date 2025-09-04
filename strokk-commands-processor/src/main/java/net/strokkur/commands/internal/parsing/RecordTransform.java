@@ -22,6 +22,11 @@ class RecordTransform extends ClassTransform {
     }
 
     @Override
+    protected void addAccessAttribute(final CommandPath<?> path, final TypeElement element) {
+        // no impl
+    }
+
+    @Override
     protected List<CommandPath<?>> parseRecordComponents(final CommandPath<?> parent, final Element element) {
         final List<? extends Element> enclosedElements = element.getEnclosedElements();
 

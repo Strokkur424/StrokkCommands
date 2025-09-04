@@ -84,4 +84,29 @@ public interface Utils {
 
         return names.reversed();
     }
+
+    static String getInstanceName(TypeElement typeElement) {
+        final StringBuilder builder = new StringBuilder();
+        populateInstanceName(builder, typeElement);
+        return builder.toString();
+    }
+
+    static void populateInstanceName(StringBuilder builder, TypeElement element) {
+        if (element.getNestingKind().isNested()) {
+            populateInstanceName(builder, (TypeElement) element.getEnclosingElement());
+            builder.append(element.getSimpleName());
+            return;
+        }
+
+        builder.append("instance");
+    }
+
+    static int getNestingCount(TypeElement typeElement) {
+        int nested = 0;
+        while (typeElement.getNestingKind() != NestingKind.TOP_LEVEL) {
+            typeElement = (TypeElement) typeElement.getEnclosingElement();
+            nested++;
+        }
+        return nested;
+    }
 }

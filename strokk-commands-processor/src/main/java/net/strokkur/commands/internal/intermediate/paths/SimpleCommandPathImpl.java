@@ -132,6 +132,7 @@ abstract class SimpleCommandPathImpl<S extends CommandArgument> implements Comma
 
     @Override
     public String toString(int indent) {
+        System.out.println("substring indent: %s (this: %s)".formatted(indent, this.toStringNoChildren()));
         final StringBuilder builder = new StringBuilder();
         builder.append("| ".repeat(indent));
 
@@ -139,17 +140,17 @@ abstract class SimpleCommandPathImpl<S extends CommandArgument> implements Comma
             return builder.append("<empty>").toString();
         }
 
-        for (final S argument : this.arguments) {
-            builder.append(argument.getName());
-        }
-
         if (this instanceof EmptyCommandPath) {
             builder.append("<empty_path>");
         }
 
+        for (final S argument : this.arguments) {
+            builder.append(argument.getName()).append(" ");
+        }
+
         // Add attributes
         if (!attributes.isEmpty()) {
-            builder.append(" ".repeat(40 - builder.length()));
+            builder.append(" ".repeat(Math.max(40 - builder.length(), 0)));
             builder.append("Attributes: {");
             this.attributes.forEach((key, value) -> builder.append(key).append(" = ").append(value).append(" "));
             builder.deleteCharAt(builder.length() - 1);

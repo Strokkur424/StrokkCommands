@@ -2,12 +2,16 @@ package net.strokkur.commands.internal.parsing;
 
 import net.strokkur.commands.annotations.Command;
 import net.strokkur.commands.annotations.Subcommand;
+import net.strokkur.commands.internal.StrokkCommandsPreprocessor;
+import net.strokkur.commands.internal.intermediate.access.FieldAccess;
+import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.VariableElement;
 
 class FieldTransform implements PathTransform, ForwardingMessagerWrapper {
 
@@ -21,10 +25,11 @@ class FieldTransform implements PathTransform, ForwardingMessagerWrapper {
 
     @Override
     public void transform(final CommandPath<?> parent, final Element element) {
+        debug("> FieldTransform: {}.{}", element.getEnclosingElement().getSimpleName(), element.getSimpleName());
+        final CommandPath<?> thisPath = createThisPath(parent, this.parser, element);
+        thisPath.setAttribute(AttributeKey.ACCESS_STACK, (FieldAccess) () -> (VariableElement) element);
 
-
-
-
+        this.parser.parse(thisPath, StrokkCommandsPreprocessor.getTypes().asElement(element.asType()));
     }
 
     @Override
