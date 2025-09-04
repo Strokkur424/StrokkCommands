@@ -116,7 +116,7 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
         boolean debug = System.getProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY) != null;
 
         final CommandInformation commandInformation = getCommandInformation(typeElement);
-        final CommandPath<?> commandPath = parser.parseElement(typeElement);
+        final CommandPath<?> commandPath = parser.createCommandTree(typeElement);
 
         if (debug) {
             // debug log all paths.
@@ -126,6 +126,7 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
         // Before we print the paths, we do a step I like to refer to as "flattening".
         // This does not actually change the structure of the paths, but it moves up any attributes
         // relevant for certain things to print correctly (a.e. executor requirements).
+        pathFlattener.cleanupEmptyPaths(commandPath);
         pathFlattener.cleanupPath(commandPath);
         pathFlattener.flattenPath(commandPath);
 

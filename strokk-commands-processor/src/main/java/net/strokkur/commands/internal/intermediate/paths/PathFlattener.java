@@ -19,9 +19,11 @@ package net.strokkur.commands.internal.intermediate.paths;
 
 import net.strokkur.commands.internal.intermediate.ExecutorType;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.requirement.Requirement;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -31,6 +33,72 @@ public class PathFlattener implements ForwardingMessagerWrapper {
 
     public PathFlattener(final MessagerWrapper messager) {
         this.messager = messager;
+    }
+
+    public void cleanupEmptyPaths(CommandPath<?> path) {
+        // So here is the deal:
+        // With the 1.4.0 external-subcommands update, I have introduced empty paths
+        // in order to be able to do simplify certain internal processes. This has
+        // caused a certain incompatibility during path merging:
+        //
+        // main
+        // | sub
+        // | <empty>
+        // | | sub
+        //
+        // Is now a possible tree. Unfortunately though, if you remove the <empty>,
+        // it becomes clear that those two 'sub' nodes should, in fact, be merged:
+        //
+        // main
+        // | sub
+        // | sub
+        //
+        // This method attempts to fix it.
+
+        final List<CommandPath<?>> children = new ArrayList<>(path.getChildren());
+        for (final CommandPath<?> child : children) {
+            cleanupEmptyPaths(child);
+        }
+
+        if (path instanceof EmptyCommandPath) {
+            if (path.getParent() != null) {
+                path.getParent().removeChild(path);
+            }
+            return;
+        }
+
+        if (path.getParent() instanceof EmptyCommandPath parent) {
+            final Requirement req;
+            if (parent.hasAttribute(AttributeKey.REQUIREMENT)) {
+                req = parent.getAttribute(AttributeKey.REQUIREMENT);
+            } else {
+                req = null;
+            }
+
+            final boolean requiresOp = parent.getAttributeNotNull(AttributeKey.REQUIRES_OP);
+            final Set<String> permissions;
+            if (parent.hasAttribute(AttributeKey.PERMISSIONS)) {
+                permissions = parent.getAttribute(AttributeKey.PERMISSIONS);
+            } else {
+                permissions = null;
+            }
+
+            if (req != null) {
+                path.setAttribute(AttributeKey.REQUIREMENT, req);
+            }
+            if (requiresOp) {
+                path.setAttribute(AttributeKey.REQUIRES_OP, true);
+            }
+            if (permissions != null) {
+                path.setAttribute(AttributeKey.PERMISSIONS, permissions);
+            }
+
+            path.setParent(null);
+
+            if (parent.getParent() != null) {
+                parent.getParent().addChild(path);
+            }
+        }
     }
 
     public void flattenPath(CommandPath<?> path) {

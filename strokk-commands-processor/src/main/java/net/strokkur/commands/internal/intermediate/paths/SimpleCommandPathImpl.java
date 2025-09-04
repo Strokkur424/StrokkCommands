@@ -143,6 +143,10 @@ abstract class SimpleCommandPathImpl<S extends CommandArgument> implements Comma
             builder.append(argument.getName());
         }
 
+        if (this instanceof EmptyCommandPath) {
+            builder.append("<empty_path>");
+        }
+
         // Add attributes
         if (!attributes.isEmpty()) {
             builder.append(" ".repeat(40 - builder.length()));
