@@ -97,10 +97,14 @@ public class PathFlattener implements ForwardingMessagerWrapper {
                 path.setAttribute(AttributeKey.PERMISSIONS, permissions);
             }
             if (accessStack != null) {
-                path.editAttributeMutable(AttributeKey.ACCESS_STACK, stack -> stack.addAll(0, accessStack), () -> accessStack);
+                path.editAttributeMutable(AttributeKey.ACCESS_STACK, stack -> accessStack.forEach(element -> {
+                    if (!stack.contains(element)) {
+                        stack.addFirst(element);
+                    }
+                }), () -> accessStack);
             }
 
-            path.setParent(null);
+            parentPath.removeChild(path);
 
             if (parent.getParent() != null) {
                 parent.getParent().addChild(path);
@@ -108,6 +112,13 @@ public class PathFlattener implements ForwardingMessagerWrapper {
 
             parentPath = path.getParent();
         }
+
+//        CommandPath<?> superParent = path;
+//        while (superParent.getParent() != null) {
+//            superParent = superParent.getParent();
+//        }
+//
+//        info("Current tree looks like this: \n{}\n \n", superParent);
     }
 
     public void flattenPath(CommandPath<?> path) {

@@ -9,5 +9,5 @@ import org.bukkit.GameMode;
 class GameModeCreativeCommand {
 
     @Subcommand
-    GameModePreset gamemode = new GameModePreset(GameMode.CREATIVE);
+    GameModePreset gameMode = new GameModePreset(GameMode.CREATIVE);
 }

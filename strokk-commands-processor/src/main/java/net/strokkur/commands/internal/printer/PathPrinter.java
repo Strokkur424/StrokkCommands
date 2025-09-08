@@ -4,6 +4,8 @@ import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
 import net.strokkur.commands.internal.intermediate.ExecutorType;
+import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
+import net.strokkur.commands.internal.intermediate.access.FieldAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
 import net.strokkur.commands.internal.intermediate.paths.ExecutablePath;
@@ -71,7 +73,14 @@ interface PathPrinter extends Printable, PrinterInformation {
     }
 
     private void printWithInstance(ExecutablePath path) throws IOException {
-        printExecutesMethodCall(path, Utils.getInstanceName(getAccessStack()));
+        final List<ExecuteAccess<?>> pathToUse;
+        if (getAccessStack().size() > 1 && getAccessStack().reversed().get(1) instanceof FieldAccess) {
+            pathToUse = getAccessStack().subList(0, getAccessStack().size() - 1);
+        } else {
+            pathToUse = getAccessStack();
+        }
+
+        printExecutesMethodCall(path, Utils.getInstanceName(pathToUse));
     }
 
     private void printExecutesMethodCall(ExecutablePath path, String typeName) throws IOException {

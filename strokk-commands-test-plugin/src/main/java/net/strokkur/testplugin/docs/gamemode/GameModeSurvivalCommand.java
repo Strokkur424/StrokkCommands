@@ -9,5 +9,5 @@ import org.bukkit.GameMode;
 class GameModeSurvivalCommand {
 
     @Subcommand
-    GameModePreset gamemode = new GameModePreset(GameMode.SURVIVAL);
+    GameModePreset gameMode = new GameModePreset(GameMode.SURVIVAL);
 }

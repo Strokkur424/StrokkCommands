@@ -9,5 +9,5 @@ import org.bukkit.GameMode;
 class GameModeSpectatorCommand {
 
     @Subcommand
-    GameModePreset gamemode = new GameModePreset(GameMode.SPECTATOR);
+    GameModePreset gameMode = new GameModePreset(GameMode.SPECTATOR);
 }

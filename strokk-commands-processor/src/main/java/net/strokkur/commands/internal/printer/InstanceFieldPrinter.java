@@ -41,7 +41,14 @@ interface InstanceFieldPrinter extends Printable, PrinterInformation {
 
         int printed = 0;
         if (commandPath instanceof ExecutablePath) {
-            if (printAccessInstance(getAccessStack())) {
+            final List<ExecuteAccess<?>> pathToUse;
+            if (getAccessStack().size() > 1 && getAccessStack().reversed().get(1) instanceof FieldAccess) {
+                pathToUse = getAccessStack().subList(0, getAccessStack().size() - 1);
+            } else {
+                pathToUse = getAccessStack();
+            }
+
+            if (printAccessInstance(pathToUse)) {
                 printed++;
             }
         } else {

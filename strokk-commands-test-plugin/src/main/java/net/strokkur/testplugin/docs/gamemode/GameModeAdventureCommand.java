@@ -9,5 +9,5 @@ import org.bukkit.GameMode;
 class GameModeAdventureCommand {
 
     @Subcommand
-    GameModePreset gamemode = new GameModePreset(GameMode.ADVENTURE);
+    GameModePreset gameMode = new GameModePreset(GameMode.ADVENTURE);
 }
