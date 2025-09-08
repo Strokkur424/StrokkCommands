@@ -4,6 +4,9 @@ import net.strokkur.commands.internal.StrokkCommandsPreprocessor;
 import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
 import net.strokkur.commands.internal.intermediate.ExecutorType;
+import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
+import net.strokkur.commands.internal.intermediate.access.FieldAccess;
+import net.strokkur.commands.internal.intermediate.access.InstanceAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
 import net.strokkur.commands.internal.intermediate.paths.LiteralCommandPath;
@@ -69,6 +72,16 @@ interface ImportPrinter extends Printable, PrinterInformation {
     }
 
     private void gatherImports(Set<String> imports, CommandPath<?> commandPath) {
+        if (commandPath.hasAttribute(AttributeKey.ACCESS_STACK)) {
+            for (final ExecuteAccess<?> access : commandPath.getAttributeNotNull(AttributeKey.ACCESS_STACK)) {
+                if (access instanceof InstanceAccess instanceAccess) {
+                    imports.add(instanceAccess.getElement().getQualifiedName().toString());
+                } else if (access instanceof FieldAccess fieldAccess) {
+                    imports.add(((TypeElement) StrokkCommandsPreprocessor.getTypes().asElement(fieldAccess.getElement().asType())).getQualifiedName().toString());
+                }
+            }
+        }
+
         if (!(commandPath instanceof LiteralCommandPath)) {
             for (final CommandArgument arg : commandPath.getArguments()) {
                 if (arg instanceof RequiredCommandArgument requiredArgument) {

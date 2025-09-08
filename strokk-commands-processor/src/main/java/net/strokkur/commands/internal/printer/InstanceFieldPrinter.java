@@ -81,6 +81,10 @@ interface InstanceFieldPrinter extends Printable, PrinterInformation {
         final String instanceName = Utils.getInstanceName(accesses);
         final String prevInstanceName = Utils.getInstanceName(accesses.subList(0, accesses.size() - 1));
 
+        if (getPrintedInstances().contains(instanceName)) {
+            return false;
+        }
+
         if (currentAccess instanceof FieldAccess fieldAccess) {
             final VariableElement fieldElement = fieldAccess.getElement();
 
