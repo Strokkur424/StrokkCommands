@@ -2,11 +2,12 @@ package net.strokkur.testplugin.externalsubcommands;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
 import io.papermc.paper.command.brigadier.Commands;
+import net.strokkur.commands.annotations.Command;
 import net.strokkur.commands.annotations.Executes;
 import net.strokkur.commands.annotations.Subcommand;
 import org.bukkit.command.CommandSender;
 
-//@Command("recordfields")
+@Command("recordfields")
 class FieldsWithRecords {
 
     @Subcommand
@@ -14,7 +15,6 @@ class FieldsWithRecords {
 
     static {
         // Expectation:
-        final FieldsWithRecords instance = new FieldsWithRecords();
         var built = Commands.literal("recordfields")
             .then(Commands.argument("wordArg", StringArgumentType.word())
                 .executes(ctx -> {

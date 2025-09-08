@@ -48,8 +48,7 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
 
     private final MessagerWrapper messager;
     private final BrigadierArgumentConverter converter;
-
-    final List<PathTransform> transforms;
+    private final List<PathTransform> transforms;
 
     public CommandParserImpl(final MessagerWrapper messager, final BrigadierArgumentConverter converter) {
         this.messager = messager;
@@ -60,16 +59,6 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
             new MethodTransform(this, messager),
             new FieldTransform(this, messager)
         );
-    }
-
-    PathTransform getTransformByType(Class<?> clazz) {
-        for (PathTransform transform : transforms) {
-            if (transform.getClass().equals(clazz)) {
-                return transform;
-            }
-        }
-
-        throw new IllegalStateException("No transform found for " + clazz);
     }
 
     @Override

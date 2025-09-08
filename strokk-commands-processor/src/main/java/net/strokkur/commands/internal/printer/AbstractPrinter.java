@@ -23,42 +23,41 @@ import org.jspecify.annotations.Nullable;
 import java.io.IOException;
 import java.io.Writer;
 
-public abstract class AbstractPrinter implements SourcePrinter {
+public abstract class AbstractPrinter implements Printable {
 
-    protected @Nullable Writer writer;
-    protected String indentString;
-    protected int indent;
+    private final String indentPreset = "\s\s\s\s";
+    private @Nullable Writer writer;
+    private String indentString;
+    private int indent;
 
     public AbstractPrinter(int indent, @Nullable Writer writer) {
         this.writer = writer;
         this.indent = indent;
-        this.indentString = INDENTATION.repeat(this.indent);
+        this.indentString = indentPreset.repeat(this.indent);
     }
 
-    public AbstractPrinter(@Nullable Writer writer) {
-        this(0, writer);
-    }
-
-    @Override
     public void setWriter(@Nullable Writer writer) {
         this.writer = writer;
     }
 
-    protected void incrementIndent() {
+    @Override
+    public void incrementIndent() {
         this.indent++;
-        this.indentString = INDENTATION.repeat(this.indent);
+        this.indentString = indentPreset.repeat(this.indent);
     }
 
-    protected void decrementIndent() {
+    @Override
+    public void decrementIndent() {
         if (indent == 0) {
             return;
         }
 
         this.indent--;
-        this.indentString = INDENTATION.repeat(this.indent);
+        this.indentString = indentPreset.repeat(this.indent);
     }
 
-    protected void print(String message, Object... format) throws IOException {
+    @Override
+    public void print(String message, Object... format) throws IOException {
         if (writer == null) {
             throw new IOException("No writer set.");
         }
@@ -66,7 +65,8 @@ public abstract class AbstractPrinter implements SourcePrinter {
         writer.append(message.replace("{}", "%s").formatted(format));
     }
 
-    protected void printIndent() throws IOException {
+    @Override
+    public void printIndent() throws IOException {
         if (writer == null) {
             throw new IOException("No writer set.");
         }
@@ -74,7 +74,8 @@ public abstract class AbstractPrinter implements SourcePrinter {
         writer.append(indentString);
     }
 
-    protected void println(String message, Object... format) throws IOException {
+    @Override
+    public void println(String message, Object... format) throws IOException {
         if (writer == null) {
             throw new IOException("No writer set.");
         }
@@ -87,7 +88,8 @@ public abstract class AbstractPrinter implements SourcePrinter {
         writer.append("\n");
     }
 
-    protected void println() throws IOException {
+    @Override
+    public void println() throws IOException {
         if (writer == null) {
             throw new IOException("No writer set.");
         }
@@ -95,7 +97,8 @@ public abstract class AbstractPrinter implements SourcePrinter {
         writer.append("\n");
     }
 
-    protected void printBlock(String block, Object... format) throws IOException {
+    @Override
+    public void printBlock(String block, Object... format) throws IOException {
         if (writer == null) {
             throw new IOException("No writer set.");
         }

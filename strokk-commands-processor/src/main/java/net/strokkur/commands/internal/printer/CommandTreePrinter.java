@@ -18,55 +18,22 @@
 package net.strokkur.commands.internal.printer;
 
 import net.strokkur.commands.internal.BuildConstants;
-import net.strokkur.commands.internal.StrokkCommandsPreprocessor;
-import net.strokkur.commands.internal.arguments.CommandArgument;
-import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
-import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
 import net.strokkur.commands.internal.intermediate.CommandInformation;
-import net.strokkur.commands.internal.intermediate.ExecutorType;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
-import net.strokkur.commands.internal.intermediate.access.FieldAccess;
-import net.strokkur.commands.internal.intermediate.access.InstanceAccess;
-import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
-import net.strokkur.commands.internal.intermediate.paths.ExecutablePath;
-import net.strokkur.commands.internal.intermediate.paths.LiteralCommandPath;
-import net.strokkur.commands.internal.intermediate.paths.RecordPath;
-import net.strokkur.commands.internal.intermediate.requirement.Requirement;
-import net.strokkur.commands.internal.util.Classes;
-import net.strokkur.commands.internal.util.Utils;
 import org.jspecify.annotations.Nullable;
 
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.PackageElement;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
-public final class CommandTreePrinter extends AbstractPrinter {
-
-    private static final Set<String> STANDARD_IMPORTS = Set.of(
-        Classes.COMMAND,
-        Classes.LITERAL_COMMAND_NODE,
-        Classes.COMMAND_SOURCE_STACK,
-        Classes.COMMANDS,
-        Classes.LIST,
-        Classes.NULL_MARKED
-    );
+public final class CommandTreePrinter extends AbstractPrinter implements PrinterInformation, ImportPrinter, InstanceFieldPrinter, PathPrinter {
 
     private final Stack<ExecuteAccess<?>> executeAccessStack = new Stack<>();
-
     private final CommandPath<?> commandPath;
     private final CommandInformation commandInformation;
     private final Set<String> printedInstances = new TreeSet<>();
@@ -77,18 +44,15 @@ public final class CommandTreePrinter extends AbstractPrinter {
         this.commandInformation = commandInformation;
     }
 
-    public String getPackageName() {
+    private String getPackageName() {
         return ((PackageElement) commandInformation.classElement().getEnclosingElement()).getQualifiedName().toString();
     }
 
-    public String getBrigadierClassName() {
+    private String getBrigadierClassName() {
         return commandInformation.classElement().getSimpleName().toString() + "Brigadier";
     }
 
-    @Override
     public void print() throws IOException {
-        final Set<String> imports = getImports();
-
         final String packageName = getPackageName();
         final String brigadierClassName = getBrigadierClassName();
 
@@ -97,7 +61,7 @@ public final class CommandTreePrinter extends AbstractPrinter {
 
         println("package {};", packageName);
         println();
-        printImports(imports);
+        printImports(getImports());
         println();
 
         printBlock("""
@@ -194,428 +158,23 @@ public final class CommandTreePrinter extends AbstractPrinter {
         println("}");
     }
 
-    private void printImports(Set<String> imports) throws IOException {
-        Map<Boolean, List<String>> splitImports = imports.stream()
-            .sorted()
-            .collect(Collectors.partitioningBy(str -> str.startsWith("java")));
-
-        List<String> javaImports = splitImports.get(true);
-        List<String> otherImports = splitImports.get(false);
-
-        for (String i : otherImports) {
-            println("import {};", i);
-        }
-
-        println();
-
-        for (String i : javaImports) {
-            println("import {};", i);
-        }
+    @Override
+    public Set<String> getPrintedInstances() {
+        return printedInstances;
     }
 
-    private Set<String> getImports() {
-        final Set<String> imports = new HashSet<>(STANDARD_IMPORTS);
-        gatherImports(imports, commandPath);
-
-        imports.removeIf(importString -> {
-            if (importString.startsWith("java.lang")) {
-                return true;
-            }
-
-            final TypeElement element = StrokkCommandsPreprocessor.getElements().getTypeElement(importString);
-            if (element == null) {
-                return false;
-            }
-
-            return Utils.getPackageElement(element) == Utils.getPackageElement(commandInformation.classElement());
-        });
-
-        return imports;
+    @Override
+    public Stack<ExecuteAccess<?>> getAccessStack() {
+        return executeAccessStack;
     }
 
-    private void gatherImports(Set<String> imports, CommandPath<?> commandPath) {
-        if (!(commandPath instanceof LiteralCommandPath)) {
-            for (final CommandArgument arg : commandPath.getArguments()) {
-                if (arg instanceof RequiredCommandArgument requiredArgument) {
-                    imports.addAll(requiredArgument.getArgumentType().imports());
-
-                    if (requiredArgument.getSuggestionProvider() != null) {
-                        final TypeElement suggestionsTypeElement = requiredArgument.getSuggestionProvider().getClassElement();
-                        if (suggestionsTypeElement != null) {
-                            imports.add(suggestionsTypeElement.getQualifiedName().toString());
-                        }
-                    }
-                }
-            }
-        }
-
-        final ExecutorType executorType = commandPath.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE);
-        if (executorType == ExecutorType.PLAYER) {
-            imports.add(Classes.PLAYER);
-        } else if (executorType == ExecutorType.ENTITY) {
-            imports.add(Classes.ENTITY);
-        }
-
-        if (executorType != ExecutorType.NONE) {
-            imports.add(Classes.SIMPLE_COMMAND_EXCEPTION_TYPE);
-            imports.add(Classes.MESSAGE_COMPONENT_SERIALIZER);
-            imports.add(Classes.COMPONENT);
-        }
-
-        for (final CommandPath<?> child : commandPath.getChildren()) {
-            gatherImports(imports, child);
-        }
+    @Override
+    public CommandPath<?> getCommandPath() {
+        return commandPath;
     }
 
-    private void printAccessInstance(List<ExecuteAccess<?>> accesses) throws IOException {
-        if (accesses.isEmpty()) {
-            return; // idk how this even happens, but what the hell am I supposed to do if the access stack is empty?
-        }
-
-        if (accesses.size() == 1) {
-            if (printedInstances.contains("instance")) {
-                return;
-            }
-            final String typeName = accesses.getFirst().getTypeName();
-            println("final {} instance = new {}();",
-                typeName,
-                typeName
-            );
-            printedInstances.add("instance");
-            return;
-        }
-
-        final ExecuteAccess<?> currentAccess = accesses.getLast();
-
-        final String typeName = currentAccess.getTypeName();
-        final String instanceName = Utils.getInstanceName(accesses);
-        final String prevInstanceName = Utils.getInstanceName(accesses.subList(0, accesses.size() - 1));
-
-        if (currentAccess instanceof FieldAccess fieldAccess) {
-            final VariableElement fieldElement = fieldAccess.getElement();
-
-            if (!printedInstances.contains(prevInstanceName)) {
-                printAccessInstance(accesses.subList(0, accesses.size() - 1));
-            }
-
-            if (Utils.isFieldInitialized(fieldElement)) {
-                println("final {} {} = {}.{};",
-                    typeName,
-                    instanceName,
-                    prevInstanceName,
-                    fieldAccess.getElement().getSimpleName()
-                );
-            } else {
-                println("final {} {} = new {}();",
-                    typeName,
-                    instanceName,
-                    typeName
-                );
-            }
-
-            printedInstances.add(instanceName);
-            return;
-        }
-
-        if (currentAccess instanceof InstanceAccess instanceAccess) {
-            final TypeElement classElement = instanceAccess.getElement();
-            if (classElement.getNestingKind() == NestingKind.TOP_LEVEL || classElement.getModifiers().contains(Modifier.STATIC)) {
-                println("final {} {} = new {}();",
-                    typeName,
-                    instanceName,
-                    typeName
-                );
-                printedInstances.add(instanceName);
-                return;
-            }
-
-            if (!printedInstances.contains(prevInstanceName)) {
-                printAccessInstance(accesses.subList(0, accesses.size() - 1));
-            }
-
-            println("final {} {} = {}.new {}();",
-                typeName,
-                instanceName,
-                prevInstanceName,
-                classElement.getSimpleName().toString()
-            );
-            printedInstances.add(instanceName);
-            return;
-        }
-
-        throw new IllegalStateException("Unknown access: " + currentAccess);
-    }
-
-    private void printInstanceFields(CommandPath<?> commandPath) throws IOException {
-        int pushed = 0;
-        if (commandPath.hasAttribute(AttributeKey.ACCESS_STACK)) {
-            for (ExecuteAccess<?> executeAccess : commandPath.getAttributeNotNull(AttributeKey.ACCESS_STACK)) {
-                if (executeAccess.getElement().getKind() == ElementKind.RECORD) {
-                    for (int i = 0; i < pushed; i++) {
-                        executeAccessStack.pop();
-                    }
-                    return;
-                }
-
-                executeAccessStack.push(executeAccess);
-                pushed++;
-            }
-        }
-
-        if (commandPath instanceof ExecutablePath) {
-            printAccessInstance(executeAccessStack);
-        } else {
-            for (final CommandPath<?> child : commandPath.getChildren()) {
-                printInstanceFields(child);
-            }
-        }
-
-        for (int i = 0; i < pushed; i++) {
-            executeAccessStack.pop();
-        }
-    }
-
-    //<editor-fold name="Command Tree Printing Methods">
-    private void printPath(CommandPath<?> path) throws IOException {
-        if (path instanceof ExecutablePath executablePath && !executablePath.getAttributeNotNull(AttributeKey.SPLIT_EXECUTOR)) {
-            printExecutablePath(executablePath);
-            return;
-        }
-
-        printGenericPath(path, () -> {});
-    }
-
-    private void printExecutablePath(ExecutablePath path) throws IOException {
-        this.printGenericPath(path, () -> {
-            // print the .executes method
-            println();
-            println(".executes(ctx -> {");
-            incrementIndent();
-
-            final ExecutorType executorType = path.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE);
-            if (executorType != ExecutorType.NONE) {
-                printBlock("""
-                        if (!(ctx.getSource().getExecutor() instanceof {} executor)) {
-                            throw new SimpleCommandExceptionType(MessageComponentSerializer.message().serialize(
-                                Component.text("This command requires {} {} executor!")
-                            )).create();
-                        }""",
-                    executorType.toString().charAt(0) + executorType.toString().toLowerCase().substring(1),
-                    executorType == ExecutorType.ENTITY ? "an" : "a",
-                    executorType.toString().toLowerCase()
-                );
-                println();
-            }
-
-            boolean instancePrint = true;
-            CommandPath<?> parentPath = path;
-
-            while ((parentPath = parentPath.getParent()) != null) {
-                if (parentPath instanceof RecordPath recordPath) {
-                    printWithRecord(path, recordPath);
-                    instancePrint = false;
-                    break;
-                }
-            }
-
-            if (instancePrint) {
-                printWithInstance(path);
-            }
-
-            println("return Command.SINGLE_SUCCESS;");
-            decrementIndent();
-            println("})");
-        });
-    }
-
-    private void printWithInstance(ExecutablePath path) throws IOException {
-        printExecutesMethodCall(path, Utils.getInstanceName(executeAccessStack));
-    }
-
-    private void printExecutesMethodCall(ExecutablePath path, String typeName) throws IOException {
-        println("{}.{}(", typeName, path.getExecutesMethod().getSimpleName().toString());
-        incrementIndent();
-
-        // Arguments
-        printExecutesArguments(path);
-
-        decrementIndent();
-        println(");");
-    }
-
-    private void printWithRecord(ExecutablePath path, RecordPath recordPath) throws IOException {
-        final String typeName = Utils.getTypeName(path.getExecutesMethod().getEnclosingElement());
-
-        if (recordPath.getArguments().isEmpty()) {
-            println("final {} executorClass = new {}();", typeName, typeName);
-        } else {
-            println("final {} executorClass = new {}(", typeName, typeName);
-            incrementIndent();
-            printExecutorArguments(recordPath, false);
-            decrementIndent();
-            println(");");
-        }
-
-        printExecutesMethodCall(path, "executorClass");
-    }
-
-    private void printExecutesArguments(ExecutablePath path) throws IOException {
-        final ExecutorType executorType = path.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE);
-        if (path.getArguments().isEmpty() && executorType == ExecutorType.NONE) {
-            println("ctx.getSource().getSender()");
-            return;
-        }
-
-        println("ctx.getSource().getSender(),");
-        if (executorType != ExecutorType.NONE) {
-            printIndent();
-            switch (executorType) {
-                case ENTITY, PLAYER -> print("executor");
-            }
-
-            if (path.getArguments().isEmpty()) {
-                println();
-                return;
-            }
-
-            print(",");
-            println();
-        }
-        printExecutorArguments(path, false);
-    }
-
-    private void printExecutorArguments(final CommandPath<?> path, boolean forceTrailingComma) throws IOException {
-        if (path.getAttributeNotNull(AttributeKey.INHERIT_PARENT_ARGS) && path.getParent() != null) {
-            printExecutorArguments(path.getParent(), true);
-        }
-
-        final List<? extends CommandArgument> arguments = path.getArguments();
-        for (int i = 0, argumentsSize = arguments.size(); i < argumentsSize; i++) {
-            final CommandArgument argument = arguments.get(i);
-
-            printIndent();
-            if (argument instanceof RequiredCommandArgument requiredArgument) {
-                print(requiredArgument.getArgumentType().retriever());
-            } else {
-                print("\"{}\"", argument.getName());
-            }
-
-            if (i + 1 < argumentsSize || forceTrailingComma) {
-                print(",");
-            }
-
-            println();
-        }
-    }
-
-    private void printArgument(CommandArgument argument) throws IOException {
-        switch (argument) {
-            case LiteralCommandArgument literalArgument -> printLiteral(literalArgument);
-            case RequiredCommandArgument requiredArgument -> printRequiredArg(requiredArgument);
-            default -> throw new IllegalStateException("Unknown argument: " + argument);
-        }
-    }
-
-    private void printLiteral(LiteralCommandArgument literalArg) throws IOException {
-        print("Commands.literal(\"{}\")", literalArg.literal());
-    }
-
-    private void printRequiredArg(RequiredCommandArgument requiredArg) throws IOException {
-        print("Commands.argument(\"{}\", {})",
-            requiredArg.getName(),
-            requiredArg.getArgumentType().initializer()
-        );
-
-        if (requiredArg.getSuggestionProvider() != null) {
-            incrementIndent();
-            println();
-            printIndent();
-            print(".suggests(" + requiredArg.getSuggestionProvider().getProvider() + ")");
-            decrementIndent();
-        }
-    }
-
-    private void printRequires(@Nullable CommandPath<?> path) throws IOException {
-        if (path != null) {
-            final List<Requirement> requirements = new ArrayList<>();
-
-            final boolean operator = path.getAttributeNotNull(AttributeKey.REQUIRES_OP);
-            final ExecutorType executorType;
-
-            if (path.hasAttribute(AttributeKey.EXECUTOR_TYPE) && !path.getAttributeNotNull(AttributeKey.EXECUTOR_HANDLED)) {
-                executorType = path.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE);
-            } else {
-                executorType = ExecutorType.NONE;
-            }
-
-            final Requirement req = path.getAttribute(AttributeKey.REQUIREMENT);
-            if (req != null) {
-                requirements.add(req);
-            }
-
-            requirements.addAll(path.getAttributeNotNull(AttributeKey.PERMISSIONS)
-                .stream()
-                .map(Requirement::permission)
-                .toList());
-
-            if (!requirements.isEmpty()) {
-                final String requirementString = Requirement.combine(requirements).getRequirementString(operator, executorType);
-                if (!requirementString.isEmpty()) {
-                    println();
-                    printIndent();
-                    print(".requires(source -> {})", requirementString);
-                }
-            }
-        }
-    }
-
-    private <T extends CommandArgument> void printArguments(List<T> arguments, @Nullable CommandPath<?> printRequirements, InsidePrinter insidePrinter, boolean noStartingThen) throws IOException {
-        if (arguments.isEmpty()) {
-            insidePrinter.print();
-            return;
-        }
-
-        T arg = arguments.removeFirst();
-        if (!noStartingThen) {
-            println();
-            printIndent();
-            print(".then(");
-        }
-
-        printArgument(arg);
-        incrementIndent();
-
-        printRequires(printRequirements);
-        printArguments(arguments, null, insidePrinter, false);
-        decrementIndent();
-
-        if (!noStartingThen) {
-            println(")");
-        }
-    }
-
-    private <T extends CommandArgument> void printGenericPath(CommandPath<T> path, InsidePrinter insidePrinter) throws IOException {
-        printArguments(new ArrayList<>(path.getArguments()), path, () -> {
-            if (path.hasAttribute(AttributeKey.ACCESS_STACK)) {
-                path.getAttributeNotNull(AttributeKey.ACCESS_STACK).forEach(executeAccessStack::push);
-            }
-
-            for (final CommandPath<?> child : path.getChildren()) {
-                printPath(child);
-            }
-
-            insidePrinter.print();
-            if (path.hasAttribute(AttributeKey.ACCESS_STACK)) {
-                path.getAttributeNotNull(AttributeKey.ACCESS_STACK).forEach(
-                    access -> executeAccessStack.pop()
-                );
-            }
-        }, path.getParent() == null);
-    }
-    //</editor-fold>
-
-    @FunctionalInterface
-    private interface InsidePrinter {
-        void print() throws IOException;
+    @Override
+    public CommandInformation getCommandInformation() {
+        return commandInformation;
     }
 }
