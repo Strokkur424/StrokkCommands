@@ -82,11 +82,12 @@ class MethodTransform implements PathTransform, ForwardingMessagerWrapper {
     }
 
     @Override
-    public boolean canTransform(final Element element) {
-        if (element.getKind() != ElementKind.METHOD) {
-            return false;
-        }
+    public boolean hardRequirement(final Element element) {
+        return element.getKind() == ElementKind.METHOD;
+    }
 
+    @Override
+    public boolean weakRequirement(final Element element) {
         //noinspection ConstantValue
         return element.getAnnotation(Executes.class) != null;
     }

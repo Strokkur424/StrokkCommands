@@ -11,7 +11,13 @@ interface PathTransform {
 
     void transform(CommandPath<?> parent, Element element);
 
-    boolean canTransform(Element element);
+    boolean hardRequirement(Element element);
+
+    boolean weakRequirement(Element element);
+
+    default boolean shouldTransform(Element element) {
+        return hardRequirement(element) && weakRequirement(element);
+    }
 
     default CommandPath<?> createThisPath(CommandPath<?> parent, CommandParser parser, Element element) {
         CommandPath<?> thisPath = parser.getLiteralPath(element, Command.class, Command::value);

@@ -13,8 +13,8 @@ class SuperNested {
         // Expectation
         final SuperNested instance = new SuperNested();
         final SuperNested.InnerNonStatic instanceInnerNonStatic = instance.new InnerNonStatic();
-        instanceInnerNonStatic.nested = new SuperNested.NestedClass();
-        final SuperNested.NestedClass.UltraNested instanceInnerNonStaticNestedUltraNested = instanceInnerNonStatic.nested.new UltraNested();
+        final SuperNested.NestedClass instanceInnerNonStaticNested = new SuperNested.NestedClass();
+        final SuperNested.NestedClass.UltraNested instanceInnerNonStaticNestedUltraNested = instanceInnerNonStaticNested.new UltraNested();
 
         var built = Commands.literal("supernested")
             .then(Commands.literal("nonstatic")

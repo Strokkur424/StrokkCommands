@@ -49,7 +49,7 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
     private final MessagerWrapper messager;
     private final BrigadierArgumentConverter converter;
 
-    private final List<PathTransform> transforms;
+    final List<PathTransform> transforms;
 
     public CommandParserImpl(final MessagerWrapper messager, final BrigadierArgumentConverter converter) {
         this.messager = messager;
@@ -57,21 +57,42 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
         this.transforms = List.of(
             new ClassTransform(this, messager),
             new RecordTransform(this, messager),
-            new MethodTransform(this, messager)
+            new MethodTransform(this, messager),
+            new FieldTransform(this, messager)
         );
+    }
+
+    PathTransform getTransformByType(Class<?> clazz) {
+        for (PathTransform transform : transforms) {
+            if (transform.getClass().equals(clazz)) {
+                return transform;
+            }
+        }
+
+        throw new IllegalStateException("No transform found for " + clazz);
     }
 
     @Override
     public CommandPath<?> createCommandTree(final TypeElement typeElement) {
         final CommandPath<?> empty = new EmptyCommandPath();
-        parse(empty, typeElement);
+        weakParse(empty, typeElement);
         return empty.getChildren().getFirst();
     }
 
     @Override
-    public void parse(final CommandPath<?> path, final Element element) {
+    public void weakParse(final CommandPath<?> path, final Element element) {
         for (final PathTransform transform : transforms) {
-            if (transform.canTransform(element)) {
+            if (transform.shouldTransform(element)) {
+                transform.transform(path, element);
+                break;
+            }
+        }
+    }
+
+    @Override
+    public void hardParse(final CommandPath<?> path, final Element element) {
+        for (final PathTransform transform : transforms) {
+            if (transform.hardRequirement(element)) {
                 transform.transform(path, element);
                 break;
             }

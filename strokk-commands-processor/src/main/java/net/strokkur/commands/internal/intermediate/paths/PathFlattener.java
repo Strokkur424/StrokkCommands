@@ -67,7 +67,8 @@ public class PathFlattener implements ForwardingMessagerWrapper {
             return;
         }
 
-        if (path.getParent() instanceof EmptyCommandPath parent) {
+        CommandPath<?> parentPath = path.getParent();
+        while (parentPath instanceof EmptyCommandPath parent) {
             final Requirement req;
             if (parent.hasAttribute(AttributeKey.REQUIREMENT)) {
                 req = parent.getAttribute(AttributeKey.REQUIREMENT);
@@ -98,6 +99,8 @@ public class PathFlattener implements ForwardingMessagerWrapper {
             if (parent.getParent() != null) {
                 parent.getParent().addChild(path);
             }
+
+            parentPath = path.getParent();
         }
     }
 

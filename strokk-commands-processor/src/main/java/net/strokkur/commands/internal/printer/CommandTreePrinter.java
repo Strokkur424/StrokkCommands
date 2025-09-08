@@ -24,6 +24,8 @@ import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
 import net.strokkur.commands.internal.intermediate.CommandInformation;
 import net.strokkur.commands.internal.intermediate.ExecutorType;
+import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
+import net.strokkur.commands.internal.intermediate.access.FieldAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
 import net.strokkur.commands.internal.intermediate.paths.ExecutablePath;
@@ -35,8 +37,6 @@ import net.strokkur.commands.internal.util.Utils;
 import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import java.io.IOException;
@@ -46,6 +46,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 public final class CommandTreePrinter extends AbstractPrinter {
@@ -59,8 +61,11 @@ public final class CommandTreePrinter extends AbstractPrinter {
         Classes.NULL_MARKED
     );
 
+    private final Stack<ExecuteAccess<?>> executeAccessStack = new Stack<>();
+
     private final CommandPath<?> commandPath;
     private final CommandInformation commandInformation;
+    private final Set<String> printedInstances = new TreeSet<>();
 
     public CommandTreePrinter(final int indent, final @Nullable Writer writer, final CommandPath<?> commandPath, final CommandInformation commandInformation) {
         super(indent, writer);
@@ -175,7 +180,7 @@ public final class CommandTreePrinter extends AbstractPrinter {
         );
         incrementIndent();
 
-        if (printInstanceFields(commandInformation.classElement())) {
+        if (printInstanceFields(commandPath)) {
             println();
         }
 
@@ -279,44 +284,97 @@ public final class CommandTreePrinter extends AbstractPrinter {
         }
     }
 
-    private boolean printInstanceFields(TypeElement typeElement) throws IOException {
-        if (typeElement.getKind() == ElementKind.RECORD) {
-            return false;
-        }
 
-        final String varType = Utils.getTypeName(typeElement);
-        final String varName = getTypeVariableName(typeElement);
 
-        final String constructor;
-        if (typeElement.getModifiers().contains(Modifier.STATIC) || !typeElement.getNestingKind().isNested()) {
-            constructor = "new " + varType;
-        } else {
-            constructor = getTypeVariableName(typeElement.getEnclosingElement()) + ".new " + typeElement.getSimpleName();
-        }
+    private boolean printInstanceFields(CommandPath<?> path) throws IOException {
+        if (path.hasAttribute(AttributeKey.ACCESS_STACK)) {
+            executeAccessStack.push(path.getAttributeNotNull(AttributeKey.ACCESS_STACK));
 
-        println("final {} {} = {}();",
-            varType,
-            varName,
-            constructor
-        );
+            // print the instance
+            final String instanceName = Utils.getInstanceName(executeAccessStack);
 
-        for (final Element element : typeElement.getEnclosedElements()) {
-            if (element instanceof TypeElement type && type.getKind() != ElementKind.RECORD) {
-                printInstanceFields(type);
+            final ExecuteAccess<?> access = executeAccessStack.peek();
+            final String typeName = Utils.getTypeName(access.getElement().asType());
+
+            final String initializer;
+            if (access instanceof FieldAccess fieldAccess && Utils.isFieldInitialized(fieldAccess.getElement())) {
+                initializer = null;
+            } else {
+                initializer = "new %s()".formatted(typeName);
             }
+
+            if (access instanceof FieldAccess fieldAccess && initializer == null)  {
+                println("final {} {} = {}.{};",
+                    typeName,
+                    instanceName,
+                    Utils.getInstanceName(executeAccessStack.subList(0, executeAccessStack.size() - 1)),
+                    fieldAccess.getElement().getSimpleName()
+                );
+            } else {
+                println("final {} {} = new {}();",
+                    typeName,
+                    instanceName,
+                    typeName
+                );
+            }
+
+            printedInstances.add(instanceName);
         }
+
+        for (final CommandPath<?> child : path.getChildren()) {
+            printInstanceFields(child);
+        }
+
+        if (path.hasAttribute(AttributeKey.ACCESS_STACK)) {
+            executeAccessStack.pop();
+        }
+
+//
+//        if (typeElement.getKind() == ElementKind.RECORD) {
+//            return false;
+//        }
+//
+//        final String varType = Utils.getTypeName(typeElement);
+//        final String varName = getTypeVariableName(typeElement);
+//
+//        final String constructor;
+//        if (typeElement.getModifiers().contains(Modifier.STATIC) || !typeElement.getNestingKind().isNested()) {
+//            constructor = "new " + varType;
+//        } else {
+//            constructor = getTypeVariableName(typeElement.getEnclosingElement()) + ".new " + typeElement.getSimpleName();
+//        }
+//
+//        println("final {} {} = {}();",
+//            varType,
+//            varName,
+//            constructor
+//        );
+//
+//        for (final Element element : typeElement.getEnclosedElements()) {
+//            if (element instanceof TypeElement type && type.getKind() != ElementKind.RECORD) {
+//                printInstanceFields(type);
+//            }
+//        }
 
         return true;
     }
 
     //<editor-fold name="Command Tree Printing Methods">
     private void printPath(CommandPath<?> path) throws IOException {
+        if (path.hasAttribute(AttributeKey.ACCESS_STACK)) {
+            executeAccessStack.push(path.getAttributeNotNull(AttributeKey.ACCESS_STACK));
+        }
+
         if (path instanceof ExecutablePath executablePath && !executablePath.getAttributeNotNull(AttributeKey.SPLIT_EXECUTOR)) {
             printExecutablePath(executablePath);
             return;
         }
 
         printGenericPath(path, () -> {});
+
+        if (path.hasAttribute(AttributeKey.ACCESS_STACK)) {
+            executeAccessStack.pop();
+        }
     }
 
     private void printExecutablePath(ExecutablePath path) throws IOException {
@@ -363,8 +421,7 @@ public final class CommandTreePrinter extends AbstractPrinter {
     }
 
     private void printWithInstance(ExecutablePath path) throws IOException {
-        final TypeElement typeElement = (TypeElement) path.getExecutesMethod().getEnclosingElement();
-        printExecutesMethodCall(path, getTypeVariableName(typeElement));
+        printExecutesMethodCall(path, Utils.getInstanceName(executeAccessStack));
     }
 
     private void printExecutesMethodCall(ExecutablePath path, String typeName) throws IOException {

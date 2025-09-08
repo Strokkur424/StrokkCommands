@@ -132,9 +132,16 @@ abstract class SimpleCommandPathImpl<S extends CommandArgument> implements Comma
 
     @Override
     public String toString(int indent) {
-        System.out.println("substring indent: %s (this: %s)".formatted(indent, this.toStringNoChildren()));
         final StringBuilder builder = new StringBuilder();
         builder.append("| ".repeat(indent));
+
+        if (this instanceof ExecutablePath exec) {
+            return builder.append("Execute: ")
+                .append(exec.getExecutesMethod().getEnclosingElement().getSimpleName())
+                .append("#")
+                .append(exec.getExecutesMethod().getSimpleName())
+                .toString();
+        }
 
         if (this.arguments.isEmpty() && this.children.isEmpty()) {
             return builder.append("<empty>").toString();

@@ -35,7 +35,9 @@ public interface CommandParser {
 
     CommandPath<?> createCommandTree(TypeElement typeElement);
 
-    void parse(CommandPath<?> path, Element element);
+    void weakParse(CommandPath<?> path, Element element);
+
+    void hardParse(CommandPath<?> path, Element element);
 
     List<List<CommandArgument>> parseArguments(List<VariableElement> elements, TypeElement typeElement);
 

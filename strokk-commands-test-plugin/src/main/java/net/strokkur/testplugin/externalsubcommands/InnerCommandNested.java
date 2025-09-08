@@ -13,12 +13,12 @@ class InnerCommandNested {
         // Expectation
         final InnerCommandNested instance = new InnerCommandNested();
         final InnerCommandNested.Nested instanceNested = instance.new Nested();
-        instanceNested.myNestedClass = new InnerCommandNested.MyNestedClass();
+        final InnerCommandNested.MyNestedClass instanceNestedMyNestedClass = instanceNested.myNestedClass;
 
         var built = Commands.literal("innercommandnested")
             .then(Commands.literal("nested")
                 .executes(ctx -> {
-                    instanceNested.myNestedClass.execute(
+                    instanceNestedMyNestedClass.execute(
                         ctx.getSource().getSender()
                     );
                     return 1;
@@ -36,7 +36,7 @@ class InnerCommandNested {
 
     static class MyNestedClass {
 
-        @Executes
+        @Executes("a")
         void execute(CommandSender sender) {
             sender.sendRichMessage("<green>Hi double nested.");
         }

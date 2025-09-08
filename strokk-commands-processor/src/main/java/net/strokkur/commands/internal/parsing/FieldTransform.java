@@ -29,13 +29,18 @@ class FieldTransform implements PathTransform, ForwardingMessagerWrapper {
         final CommandPath<?> thisPath = createThisPath(parent, this.parser, element);
         thisPath.setAttribute(AttributeKey.ACCESS_STACK, (FieldAccess) () -> (VariableElement) element);
 
-        this.parser.parse(thisPath, StrokkCommandsPreprocessor.getTypes().asElement(element.asType()));
+        this.parser.hardParse(thisPath, StrokkCommandsPreprocessor.getTypes().asElement(element.asType()));
     }
 
     @Override
-    public boolean canTransform(final Element element) {
+    public boolean hardRequirement(final Element element) {
+        return element.getKind() == ElementKind.FIELD;
+    }
+
+    @Override
+    public boolean weakRequirement(final Element element) {
         //noinspection ConstantValue
-        return element.getKind() == ElementKind.FIELD && (element.getAnnotation(Command.class) != null || element.getAnnotation(Subcommand.class) != null);
+        return element.getAnnotation(Command.class) != null || element.getAnnotation(Subcommand.class) != null;
     }
 
     @Override

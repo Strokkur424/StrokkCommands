@@ -17,6 +17,7 @@
  */
 package net.strokkur.commands.internal;
 
+import com.sun.source.util.Trees;
 import net.strokkur.commands.annotations.Aliases;
 import net.strokkur.commands.annotations.Command;
 import net.strokkur.commands.annotations.Description;
@@ -50,6 +51,7 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
 
     private static @Nullable Types types = null;
     private static @Nullable Elements elements = null;
+    private static @Nullable Trees trees = null;
 
     public static Types getTypes() {
         return Objects.requireNonNull(types, "types is null");
@@ -57,6 +59,10 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
 
     public static Elements getElements() {
         return Objects.requireNonNull(elements, "elements is null");
+    }
+
+    public static Trees getTrees() {
+        return Objects.requireNonNull(trees, "trees is null");
     }
 
     @Override
@@ -74,6 +80,7 @@ public class StrokkCommandsPreprocessor extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         types = processingEnv.getTypeUtils();
         elements = processingEnv.getElementUtils();
+        trees = Trees.instance(processingEnv);
 
         final MessagerWrapper messagerWrapper = MessagerWrapper.wrap(super.processingEnv.getMessager());
         final BrigadierArgumentConverter converter = new BrigadierArgumentConverter(messagerWrapper);

@@ -48,7 +48,7 @@ class ClassTransform implements PathTransform, ForwardingMessagerWrapper {
 
             for (final CommandPath<?> recordPath : relevant) {
                 this.parser.populateRequirements(recordPath, element);
-                this.parser.parse(recordPath, enclosed);
+                this.parser.weakParse(recordPath, enclosed);
             }
         }
     }
@@ -62,13 +62,14 @@ class ClassTransform implements PathTransform, ForwardingMessagerWrapper {
     }
 
     @Override
-    public boolean canTransform(final Element element) {
-        if (!(element instanceof TypeElement type && type.getKind() == ElementKind.CLASS)) {
-            return false;
-        }
+    public boolean hardRequirement(final Element element) {
+        return element.getKind() == ElementKind.CLASS;
+    }
 
+    @Override
+    public boolean weakRequirement(final Element element) {
         //noinspection ConstantValue
-        return type.getAnnotation(Command.class) != null || type.getAnnotation(Subcommand.class) != null;
+        return element.getAnnotation(Command.class) != null || element.getAnnotation(Subcommand.class) != null;
     }
 
     @Override

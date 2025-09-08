@@ -1,7 +1,5 @@
 package net.strokkur.commands.internal.parsing;
 
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.Subcommand;
 import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
 import net.strokkur.commands.internal.intermediate.paths.RecordPath;
@@ -50,12 +48,7 @@ class RecordTransform extends ClassTransform {
     }
 
     @Override
-    public boolean canTransform(final Element element) {
-        if (!(element instanceof TypeElement type && type.getKind() == ElementKind.RECORD)) {
-            return false;
-        }
-
-        //noinspection ConstantValue
-        return type.getAnnotation(Command.class) != null || type.getAnnotation(Subcommand.class) != null;
+    public boolean hardRequirement(final Element element) {
+        return element.getKind() == ElementKind.RECORD;
     }
 }
