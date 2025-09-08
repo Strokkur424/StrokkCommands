@@ -10,6 +10,8 @@ public interface ExecuteAccess<E extends Element> {
 
     String getTypeName();
 
+    boolean isRecord();
+
     static FieldAccess of(VariableElement fieldElement) {
         return new FieldAccessImpl(fieldElement);
     }

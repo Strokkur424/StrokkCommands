@@ -8,7 +8,6 @@ import net.strokkur.commands.internal.intermediate.paths.CommandPath;
 import net.strokkur.commands.internal.intermediate.paths.ExecutablePath;
 import net.strokkur.commands.internal.util.Utils;
 
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
@@ -18,14 +17,54 @@ import java.util.List;
 
 interface InstanceFieldPrinter extends Printable, PrinterInformation {
 
-    default void printAccessInstance(List<ExecuteAccess<?>> accesses) throws IOException {
+    default void printInstanceFields() throws IOException {
+        if (printInstanceFields(getCommandPath()) > 0) {
+            println(); // Extra newline for styling reasons
+        }
+    }
+
+    private int printInstanceFields(final CommandPath<?> commandPath) throws IOException {
+        int pushed = 0;
+        if (commandPath.hasAttribute(AttributeKey.ACCESS_STACK)) {
+            for (ExecuteAccess<?> executeAccess : commandPath.getAttributeNotNull(AttributeKey.ACCESS_STACK)) {
+                if (executeAccess.isRecord()) {
+                    for (int i = 0; i < pushed; i++) {
+                        getAccessStack().pop();
+                    }
+                    return 0;
+                }
+
+                getAccessStack().push(executeAccess);
+                pushed++;
+            }
+        }
+
+        int printed = 0;
+        if (commandPath instanceof ExecutablePath) {
+            if (printAccessInstance(getAccessStack())) {
+                printed++;
+            }
+        } else {
+            for (final CommandPath<?> child : commandPath.getChildren()) {
+                printed += printInstanceFields(child);
+            }
+        }
+
+        for (int i = 0; i < pushed; i++) {
+            getAccessStack().pop();
+        }
+
+        return printed;
+    }
+
+    private boolean printAccessInstance(List<ExecuteAccess<?>> accesses) throws IOException {
         if (accesses.isEmpty()) {
-            return; // IDK how this even happens, but what the hell am I supposed to do if the access stack is empty?
+            return false; // IDK how this even happens, but what the hell am I supposed to do if the access stack is empty?
         }
 
         if (accesses.size() == 1) {
             if (getPrintedInstances().contains("instance")) {
-                return;
+                return false;
             }
             final String typeName = accesses.getFirst().getTypeName();
             println("final {} instance = new {}();",
@@ -33,7 +72,7 @@ interface InstanceFieldPrinter extends Printable, PrinterInformation {
                 typeName
             );
             getPrintedInstances().add("instance");
-            return;
+            return true;
         }
 
         final ExecuteAccess<?> currentAccess = accesses.getLast();
@@ -65,7 +104,7 @@ interface InstanceFieldPrinter extends Printable, PrinterInformation {
             }
 
             getPrintedInstances().add(instanceName);
-            return;
+            return true;
         }
 
         if (currentAccess instanceof InstanceAccess instanceAccess) {
@@ -77,7 +116,7 @@ interface InstanceFieldPrinter extends Printable, PrinterInformation {
                     typeName
                 );
                 getPrintedInstances().add(instanceName);
-                return;
+                return true;
             }
 
             if (!getPrintedInstances().contains(prevInstanceName)) {
@@ -91,38 +130,9 @@ interface InstanceFieldPrinter extends Printable, PrinterInformation {
                 classElement.getSimpleName().toString()
             );
             getPrintedInstances().add(instanceName);
-            return;
+            return true;
         }
 
         throw new IllegalStateException("Unknown access: " + currentAccess);
-    }
-
-    default void printInstanceFields(CommandPath<?> commandPath) throws IOException {
-        int pushed = 0;
-        if (commandPath.hasAttribute(AttributeKey.ACCESS_STACK)) {
-            for (ExecuteAccess<?> executeAccess : commandPath.getAttributeNotNull(AttributeKey.ACCESS_STACK)) {
-                if (executeAccess.getElement().getKind() == ElementKind.RECORD) {
-                    for (int i = 0; i < pushed; i++) {
-                        getAccessStack().pop();
-                    }
-                    return;
-                }
-
-                getAccessStack().push(executeAccess);
-                pushed++;
-            }
-        }
-
-        if (commandPath instanceof ExecutablePath) {
-            printAccessInstance(getAccessStack());
-        } else {
-            for (final CommandPath<?> child : commandPath.getChildren()) {
-                printInstanceFields(child);
-            }
-        }
-
-        for (int i = 0; i < pushed; i++) {
-            getAccessStack().pop();
-        }
     }
 }

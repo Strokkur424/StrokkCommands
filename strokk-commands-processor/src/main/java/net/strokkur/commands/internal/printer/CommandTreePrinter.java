@@ -44,11 +44,11 @@ public final class CommandTreePrinter extends AbstractPrinter implements Printer
         this.commandInformation = commandInformation;
     }
 
-    private String getPackageName() {
+    public String getPackageName() {
         return ((PackageElement) commandInformation.classElement().getEnclosingElement()).getQualifiedName().toString();
     }
 
-    private String getBrigadierClassName() {
+    public String getBrigadierClassName() {
         return commandInformation.classElement().getSimpleName().toString() + "Brigadier";
     }
 
@@ -128,8 +128,7 @@ public final class CommandTreePrinter extends AbstractPrinter implements Printer
         );
         incrementIndent();
 
-        printInstanceFields(commandPath);
-        println();
+        printInstanceFields();
 
         printIndent();
         print("return ");
