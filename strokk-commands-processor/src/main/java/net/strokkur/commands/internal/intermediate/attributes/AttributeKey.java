@@ -24,6 +24,7 @@ import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.Nullable;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -36,7 +37,7 @@ public interface AttributeKey<T> {
     AttributeKey<Boolean> REQUIRES_OP = create("requires_op", false);
     AttributeKey<Set<String>> PERMISSIONS = createDynamic("permission", HashSet::new);
 
-    AttributeKey<ExecuteAccess> ACCESS_STACK = create("access_stack", null);
+    AttributeKey<List<ExecuteAccess<?>>> ACCESS_STACK = create("access_stack", null);
 
     // Splitting
     AttributeKey<Boolean> INHERIT_PARENT_ARGS = create("inherit_parent_args", false);

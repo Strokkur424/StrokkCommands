@@ -25,6 +25,8 @@ import org.jspecify.annotations.Nullable;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public interface CommandPath<S extends CommandArgument> {
 
@@ -51,6 +53,22 @@ public interface CommandPath<S extends CommandArgument> {
     void removeAttribute(AttributeKey<?> key);
 
     boolean hasAttribute(AttributeKey<?> key);
+
+    default <V> void editAttribute(AttributeKey<V> key, Function<V, V> action, @Nullable Supplier<V> ifNotExists) {
+        if (hasAttribute(key)) {
+            setAttribute(key, action.apply(getAttributeNotNull(key)));
+        } else if (ifNotExists != null) {
+            setAttribute(key, ifNotExists.get());
+        }
+    }
+
+    default <V> void editAttributeMutable(AttributeKey<V> key, Consumer<V> action, @Nullable Supplier<V> ifNotExists) {
+        if (hasAttribute(key)) {
+            action.accept(getAttributeNotNull(key));
+        } else if (ifNotExists != null) {
+            setAttribute(key, ifNotExists.get());
+        }
+    }
 
     /**
      * Splits the argument path of this path and returns an instance of the first half of the split

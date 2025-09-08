@@ -18,6 +18,7 @@
 package net.strokkur.commands.internal.intermediate.paths;
 
 import net.strokkur.commands.internal.intermediate.ExecutorType;
+import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.requirement.Requirement;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
@@ -84,6 +85,8 @@ public class PathFlattener implements ForwardingMessagerWrapper {
                 permissions = null;
             }
 
+            final List<ExecuteAccess<?>> accessStack = parent.getAttribute(AttributeKey.ACCESS_STACK);
+
             if (req != null) {
                 path.setAttribute(AttributeKey.REQUIREMENT, req);
             }
@@ -92,6 +95,9 @@ public class PathFlattener implements ForwardingMessagerWrapper {
             }
             if (permissions != null) {
                 path.setAttribute(AttributeKey.PERMISSIONS, permissions);
+            }
+            if (accessStack != null) {
+                path.editAttributeMutable(AttributeKey.ACCESS_STACK, stack -> stack.addAll(0, accessStack), () -> accessStack);
             }
 
             path.setParent(null);

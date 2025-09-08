@@ -2,6 +2,7 @@ package net.strokkur.commands.internal.parsing;
 
 import net.strokkur.commands.annotations.Command;
 import net.strokkur.commands.annotations.Subcommand;
+import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.access.InstanceAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
@@ -11,6 +12,7 @@ import net.strokkur.commands.internal.util.MessagerWrapper;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -54,7 +56,12 @@ class ClassTransform implements PathTransform, ForwardingMessagerWrapper {
     }
 
     protected void addAccessAttribute(final CommandPath<?> path, final TypeElement element) {
-        path.setAttribute(AttributeKey.ACCESS_STACK, (InstanceAccess) () -> element);
+        final InstanceAccess access = ExecuteAccess.of(element);
+        path.editAttributeMutable(
+            AttributeKey.ACCESS_STACK,
+            accesses -> accesses.add(access),
+            () -> new ArrayList<>(List.of(access))
+        );
     }
 
     protected List<CommandPath<?>> parseRecordComponents(final CommandPath<?> parent, final Element element) {

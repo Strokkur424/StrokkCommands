@@ -11,8 +11,6 @@ class SuperNested {
 
     static {
         // Expectation
-        final SuperNested instance = new SuperNested();
-        final SuperNested.InnerNonStatic instanceInnerNonStatic = instance.new InnerNonStatic();
         final SuperNested.NestedClass instanceInnerNonStaticNested = new SuperNested.NestedClass();
         final SuperNested.NestedClass.UltraNested instanceInnerNonStaticNestedUltraNested = instanceInnerNonStaticNested.new UltraNested();
 
