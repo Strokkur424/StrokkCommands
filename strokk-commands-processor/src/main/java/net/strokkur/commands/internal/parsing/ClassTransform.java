@@ -66,7 +66,6 @@ class ClassTransform implements PathTransform, ForwardingMessagerWrapper {
             }
 
             for (final CommandPath<?> recordPath : relevant) {
-                this.parser.populateRequirements(recordPath, element);
                 this.parser.weakParse(recordPath, enclosed);
             }
         }

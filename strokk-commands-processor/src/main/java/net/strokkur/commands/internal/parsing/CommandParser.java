@@ -41,8 +41,6 @@ public interface CommandParser {
 
     List<List<CommandArgument>> parseArguments(List<VariableElement> elements, TypeElement typeElement);
 
-    void populateRequirements(CommandPath<?> path, Element element);
-
     @Nullable
     @SuppressWarnings("ConstantValue")
     default <A extends Annotation> LiteralCommandPath getLiteralPath(Element element, Class<A> annotation, Function<A, String> valueExtract) {

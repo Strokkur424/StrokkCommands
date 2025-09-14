@@ -23,10 +23,8 @@ import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.intermediate.ExecutorType;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
-import net.strokkur.commands.internal.intermediate.paths.EmptyCommandPath;
 import net.strokkur.commands.internal.intermediate.paths.ExecutablePath;
 import net.strokkur.commands.internal.intermediate.paths.ExecutablePathImpl;
-import net.strokkur.commands.internal.intermediate.paths.LiteralCommandPath;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.commands.internal.util.MessagerWrapper;
@@ -53,11 +51,7 @@ class MethodTransform implements PathTransform, ForwardingMessagerWrapper {
     public void transform(final CommandPath<?> parent, final Element element) {
         debug("> MethodTransform: parsing {} for '{}'", element, parent.toStringNoChildren());
         final ExecutableElement method = (ExecutableElement) element;
-        final LiteralCommandPath path = this.parser.getLiteralPath(element, Executes.class, Executes::value);
-        final CommandPath<?> thisPath = path == null ? new EmptyCommandPath() : path;
-
-        this.parser.populateRequirements(thisPath, element);
-        parent.addChild(thisPath);
+        final CommandPath<?> thisPath = this.createThisExecutesPath(parent, this.parser, element);
 
         ExecutorType type = ExecutorType.NONE;
 

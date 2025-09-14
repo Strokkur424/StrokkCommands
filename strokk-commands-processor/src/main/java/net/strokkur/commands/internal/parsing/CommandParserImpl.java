@@ -18,8 +18,6 @@
 package net.strokkur.commands.internal.parsing;
 
 import net.strokkur.commands.annotations.Literal;
-import net.strokkur.commands.annotations.Permission;
-import net.strokkur.commands.annotations.RequiresOP;
 import net.strokkur.commands.annotations.Suggestion;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentType;
@@ -27,7 +25,6 @@ import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgumentImpl;
 import net.strokkur.commands.internal.exceptions.HandledConversionException;
-import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
 import net.strokkur.commands.internal.intermediate.paths.EmptyCommandPath;
 import net.strokkur.commands.internal.intermediate.suggestions.SuggestionProvider;
@@ -42,7 +39,6 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapper {
 
@@ -145,22 +141,6 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
         }
 
         return arguments;
-    }
-
-    @Override
-    public void populateRequirements(final CommandPath<?> path, final Element element) {
-        //noinspection ConstantValue
-        if (element.getAnnotation(RequiresOP.class) != null) {
-            path.setAttribute(AttributeKey.REQUIRES_OP, true);
-        }
-
-        final Permission permission = element.getAnnotation(Permission.class);
-        //noinspection ConstantValue
-        if (permission != null) {
-            final Set<String> perms = path.getAttributeNotNull(AttributeKey.PERMISSIONS);
-            perms.add(permission.value());
-            path.setAttribute(AttributeKey.PERMISSIONS, perms);
-        }
     }
 
     @Nullable

@@ -18,11 +18,17 @@
 package net.strokkur.commands.internal.parsing;
 
 import net.strokkur.commands.annotations.Command;
+import net.strokkur.commands.annotations.Executes;
+import net.strokkur.commands.annotations.Permission;
+import net.strokkur.commands.annotations.RequiresOP;
 import net.strokkur.commands.annotations.Subcommand;
+import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
 import net.strokkur.commands.internal.intermediate.paths.EmptyCommandPath;
+import org.jetbrains.annotations.Nullable;
 
 import javax.lang.model.element.Element;
+import java.util.Set;
 
 interface PathTransform {
 
@@ -41,8 +47,27 @@ interface PathTransform {
         if (thisPath == null) {
             thisPath = parser.getLiteralPath(element, Subcommand.class, Subcommand::value);
         }
+        return populatePath(parent, thisPath, element);
+    }
+
+    default CommandPath<?> createThisExecutesPath(CommandPath<?> parent, CommandParser parser, Element element) {
+        CommandPath<?> thisPath = parser.getLiteralPath(element, Executes.class, Executes::value);
+        return populatePath(parent, thisPath, element);
+    }
+
+    private CommandPath<?> populatePath(CommandPath<?> parent, @Nullable CommandPath<?> thisPath, Element element) {
         if (thisPath == null) {
             thisPath = new EmptyCommandPath();
+        }
+
+        // Add permission and RequiresOP clauses
+        final Permission permission = element.getAnnotation(Permission.class);
+        if (permission != null) {
+            thisPath.setAttribute(AttributeKey.PERMISSIONS, Set.of(permission.value()));
+        }
+
+        if (element.getAnnotation(RequiresOP.class) != null) {
+            thisPath.setAttribute(AttributeKey.REQUIRES_OP, true);
         }
 
         parent.addChild(thisPath);
