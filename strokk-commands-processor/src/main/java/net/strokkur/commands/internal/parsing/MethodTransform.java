@@ -39,72 +39,72 @@ import java.util.List;
 
 class MethodTransform implements PathTransform, ForwardingMessagerWrapper {
 
-    private final CommandParser parser;
-    private final MessagerWrapper messager;
+  private final CommandParser parser;
+  private final MessagerWrapper messager;
 
-    public MethodTransform(final CommandParser parser, final MessagerWrapper messager) {
-        this.parser = parser;
-        this.messager = messager;
-    }
+  public MethodTransform(final CommandParser parser, final MessagerWrapper messager) {
+    this.parser = parser;
+    this.messager = messager;
+  }
 
-    @Override
-    public void transform(final CommandPath<?> parent, final Element element) {
-        debug("> MethodTransform: parsing {} for '{}'", element, parent.toStringNoChildren());
-        final ExecutableElement method = (ExecutableElement) element;
-        final CommandPath<?> thisPath = this.createThisExecutesPath(parent, this.parser, element);
+  @Override
+  public void transform(final CommandPath<?> parent, final Element element) {
+    debug("> MethodTransform: parsing {} for '{}'", element, parent.toStringNoChildren());
+    final ExecutableElement method = (ExecutableElement) element;
+    final CommandPath<?> thisPath = this.createThisExecutesPath(parent, this.parser, element);
 
-        ExecutorType type = ExecutorType.NONE;
+    ExecutorType type = ExecutorType.NONE;
 
-        final List<? extends VariableElement> parameters = method.getParameters();
-        final List<VariableElement> arguments = new ArrayList<>(parameters.size() - 1);
+    final List<? extends VariableElement> parameters = method.getParameters();
+    final List<VariableElement> arguments = new ArrayList<>(parameters.size() - 1);
 
-        for (int i = 1, parametersSize = parameters.size(); i < parametersSize; i++) {
-            final VariableElement param = parameters.get(i);
+    for (int i = 1, parametersSize = parameters.size(); i < parametersSize; i++) {
+      final VariableElement param = parameters.get(i);
 
-            //noinspection ConstantValue
-            if (i == 1 && param.getAnnotation(Executor.class) != null) {
-                if (param.asType().toString().equals(Classes.PLAYER)) {
-                    type = ExecutorType.PLAYER;
-                    continue;
-                } else if (param.asType().toString().equals(Classes.ENTITY)) {
-                    type = ExecutorType.ENTITY;
-                    continue;
-                }
-            }
-
-            arguments.add(param);
+      //noinspection ConstantValue
+      if (i == 1 && param.getAnnotation(Executor.class) != null) {
+        if (param.asType().toString().equals(Classes.PLAYER)) {
+          type = ExecutorType.PLAYER;
+          continue;
+        } else if (param.asType().toString().equals(Classes.ENTITY)) {
+          type = ExecutorType.ENTITY;
+          continue;
         }
+      }
 
-        final List<List<CommandArgument>> args = this.parser.parseArguments(arguments, (TypeElement) method.getEnclosingElement());
-        if (args.isEmpty()) {
-            final ExecutablePath out = new ExecutablePathImpl(List.of(), method);
-            out.setAttribute(AttributeKey.EXECUTOR_TYPE, type);
-            thisPath.addChild(out);
-            debug("> MethodTransform: no arguments found. Current tree for thisPath: {}", thisPath);
-            return;
-        }
-
-        for (final List<CommandArgument> argList : args) {
-            final ExecutablePath out = new ExecutablePathImpl(argList, method);
-            out.setAttribute(AttributeKey.EXECUTOR_TYPE, type);
-            thisPath.addChild(out);
-        }
-        debug("> MethodTransform: found arguments! Current tree for thisPath: {}", thisPath);
+      arguments.add(param);
     }
 
-    @Override
-    public boolean hardRequirement(final Element element) {
-        return element.getKind() == ElementKind.METHOD;
+    final List<List<CommandArgument>> args = this.parser.parseArguments(arguments, (TypeElement) method.getEnclosingElement());
+    if (args.isEmpty()) {
+      final ExecutablePath out = new ExecutablePathImpl(List.of(), method);
+      out.setAttribute(AttributeKey.EXECUTOR_TYPE, type);
+      thisPath.addChild(out);
+      debug("> MethodTransform: no arguments found. Current tree for thisPath: {}", thisPath);
+      return;
     }
 
-    @Override
-    public boolean weakRequirement(final Element element) {
-        //noinspection ConstantValue
-        return element.getAnnotation(Executes.class) != null;
+    for (final List<CommandArgument> argList : args) {
+      final ExecutablePath out = new ExecutablePathImpl(argList, method);
+      out.setAttribute(AttributeKey.EXECUTOR_TYPE, type);
+      thisPath.addChild(out);
     }
+    debug("> MethodTransform: found arguments! Current tree for thisPath: {}", thisPath);
+  }
 
-    @Override
-    public MessagerWrapper delegateMessager() {
-        return this.messager;
-    }
+  @Override
+  public boolean hardRequirement(final Element element) {
+    return element.getKind() == ElementKind.METHOD;
+  }
+
+  @Override
+  public boolean weakRequirement(final Element element) {
+    //noinspection ConstantValue
+    return element.getAnnotation(Executes.class) != null;
+  }
+
+  @Override
+  public MessagerWrapper delegateMessager() {
+    return this.messager;
+  }
 }

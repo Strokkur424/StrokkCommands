@@ -32,30 +32,30 @@ import org.bukkit.inventory.ItemStack;
 @Command("does")
 public class PredicateArgumentsCommand {
 
-    @Executes("item")
-    void executor(CommandSender sender, ItemStack item, @Literal("match") String $match, ItemStackPredicate predicate) {
-        if (predicate.test(item)) {
-            sender.sendMessage(Component.text("Yes, yes it does.", NamedTextColor.GREEN));
-        } else {
-            sender.sendMessage(Component.text("No, of course it doesn't ;-;", NamedTextColor.RED));
-        }
+  @Executes("item")
+  void executor(CommandSender sender, ItemStack item, @Literal("match") String $match, ItemStackPredicate predicate) {
+    if (predicate.test(item)) {
+      sender.sendMessage(Component.text("Yes, yes it does.", NamedTextColor.GREEN));
+    } else {
+      sender.sendMessage(Component.text("No, of course it doesn't ;-;", NamedTextColor.RED));
     }
+  }
 
-    @Executes("number")
-    void executor(CommandSender sender, double value, @Literal("fit") String $fit, @Literal("into") String $into, Range<Double> range) {
-        checkNumberInRange(sender, value, range);
-    }
+  @Executes("number")
+  void executor(CommandSender sender, double value, @Literal("fit") String $fit, @Literal("into") String $into, Range<Double> range) {
+    checkNumberInRange(sender, value, range);
+  }
 
-    @Executes("int-range")
-    void executor(CommandSender sender, int value, @Literal("fit") String $fit, @Literal("into") String $into, Range<Integer> range) {
-        checkNumberInRange(sender, value, range);
-    }
+  @Executes("int-range")
+  void executor(CommandSender sender, int value, @Literal("fit") String $fit, @Literal("into") String $into, Range<Integer> range) {
+    checkNumberInRange(sender, value, range);
+  }
 
-    <T extends Comparable> void checkNumberInRange(Audience audience, T value, Range<T> range) {
-        if (range.contains(value)) {
-            audience.sendMessage(Component.text("Yes it does, open your eyes.", NamedTextColor.GREEN));
-        } else {
-            audience.sendMessage(Component.text("W... why the hell would it???", NamedTextColor.RED));
-        }
+  <T extends Comparable> void checkNumberInRange(Audience audience, T value, Range<T> range) {
+    if (range.contains(value)) {
+      audience.sendMessage(Component.text("Yes it does, open your eyes.", NamedTextColor.GREEN));
+    } else {
+      audience.sendMessage(Component.text("W... why the hell would it???", NamedTextColor.RED));
     }
+  }
 }

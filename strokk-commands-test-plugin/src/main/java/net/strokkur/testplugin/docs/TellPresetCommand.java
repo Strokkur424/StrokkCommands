@@ -26,18 +26,18 @@ import org.bukkit.entity.Player;
 @Command("tellpreset")
 public class TellPresetCommand {
 
-    @Executes
-    void executeTellPreset(CommandSender sender,
-                           Player player,
-                           @Literal({"first", "second", "last"}) String preset) {
-        String message = switch (preset) {
-            case "first" -> "You selected the first choice!";
-            case "second" -> "This is the second one...";
-            case "last" -> "...and this is the last one.";
-            // This will never happen
-            default -> throw new IllegalStateException("Illegal literal.");
-        };
+  @Executes
+  void executeTellPreset(CommandSender sender,
+                         Player player,
+                         @Literal({"first", "second", "last"}) String preset) {
+    String message = switch (preset) {
+      case "first" -> "You selected the first choice!";
+      case "second" -> "This is the second one...";
+      case "last" -> "...and this is the last one.";
+      // This will never happen
+      default -> throw new IllegalStateException("Illegal literal.");
+    };
 
-        player.sendPlainMessage(message);
-    }
+    player.sendPlainMessage(message);
+  }
 }

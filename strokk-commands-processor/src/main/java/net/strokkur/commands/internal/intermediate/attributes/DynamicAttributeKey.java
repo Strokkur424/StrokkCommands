@@ -23,8 +23,8 @@ import java.util.function.Supplier;
 
 public record DynamicAttributeKey<T>(String key, Supplier<@Nullable T> supplier) implements AttributeKey<T> {
 
-    @Override
-    public @Nullable T defaultValue() {
-        return supplier.get();
-    }
+  @Override
+  public @Nullable T defaultValue() {
+    return supplier.get();
+  }
 }

@@ -31,158 +31,158 @@ import java.util.TreeMap;
 
 abstract class SimpleCommandPathImpl<S extends CommandArgument> implements CommandPath<S> {
 
-    protected final List<CommandPath<?>> children;
-    protected @Nullable CommandPath<?> parent;
-    protected List<S> arguments;
-    protected Map<String, Object> attributes = new TreeMap<>();
+  protected final List<CommandPath<?>> children;
+  protected @Nullable CommandPath<?> parent;
+  protected List<S> arguments;
+  protected Map<String, Object> attributes = new TreeMap<>();
 
-    public SimpleCommandPathImpl(final List<S> arguments) {
-        this.children = new ArrayList<>();
-        this.parent = null;
-        this.arguments = arguments;
+  public SimpleCommandPathImpl(final List<S> arguments) {
+    this.children = new ArrayList<>();
+    this.parent = null;
+    this.arguments = arguments;
+  }
+
+  abstract SimpleCommandPathImpl<S> createLeftSplit(final List<S> args);
+
+  @Override
+  public @UnmodifiableView List<S> getArguments() {
+    return Collections.unmodifiableList(arguments);
+  }
+
+  @Override
+  public @Nullable CommandPath<?> getParent() {
+    return this.parent;
+  }
+
+  @Override
+  public void setParent(final @Nullable CommandPath<?> parent) {
+    this.parent = parent;
+  }
+
+  @Override
+  public @UnmodifiableView List<CommandPath<?>> getChildren() {
+    return Collections.unmodifiableList(children);
+  }
+
+  @Override
+  public void removeChild(final CommandPath<?> child) {
+    child.setParent(null);
+    this.children.remove(child);
+  }
+
+  @Override
+  public void addChild(final CommandPath<?> child) {
+    if (child.getParent() != null) {
+      // Just a bit of cleanup to avoid dangling references
+      child.getParent().removeChild(child);
     }
 
-    abstract SimpleCommandPathImpl<S> createLeftSplit(final List<S> args);
+    this.children.add(child);
+    child.setParent(this);
+  }
 
-    @Override
-    public @UnmodifiableView List<S> getArguments() {
-        return Collections.unmodifiableList(arguments);
+  @Override
+  @Nullable
+  public <T> T getAttribute(final AttributeKey<T> key) {
+    if (attributes.containsKey(key.key())) {
+      return (T) attributes.get(key.key());
+    } else {
+      return key.defaultValue();
+    }
+  }
+
+  @Override
+  public <T> void setAttribute(final AttributeKey<T> key, final T value) {
+    attributes.put(key.key(), value);
+  }
+
+  @Override
+  public void removeAttribute(final AttributeKey<?> key) {
+    attributes.remove(key.key());
+  }
+
+  @Override
+  public boolean hasAttribute(final AttributeKey<?> key) {
+    return attributes.containsKey(key.key());
+  }
+
+  @Override
+  public CommandPath<S> splitPath(final int index) {
+    List<S> left = new ArrayList<>(arguments.subList(0, index));
+    arguments = new ArrayList<>(arguments.subList(index, arguments.size()));
+
+    final SimpleCommandPathImpl<S> leftPath = createLeftSplit(left);
+    leftPath.attributes = new HashMap<>(attributes);
+
+    if (this.parent != null) {
+      final CommandPath<?> parent = this.parent;
+      parent.removeChild(this);
+      parent.addChild(leftPath);
     }
 
-    @Override
-    public @Nullable CommandPath<?> getParent() {
-        return this.parent;
+    leftPath.children.clear();
+    leftPath.addChild(this);
+    return leftPath;
+  }
+
+  @Override
+  public String toString() {
+    return toString(0);
+  }
+
+  @Override
+  public String toString(int indent) {
+    final StringBuilder builder = new StringBuilder();
+    builder.append("| ".repeat(indent));
+
+    if (this instanceof ExecutablePath exec) {
+      builder.append("Execute: ")
+          .append(exec.getExecutesMethod().getEnclosingElement().getSimpleName())
+          .append("#")
+          .append(exec.getExecutesMethod().getSimpleName());
+    } else if (this instanceof EmptyCommandPath) {
+      builder.append("<empty_path>");
+    } else if (this.arguments.isEmpty() && this.children.isEmpty()) {
+      return builder.append("<empty>").toString();
     }
 
-    @Override
-    public void setParent(final @Nullable CommandPath<?> parent) {
-        this.parent = parent;
+    for (final S argument : this.arguments) {
+      builder.append(argument.getName()).append(" ");
     }
 
-    @Override
-    public @UnmodifiableView List<CommandPath<?>> getChildren() {
-        return Collections.unmodifiableList(children);
+    // Add attributes
+    if (!attributes.isEmpty()) {
+      builder.append(" ".repeat(Math.max(80 - builder.length(), 0)));
+      builder.append("Attributes: {");
+      this.attributes.forEach((key, value) -> builder.append(key).append(" = ").append(value).append(" "));
+      builder.deleteCharAt(builder.length() - 1);
+      builder.append("}");
     }
 
-    @Override
-    public void removeChild(final CommandPath<?> child) {
-        child.setParent(null);
-        this.children.remove(child);
+    for (final CommandPath<?> child : this.children) {
+      builder.append("\n");
+      builder.append(child.toString(indent + 1));
     }
 
-    @Override
-    public void addChild(final CommandPath<?> child) {
-        if (child.getParent() != null) {
-            // Just a bit of cleanup to avoid dangling references
-            child.getParent().removeChild(child);
-        }
+    return builder.toString();
+  }
 
-        this.children.add(child);
-        child.setParent(this);
+  @Override
+  public String toStringNoChildren() {
+    final StringBuilder builder = new StringBuilder();
+
+    if (this.arguments.isEmpty() && this.children.isEmpty()) {
+      return builder.append("<empty_args>").toString();
     }
 
-    @Override
-    @Nullable
-    public <T> T getAttribute(final AttributeKey<T> key) {
-        if (attributes.containsKey(key.key())) {
-            return (T) attributes.get(key.key());
-        } else {
-            return key.defaultValue();
-        }
+    for (int i = 0, aSize = this.arguments.size(); i < aSize; i++) {
+      final S argument = this.arguments.get(i);
+      builder.append(argument.getName());
+      if (i + 1 < aSize) {
+        builder.append(" ");
+      }
     }
 
-    @Override
-    public <T> void setAttribute(final AttributeKey<T> key, final T value) {
-        attributes.put(key.key(), value);
-    }
-
-    @Override
-    public void removeAttribute(final AttributeKey<?> key) {
-        attributes.remove(key.key());
-    }
-
-    @Override
-    public boolean hasAttribute(final AttributeKey<?> key) {
-        return attributes.containsKey(key.key());
-    }
-
-    @Override
-    public CommandPath<S> splitPath(final int index) {
-        List<S> left = new ArrayList<>(arguments.subList(0, index));
-        arguments = new ArrayList<>(arguments.subList(index, arguments.size()));
-
-        final SimpleCommandPathImpl<S> leftPath = createLeftSplit(left);
-        leftPath.attributes = new HashMap<>(attributes);
-
-        if (this.parent != null) {
-            final CommandPath<?> parent = this.parent;
-            parent.removeChild(this);
-            parent.addChild(leftPath);
-        }
-
-        leftPath.children.clear();
-        leftPath.addChild(this);
-        return leftPath;
-    }
-
-    @Override
-    public String toString() {
-        return toString(0);
-    }
-
-    @Override
-    public String toString(int indent) {
-        final StringBuilder builder = new StringBuilder();
-        builder.append("| ".repeat(indent));
-
-        if (this instanceof ExecutablePath exec) {
-            builder.append("Execute: ")
-                .append(exec.getExecutesMethod().getEnclosingElement().getSimpleName())
-                .append("#")
-                .append(exec.getExecutesMethod().getSimpleName());
-        } else if (this instanceof EmptyCommandPath) {
-            builder.append("<empty_path>");
-        } else if (this.arguments.isEmpty() && this.children.isEmpty()) {
-            return builder.append("<empty>").toString();
-        }
-
-        for (final S argument : this.arguments) {
-            builder.append(argument.getName()).append(" ");
-        }
-
-        // Add attributes
-        if (!attributes.isEmpty()) {
-            builder.append(" ".repeat(Math.max(80 - builder.length(), 0)));
-            builder.append("Attributes: {");
-            this.attributes.forEach((key, value) -> builder.append(key).append(" = ").append(value).append(" "));
-            builder.deleteCharAt(builder.length() - 1);
-            builder.append("}");
-        }
-
-        for (final CommandPath<?> child : this.children) {
-            builder.append("\n");
-            builder.append(child.toString(indent + 1));
-        }
-
-        return builder.toString();
-    }
-
-    @Override
-    public String toStringNoChildren() {
-        final StringBuilder builder = new StringBuilder();
-
-        if (this.arguments.isEmpty() && this.children.isEmpty()) {
-            return builder.append("<empty_args>").toString();
-        }
-
-        for (int i = 0, aSize = this.arguments.size(); i < aSize; i++) {
-            final S argument = this.arguments.get(i);
-            builder.append(argument.getName());
-            if (i + 1 < aSize) {
-                builder.append(" ");
-            }
-        }
-
-        return builder.toString();
-    }
+    return builder.toString();
+  }
 }

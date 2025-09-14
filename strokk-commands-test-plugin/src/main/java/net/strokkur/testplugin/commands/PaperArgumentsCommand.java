@@ -31,20 +31,20 @@ import org.bukkit.inventory.ItemStack;
 @Command("paperargs")
 class PaperArgumentsCommand {
 
-    @Executes("time")
-    void executes(CommandSender sender, @Executor Entity entity, @TimeArg int time) {
-        entity.getWorld().setTime(entity.getWorld().getTime() + time);
-        sender.sendRichMessage("<aqua>Successfully fast-forwarded the world's time by <red><amount> ticks</red>!",
-            Placeholder.unparsed("amount", Integer.toString(time))
-        );
-    }
+  @Executes("time")
+  void executes(CommandSender sender, @Executor Entity entity, @TimeArg int time) {
+    entity.getWorld().setTime(entity.getWorld().getTime() + time);
+    sender.sendRichMessage("<aqua>Successfully fast-forwarded the world's time by <red><amount> ticks</red>!",
+        Placeholder.unparsed("amount", Integer.toString(time))
+    );
+  }
 
-    @Executes("item")
-    void executes(CommandSender sender, @Executor Player player, ItemStack itemStack) {
-        player.give(itemStack);
-        sender.sendRichMessage("<aqua>Successfully gave <player> a <red><item></red>!",
-            Placeholder.component("player", player.displayName()),
-            Placeholder.component("item", Component.translatable(itemStack))
-        );
-    }
+  @Executes("item")
+  void executes(CommandSender sender, @Executor Player player, ItemStack itemStack) {
+    player.give(itemStack);
+    sender.sendRichMessage("<aqua>Successfully gave <player> a <red><item></red>!",
+        Placeholder.component("player", player.displayName()),
+        Placeholder.component("item", Component.translatable(itemStack))
+    );
+  }
 }

@@ -27,6 +27,6 @@ import org.bukkit.GameMode;
 @Permission("testplugin.gamemode.spectator")
 class GameModeSpectatorCommand {
 
-    @Subcommand
-    GameModePreset gameMode = new GameModePreset(GameMode.SPECTATOR);
+  @Subcommand
+  GameModePreset gameMode = new GameModePreset(GameMode.SPECTATOR);
 }

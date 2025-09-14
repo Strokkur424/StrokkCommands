@@ -22,17 +22,17 @@ import java.util.Objects;
 
 record LiteralCommandArgumentImpl(String literal, Element element) implements LiteralCommandArgument {
 
-    @Override
-    public boolean equals(final Object o) {
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        final LiteralCommandArgumentImpl that = (LiteralCommandArgumentImpl) o;
-        return Objects.equals(literal(), that.literal());
+  @Override
+  public boolean equals(final Object o) {
+    if (o == null || getClass() != o.getClass()) {
+      return false;
     }
+    final LiteralCommandArgumentImpl that = (LiteralCommandArgumentImpl) o;
+    return Objects.equals(literal(), that.literal());
+  }
 
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(literal());
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(literal());
+  }
 }

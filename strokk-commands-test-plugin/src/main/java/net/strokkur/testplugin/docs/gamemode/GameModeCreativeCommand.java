@@ -27,6 +27,6 @@ import org.bukkit.GameMode;
 @Permission("testplugin.gamemode.creative")
 class GameModeCreativeCommand {
 
-    @Subcommand
-    GameModePreset gameMode = new GameModePreset(GameMode.CREATIVE);
+  @Subcommand
+  GameModePreset gameMode = new GameModePreset(GameMode.CREATIVE);
 }

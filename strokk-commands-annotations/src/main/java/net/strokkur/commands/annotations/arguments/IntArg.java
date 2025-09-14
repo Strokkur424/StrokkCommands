@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.PARAMETER)
 public @interface IntArg {
-    int min() default Integer.MIN_VALUE;
+  int min() default Integer.MIN_VALUE;
 
-    int max() default Integer.MAX_VALUE;
+  int max() default Integer.MAX_VALUE;
 }

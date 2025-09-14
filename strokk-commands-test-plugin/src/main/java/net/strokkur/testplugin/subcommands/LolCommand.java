@@ -26,9 +26,9 @@ import org.bukkit.entity.Player;
 @Command("lol")
 record LolCommand(Player player, @Literal String now) {
 
-    @Executes
-    void execute(CommandSender sender) {
-        player.sendPlainMessage("lol from " + sender.getName());
-        sender.sendPlainMessage("lol'd " + player.getName());
-    }
+  @Executes
+  void execute(CommandSender sender) {
+    player.sendPlainMessage("lol from " + sender.getName());
+    sender.sendPlainMessage("lol'd " + player.getName());
+  }
 }

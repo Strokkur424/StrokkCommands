@@ -26,18 +26,18 @@ import org.bukkit.inventory.ItemStack;
 @Command("give")
 class GiveCommand {
 
-    @Command("item")
-    record ItemSub(Player target, ItemStack item) {
+  @Command("item")
+  record ItemSub(Player target, ItemStack item) {
 
-        @Executes
-        void giveDefault(CommandSender sender) {
-            giveCount(sender, 1);
-        }
-
-        @Executes
-        void giveCount(CommandSender sender, int count) {
-            item.setAmount(count);
-            target.give(item);
-        }
+    @Executes
+    void giveDefault(CommandSender sender) {
+      giveCount(sender, 1);
     }
+
+    @Executes
+    void giveCount(CommandSender sender, int count) {
+      item.setAmount(count);
+      target.give(item);
+    }
+  }
 }

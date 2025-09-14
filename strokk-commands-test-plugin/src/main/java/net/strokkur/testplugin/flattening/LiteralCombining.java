@@ -25,22 +25,22 @@ import org.bukkit.command.CommandSender;
 @Command("combined")
 class LiteralCombining {
 
-    @Executes("sub")
-    void normalSub(CommandSender sender) {
-        sender.sendRichMessage("<gold>Normal executes method.");
-    }
+  @Executes("sub")
+  void normalSub(CommandSender sender) {
+    sender.sendRichMessage("<gold>Normal executes method.");
+  }
+
+  @Executes
+  void literalSub(CommandSender sender, @Literal String sub, @Literal String two) {
+    sender.sendRichMessage("<gold>Literal executes method.");
+  }
+
+  @Command("sub class")
+  static class SubClass {
 
     @Executes
-    void literalSub(CommandSender sender, @Literal String sub, @Literal String two) {
-        sender.sendRichMessage("<gold>Literal executes method.");
+    void execute(CommandSender sender) {
+      sender.sendRichMessage("<gold>Sub class executes method.");
     }
-
-    @Command("sub class")
-    static class SubClass {
-
-        @Executes
-        void execute(CommandSender sender) {
-            sender.sendRichMessage("<gold>Sub class executes method.");
-        }
-    }
+  }
 }

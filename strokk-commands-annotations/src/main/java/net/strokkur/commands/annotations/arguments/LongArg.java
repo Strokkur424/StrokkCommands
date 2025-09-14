@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.PARAMETER)
 public @interface LongArg {
-    long max() default Long.MAX_VALUE;
+  long max() default Long.MAX_VALUE;
 
-    long min() default Long.MIN_VALUE;
+  long min() default Long.MIN_VALUE;
 }

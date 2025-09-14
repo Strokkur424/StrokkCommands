@@ -30,38 +30,38 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 public class GameModePreset {
 
-    private final GameMode mode;
+  private final GameMode mode;
 
-    public GameModePreset(final GameMode mode) {
-        this.mode = mode;
+  public GameModePreset(final GameMode mode) {
+    this.mode = mode;
+  }
+
+  @Executes
+  public void executes(CommandSender sender, @Executor Player executor) {
+    changeGameMode(sender, executor);
+  }
+
+  @Executes
+  public void executesTarget(CommandSender sender, Player target) {
+    changeGameMode(sender, target);
+  }
+
+  private void changeGameMode(CommandSender sender, Player target) {
+    final String targetName = sender == target ? "your" : target.getName() + "'s";
+    final String targetNameUpper = sender == target ? "Your" : targetName;
+
+    if (target.getGameMode() == mode) {
+      sender.sendRichMessage("<red><target_name> game mode is already set to <mode>!",
+          Placeholder.unparsed("target_name", targetNameUpper),
+          Placeholder.component("mode", Component.translatable(mode))
+      );
+      return;
     }
 
-    @Executes
-    public void executes(CommandSender sender, @Executor Player executor) {
-        changeGameMode(sender, executor);
-    }
-
-    @Executes
-    public void executesTarget(CommandSender sender, Player target) {
-        changeGameMode(sender, target);
-    }
-
-    private void changeGameMode(CommandSender sender, Player target) {
-        final String targetName = sender == target ? "your" : target.getName() + "'s";
-        final String targetNameUpper = sender == target ? "Your" : targetName;
-
-        if (target.getGameMode() == mode) {
-            sender.sendRichMessage("<red><target_name> game mode is already set to <mode>!",
-                Placeholder.unparsed("target_name", targetNameUpper),
-                Placeholder.component("mode", Component.translatable(mode))
-            );
-            return;
-        }
-
-        target.setGameMode(mode);
-        sender.sendRichMessage("<green>Successfully set <target_name> game mode to <mode>!",
-            Placeholder.unparsed("target_name", targetName),
-            Placeholder.component("mode", Component.translatable(mode))
-        );
-    }
+    target.setGameMode(mode);
+    sender.sendRichMessage("<green>Successfully set <target_name> game mode to <mode>!",
+        Placeholder.unparsed("target_name", targetName),
+        Placeholder.component("mode", Component.translatable(mode))
+    );
+  }
 }

@@ -1,8 +1,8 @@
 pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        maven("https://eldonexus.de/repository/maven-public/")
-    }
+  repositories {
+    gradlePluginPortal()
+    maven("https://eldonexus.de/repository/maven-public/")
+  }
 }
 
 rootProject.name = "StrokkCommands"

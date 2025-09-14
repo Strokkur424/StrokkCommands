@@ -24,26 +24,26 @@ import javax.lang.model.type.TypeMirror;
 
 public interface SuggestionProvider {
 
-    static SuggestionProvider ofClass(TypeMirror implementingClass) {
-        return new ClassSuggestionProvider(implementingClass);
-    }
+  static SuggestionProvider ofClass(TypeMirror implementingClass) {
+    return new ClassSuggestionProvider(implementingClass);
+  }
 
-    static SuggestionProvider ofMethodReference(TypeMirror classElement, String methodName) {
-        return new MethodReferenceSuggestionProvider(classElement, methodName);
-    }
+  static SuggestionProvider ofMethodReference(TypeMirror classElement, String methodName) {
+    return new MethodReferenceSuggestionProvider(classElement, methodName);
+  }
 
-    static SuggestionProvider ofMethod(TypeMirror classElement, String methodName) {
-        return new MethodSuggestionProvider(classElement, methodName);
-    }
+  static SuggestionProvider ofMethod(TypeMirror classElement, String methodName) {
+    return new MethodSuggestionProvider(classElement, methodName);
+  }
 
-    static SuggestionProvider ofField(TypeMirror classElement, String fieldName) {
-        return new FieldSuggestionProvider(classElement, fieldName);
-    }
+  static SuggestionProvider ofField(TypeMirror classElement, String fieldName) {
+    return new FieldSuggestionProvider(classElement, fieldName);
+  }
 
-    String getProvider();
+  String getProvider();
 
-    @Nullable
-    default TypeElement getClassElement() {
-        return null;
-    }
+  @Nullable
+  default TypeElement getClassElement() {
+    return null;
+  }
 }

@@ -23,37 +23,37 @@ import java.util.List;
 
 public interface Requirement {
 
-    Requirement EMPTY = (op, executorType) -> "Not handled anywhere, should not show up either.";
+  Requirement EMPTY = (op, executorType) -> "Not handled anywhere, should not show up either.";
 
-    static Requirement permission(String permission) {
-        return new PermissionRequirement(permission);
+  static Requirement permission(String permission) {
+    return new PermissionRequirement(permission);
+  }
+
+  static Requirement combine(List<Requirement> requirements) {
+    return new CombinedRequirement(requirements);
+  }
+
+  static Requirement combine(Requirement... requirements) {
+    return new CombinedRequirement(List.of(requirements));
+  }
+
+  //<editor-fold name="Utility Method"
+  static String getDefaultRequirement(boolean operator, ExecutorType executorType) {
+    if (!operator && executorType == ExecutorType.NONE) {
+      return "";
     }
 
-    static Requirement combine(List<Requirement> requirements) {
-        return new CombinedRequirement(requirements);
+    if (operator && executorType == ExecutorType.NONE) {
+      return "source.getSender().isOp()";
     }
 
-    static Requirement combine(Requirement... requirements) {
-        return new CombinedRequirement(List.of(requirements));
+    if (!operator) {
+      return executorType.getPredicate();
     }
 
-    //<editor-fold name="Utility Method"
-    static String getDefaultRequirement(boolean operator, ExecutorType executorType) {
-        if (!operator && executorType == ExecutorType.NONE) {
-            return "";
-        }
+    return "source.getSender().isOp() && " + executorType.getPredicate();
+  }
 
-        if (operator && executorType == ExecutorType.NONE) {
-            return "source.getSender().isOp()";
-        }
-
-        if (!operator) {
-            return executorType.getPredicate();
-        }
-
-        return "source.getSender().isOp() && " + executorType.getPredicate();
-    }
-
-    String getRequirementString(boolean operator, ExecutorType executorType);
-    //</editor-fold>
+  String getRequirementString(boolean operator, ExecutorType executorType);
+  //</editor-fold>
 }

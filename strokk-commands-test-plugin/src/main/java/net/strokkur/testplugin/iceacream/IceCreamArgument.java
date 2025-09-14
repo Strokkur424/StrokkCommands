@@ -33,32 +33,32 @@ import java.util.concurrent.CompletableFuture;
 
 public class IceCreamArgument implements CustomArgumentType.Converted<IceCreamType, String> {
 
-    private static final List<IceCreamType> TYPES = List.of(IceCreamType.values());
+  private static final List<IceCreamType> TYPES = List.of(IceCreamType.values());
 
-    private static final DynamicCommandExceptionType NOT_ICE_CREAM = new DynamicCommandExceptionType(
-        obj -> MessageComponentSerializer.message().serialize(Component.text(obj + " is not a valid ice cream!"))
-    );
+  private static final DynamicCommandExceptionType NOT_ICE_CREAM = new DynamicCommandExceptionType(
+      obj -> MessageComponentSerializer.message().serialize(Component.text(obj + " is not a valid ice cream!"))
+  );
 
-    @Override
-    public IceCreamType convert(String nativeType) throws CommandSyntaxException {
-        try {
-            return IceCreamType.valueOf(nativeType.toUpperCase());
-        } catch (IllegalArgumentException notIceCream) {
-            throw NOT_ICE_CREAM.create(nativeType);
-        }
+  @Override
+  public IceCreamType convert(String nativeType) throws CommandSyntaxException {
+    try {
+      return IceCreamType.valueOf(nativeType.toUpperCase());
+    } catch (IllegalArgumentException notIceCream) {
+      throw NOT_ICE_CREAM.create(nativeType);
     }
+  }
 
-    @Override
-    public ArgumentType<String> getNativeType() {
-        return StringArgumentType.word();
-    }
+  @Override
+  public ArgumentType<String> getNativeType() {
+    return StringArgumentType.word();
+  }
 
-    @Override
-    public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        TYPES.stream()
-            .map(Object::toString)
-            .filter(name -> name.startsWith(builder.getRemainingLowerCase()))
-            .forEach(builder::suggest);
-        return builder.buildFuture();
-    }
+  @Override
+  public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
+    TYPES.stream()
+        .map(Object::toString)
+        .filter(name -> name.startsWith(builder.getRemainingLowerCase()))
+        .forEach(builder::suggest);
+    return builder.buildFuture();
+  }
 }

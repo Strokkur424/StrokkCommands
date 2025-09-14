@@ -32,40 +32,40 @@ import java.util.List;
 
 class RecordTransform extends ClassTransform {
 
-    public RecordTransform(final CommandParser parser, final MessagerWrapper messager) {
-        super(parser, messager);
+  public RecordTransform(final CommandParser parser, final MessagerWrapper messager) {
+    super(parser, messager);
+  }
+
+  @Override
+  protected void addAccessAttribute(final CommandPath<?> path, final TypeElement element) {
+    // no impl
+  }
+
+  @Override
+  protected List<CommandPath<?>> parseRecordComponents(final CommandPath<?> parent, final Element element) {
+    final List<? extends Element> enclosedElements = element.getEnclosedElements();
+
+    final List<VariableElement> recordComponents = new ArrayList<>(enclosedElements.size());
+    for (final Element enclosed : enclosedElements) {
+      if (enclosed.getKind() == ElementKind.RECORD_COMPONENT) {
+        recordComponents.add((VariableElement) enclosed);
+      }
     }
 
-    @Override
-    protected void addAccessAttribute(final CommandPath<?> path, final TypeElement element) {
-        // no impl
+    final List<List<CommandArgument>> possibleArguments = this.parser.parseArguments(recordComponents, (TypeElement) element);
+    final List<CommandPath<?>> paths = new ArrayList<>(possibleArguments.size());
+
+    for (final List<CommandArgument> arguments : possibleArguments) {
+      final RecordPath recordPath = new RecordPathImpl(arguments);
+      parent.addChild(recordPath);
+      paths.add(recordPath);
     }
 
-    @Override
-    protected List<CommandPath<?>> parseRecordComponents(final CommandPath<?> parent, final Element element) {
-        final List<? extends Element> enclosedElements = element.getEnclosedElements();
+    return paths;
+  }
 
-        final List<VariableElement> recordComponents = new ArrayList<>(enclosedElements.size());
-        for (final Element enclosed : enclosedElements) {
-            if (enclosed.getKind() == ElementKind.RECORD_COMPONENT) {
-                recordComponents.add((VariableElement) enclosed);
-            }
-        }
-
-        final List<List<CommandArgument>> possibleArguments = this.parser.parseArguments(recordComponents, (TypeElement) element);
-        final List<CommandPath<?>> paths = new ArrayList<>(possibleArguments.size());
-
-        for (final List<CommandArgument> arguments : possibleArguments) {
-            final RecordPath recordPath = new RecordPathImpl(arguments);
-            parent.addChild(recordPath);
-            paths.add(recordPath);
-        }
-
-        return paths;
-    }
-
-    @Override
-    public boolean hardRequirement(final Element element) {
-        return element.getKind() == ElementKind.RECORD;
-    }
+  @Override
+  public boolean hardRequirement(final Element element) {
+    return element.getKind() == ElementKind.RECORD;
+  }
 }

@@ -27,31 +27,31 @@ import org.bukkit.command.CommandSender;
 @Command("recordfields")
 class FieldsWithRecords {
 
-    @Subcommand
-    SomeRecord someRecord;
+  static {
+    // Expectation:
+    var built = Commands.literal("recordfields")
+        .then(Commands.argument("wordArg", StringArgumentType.word())
+            .executes(ctx -> {
+              final SomeRecord executor = new SomeRecord(
+                  StringArgumentType.getString(ctx, "wordArg")
+              );
+              executor.execute(
+                  ctx.getSource().getSender()
+              );
+              return 1;
+            })
+        )
+        .build();
+  }
 
-    static {
-        // Expectation:
-        var built = Commands.literal("recordfields")
-            .then(Commands.argument("wordArg", StringArgumentType.word())
-                .executes(ctx -> {
-                    final SomeRecord executor = new SomeRecord(
-                        StringArgumentType.getString(ctx, "wordArg")
-                    );
-                    executor.execute(
-                        ctx.getSource().getSender()
-                    );
-                    return 1;
-                })
-            )
-            .build();
+  @Subcommand
+  SomeRecord someRecord;
+
+  record SomeRecord(String wordArg) {
+
+    @Executes
+    void execute(CommandSender sender) {
+      sender.sendMessage(wordArg);
     }
-
-    record SomeRecord(String wordArg) {
-
-        @Executes
-        void execute(CommandSender sender) {
-            sender.sendMessage(wordArg);
-        }
-    }
+  }
 }

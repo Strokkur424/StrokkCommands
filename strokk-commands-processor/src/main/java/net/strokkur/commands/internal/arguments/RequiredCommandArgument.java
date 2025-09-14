@@ -21,8 +21,8 @@ import net.strokkur.commands.internal.intermediate.suggestions.SuggestionProvide
 import org.jspecify.annotations.Nullable;
 
 public interface RequiredCommandArgument extends CommandArgument {
-    BrigadierArgumentType getArgumentType();
+  BrigadierArgumentType getArgumentType();
 
-    @Nullable
-    SuggestionProvider getSuggestionProvider();
+  @Nullable
+  SuggestionProvider getSuggestionProvider();
 }

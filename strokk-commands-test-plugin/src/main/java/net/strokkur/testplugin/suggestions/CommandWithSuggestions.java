@@ -37,39 +37,39 @@ import java.util.concurrent.CompletableFuture;
 @NullMarked
 class CommandWithSuggestions {
 
-    static CompletableFuture<Suggestions> mySuggestions(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {
-        builder.suggest("abc");
-        builder.suggest("xyz");
-        return builder.buildFuture();
-    }
+  static CompletableFuture<Suggestions> mySuggestions(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {
+    builder.suggest("abc");
+    builder.suggest("xyz");
+    return builder.buildFuture();
+  }
 
-    static SuggestionProvider<CommandSourceStack> mySuggestions() {
-        return (ctx, builder) -> {
-            Bukkit.getOnlinePlayers().stream()
-                .map(Player::getName)
-                .filter(name -> name.toLowerCase().startsWith(builder.getRemainingLowerCase()))
-                .forEach(builder::suggest);
-            return builder.buildFuture();
-        };
-    }
+  static SuggestionProvider<CommandSourceStack> mySuggestions() {
+    return (ctx, builder) -> {
+      Bukkit.getOnlinePlayers().stream()
+          .map(Player::getName)
+          .filter(name -> name.toLowerCase().startsWith(builder.getRemainingLowerCase()))
+          .forEach(builder::suggest);
+      return builder.buildFuture();
+    };
+  }
 
-    @Executes("field")
-    void executesField(CommandSender sender, @Suggestion(base = SuggestionsRepository.class, field = "STATIC_FIELD") String value) {
-        // ...
-    }
+  @Executes("field")
+  void executesField(CommandSender sender, @Suggestion(base = SuggestionsRepository.class, field = "STATIC_FIELD") String value) {
+    // ...
+  }
 
-    @Executes("methodRef")
-    void executesMethodRef(CommandSender sender, @Suggestion(method = "mySuggestions") String value) {
-        // ...
-    }
+  @Executes("methodRef")
+  void executesMethodRef(CommandSender sender, @Suggestion(method = "mySuggestions") String value) {
+    // ...
+  }
 
-    @Executes("method")
-    void executesMethod(CommandSender sender, @Suggestion(method = "mySuggestions", reference = false) String value) {
-        // ...
-    }
+  @Executes("method")
+  void executesMethod(CommandSender sender, @Suggestion(method = "mySuggestions", reference = false) String value) {
+    // ...
+  }
 
-    @Executes("class")
-    void executesClass(CommandSender sender, @Suggestion(base = SuggestionsRepository.SomeClass.class) @IntArg(min = 1, max = 64) int value) {
-        // ...
-    }
+  @Executes("class")
+  void executesClass(CommandSender sender, @Suggestion(base = SuggestionsRepository.SomeClass.class) @IntArg(min = 1, max = 64) int value) {
+    // ...
+  }
 }

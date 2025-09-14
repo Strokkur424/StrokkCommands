@@ -26,14 +26,14 @@ import javax.lang.model.type.TypeMirror;
 
 public record ClassSuggestionProvider(TypeMirror type) implements SuggestionProvider {
 
-    @Override
-    public String getProvider() {
-        return "new " + Utils.getTypeName(StrokkCommandsPreprocessor.getTypes().asElement(type)) + "()";
-    }
+  @Override
+  public String getProvider() {
+    return "new " + Utils.getTypeName(StrokkCommandsPreprocessor.getTypes().asElement(type)) + "()";
+  }
 
-    @Override
-    @Nullable
-    public TypeElement getClassElement() {
-        return (TypeElement) StrokkCommandsPreprocessor.getTypes().asElement(type);
-    }
+  @Override
+  @Nullable
+  public TypeElement getClassElement() {
+    return (TypeElement) StrokkCommandsPreprocessor.getTypes().asElement(type);
+  }
 }

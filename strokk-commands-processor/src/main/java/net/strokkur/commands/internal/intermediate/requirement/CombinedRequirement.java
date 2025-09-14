@@ -25,56 +25,56 @@ import java.util.Set;
 
 class CombinedRequirement implements Requirement {
 
-    private final List<Requirement> requirements;
+  private final List<Requirement> requirements;
 
-    public CombinedRequirement(final List<Requirement> requirements) {
-        this.requirements = requirements;
+  public CombinedRequirement(final List<Requirement> requirements) {
+    this.requirements = requirements;
+  }
+
+  public static void concatPermissions(Requirement req, Set<String> handled) {
+    if (req instanceof CombinedRequirement comb) {
+      for (final Requirement requirement : comb.requirements) {
+        concatPermissions(requirement, handled);
+      }
     }
 
-    public static void concatPermissions(Requirement req, Set<String> handled) {
-        if (req instanceof CombinedRequirement comb) {
-            for (final Requirement requirement : comb.requirements) {
-                concatPermissions(requirement, handled);
-            }
-        }
+    if (req instanceof PermissionRequirement permissionRequirement) {
+      handled.add(permissionRequirement.getPermission());
+    }
+  }
 
-        if (req instanceof PermissionRequirement permissionRequirement) {
-            handled.add(permissionRequirement.getPermission());
-        }
+  @Override
+  public String getRequirementString(boolean operator, ExecutorType executorType) {
+    final Set<String> permissions = new HashSet<>();
+    concatPermissions(this, permissions);
+
+    final String defaultReq = Requirement.getDefaultRequirement(operator, executorType);
+    if (permissions.isEmpty()) {
+      return defaultReq;
     }
 
-    @Override
-    public String getRequirementString(boolean operator, ExecutorType executorType) {
-        final Set<String> permissions = new HashSet<>();
-        concatPermissions(this, permissions);
+    final String permissionsString = String.join(" || ", permissions.stream()
+        .map("source.getSender().hasPermission(\"%s\")"::formatted)
+        .toList());
 
-        final String defaultReq = Requirement.getDefaultRequirement(operator, executorType);
-        if (permissions.isEmpty()) {
-            return defaultReq;
-        }
-
-        final String permissionsString = String.join(" || ", permissions.stream()
-            .map("source.getSender().hasPermission(\"%s\")"::formatted)
-            .toList());
-
-        if (defaultReq.isBlank()) {
-            return permissionsString;
-        }
-
-        final String parenthesisPermissionString;
-        if (permissions.size() == 1) {
-            parenthesisPermissionString = permissionsString;
-        } else {
-            parenthesisPermissionString = "(" + permissionsString + ")";
-        }
-
-        return defaultReq + " && " + parenthesisPermissionString;
+    if (defaultReq.isBlank()) {
+      return permissionsString;
     }
 
-    @Override
-    public String toString() {
-        return "CombinedRequirement{" +
-            "requirements=" + requirements +
-            '}';
+    final String parenthesisPermissionString;
+    if (permissions.size() == 1) {
+      parenthesisPermissionString = permissionsString;
+    } else {
+      parenthesisPermissionString = "(" + permissionsString + ")";
     }
+
+    return defaultReq + " && " + parenthesisPermissionString;
+  }
+
+  @Override
+  public String toString() {
+    return "CombinedRequirement{" +
+        "requirements=" + requirements +
+        '}';
+  }
 }

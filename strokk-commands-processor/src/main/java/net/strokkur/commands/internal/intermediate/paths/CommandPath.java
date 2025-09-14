@@ -30,92 +30,92 @@ import java.util.function.Supplier;
 
 public interface CommandPath<S extends CommandArgument> {
 
-    @UnmodifiableView
-    List<S> getArguments();
+  @UnmodifiableView
+  List<S> getArguments();
 
-    @Nullable
-    CommandPath<?> getParent();
+  @Nullable
+  CommandPath<?> getParent();
 
-    void setParent(@Nullable CommandPath<?> parent);
+  void setParent(@Nullable CommandPath<?> parent);
 
-    @UnmodifiableView
-    List<CommandPath<?>> getChildren();
+  @UnmodifiableView
+  List<CommandPath<?>> getChildren();
 
-    void removeChild(CommandPath<?> child);
+  void removeChild(CommandPath<?> child);
 
-    void addChild(CommandPath<?> child);
+  void addChild(CommandPath<?> child);
 
-    @Nullable
-    <T> T getAttribute(AttributeKey<T> key);
+  @Nullable
+  <T> T getAttribute(AttributeKey<T> key);
 
-    <T> void setAttribute(AttributeKey<T> key, T value);
+  <T> void setAttribute(AttributeKey<T> key, T value);
 
-    void removeAttribute(AttributeKey<?> key);
+  void removeAttribute(AttributeKey<?> key);
 
-    boolean hasAttribute(AttributeKey<?> key);
+  boolean hasAttribute(AttributeKey<?> key);
 
-    default <V> void editAttribute(AttributeKey<V> key, Function<V, V> action, @Nullable Supplier<V> ifNotExists) {
-        if (hasAttribute(key)) {
-            setAttribute(key, action.apply(getAttributeNotNull(key)));
-        } else if (ifNotExists != null) {
-            setAttribute(key, ifNotExists.get());
-        }
+  /**
+   * Splits the argument path of this path and returns an instance of the first half of the split
+   * path. The second split path will be the same instance as this path.
+   *
+   * @param index the index to split at
+   * @return the new, left side instance of the split
+   */
+  CommandPath<S> splitPath(int index);
+
+  /**
+   * Debug method.
+   */
+  String toString(int indent);
+
+  String toStringNoChildren();
+
+  default <V> void editAttribute(AttributeKey<V> key, Function<V, V> action, @Nullable Supplier<V> ifNotExists) {
+    if (hasAttribute(key)) {
+      setAttribute(key, action.apply(getAttributeNotNull(key)));
+    } else if (ifNotExists != null) {
+      setAttribute(key, ifNotExists.get());
+    }
+  }
+
+  default <V> void editAttributeMutable(AttributeKey<V> key, Consumer<V> action, @Nullable Supplier<V> ifNotExists) {
+    if (hasAttribute(key)) {
+      action.accept(getAttributeNotNull(key));
+    } else if (ifNotExists != null) {
+      setAttribute(key, ifNotExists.get());
+    }
+  }
+
+  default <T> T getAttributeNotNull(AttributeKey<T> key) {
+    return Objects.requireNonNull(getAttribute(key), "Attribute key " + key + " is null");
+  }
+
+  default void forEachChild(Consumer<CommandPath<?>> action) {
+    this.getChildren().forEach(child -> child.forEachChildAccept(action));
+  }
+
+  default void forEachChildAccept(Consumer<CommandPath<?>> action) {
+    this.getChildren().forEach(child -> child.forEachChildAccept(action));
+    action.accept(this);
+  }
+
+  /**
+   * Returns the number of same arguments at the start of this and the provided path.
+   *
+   * @param other other path
+   * @return number of arguments that are the same at the start
+   */
+  default int getSameArguments(CommandPath<?> other) {
+    final List<?> arguments = getArguments();
+    final List<?> otherArguments = other.getArguments();
+    final int min = Math.min(arguments.size(), otherArguments.size());
+
+    for (int i = 0; i < min; i++) {
+      if (!arguments.get(i).equals(otherArguments.get(i))) {
+        return i;
+      }
     }
 
-    default <V> void editAttributeMutable(AttributeKey<V> key, Consumer<V> action, @Nullable Supplier<V> ifNotExists) {
-        if (hasAttribute(key)) {
-            action.accept(getAttributeNotNull(key));
-        } else if (ifNotExists != null) {
-            setAttribute(key, ifNotExists.get());
-        }
-    }
-
-    /**
-     * Splits the argument path of this path and returns an instance of the first half of the split
-     * path. The second split path will be the same instance as this path.
-     *
-     * @param index the index to split at
-     * @return the new, left side instance of the split
-     */
-    CommandPath<S> splitPath(int index);
-
-    /**
-     * Debug method.
-     */
-    String toString(int indent);
-
-    String toStringNoChildren();
-
-    default <T> T getAttributeNotNull(AttributeKey<T> key) {
-        return Objects.requireNonNull(getAttribute(key), "Attribute key " + key + " is null");
-    }
-
-    default void forEachChild(Consumer<CommandPath<?>> action) {
-        this.getChildren().forEach(child -> child.forEachChildAccept(action));
-    }
-
-    default void forEachChildAccept(Consumer<CommandPath<?>> action) {
-        this.getChildren().forEach(child -> child.forEachChildAccept(action));
-        action.accept(this);
-    }
-
-    /**
-     * Returns the number of same arguments at the start of this and the provided path.
-     *
-     * @param other other path
-     * @return number of arguments that are the same at the start
-     */
-    default int getSameArguments(CommandPath<?> other) {
-        final List<?> arguments = getArguments();
-        final List<?> otherArguments = other.getArguments();
-        final int min = Math.min(arguments.size(), otherArguments.size());
-
-        for (int i = 0; i < min; i++) {
-            if (!arguments.get(i).equals(otherArguments.get(i))) {
-                return i;
-            }
-        }
-
-        return min;
-    }
+    return min;
+  }
 }

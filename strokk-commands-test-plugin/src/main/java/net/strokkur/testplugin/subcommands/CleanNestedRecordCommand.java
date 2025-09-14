@@ -25,12 +25,12 @@ import org.bukkit.command.CommandSender;
 @Command("cleannestedrecord")
 class CleanNestedRecordCommand {
 
-    @Subcommand
-    record NestedRecord(String word) {
+  @Subcommand
+  record NestedRecord(String word) {
 
-        @Executes
-        void execute(CommandSender sender) {
-            sender.sendPlainMessage("Hell yeah!");
-        }
+    @Executes
+    void execute(CommandSender sender) {
+      sender.sendPlainMessage("Hell yeah!");
     }
+  }
 }

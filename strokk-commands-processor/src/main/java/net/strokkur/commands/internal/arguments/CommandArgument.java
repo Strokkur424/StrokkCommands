@@ -21,7 +21,7 @@ import javax.lang.model.element.Element;
 
 public interface CommandArgument {
 
-    String getName();
+  String getName();
 
-    Element element();
+  Element element();
 }

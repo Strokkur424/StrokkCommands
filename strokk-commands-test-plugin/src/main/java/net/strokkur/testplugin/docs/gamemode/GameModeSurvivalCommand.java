@@ -27,6 +27,6 @@ import org.bukkit.GameMode;
 @Permission("testplugin.gamemode.survival")
 class GameModeSurvivalCommand {
 
-    @Subcommand
-    GameModePreset gameMode = new GameModePreset(GameMode.SURVIVAL);
+  @Subcommand
+  GameModePreset gameMode = new GameModePreset(GameMode.SURVIVAL);
 }

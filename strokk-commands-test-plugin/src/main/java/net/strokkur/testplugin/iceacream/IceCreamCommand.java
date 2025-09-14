@@ -26,10 +26,10 @@ import org.bukkit.command.CommandSender;
 @Command("icecream")
 public class IceCreamCommand {
 
-    @Executes("lick")
-    void onLick(CommandSender sender, @CustomArg(IceCreamArgument.class) IceCreamType iceCream) {
-        sender.sendRichMessage("<rainbow><b>YUMMY!</rainbow> You just had a scoop of <color:#7925ab><icecream></color>!",
-            Placeholder.unparsed("icecream", iceCream.toString())
-        );
-    }
+  @Executes("lick")
+  void onLick(CommandSender sender, @CustomArg(IceCreamArgument.class) IceCreamType iceCream) {
+    sender.sendRichMessage("<rainbow><b>YUMMY!</rainbow> You just had a scoop of <color:#7925ab><icecream></color>!",
+        Placeholder.unparsed("icecream", iceCream.toString())
+    );
+  }
 }

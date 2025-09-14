@@ -29,18 +29,18 @@ import org.bukkit.command.CommandSender;
 @Command("fillblock")
 record FillBlockCommand(BlockPosition pos1, BlockPosition pos2, BlockState state) {
 
-    @Executes
-    void execute(CommandSender sender) {
-        execute(sender, 1000);
-    }
+  @Executes
+  void execute(CommandSender sender) {
+    execute(sender, 1000);
+  }
 
-    @Executes
-    void execute(CommandSender sender, int perTick) {
-        sender.sendRichMessage("You attempted to fill all blocks between <pos1> and <pos2> with <type> (placing <per_tick> blocks per tick.)",
-            Placeholder.unparsed("pos1", "%d %d %d".formatted(pos1.blockX(), pos1.blockY(), pos1.blockZ())),
-            Placeholder.unparsed("pos2", "%d %d %d".formatted(pos2.blockX(), pos2.blockY(), pos2.blockZ())),
-            Placeholder.component("type", Component.translatable(state.getType())),
-            Placeholder.component("per_tick", Component.text(perTick))
-        );
-    }
+  @Executes
+  void execute(CommandSender sender, int perTick) {
+    sender.sendRichMessage("You attempted to fill all blocks between <pos1> and <pos2> with <type> (placing <per_tick> blocks per tick.)",
+        Placeholder.unparsed("pos1", "%d %d %d".formatted(pos1.blockX(), pos1.blockY(), pos1.blockZ())),
+        Placeholder.unparsed("pos2", "%d %d %d".formatted(pos2.blockX(), pos2.blockY(), pos2.blockZ())),
+        Placeholder.component("type", Component.translatable(state.getType())),
+        Placeholder.component("per_tick", Component.text(perTick))
+    );
+  }
 }

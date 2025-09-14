@@ -24,12 +24,12 @@ import java.util.List;
 
 public class EmptyCommandPath extends SimpleCommandPathImpl<CommandArgument> {
 
-    public EmptyCommandPath() {
-        super(Collections.emptyList());
-    }
+  public EmptyCommandPath() {
+    super(Collections.emptyList());
+  }
 
-    @Override
-    SimpleCommandPathImpl<CommandArgument> createLeftSplit(final List<CommandArgument> args) {
-        return new EmptyCommandPath();
-    }
+  @Override
+  SimpleCommandPathImpl<CommandArgument> createLeftSplit(final List<CommandArgument> args) {
+    return new EmptyCommandPath();
+  }
 }

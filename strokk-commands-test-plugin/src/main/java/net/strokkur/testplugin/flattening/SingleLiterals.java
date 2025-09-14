@@ -25,13 +25,13 @@ import org.bukkit.command.CommandSender;
 @Command("single-literals")
 class SingleLiterals {
 
-    @Executes
-    void accept(CommandSender sender, @Literal String accept) {
-        sender.sendRichMessage("<green>Accepted!");
-    }
+  @Executes
+  void accept(CommandSender sender, @Literal String accept) {
+    sender.sendRichMessage("<green>Accepted!");
+  }
 
-    @Executes
-    void decline(CommandSender sender, @Literal String decline) {
-        sender.sendRichMessage("<red>Declined!");
-    }
+  @Executes
+  void decline(CommandSender sender, @Literal String decline) {
+    sender.sendRichMessage("<red>Declined!");
+  }
 }

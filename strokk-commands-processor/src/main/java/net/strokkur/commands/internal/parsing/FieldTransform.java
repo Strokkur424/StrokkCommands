@@ -34,37 +34,37 @@ import java.util.List;
 
 class FieldTransform implements PathTransform, ForwardingMessagerWrapper {
 
-    private final CommandParser parser;
-    private final MessagerWrapper messager;
+  private final CommandParser parser;
+  private final MessagerWrapper messager;
 
-    public FieldTransform(final CommandParser parser, final MessagerWrapper messager) {
-        this.parser = parser;
-        this.messager = messager;
-    }
+  public FieldTransform(final CommandParser parser, final MessagerWrapper messager) {
+    this.parser = parser;
+    this.messager = messager;
+  }
 
-    @Override
-    public void transform(final CommandPath<?> parent, final Element element) {
-        debug("> FieldTransform: {}.{}", element.getEnclosingElement().getSimpleName(), element.getSimpleName());
-        final CommandPath<?> thisPath = createThisPath(parent, this.parser, element);
+  @Override
+  public void transform(final CommandPath<?> parent, final Element element) {
+    debug("> FieldTransform: {}.{}", element.getEnclosingElement().getSimpleName(), element.getSimpleName());
+    final CommandPath<?> thisPath = createThisPath(parent, this.parser, element);
 
-        thisPath.setAttribute(AttributeKey.ACCESS_STACK, new ArrayList<>(List.of(ExecuteAccess.of((VariableElement) element))));
+    thisPath.setAttribute(AttributeKey.ACCESS_STACK, new ArrayList<>(List.of(ExecuteAccess.of((VariableElement) element))));
 
-        this.parser.hardParse(thisPath, StrokkCommandsPreprocessor.getTypes().asElement(element.asType()));
-    }
+    this.parser.hardParse(thisPath, StrokkCommandsPreprocessor.getTypes().asElement(element.asType()));
+  }
 
-    @Override
-    public boolean hardRequirement(final Element element) {
-        return element.getKind() == ElementKind.FIELD;
-    }
+  @Override
+  public boolean hardRequirement(final Element element) {
+    return element.getKind() == ElementKind.FIELD;
+  }
 
-    @Override
-    public boolean weakRequirement(final Element element) {
-        //noinspection ConstantValue
-        return element.getAnnotation(Command.class) != null || element.getAnnotation(Subcommand.class) != null;
-    }
+  @Override
+  public boolean weakRequirement(final Element element) {
+    //noinspection ConstantValue
+    return element.getAnnotation(Command.class) != null || element.getAnnotation(Subcommand.class) != null;
+  }
 
-    @Override
-    public MessagerWrapper delegateMessager() {
-        return this.messager;
-    }
+  @Override
+  public MessagerWrapper delegateMessager() {
+    return this.messager;
+  }
 }

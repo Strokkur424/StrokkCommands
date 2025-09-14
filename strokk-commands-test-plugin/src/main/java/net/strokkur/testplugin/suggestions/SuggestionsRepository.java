@@ -32,29 +32,29 @@ import java.util.concurrent.CompletableFuture;
 @NullMarked
 interface SuggestionsRepository {
 
-    SuggestionProvider<CommandSourceStack> STATIC_FIELD = (ctx, builder) -> {
-        builder.suggest(8);
-        builder.suggest(16);
-        builder.suggest(32);
-        return builder.buildFuture();
-    };
+  SuggestionProvider<CommandSourceStack> STATIC_FIELD = (ctx, builder) -> {
+    builder.suggest(8);
+    builder.suggest(16);
+    builder.suggest(32);
+    return builder.buildFuture();
+  };
 
-    class SomeClass implements SuggestionProvider<CommandSourceStack> {
-        private final List<String> suggestions;
+  class SomeClass implements SuggestionProvider<CommandSourceStack> {
+    private final List<String> suggestions;
 
-        public SomeClass() {
-            suggestions = new ArrayList<>(64);
-            for (int i = 1; i <= 64; i++) {
-                suggestions.add(Integer.toString(i));
-            }
-        }
-
-        @Override
-        public CompletableFuture<Suggestions> getSuggestions(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {
-            suggestions.stream()
-                .filter(num -> num.startsWith(builder.getRemaining()))
-                .forEach(builder::suggest);
-            return builder.buildFuture();
-        }
+    public SomeClass() {
+      suggestions = new ArrayList<>(64);
+      for (int i = 1; i <= 64; i++) {
+        suggestions.add(Integer.toString(i));
+      }
     }
+
+    @Override
+    public CompletableFuture<Suggestions> getSuggestions(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {
+      suggestions.stream()
+          .filter(num -> num.startsWith(builder.getRemaining()))
+          .forEach(builder::suggest);
+      return builder.buildFuture();
+    }
+  }
 }

@@ -37,102 +37,102 @@ import java.util.Optional;
 
 public interface Utils {
 
-    @Nullable
-    static TypeMirror getAnnotationMirror(Element element, Class<? extends Annotation> annotationClass) {
-        return getAnnotationMirror(element, annotationClass, "value");
+  @Nullable
+  static TypeMirror getAnnotationMirror(Element element, Class<? extends Annotation> annotationClass) {
+    return getAnnotationMirror(element, annotationClass, "value");
+  }
+
+  @Nullable
+  static TypeMirror getAnnotationMirror(Element element, Class<? extends Annotation> annotationClass, String fieldName) {
+    String annotationName = annotationClass.getName();
+
+    Optional<? extends AnnotationMirror> out = element.getAnnotationMirrors().stream()
+        .filter(mirror -> ((TypeElement) mirror.getAnnotationType().asElement()).getQualifiedName().contentEquals(annotationName))
+        .findFirst();
+
+    return out.flatMap(mirror -> mirror.getElementValues().entrySet().stream()
+            .filter(entry -> entry.getKey().getSimpleName().contentEquals(fieldName))
+            .map(entry -> (TypeMirror) entry.getValue().getValue())
+            .findFirst())
+        .orElse(null);
+  }
+
+  static PackageElement getPackageElement(TypeElement typeElement) {
+    if (typeElement.getNestingKind() == NestingKind.TOP_LEVEL) {
+      return (PackageElement) typeElement.getEnclosingElement();
     }
 
-    @Nullable
-    static TypeMirror getAnnotationMirror(Element element, Class<? extends Annotation> annotationClass, String fieldName) {
-        String annotationName = annotationClass.getName();
+    return getPackageElement((TypeElement) typeElement.getEnclosingElement());
+  }
 
-        Optional<? extends AnnotationMirror> out = element.getAnnotationMirrors().stream()
-            .filter(mirror -> ((TypeElement) mirror.getAnnotationType().asElement()).getQualifiedName().contentEquals(annotationName))
-            .findFirst();
+  static String getTypeName(TypeMirror typeMirror) {
+    return getTypeName(StrokkCommandsPreprocessor.getTypes().asElement(typeMirror));
+  }
 
-        return out.flatMap(mirror -> mirror.getElementValues().entrySet().stream()
-                .filter(entry -> entry.getKey().getSimpleName().contentEquals(fieldName))
-                .map(entry -> (TypeMirror) entry.getValue().getValue())
-                .findFirst())
-            .orElse(null);
+  static String getTypeName(Element type) {
+    final StringBuilder builder = new StringBuilder();
+    final List<String> names = getNestedClassNames(type);
+
+    for (int i = 0, size = names.size(); i < size; i++) {
+      final String name = names.get(i);
+      builder.append(name);
+      if (i + 1 < size) {
+        builder.append(".");
+      }
+    }
+    return builder.toString();
+  }
+
+  static List<String> getNestedClassNames(Element type) {
+    final List<String> names = new ArrayList<>(16);
+
+    do {
+      names.add(type.getSimpleName().toString());
+      type = type.getEnclosingElement();
+    } while (type instanceof TypeElement);
+
+    return names.reversed();
+  }
+
+  static String getInstanceName(List<ExecuteAccess<?>> stack) {
+    final StringBuilder builder = new StringBuilder("instance");
+    for (int i = 1, executeAccessStackSize = stack.size(); i < executeAccessStackSize; i++) {
+      final ExecuteAccess<?> access = stack.get(i);
+      final String name = access.getElement().getSimpleName().toString();
+      builder.append(name.substring(0, 1).toUpperCase()).append(name.substring(1));
     }
 
-    static PackageElement getPackageElement(TypeElement typeElement) {
-        if (typeElement.getNestingKind() == NestingKind.TOP_LEVEL) {
-            return (PackageElement) typeElement.getEnclosingElement();
-        }
+    return builder.toString();
+  }
 
-        return getPackageElement((TypeElement) typeElement.getEnclosingElement());
+  static String getInstanceName(TypeElement typeElement) {
+    final StringBuilder builder = new StringBuilder();
+    populateInstanceName(builder, typeElement);
+    return builder.toString();
+  }
+
+  static void populateInstanceName(StringBuilder builder, TypeElement element) {
+    if (element.getNestingKind().isNested()) {
+      populateInstanceName(builder, (TypeElement) element.getEnclosingElement());
+      builder.append(element.getSimpleName());
+      return;
     }
 
-    static String getTypeName(TypeMirror typeMirror) {
-        return getTypeName(StrokkCommandsPreprocessor.getTypes().asElement(typeMirror));
+    builder.append("instance");
+  }
+
+  static int getNestingCount(TypeElement typeElement) {
+    int nested = 0;
+    while (typeElement.getNestingKind() != NestingKind.TOP_LEVEL) {
+      typeElement = (TypeElement) typeElement.getEnclosingElement();
+      nested++;
     }
+    return nested;
+  }
 
-    static String getTypeName(Element type) {
-        final StringBuilder builder = new StringBuilder();
-        final List<String> names = getNestedClassNames(type);
-
-        for (int i = 0, size = names.size(); i < size; i++) {
-            final String name = names.get(i);
-            builder.append(name);
-            if (i + 1 < size) {
-                builder.append(".");
-            }
-        }
-        return builder.toString();
-    }
-
-    static List<String> getNestedClassNames(Element type) {
-        final List<String> names = new ArrayList<>(16);
-
-        do {
-            names.add(type.getSimpleName().toString());
-            type = type.getEnclosingElement();
-        } while (type instanceof TypeElement);
-
-        return names.reversed();
-    }
-
-    static String getInstanceName(List<ExecuteAccess<?>> stack) {
-        final StringBuilder builder = new StringBuilder("instance");
-        for (int i = 1, executeAccessStackSize = stack.size(); i < executeAccessStackSize; i++) {
-            final ExecuteAccess<?> access = stack.get(i);
-            final String name = access.getElement().getSimpleName().toString();
-            builder.append(name.substring(0, 1).toUpperCase()).append(name.substring(1));
-        }
-
-        return builder.toString();
-    }
-
-    static String getInstanceName(TypeElement typeElement) {
-        final StringBuilder builder = new StringBuilder();
-        populateInstanceName(builder, typeElement);
-        return builder.toString();
-    }
-
-    static void populateInstanceName(StringBuilder builder, TypeElement element) {
-        if (element.getNestingKind().isNested()) {
-            populateInstanceName(builder, (TypeElement) element.getEnclosingElement());
-            builder.append(element.getSimpleName());
-            return;
-        }
-
-        builder.append("instance");
-    }
-
-    static int getNestingCount(TypeElement typeElement) {
-        int nested = 0;
-        while (typeElement.getNestingKind() != NestingKind.TOP_LEVEL) {
-            typeElement = (TypeElement) typeElement.getEnclosingElement();
-            nested++;
-        }
-        return nested;
-    }
-
-    static boolean isFieldInitialized(VariableElement fieldElement) {
-        final Trees trees = StrokkCommandsPreprocessor.getTrees();
-        final VariableTree fieldTree = (VariableTree) trees.getTree(fieldElement);
-        return fieldTree.getInitializer() != null;
-    }
+  static boolean isFieldInitialized(VariableElement fieldElement) {
+    final Trees trees = StrokkCommandsPreprocessor.getTrees();
+    final VariableTree fieldTree = (VariableTree) trees.getTree(fieldElement);
+    return fieldTree.getInitializer() != null;
+  }
 }

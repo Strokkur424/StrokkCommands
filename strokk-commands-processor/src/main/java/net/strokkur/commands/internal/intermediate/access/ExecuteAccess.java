@@ -23,17 +23,17 @@ import javax.lang.model.element.VariableElement;
 
 public interface ExecuteAccess<E extends Element> {
 
-    E getElement();
+  static FieldAccess of(VariableElement fieldElement) {
+    return new FieldAccessImpl(fieldElement);
+  }
 
-    String getTypeName();
+  static InstanceAccess of(TypeElement typeElement) {
+    return new InstanceAccessImpl(typeElement);
+  }
 
-    boolean isRecord();
+  E getElement();
 
-    static FieldAccess of(VariableElement fieldElement) {
-        return new FieldAccessImpl(fieldElement);
-    }
+  String getTypeName();
 
-    static InstanceAccess of(TypeElement typeElement) {
-        return new InstanceAccessImpl(typeElement);
-    }
+  boolean isRecord();
 }

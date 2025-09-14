@@ -26,11 +26,11 @@ import java.lang.annotation.Target;
 @Target(ElementType.PARAMETER)
 public @interface Suggestion {
 
-    Class<?> base() default Class.class;
+  Class<?> base() default Class.class;
 
-    String field() default "";
+  String field() default "";
 
-    String method() default "";
+  String method() default "";
 
-    boolean reference() default true;
+  boolean reference() default true;
 }

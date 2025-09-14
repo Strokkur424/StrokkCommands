@@ -26,11 +26,11 @@ import java.util.Stack;
 
 interface PrinterInformation {
 
-    CommandPath<?> getCommandPath();
+  CommandPath<?> getCommandPath();
 
-    CommandInformation getCommandInformation();
+  CommandInformation getCommandInformation();
 
-    Set<String> getPrintedInstances();
+  Set<String> getPrintedInstances();
 
-    Stack<ExecuteAccess<?>> getAccessStack();
+  Stack<ExecuteAccess<?>> getAccessStack();
 }

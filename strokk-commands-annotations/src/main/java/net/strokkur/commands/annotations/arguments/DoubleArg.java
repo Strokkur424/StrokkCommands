@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.PARAMETER)
 public @interface DoubleArg {
-    double min() default Double.MIN_VALUE;
+  double min() default Double.MIN_VALUE;
 
-    double max() default Double.MAX_VALUE;
+  double max() default Double.MAX_VALUE;
 }

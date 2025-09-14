@@ -24,13 +24,13 @@ import javax.lang.model.element.TypeElement;
 
 public interface InstanceAccess extends ExecuteAccess<TypeElement> {
 
-    @Override
-    default String getTypeName() {
-        return Utils.getTypeName(getElement());
-    }
+  @Override
+  default String getTypeName() {
+    return Utils.getTypeName(getElement());
+  }
 
-    @Override
-    default boolean isRecord() {
-        return  getElement().getKind() == ElementKind.RECORD;
-    }
+  @Override
+  default boolean isRecord() {
+    return getElement().getKind() == ElementKind.RECORD;
+  }
 }

@@ -23,12 +23,12 @@ import java.util.List;
 
 public class LiteralCommandPath extends SimpleCommandPathImpl<LiteralCommandArgument> {
 
-    public LiteralCommandPath(final List<LiteralCommandArgument> arguments) {
-        super(arguments);
-    }
+  public LiteralCommandPath(final List<LiteralCommandArgument> arguments) {
+    super(arguments);
+  }
 
-    @Override
-    SimpleCommandPathImpl<LiteralCommandArgument> createLeftSplit(final List<LiteralCommandArgument> args) {
-        return new LiteralCommandPath(args);
-    }
+  @Override
+  SimpleCommandPathImpl<LiteralCommandArgument> createLeftSplit(final List<LiteralCommandArgument> args) {
+    return new LiteralCommandPath(args);
+  }
 }

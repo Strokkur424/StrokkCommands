@@ -34,133 +34,133 @@ import java.util.List;
 
 interface InstanceFieldPrinter extends Printable, PrinterInformation {
 
-    default void printInstanceFields() throws IOException {
-        if (printInstanceFields(getCommandPath()) > 0) {
-            println(); // Extra newline for styling reasons
-        }
+  default void printInstanceFields() throws IOException {
+    if (printInstanceFields(getCommandPath()) > 0) {
+      println(); // Extra newline for styling reasons
     }
+  }
 
-    private int printInstanceFields(final CommandPath<?> commandPath) throws IOException {
-        int pushed = 0;
-        if (commandPath.hasAttribute(AttributeKey.ACCESS_STACK)) {
-            for (ExecuteAccess<?> executeAccess : commandPath.getAttributeNotNull(AttributeKey.ACCESS_STACK)) {
-                if (executeAccess.isRecord()) {
-                    for (int i = 0; i < pushed; i++) {
-                        getAccessStack().pop();
-                    }
-                    return 0;
-                }
-
-                getAccessStack().push(executeAccess);
-                pushed++;
-            }
-        }
-
-        int printed = 0;
-        if (commandPath instanceof ExecutablePath) {
-            final List<ExecuteAccess<?>> pathToUse;
-            if (getAccessStack().size() > 1 && getAccessStack().reversed().get(1) instanceof FieldAccess) {
-                pathToUse = getAccessStack().subList(0, getAccessStack().size() - 1);
-            } else {
-                pathToUse = getAccessStack();
-            }
-
-            if (printAccessInstance(pathToUse)) {
-                printed++;
-            }
-        } else {
-            for (final CommandPath<?> child : commandPath.getChildren()) {
-                printed += printInstanceFields(child);
-            }
-        }
-
-        for (int i = 0; i < pushed; i++) {
+  private int printInstanceFields(final CommandPath<?> commandPath) throws IOException {
+    int pushed = 0;
+    if (commandPath.hasAttribute(AttributeKey.ACCESS_STACK)) {
+      for (ExecuteAccess<?> executeAccess : commandPath.getAttributeNotNull(AttributeKey.ACCESS_STACK)) {
+        if (executeAccess.isRecord()) {
+          for (int i = 0; i < pushed; i++) {
             getAccessStack().pop();
+          }
+          return 0;
         }
 
-        return printed;
+        getAccessStack().push(executeAccess);
+        pushed++;
+      }
     }
 
-    private boolean printAccessInstance(List<ExecuteAccess<?>> accesses) throws IOException {
-        if (accesses.isEmpty()) {
-            return false; // IDK how this even happens, but what the hell am I supposed to do if the access stack is empty?
-        }
+    int printed = 0;
+    if (commandPath instanceof ExecutablePath) {
+      final List<ExecuteAccess<?>> pathToUse;
+      if (getAccessStack().size() > 1 && getAccessStack().reversed().get(1) instanceof FieldAccess) {
+        pathToUse = getAccessStack().subList(0, getAccessStack().size() - 1);
+      } else {
+        pathToUse = getAccessStack();
+      }
 
-        if (accesses.size() == 1) {
-            if (getPrintedInstances().contains("instance")) {
-                return false;
-            }
-            final String typeName = accesses.getFirst().getTypeName();
-            println("final {} instance = new {}();",
-                typeName,
-                typeName
-            );
-            getPrintedInstances().add("instance");
-            return true;
-        }
-
-        final ExecuteAccess<?> currentAccess = accesses.getLast();
-
-        final String typeName = currentAccess.getTypeName();
-        final String instanceName = Utils.getInstanceName(accesses);
-        final String prevInstanceName = Utils.getInstanceName(accesses.subList(0, accesses.size() - 1));
-
-        if (getPrintedInstances().contains(instanceName)) {
-            return false;
-        }
-
-        if (currentAccess instanceof FieldAccess fieldAccess) {
-            final VariableElement fieldElement = fieldAccess.getElement();
-
-            if (!getPrintedInstances().contains(prevInstanceName)) {
-                printAccessInstance(accesses.subList(0, accesses.size() - 1));
-            }
-
-            if (Utils.isFieldInitialized(fieldElement)) {
-                println("final {} {} = {}.{};",
-                    typeName,
-                    instanceName,
-                    prevInstanceName,
-                    fieldAccess.getElement().getSimpleName()
-                );
-            } else {
-                println("final {} {} = new {}();",
-                    typeName,
-                    instanceName,
-                    typeName
-                );
-            }
-
-            getPrintedInstances().add(instanceName);
-            return true;
-        }
-
-        if (currentAccess instanceof InstanceAccess instanceAccess) {
-            final TypeElement classElement = instanceAccess.getElement();
-            if (classElement.getNestingKind() == NestingKind.TOP_LEVEL || classElement.getModifiers().contains(Modifier.STATIC)) {
-                println("final {} {} = new {}();",
-                    typeName,
-                    instanceName,
-                    typeName
-                );
-                getPrintedInstances().add(instanceName);
-                return true;
-            }
-
-            if (!getPrintedInstances().contains(prevInstanceName)) {
-                printAccessInstance(accesses.subList(0, accesses.size() - 1));
-            }
-
-            println("final {} {} = {}.new {}();",
-                typeName,
-                instanceName,
-                prevInstanceName,
-                classElement.getSimpleName().toString()
-            );
-            getPrintedInstances().add(instanceName);
-            return true;
-        }
-
-        throw new IllegalStateException("Unknown access: " + currentAccess);
+      if (printAccessInstance(pathToUse)) {
+        printed++;
+      }
+    } else {
+      for (final CommandPath<?> child : commandPath.getChildren()) {
+        printed += printInstanceFields(child);
+      }
     }
+
+    for (int i = 0; i < pushed; i++) {
+      getAccessStack().pop();
+    }
+
+    return printed;
+  }
+
+  private boolean printAccessInstance(List<ExecuteAccess<?>> accesses) throws IOException {
+    if (accesses.isEmpty()) {
+      return false; // IDK how this even happens, but what the hell am I supposed to do if the access stack is empty?
+    }
+
+    if (accesses.size() == 1) {
+      if (getPrintedInstances().contains("instance")) {
+        return false;
+      }
+      final String typeName = accesses.getFirst().getTypeName();
+      println("final {} instance = new {}();",
+          typeName,
+          typeName
+      );
+      getPrintedInstances().add("instance");
+      return true;
+    }
+
+    final ExecuteAccess<?> currentAccess = accesses.getLast();
+
+    final String typeName = currentAccess.getTypeName();
+    final String instanceName = Utils.getInstanceName(accesses);
+    final String prevInstanceName = Utils.getInstanceName(accesses.subList(0, accesses.size() - 1));
+
+    if (getPrintedInstances().contains(instanceName)) {
+      return false;
+    }
+
+    if (currentAccess instanceof FieldAccess fieldAccess) {
+      final VariableElement fieldElement = fieldAccess.getElement();
+
+      if (!getPrintedInstances().contains(prevInstanceName)) {
+        printAccessInstance(accesses.subList(0, accesses.size() - 1));
+      }
+
+      if (Utils.isFieldInitialized(fieldElement)) {
+        println("final {} {} = {}.{};",
+            typeName,
+            instanceName,
+            prevInstanceName,
+            fieldAccess.getElement().getSimpleName()
+        );
+      } else {
+        println("final {} {} = new {}();",
+            typeName,
+            instanceName,
+            typeName
+        );
+      }
+
+      getPrintedInstances().add(instanceName);
+      return true;
+    }
+
+    if (currentAccess instanceof InstanceAccess instanceAccess) {
+      final TypeElement classElement = instanceAccess.getElement();
+      if (classElement.getNestingKind() == NestingKind.TOP_LEVEL || classElement.getModifiers().contains(Modifier.STATIC)) {
+        println("final {} {} = new {}();",
+            typeName,
+            instanceName,
+            typeName
+        );
+        getPrintedInstances().add(instanceName);
+        return true;
+      }
+
+      if (!getPrintedInstances().contains(prevInstanceName)) {
+        printAccessInstance(accesses.subList(0, accesses.size() - 1));
+      }
+
+      println("final {} {} = {}.new {}();",
+          typeName,
+          instanceName,
+          prevInstanceName,
+          classElement.getSimpleName().toString()
+      );
+      getPrintedInstances().add(instanceName);
+      return true;
+    }
+
+    throw new IllegalStateException("Unknown access: " + currentAccess);
+  }
 }

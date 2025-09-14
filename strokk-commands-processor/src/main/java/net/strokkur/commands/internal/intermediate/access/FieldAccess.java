@@ -25,13 +25,13 @@ import javax.lang.model.element.VariableElement;
 
 public interface FieldAccess extends ExecuteAccess<VariableElement> {
 
-    @Override
-    default String getTypeName() {
-        return Utils.getTypeName(getElement().asType());
-    }
+  @Override
+  default String getTypeName() {
+    return Utils.getTypeName(getElement().asType());
+  }
 
-    @Override
-    default boolean isRecord() {
-        return StrokkCommandsPreprocessor.getTypes().asElement(getElement().asType()).getKind() == ElementKind.RECORD;
-    }
+  @Override
+  default boolean isRecord() {
+    return StrokkCommandsPreprocessor.getTypes().asElement(getElement().asType()).getKind() == ElementKind.RECORD;
+  }
 }

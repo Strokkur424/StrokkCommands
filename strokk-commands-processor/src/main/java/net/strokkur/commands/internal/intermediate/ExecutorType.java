@@ -18,28 +18,28 @@
 package net.strokkur.commands.internal.intermediate;
 
 public enum ExecutorType {
-    NONE,
-    ENTITY("source.getExecutor() != null"),
-    PLAYER("source.getExecutor() instanceof Player");
+  NONE,
+  ENTITY("source.getExecutor() != null"),
+  PLAYER("source.getExecutor() instanceof Player");
 
-    private final String predicate;
+  private final String predicate;
 
-    ExecutorType() {
-        this("true");
-    }
+  ExecutorType() {
+    this("true");
+  }
 
-    ExecutorType(String predicate) {
-        this.predicate = predicate;
-    }
+  ExecutorType(String predicate) {
+    this.predicate = predicate;
+  }
 
-    public String getPredicate() {
-        return predicate;
-    }
+  public String getPredicate() {
+    return predicate;
+  }
 
-    /**
-     * {@return if this executor is more restrictive or equal than another}
-     */
-    public boolean isMoreRestrictiveOrEqualThan(ExecutorType other) {
-        return this.ordinal() >= other.ordinal();
-    }
+  /**
+   * {@return if this executor is more restrictive or equal than another}
+   */
+  public boolean isMoreRestrictiveOrEqualThan(ExecutorType other) {
+    return this.ordinal() >= other.ordinal();
+  }
 }

@@ -24,8 +24,8 @@ import org.bukkit.command.CommandSender;
 @Command("this is a long command")
 class LongCommand {
 
-    @Executes
-    void execute(CommandSender sender) {
-        sender.sendMessage("This is a long command");
-    }
+  @Executes
+  void execute(CommandSender sender) {
+    sender.sendMessage("This is a long command");
+  }
 }

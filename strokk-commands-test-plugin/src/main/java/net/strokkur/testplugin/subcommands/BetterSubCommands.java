@@ -28,50 +28,50 @@ import org.bukkit.entity.Player;
 @Command("subcommands")
 public class BetterSubCommands {
 
-    @Command("give")
-    record Give(Player target) {
+  @Command("give")
+  record Give(Player target) {
 
-        @Executes("holy-relic")
-        @Permission("aaa")
-        void holyRelic(CommandSender sender) {
+    @Executes("holy-relic")
+    @Permission("aaa")
+    void holyRelic(CommandSender sender) {
 
-        }
-
-        @Executes("excalibur")
-        @Permission("bbb")
-        void excalibur(CommandSender sender) {
-
-        }
     }
 
-    @Command("kill")
-    record Kill(Player target, String reason) {
+    @Executes("excalibur")
+    @Permission("bbb")
+    void excalibur(CommandSender sender) {
 
-        @Executes
-        void kill(CommandSender sender) {
-            killForce(sender, false);
-        }
+    }
+  }
 
-        @Executes
-        @RequiresOP
-        void killForce(CommandSender sender, boolean force) {
-            if (!force) {
-                return;
-            }
+  @Command("kill")
+  record Kill(Player target, String reason) {
 
-            target.setHealth(0d);
-            sender.sendRichMessage("<red>Successfully killed <target>",
-                Placeholder.component("target", target.displayName())
-            );
-        }
+    @Executes
+    void kill(CommandSender sender) {
+      killForce(sender, false);
     }
 
-    @Command("help")
-    class Help {
+    @Executes
+    @RequiresOP
+    void killForce(CommandSender sender, boolean force) {
+      if (!force) {
+        return;
+      }
 
-        @Executes
-        void help(CommandSender sender) {
-            sender.sendRichMessage("Not a help message.");
-        }
+      target.setHealth(0d);
+      sender.sendRichMessage("<red>Successfully killed <target>",
+          Placeholder.component("target", target.displayName())
+      );
     }
+  }
+
+  @Command("help")
+  class Help {
+
+    @Executes
+    void help(CommandSender sender) {
+      sender.sendRichMessage("Not a help message.");
+    }
+  }
 }

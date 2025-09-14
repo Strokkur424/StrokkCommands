@@ -33,32 +33,32 @@ import java.util.function.Function;
 
 public interface CommandParser {
 
-    CommandPath<?> createCommandTree(TypeElement typeElement);
+  CommandPath<?> createCommandTree(TypeElement typeElement);
 
-    void weakParse(CommandPath<?> path, Element element);
+  void weakParse(CommandPath<?> path, Element element);
 
-    void hardParse(CommandPath<?> path, Element element);
+  void hardParse(CommandPath<?> path, Element element);
 
-    List<List<CommandArgument>> parseArguments(List<VariableElement> elements, TypeElement typeElement);
+  List<List<CommandArgument>> parseArguments(List<VariableElement> elements, TypeElement typeElement);
 
-    @Nullable
-    @SuppressWarnings("ConstantValue")
-    default <A extends Annotation> LiteralCommandPath getLiteralPath(Element element, Class<A> annotation, Function<A, String> valueExtract) {
-        final A a = element.getAnnotation(annotation);
-        if (a == null) {
-            return null;
-        }
-
-        final String path = valueExtract.apply(a);
-        if (path == null || path.isBlank()) {
-            return null;
-        }
-
-        final List<LiteralCommandArgument> list = new ArrayList<>();
-        for (String lit : path.split(" ")) {
-            list.add(LiteralCommandArgument.literal(lit, element));
-        }
-
-        return new LiteralCommandPath(list);
+  @Nullable
+  @SuppressWarnings("ConstantValue")
+  default <A extends Annotation> LiteralCommandPath getLiteralPath(Element element, Class<A> annotation, Function<A, String> valueExtract) {
+    final A a = element.getAnnotation(annotation);
+    if (a == null) {
+      return null;
     }
+
+    final String path = valueExtract.apply(a);
+    if (path == null || path.isBlank()) {
+      return null;
+    }
+
+    final List<LiteralCommandArgument> list = new ArrayList<>();
+    for (String lit : path.split(" ")) {
+      list.add(LiteralCommandArgument.literal(lit, element));
+    }
+
+    return new LiteralCommandPath(list);
+  }
 }

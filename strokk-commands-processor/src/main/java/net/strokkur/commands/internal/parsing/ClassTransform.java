@@ -36,67 +36,67 @@ import java.util.Set;
 
 class ClassTransform implements PathTransform, ForwardingMessagerWrapper {
 
-    private static final Set<ElementKind> ENCLOSED_ELEMENTS_TO_PARSE = Set.of(
-        ElementKind.METHOD,
-        ElementKind.FIELD,
-        ElementKind.CLASS,
-        ElementKind.RECORD
+  private static final Set<ElementKind> ENCLOSED_ELEMENTS_TO_PARSE = Set.of(
+      ElementKind.METHOD,
+      ElementKind.FIELD,
+      ElementKind.CLASS,
+      ElementKind.RECORD
+  );
+
+  protected final CommandParser parser;
+  private final MessagerWrapper messager;
+
+  public ClassTransform(final CommandParser parser, final MessagerWrapper messager) {
+    this.parser = parser;
+    this.messager = messager;
+  }
+
+  @Override
+  public void transform(final CommandPath<?> parent, final Element element) {
+    debug("> ClassTransform: parsing {}...", element);
+
+    final CommandPath<?> thisPath = this.createThisPath(parent, this.parser, element);
+    addAccessAttribute(thisPath, (TypeElement) element);
+
+    final List<CommandPath<?>> relevant = parseRecordComponents(thisPath, element);
+
+    for (final Element enclosed : element.getEnclosedElements()) {
+      if (!ENCLOSED_ELEMENTS_TO_PARSE.contains(enclosed.getKind())) {
+        continue;
+      }
+
+      for (final CommandPath<?> recordPath : relevant) {
+        this.parser.weakParse(recordPath, enclosed);
+      }
+    }
+  }
+
+  protected void addAccessAttribute(final CommandPath<?> path, final TypeElement element) {
+    final InstanceAccess access = ExecuteAccess.of(element);
+    path.editAttributeMutable(
+        AttributeKey.ACCESS_STACK,
+        accesses -> accesses.add(access),
+        () -> new ArrayList<>(List.of(access))
     );
+  }
 
-    protected final CommandParser parser;
-    private final MessagerWrapper messager;
+  protected List<CommandPath<?>> parseRecordComponents(final CommandPath<?> parent, final Element element) {
+    return Collections.singletonList(parent);
+  }
 
-    public ClassTransform(final CommandParser parser, final MessagerWrapper messager) {
-        this.parser = parser;
-        this.messager = messager;
-    }
+  @Override
+  public boolean hardRequirement(final Element element) {
+    return element.getKind() == ElementKind.CLASS;
+  }
 
-    @Override
-    public void transform(final CommandPath<?> parent, final Element element) {
-        debug("> ClassTransform: parsing {}...", element);
+  @Override
+  public boolean weakRequirement(final Element element) {
+    //noinspection ConstantValue
+    return element.getAnnotation(Command.class) != null || element.getAnnotation(Subcommand.class) != null;
+  }
 
-        final CommandPath<?> thisPath = this.createThisPath(parent, this.parser, element);
-        addAccessAttribute(thisPath, (TypeElement) element);
-
-        final List<CommandPath<?>> relevant = parseRecordComponents(thisPath, element);
-
-        for (final Element enclosed : element.getEnclosedElements()) {
-            if (!ENCLOSED_ELEMENTS_TO_PARSE.contains(enclosed.getKind())) {
-                continue;
-            }
-
-            for (final CommandPath<?> recordPath : relevant) {
-                this.parser.weakParse(recordPath, enclosed);
-            }
-        }
-    }
-
-    protected void addAccessAttribute(final CommandPath<?> path, final TypeElement element) {
-        final InstanceAccess access = ExecuteAccess.of(element);
-        path.editAttributeMutable(
-            AttributeKey.ACCESS_STACK,
-            accesses -> accesses.add(access),
-            () -> new ArrayList<>(List.of(access))
-        );
-    }
-
-    protected List<CommandPath<?>> parseRecordComponents(final CommandPath<?> parent, final Element element) {
-        return Collections.singletonList(parent);
-    }
-
-    @Override
-    public boolean hardRequirement(final Element element) {
-        return element.getKind() == ElementKind.CLASS;
-    }
-
-    @Override
-    public boolean weakRequirement(final Element element) {
-        //noinspection ConstantValue
-        return element.getAnnotation(Command.class) != null || element.getAnnotation(Subcommand.class) != null;
-    }
-
-    @Override
-    public MessagerWrapper delegateMessager() {
-        return this.messager;
-    }
+  @Override
+  public MessagerWrapper delegateMessager() {
+    return this.messager;
+  }
 }

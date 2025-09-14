@@ -37,13 +37,13 @@ import static net.strokkur.commands.StringArgType.STRING;
 @Command("adventure")
 class AdventureArgumentsCommand {
 
-    @Executes("send message")
-    void executes(CommandSender sender, @StringArg(STRING) String message, @Literal("with") String $with, @Literal("color") String $color, NamedTextColor color) {
-        Bukkit.broadcast(Component.text(message, color));
-    }
+  @Executes("send message")
+  void executes(CommandSender sender, @StringArg(STRING) String message, @Literal("with") String $with, @Literal("color") String $color, NamedTextColor color) {
+    Bukkit.broadcast(Component.text(message, color));
+  }
 
-    @Executes("send signed message")
-    void executes(CommandSender sender, @Executor Player player, CompletableFuture<SignedMessage> message) {
-        message.thenAccept(msg -> Bukkit.getServer().sendMessage(msg, ChatType.CHAT.bind(player.name())));
-    }
+  @Executes("send signed message")
+  void executes(CommandSender sender, @Executor Player player, CompletableFuture<SignedMessage> message) {
+    message.thenAccept(msg -> Bukkit.getServer().sendMessage(msg, ChatType.CHAT.bind(player.name())));
+  }
 }

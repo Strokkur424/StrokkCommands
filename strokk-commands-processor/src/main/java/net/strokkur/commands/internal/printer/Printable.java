@@ -21,17 +21,17 @@ import java.io.IOException;
 
 interface Printable {
 
-    void incrementIndent();
+  void incrementIndent();
 
-    void decrementIndent();
+  void decrementIndent();
 
-    void print(String message, Object... format) throws IOException;
+  void print(String message, Object... format) throws IOException;
 
-    void printIndent() throws IOException;
+  void printIndent() throws IOException;
 
-    void println(String message, Object... format) throws IOException;
+  void println(String message, Object... format) throws IOException;
 
-    void println() throws IOException;
+  void println() throws IOException;
 
-    void printBlock(String block, Object... format) throws IOException;
+  void printBlock(String block, Object... format) throws IOException;
 }

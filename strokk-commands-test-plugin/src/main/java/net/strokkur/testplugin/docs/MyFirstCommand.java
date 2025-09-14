@@ -33,16 +33,16 @@ import org.bukkit.util.Vector;
 @Description("My first StrokkCommands-command!")
 class MyFirstCommand {
 
-    @Executes("two three four")
-    @RequiresOP
-    void onExecute(CommandSender sender, @Executor Player player) {
-        sender.sendRichMessage("<#f29def>Hey there! You just executed your first command ^-^");
-    }
+  @Executes("two three four")
+  @RequiresOP
+  void onExecute(CommandSender sender, @Executor Player player) {
+    sender.sendRichMessage("<#f29def>Hey there! You just executed your first command ^-^");
+  }
 
-    @Executes("fling")
-    @Permission("some.permission")
-    void onFling(CommandSender sender, @Executor Player player) {
-        player.setVelocity(player.getVelocity().add(new Vector(0, 10, 0)));
-        player.sendRichMessage("<b><#c4e6ff>WOOSH</b> <#c4fffd>You've been flung!");
-    }
+  @Executes("fling")
+  @Permission("some.permission")
+  void onFling(CommandSender sender, @Executor Player player) {
+    player.setVelocity(player.getVelocity().add(new Vector(0, 10, 0)));
+    player.sendRichMessage("<b><#c4e6ff>WOOSH</b> <#c4fffd>You've been flung!");
+  }
 }

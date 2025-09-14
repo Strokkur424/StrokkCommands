@@ -32,45 +32,45 @@ import java.util.Set;
 
 interface PathTransform {
 
-    void transform(CommandPath<?> parent, Element element);
+  void transform(CommandPath<?> parent, Element element);
 
-    boolean hardRequirement(Element element);
+  boolean hardRequirement(Element element);
 
-    boolean weakRequirement(Element element);
+  boolean weakRequirement(Element element);
 
-    default boolean shouldTransform(Element element) {
-        return hardRequirement(element) && weakRequirement(element);
+  default boolean shouldTransform(Element element) {
+    return hardRequirement(element) && weakRequirement(element);
+  }
+
+  default CommandPath<?> createThisPath(CommandPath<?> parent, CommandParser parser, Element element) {
+    CommandPath<?> thisPath = parser.getLiteralPath(element, Command.class, Command::value);
+    if (thisPath == null) {
+      thisPath = parser.getLiteralPath(element, Subcommand.class, Subcommand::value);
+    }
+    return populatePath(parent, thisPath, element);
+  }
+
+  default CommandPath<?> createThisExecutesPath(CommandPath<?> parent, CommandParser parser, Element element) {
+    CommandPath<?> thisPath = parser.getLiteralPath(element, Executes.class, Executes::value);
+    return populatePath(parent, thisPath, element);
+  }
+
+  private CommandPath<?> populatePath(CommandPath<?> parent, @Nullable CommandPath<?> thisPath, Element element) {
+    if (thisPath == null) {
+      thisPath = new EmptyCommandPath();
     }
 
-    default CommandPath<?> createThisPath(CommandPath<?> parent, CommandParser parser, Element element) {
-        CommandPath<?> thisPath = parser.getLiteralPath(element, Command.class, Command::value);
-        if (thisPath == null) {
-            thisPath = parser.getLiteralPath(element, Subcommand.class, Subcommand::value);
-        }
-        return populatePath(parent, thisPath, element);
+    // Add permission and RequiresOP clauses
+    final Permission permission = element.getAnnotation(Permission.class);
+    if (permission != null) {
+      thisPath.setAttribute(AttributeKey.PERMISSIONS, Set.of(permission.value()));
     }
 
-    default CommandPath<?> createThisExecutesPath(CommandPath<?> parent, CommandParser parser, Element element) {
-        CommandPath<?> thisPath = parser.getLiteralPath(element, Executes.class, Executes::value);
-        return populatePath(parent, thisPath, element);
+    if (element.getAnnotation(RequiresOP.class) != null) {
+      thisPath.setAttribute(AttributeKey.REQUIRES_OP, true);
     }
 
-    private CommandPath<?> populatePath(CommandPath<?> parent, @Nullable CommandPath<?> thisPath, Element element) {
-        if (thisPath == null) {
-            thisPath = new EmptyCommandPath();
-        }
-
-        // Add permission and RequiresOP clauses
-        final Permission permission = element.getAnnotation(Permission.class);
-        if (permission != null) {
-            thisPath.setAttribute(AttributeKey.PERMISSIONS, Set.of(permission.value()));
-        }
-
-        if (element.getAnnotation(RequiresOP.class) != null) {
-            thisPath.setAttribute(AttributeKey.REQUIRES_OP, true);
-        }
-
-        parent.addChild(thisPath);
-        return thisPath;
-    }
+    parent.addChild(thisPath);
+    return thisPath;
+  }
 }

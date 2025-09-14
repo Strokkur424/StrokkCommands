@@ -23,15 +23,15 @@ import javax.lang.model.element.VariableElement;
 
 class FieldAccessImpl extends ExecuteAccessImpl<VariableElement> implements FieldAccess {
 
-    public FieldAccessImpl(final VariableElement element) {
-        super(element);
-    }
+  public FieldAccessImpl(final VariableElement element) {
+    super(element);
+  }
 
-    @Override
-    public String toString() {
-        return "FieldAccessImpl{" +
-            "element=" + element + ',' +
-            "initialized=" + Utils.isFieldInitialized(element) +
-            '}';
-    }
+  @Override
+  public String toString() {
+    return "FieldAccessImpl{" +
+        "element=" + element + ',' +
+        "initialized=" + Utils.isFieldInitialized(element) +
+        '}';
+  }
 }

@@ -22,18 +22,18 @@ import net.strokkur.commands.annotations.Executes;
 import org.bukkit.command.CommandSender;
 
 class ExternalSimpleSubBlueprint {
-    private final String text;
+  private final String text;
 
-    public ExternalSimpleSubBlueprint() {
-        this("default");
-    }
+  public ExternalSimpleSubBlueprint() {
+    this("default");
+  }
 
-    public ExternalSimpleSubBlueprint(final String text) {
-        this.text = text;
-    }
+  public ExternalSimpleSubBlueprint(final String text) {
+    this.text = text;
+  }
 
-    @Executes
-    void execute(CommandSender sender) {
-        sender.sendRichMessage(text, Placeholder.unparsed("sender", sender.getName()));
-    }
+  @Executes
+  void execute(CommandSender sender) {
+    sender.sendRichMessage(text, Placeholder.unparsed("sender", sender.getName()));
+  }
 }

@@ -27,6 +27,6 @@ import org.bukkit.GameMode;
 @Permission("testplugin.gamemode.adventure")
 class GameModeAdventureCommand {
 
-    @Subcommand
-    GameModePreset gameMode = new GameModePreset(GameMode.ADVENTURE);
+  @Subcommand
+  GameModePreset gameMode = new GameModePreset(GameMode.ADVENTURE);
 }

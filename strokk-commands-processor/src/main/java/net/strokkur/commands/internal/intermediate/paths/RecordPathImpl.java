@@ -23,12 +23,12 @@ import java.util.List;
 
 public class RecordPathImpl extends SimpleCommandPathImpl<CommandArgument> implements RecordPath {
 
-    public RecordPathImpl(final List<CommandArgument> arguments) {
-        super(arguments);
-    }
+  public RecordPathImpl(final List<CommandArgument> arguments) {
+    super(arguments);
+  }
 
-    @Override
-    SimpleCommandPathImpl<CommandArgument> createLeftSplit(final List<CommandArgument> args) {
-        return new RecordPathImpl(args);
-    }
+  @Override
+  SimpleCommandPathImpl<CommandArgument> createLeftSplit(final List<CommandArgument> args) {
+    return new RecordPathImpl(args);
+  }
 }
