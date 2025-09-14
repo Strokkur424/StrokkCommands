@@ -6,8 +6,8 @@ description: A guide to (re)using commands declared outside your command class.
 import { Aside } from "@astrojs/starlight/components";
 
 Having one file per command is nice - keeps everything organized... until it doesn't. The reality of command design is
-that oftentimes, you end up with a lot of logic for individual root commands. Traditional ways to deal with that
-is putting subcommands into its own sites. Such an approach works wonderfully. And StrokkCommands supports it!
+that oftentimes, you end up with a lot of logic for individual root commands. The traditional way to deal with that
+issue is to put subcommands into their own files. Such an approach works wonderfully. And StrokkCommands supports it!
 
 ## Prototype subcommand classes
 You can declare external subcommands in an object-oriented manner simply by creating a class, just like you
@@ -116,7 +116,7 @@ class GameModeCommand {
 
 <Aside type="tip">
   The full code for this example can be found on the [StrokkCommands Repository](https://github.com/Strokkur424/StrokkCommands)
-  under [strokk-commands-test-plugin/src/main/java/net/strokkur/testplugin/docs/gamemode](https://github.com/Strokkur424/StrokkCommands/tree/strokk-cmmands-test-plugin/src/main/java/net/strokkur/testplugin/docs/gamemode).
+  under [strokk-commands-test-plugin/src/main/java/net/strokkur/testplugin/docs/gamemode](https://github.com/Strokkur424/StrokkCommands/tree/main/strokk-commands-test-plugin/src/main/java/net/strokkur/testplugin/docs/gamemode).
 </Aside>
 
 Once you have done that, all that is left is to compile the project once, register the generated `GameModeCommandBrigadier`
@@ -141,6 +141,6 @@ class GameModeCreativeCommand {
 This is really simple and easy, isn't it?
 
 ## Some notes about prototype classes
-Prototype classes support **the full feature set normal commands support**. This means you can even nested
-prototype classes into prototype classes! You should just be careful to not accidentally create a
-cycle dependency, since that would crash the processor.
+Prototype classes support **the full feature set normal commands support**. This means you can even nest
+prototype classes into other prototype classes! You should just be careful to not accidentally create a
+cyclic dependency, where one prototype uses another prototype, which in turn uses the previous prototype.
