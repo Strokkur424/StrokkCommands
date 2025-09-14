@@ -116,7 +116,7 @@ class GameModeCommand {
 
 <Aside type="tip">
   The full code for this example can be found on the [StrokkCommands Repository](https://github.com/Strokkur424/StrokkCommands)
-  under [strokk-commands-test-plugin/src/main/java/net/strokkur/testplugin/docs/gamemode](https://github.com/Strokkur424/StrokkCommands/tree/main/strokk-commands-test-plugin/src/main/java/net/strokkur/testplugin/docs/gamemode).
+  under [test-plugin/src/main/java/net/strokkur/testplugin/docs/gamemode](https://github.com/Strokkur424/StrokkCommands/tree/main/test-plugin/src/main/java/net/strokkur/testplugin/docs/gamemode).
 </Aside>
 
 Once you have done that, all that is left is to compile the project once, register the generated `GameModeCommandBrigadier`
@@ -133,8 +133,8 @@ For example, the creative shortcut would look like this:
 @Permission("testplugin.gamemode.creative")
 class GameModeCreativeCommand {
 
-    @Subcommand
-    GameModePreset gameMode = new GameModePreset(GameMode.CREATIVE);
+  @Subcommand
+  GameModePreset gameMode = new GameModePreset(GameMode.CREATIVE);
 }
 ```
 
