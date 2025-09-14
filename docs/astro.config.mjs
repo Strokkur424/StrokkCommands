@@ -34,6 +34,7 @@ export default defineConfig({
             { slug: "docs/permissions" },
             { slug: "docs/records" },
             { slug: "docs/subcommands" },
+            { slug: "docs/external-subcommands" },
           ],
         },
       ],

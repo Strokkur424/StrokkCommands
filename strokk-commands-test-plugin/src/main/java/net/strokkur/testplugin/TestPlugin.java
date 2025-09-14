@@ -28,6 +28,14 @@ public final class TestPlugin extends JavaPlugin {
     public void onLoad() {
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS.newHandler(event -> {
             Commands commands = event.registrar();
+//
+//            GameModeCommandBrigadier.register(commands);
+//            GameModeCreativeCommandBrigadier.register(commands);
+//            GameModeSurvivalCommandBrigadier.register(commands);
+//            GameModeAdventureCommandBrigadier.register(commands);
+//            GameModeSpectatorCommandBrigadier.register(commands);
+
+//            SimpleFieldsBrigadier.register(commands);
 
 //            CommandWithSuggestionsBrigadier.register(commands);
 //            IceCreamCommandBrigadier.register(commands);

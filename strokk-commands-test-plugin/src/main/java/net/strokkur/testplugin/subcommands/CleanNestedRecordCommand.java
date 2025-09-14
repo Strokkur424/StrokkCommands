@@ -15,20 +15,22 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.paths;
+package net.strokkur.testplugin.subcommands;
 
-import net.strokkur.commands.internal.arguments.CommandArgument;
+import net.strokkur.commands.annotations.Command;
+import net.strokkur.commands.annotations.Executes;
+import net.strokkur.commands.annotations.Subcommand;
+import org.bukkit.command.CommandSender;
 
-import java.util.List;
+@Command("cleannestedrecord")
+class CleanNestedRecordCommand {
 
-public class RecordPathImpl extends SimpleCommandPathImpl<CommandArgument> implements RecordPath {
+    @Subcommand
+    record NestedRecord(String word) {
 
-    public RecordPathImpl(final List<CommandArgument> arguments) {
-        super(arguments);
-    }
-
-    @Override
-    SimpleCommandPathImpl<CommandArgument> createLeftSplit(final List<CommandArgument> args) {
-        return new RecordPathImpl(args);
+        @Executes
+        void execute(CommandSender sender) {
+            sender.sendPlainMessage("Hell yeah!");
+        }
     }
 }

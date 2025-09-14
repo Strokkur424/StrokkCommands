@@ -15,20 +15,23 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.paths;
+package net.strokkur.testplugin.externalsubcommands;
 
-import net.strokkur.commands.internal.arguments.CommandArgument;
+import net.strokkur.commands.annotations.Command;
+import net.strokkur.commands.annotations.Subcommand;
 
-import java.util.List;
+@Command("simplefields")
+class SimpleFields {
 
-public class RecordPathImpl extends SimpleCommandPathImpl<CommandArgument> implements RecordPath {
+    @Subcommand("hello")
+    ExternalSimpleSubBlueprint hello = new ExternalSimpleSubBlueprint("Hey <sender>, how are you?");
 
-    public RecordPathImpl(final List<CommandArgument> arguments) {
-        super(arguments);
-    }
+    @Subcommand("weather")
+    ExternalSimpleSubBlueprint weather = new ExternalSimpleSubBlueprint("The weather is nice today, isn't it?");
 
-    @Override
-    SimpleCommandPathImpl<CommandArgument> createLeftSplit(final List<CommandArgument> args) {
-        return new RecordPathImpl(args);
-    }
+    @Subcommand("balance")
+    ExternalSimpleSubBlueprint balance = new ExternalSimpleSubBlueprint("You're balance is: <green>$0</green>. Unfortunate.");
+
+    @Subcommand("default")
+    ExternalSimpleSubBlueprint defaultSub;
 }

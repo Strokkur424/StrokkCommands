@@ -15,20 +15,23 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.paths;
+package net.strokkur.commands.internal.intermediate.access;
 
-import net.strokkur.commands.internal.arguments.CommandArgument;
+import net.strokkur.commands.internal.StrokkCommandsPreprocessor;
+import net.strokkur.commands.internal.util.Utils;
 
-import java.util.List;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.VariableElement;
 
-public class RecordPathImpl extends SimpleCommandPathImpl<CommandArgument> implements RecordPath {
+public interface FieldAccess extends ExecuteAccess<VariableElement> {
 
-    public RecordPathImpl(final List<CommandArgument> arguments) {
-        super(arguments);
+    @Override
+    default String getTypeName() {
+        return Utils.getTypeName(getElement().asType());
     }
 
     @Override
-    SimpleCommandPathImpl<CommandArgument> createLeftSplit(final List<CommandArgument> args) {
-        return new RecordPathImpl(args);
+    default boolean isRecord() {
+        return StrokkCommandsPreprocessor.getTypes().asElement(getElement().asType()).getKind() == ElementKind.RECORD;
     }
 }

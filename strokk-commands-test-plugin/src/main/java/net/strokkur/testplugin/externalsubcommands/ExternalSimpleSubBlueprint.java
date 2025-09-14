@@ -15,20 +15,25 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.paths;
+package net.strokkur.testplugin.externalsubcommands;
 
-import net.strokkur.commands.internal.arguments.CommandArgument;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.strokkur.commands.annotations.Executes;
+import org.bukkit.command.CommandSender;
 
-import java.util.List;
+class ExternalSimpleSubBlueprint {
+    private final String text;
 
-public class RecordPathImpl extends SimpleCommandPathImpl<CommandArgument> implements RecordPath {
-
-    public RecordPathImpl(final List<CommandArgument> arguments) {
-        super(arguments);
+    public ExternalSimpleSubBlueprint() {
+        this("default");
     }
 
-    @Override
-    SimpleCommandPathImpl<CommandArgument> createLeftSplit(final List<CommandArgument> args) {
-        return new RecordPathImpl(args);
+    public ExternalSimpleSubBlueprint(final String text) {
+        this.text = text;
+    }
+
+    @Executes
+    void execute(CommandSender sender) {
+        sender.sendRichMessage(text, Placeholder.unparsed("sender", sender.getName()));
     }
 }

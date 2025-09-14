@@ -17,6 +17,10 @@
  */
 package net.strokkur.commands.internal.util;
 
+import com.sun.source.tree.VariableTree;
+import com.sun.source.util.Trees;
+import net.strokkur.commands.internal.StrokkCommandsPreprocessor;
+import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -24,6 +28,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -60,6 +65,10 @@ public interface Utils {
         return getPackageElement((TypeElement) typeElement.getEnclosingElement());
     }
 
+    static String getTypeName(TypeMirror typeMirror) {
+        return getTypeName(StrokkCommandsPreprocessor.getTypes().asElement(typeMirror));
+    }
+
     static String getTypeName(Element type) {
         final StringBuilder builder = new StringBuilder();
         final List<String> names = getNestedClassNames(type);
@@ -83,5 +92,47 @@ public interface Utils {
         } while (type instanceof TypeElement);
 
         return names.reversed();
+    }
+
+    static String getInstanceName(List<ExecuteAccess<?>> stack) {
+        final StringBuilder builder = new StringBuilder("instance");
+        for (int i = 1, executeAccessStackSize = stack.size(); i < executeAccessStackSize; i++) {
+            final ExecuteAccess<?> access = stack.get(i);
+            final String name = access.getElement().getSimpleName().toString();
+            builder.append(name.substring(0, 1).toUpperCase()).append(name.substring(1));
+        }
+
+        return builder.toString();
+    }
+
+    static String getInstanceName(TypeElement typeElement) {
+        final StringBuilder builder = new StringBuilder();
+        populateInstanceName(builder, typeElement);
+        return builder.toString();
+    }
+
+    static void populateInstanceName(StringBuilder builder, TypeElement element) {
+        if (element.getNestingKind().isNested()) {
+            populateInstanceName(builder, (TypeElement) element.getEnclosingElement());
+            builder.append(element.getSimpleName());
+            return;
+        }
+
+        builder.append("instance");
+    }
+
+    static int getNestingCount(TypeElement typeElement) {
+        int nested = 0;
+        while (typeElement.getNestingKind() != NestingKind.TOP_LEVEL) {
+            typeElement = (TypeElement) typeElement.getEnclosingElement();
+            nested++;
+        }
+        return nested;
+    }
+
+    static boolean isFieldInitialized(VariableElement fieldElement) {
+        final Trees trees = StrokkCommandsPreprocessor.getTrees();
+        final VariableTree fieldTree = (VariableTree) trees.getTree(fieldElement);
+        return fieldTree.getInitializer() != null;
     }
 }

@@ -17,10 +17,48 @@
  */
 package net.strokkur.commands.internal.parsing;
 
+import net.strokkur.commands.internal.arguments.CommandArgument;
+import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
+import net.strokkur.commands.internal.intermediate.paths.CommandPath;
 import net.strokkur.commands.internal.intermediate.paths.LiteralCommandPath;
+import org.jspecify.annotations.Nullable;
 
+import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
 
 public interface CommandParser {
-    LiteralCommandPath parseElement(TypeElement typeElement);
+
+    CommandPath<?> createCommandTree(TypeElement typeElement);
+
+    void weakParse(CommandPath<?> path, Element element);
+
+    void hardParse(CommandPath<?> path, Element element);
+
+    List<List<CommandArgument>> parseArguments(List<VariableElement> elements, TypeElement typeElement);
+
+    @Nullable
+    @SuppressWarnings("ConstantValue")
+    default <A extends Annotation> LiteralCommandPath getLiteralPath(Element element, Class<A> annotation, Function<A, String> valueExtract) {
+        final A a = element.getAnnotation(annotation);
+        if (a == null) {
+            return null;
+        }
+
+        final String path = valueExtract.apply(a);
+        if (path == null || path.isBlank()) {
+            return null;
+        }
+
+        final List<LiteralCommandArgument> list = new ArrayList<>();
+        for (String lit : path.split(" ")) {
+            list.add(LiteralCommandArgument.literal(lit, element));
+        }
+
+        return new LiteralCommandPath(list);
+    }
 }

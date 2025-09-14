@@ -18,11 +18,13 @@
 package net.strokkur.commands.internal.intermediate.attributes;
 
 import net.strokkur.commands.internal.intermediate.ExecutorType;
+import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.requirement.Requirement;
 import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.Nullable;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -34,6 +36,8 @@ public interface AttributeKey<T> {
     AttributeKey<Requirement> REQUIREMENT = create("requirement", Requirement.EMPTY);
     AttributeKey<Boolean> REQUIRES_OP = create("requires_op", false);
     AttributeKey<Set<String>> PERMISSIONS = createDynamic("permission", HashSet::new);
+
+    AttributeKey<List<ExecuteAccess<?>>> ACCESS_STACK = create("access_stack", null);
 
     // Splitting
     AttributeKey<Boolean> INHERIT_PARENT_ARGS = create("inherit_parent_args", false);

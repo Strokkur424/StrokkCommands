@@ -15,20 +15,15 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.paths;
+package net.strokkur.commands.annotations;
 
-import net.strokkur.commands.internal.arguments.CommandArgument;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import java.util.List;
-
-public class RecordPathImpl extends SimpleCommandPathImpl<CommandArgument> implements RecordPath {
-
-    public RecordPathImpl(final List<CommandArgument> arguments) {
-        super(arguments);
-    }
-
-    @Override
-    SimpleCommandPathImpl<CommandArgument> createLeftSplit(final List<CommandArgument> args) {
-        return new RecordPathImpl(args);
-    }
+@Retention(RetentionPolicy.SOURCE)
+@Target({ElementType.TYPE, ElementType.FIELD})
+public @interface Subcommand {
+    String value() default "";
 }

@@ -19,16 +19,17 @@ package net.strokkur.commands.internal.intermediate.paths;
 
 import net.strokkur.commands.internal.arguments.CommandArgument;
 
+import java.util.Collections;
 import java.util.List;
 
-public class RecordPathImpl extends SimpleCommandPathImpl<CommandArgument> implements RecordPath {
+public class EmptyCommandPath extends SimpleCommandPathImpl<CommandArgument> {
 
-    public RecordPathImpl(final List<CommandArgument> arguments) {
-        super(arguments);
+    public EmptyCommandPath() {
+        super(Collections.emptyList());
     }
 
     @Override
     SimpleCommandPathImpl<CommandArgument> createLeftSplit(final List<CommandArgument> args) {
-        return new RecordPathImpl(args);
+        return new EmptyCommandPath();
     }
 }

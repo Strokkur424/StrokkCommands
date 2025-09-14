@@ -135,17 +135,24 @@ abstract class SimpleCommandPathImpl<S extends CommandArgument> implements Comma
         final StringBuilder builder = new StringBuilder();
         builder.append("| ".repeat(indent));
 
-        if (this.arguments.isEmpty() && this.children.isEmpty()) {
+        if (this instanceof ExecutablePath exec) {
+            builder.append("Execute: ")
+                .append(exec.getExecutesMethod().getEnclosingElement().getSimpleName())
+                .append("#")
+                .append(exec.getExecutesMethod().getSimpleName());
+        } else if (this instanceof EmptyCommandPath) {
+            builder.append("<empty_path>");
+        } else if (this.arguments.isEmpty() && this.children.isEmpty()) {
             return builder.append("<empty>").toString();
         }
 
         for (final S argument : this.arguments) {
-            builder.append(argument.getName());
+            builder.append(argument.getName()).append(" ");
         }
 
         // Add attributes
         if (!attributes.isEmpty()) {
-            builder.append(" ".repeat(40 - builder.length()));
+            builder.append(" ".repeat(Math.max(80 - builder.length(), 0)));
             builder.append("Attributes: {");
             this.attributes.forEach((key, value) -> builder.append(key).append(" = ").append(value).append(" "));
             builder.deleteCharAt(builder.length() - 1);
