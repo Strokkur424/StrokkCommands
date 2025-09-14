@@ -2,6 +2,7 @@
 publishdata = "1.4.0"
 spotless = "7.0.2"
 run = "3.0.0-beta.1"
+blossom = "2.1.0"
 
 paper = "1.21.8-R0.1-SNAPSHOT"
 minecraft = "1.21.8"
@@ -18,6 +19,7 @@ jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "j
 publishdata = { id = "de.chojo.publishdata", version.ref = "publishdata" }
 run-paper = { id = "xyz.jpenilla.run-paper", version.ref = "run" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+blossom = { id = "net.kyori.blossom", version.ref = "blossom" }
 
 [bundles]
 annotations = ["jspecify", "jetbrains-annotations"]

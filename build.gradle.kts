@@ -6,6 +6,7 @@ plugins {
   id("maven-publish")
   alias(libs.plugins.publishdata)
   alias(libs.plugins.spotless)
+  alias(libs.plugins.blossom) apply false
 }
 
 group = "net.strokkur"
