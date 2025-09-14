@@ -3,8 +3,8 @@ plugins {
 }
 
 dependencies {
-  compileOnly(project(":strokk-commands-annotations"))
-  annotationProcessor(project(":strokk-commands-processor"))
+  compileOnly(project(":commands-annotations"))
+  annotationProcessor(project(":commands-processor"))
 
   compileOnly(libs.paper.api)
 }

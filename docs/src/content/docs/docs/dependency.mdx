@@ -57,8 +57,8 @@ Next up we add the dependency:
 
     ```kts replace
     dependencies {
-      compileOnly("net.strokkur:strokk-commands-annotations:\{LATEST_COMMANDS_RELEASE}-SNAPSHOT")
-      annotationProcessor("net.strokkur:strokk-commands-processor:\{LATEST_COMMANDS_RELEASE}-SNAPSHOT")
+      compileOnly("net.strokkur:commands-annotations:\{LATEST_COMMANDS_RELEASE}")
+      annotationProcessor("net.strokkur:commands-processor:\{LATEST_COMMANDS_RELEASE}")
     }
     ```
   </TabItem>
@@ -70,8 +70,8 @@ Next up we add the dependency:
     <dependencies>
       <dependency>
         <group>net.strokkur</group>
-        <artifactId>strokk-commands-annotations</artifactId>
-        <version>\{LATEST_COMMANDS_RELEASE}-SNAPSHOT</version>
+        <artifactId>commands-annotations</artifactId>
+        <version>\{LATEST_COMMANDS_RELEASE}</version>
         <scope>provided</scope>
       </dependency>
     </dependencies>
@@ -90,8 +90,8 @@ Next up we add the dependency:
               <!-- Add annotation processor -->
               <annotationProcessorPath>
                 <group>net.strokkur</group>
-                <artifactId>strokk-commands-processor</artifactId>
-                <version>\{LATEST_COMMANDS_RELEASE}-SNAPSHOT</version>
+                <artifactId>commands-processor</artifactId>
+                <version>\{LATEST_COMMANDS_RELEASE}</version>
               </annotationProcessorPath>
             </annotationProcessorPaths>
           </configuration>

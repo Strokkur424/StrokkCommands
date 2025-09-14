@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  implementation(project(":strokk-commands-annotations"))
+  implementation(project(":commands-annotations"))
   compileOnly(libs.bundles.annotations)
 }
 
