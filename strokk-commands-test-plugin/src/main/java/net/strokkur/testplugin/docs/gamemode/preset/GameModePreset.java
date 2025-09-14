@@ -38,32 +38,29 @@ public class GameModePreset {
 
     @Executes
     public void executes(CommandSender sender, @Executor Player executor) {
-        if (executor.getGameMode() == mode) {
-            sender.sendRichMessage("<red>Your game mode is already set to <mode>!",
-                Placeholder.component("mode", Component.translatable(mode))
-            );
-            return;
-        }
-
-        executor.setGameMode(mode);
-        sender.sendRichMessage("<green>Successfully set your game mode to <mode>!",
-            Placeholder.component("mode", Component.translatable(mode))
-        );
+        changeGameMode(sender, executor);
     }
 
     @Executes
     public void executesTarget(CommandSender sender, Player target) {
+        changeGameMode(sender, target);
+    }
+
+    private void changeGameMode(CommandSender sender, Player target) {
+        final String targetName = sender == target ? "your" : target.getName() + "'s";
+        final String targetNameUpper = sender == target ? "Your" : targetName;
+
         if (target.getGameMode() == mode) {
-            sender.sendRichMessage("<red><target>'s game mode is already set to <mode>!",
-                Placeholder.unparsed("target", target.getName()),
+            sender.sendRichMessage("<red><target_name> game mode is already set to <mode>!",
+                Placeholder.unparsed("target_name", targetNameUpper),
                 Placeholder.component("mode", Component.translatable(mode))
             );
             return;
         }
 
         target.setGameMode(mode);
-        sender.sendRichMessage("<green>Successfully set <target>'s game mode to <mode>!",
-            Placeholder.unparsed("target", target.getName()),
+        sender.sendRichMessage("<green>Successfully set <target_name> game mode to <mode>!",
+            Placeholder.unparsed("target_name", targetName),
             Placeholder.component("mode", Component.translatable(mode))
         );
     }

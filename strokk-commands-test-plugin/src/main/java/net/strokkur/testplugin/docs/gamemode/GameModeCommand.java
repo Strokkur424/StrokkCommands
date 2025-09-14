@@ -32,15 +32,31 @@ class GameModeCommand {
     @Permission("testplugin.gamemode.survival")
     GameModePreset survival = new GameModePreset(GameMode.SURVIVAL);
 
+    @Subcommand("s")
+    @Permission("testplugin.gamemode.survival")
+    GameModePreset s = new GameModePreset(GameMode.SURVIVAL);
+
     @Subcommand("creative")
     @Permission("testplugin.gamemode.creative")
     GameModePreset creative = new GameModePreset(GameMode.CREATIVE);
+
+    @Subcommand("c")
+    @Permission("testplugin.gamemode.creative")
+    GameModePreset c = new GameModePreset(GameMode.CREATIVE);
 
     @Subcommand("adventure")
     @Permission("testplugin.gamemode.adventure")
     GameModePreset adventure = new GameModePreset(GameMode.ADVENTURE);
 
+    @Subcommand("a")
+    @Permission("testplugin.gamemode.adventure")
+    GameModePreset a = new GameModePreset(GameMode.ADVENTURE);
+
     @Subcommand("spectator")
     @Permission("testplugin.gamemode.spectator")
     GameModePreset spectator = new GameModePreset(GameMode.SPECTATOR);
+
+    @Subcommand("sp")
+    @Permission("testplugin.gamemode.spectator")
+    GameModePreset sp = new GameModePreset(GameMode.SPECTATOR);
 }
