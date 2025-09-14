@@ -17,7 +17,7 @@
  */
 package net.strokkur.commands.internal.intermediate.suggestions;
 
-import net.strokkur.commands.internal.StrokkCommandsPreprocessor;
+import net.strokkur.commands.internal.StrokkCommandsProcessor;
 import net.strokkur.commands.internal.util.Utils;
 import org.jspecify.annotations.Nullable;
 
@@ -28,12 +28,12 @@ public record ClassSuggestionProvider(TypeMirror type) implements SuggestionProv
 
   @Override
   public String getProvider() {
-    return "new " + Utils.getTypeName(StrokkCommandsPreprocessor.getTypes().asElement(type)) + "()";
+    return "new " + Utils.getTypeName(StrokkCommandsProcessor.getTypes().asElement(type)) + "()";
   }
 
   @Override
   @Nullable
   public TypeElement getClassElement() {
-    return (TypeElement) StrokkCommandsPreprocessor.getTypes().asElement(type);
+    return (TypeElement) StrokkCommandsProcessor.getTypes().asElement(type);
   }
 }

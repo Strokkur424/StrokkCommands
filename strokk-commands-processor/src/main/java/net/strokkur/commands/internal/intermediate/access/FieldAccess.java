@@ -17,7 +17,7 @@
  */
 package net.strokkur.commands.internal.intermediate.access;
 
-import net.strokkur.commands.internal.StrokkCommandsPreprocessor;
+import net.strokkur.commands.internal.StrokkCommandsProcessor;
 import net.strokkur.commands.internal.util.Utils;
 
 import javax.lang.model.element.ElementKind;
@@ -32,6 +32,6 @@ public interface FieldAccess extends ExecuteAccess<VariableElement> {
 
   @Override
   default boolean isRecord() {
-    return StrokkCommandsPreprocessor.getTypes().asElement(getElement().asType()).getKind() == ElementKind.RECORD;
+    return StrokkCommandsProcessor.getTypes().asElement(getElement().asType()).getKind() == ElementKind.RECORD;
   }
 }

@@ -19,7 +19,7 @@ package net.strokkur.commands.internal.parsing;
 
 import net.strokkur.commands.annotations.Command;
 import net.strokkur.commands.annotations.Subcommand;
-import net.strokkur.commands.internal.StrokkCommandsPreprocessor;
+import net.strokkur.commands.internal.StrokkCommandsProcessor;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
@@ -49,7 +49,7 @@ class FieldTransform implements PathTransform, ForwardingMessagerWrapper {
 
     thisPath.setAttribute(AttributeKey.ACCESS_STACK, new ArrayList<>(List.of(ExecuteAccess.of((VariableElement) element))));
 
-    this.parser.hardParse(thisPath, StrokkCommandsPreprocessor.getTypes().asElement(element.asType()));
+    this.parser.hardParse(thisPath, StrokkCommandsProcessor.getTypes().asElement(element.asType()));
   }
 
   @Override

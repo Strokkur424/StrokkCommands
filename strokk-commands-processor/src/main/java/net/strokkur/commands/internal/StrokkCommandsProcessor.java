@@ -47,7 +47,7 @@ import java.util.Objects;
 import java.util.Set;
 
 @NullMarked
-public class StrokkCommandsPreprocessor extends AbstractProcessor {
+public class StrokkCommandsProcessor extends AbstractProcessor {
 
   private static @Nullable Types types = null;
   private static @Nullable Elements elements = null;

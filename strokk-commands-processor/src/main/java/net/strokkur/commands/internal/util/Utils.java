@@ -19,7 +19,7 @@ package net.strokkur.commands.internal.util;
 
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.Trees;
-import net.strokkur.commands.internal.StrokkCommandsPreprocessor;
+import net.strokkur.commands.internal.StrokkCommandsProcessor;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import org.jspecify.annotations.Nullable;
 
@@ -66,7 +66,7 @@ public interface Utils {
   }
 
   static String getTypeName(TypeMirror typeMirror) {
-    return getTypeName(StrokkCommandsPreprocessor.getTypes().asElement(typeMirror));
+    return getTypeName(StrokkCommandsProcessor.getTypes().asElement(typeMirror));
   }
 
   static String getTypeName(Element type) {
@@ -131,7 +131,7 @@ public interface Utils {
   }
 
   static boolean isFieldInitialized(VariableElement fieldElement) {
-    final Trees trees = StrokkCommandsPreprocessor.getTrees();
+    final Trees trees = StrokkCommandsProcessor.getTrees();
     final VariableTree fieldTree = (VariableTree) trees.getTree(fieldElement);
     return fieldTree.getInitializer() != null;
   }

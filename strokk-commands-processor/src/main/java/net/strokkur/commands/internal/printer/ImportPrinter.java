@@ -17,7 +17,7 @@
  */
 package net.strokkur.commands.internal.printer;
 
-import net.strokkur.commands.internal.StrokkCommandsPreprocessor;
+import net.strokkur.commands.internal.StrokkCommandsProcessor;
 import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
 import net.strokkur.commands.internal.intermediate.ExecutorType;
@@ -77,7 +77,7 @@ interface ImportPrinter extends Printable, PrinterInformation {
         return true;
       }
 
-      final TypeElement element = StrokkCommandsPreprocessor.getElements().getTypeElement(importString);
+      final TypeElement element = StrokkCommandsProcessor.getElements().getTypeElement(importString);
       if (element == null) {
         return false;
       }
@@ -94,7 +94,7 @@ interface ImportPrinter extends Printable, PrinterInformation {
         if (access instanceof InstanceAccess instanceAccess) {
           imports.add(instanceAccess.getElement().getQualifiedName().toString());
         } else if (access instanceof FieldAccess fieldAccess) {
-          imports.add(((TypeElement) StrokkCommandsPreprocessor.getTypes().asElement(fieldAccess.getElement().asType())).getQualifiedName().toString());
+          imports.add(((TypeElement) StrokkCommandsProcessor.getTypes().asElement(fieldAccess.getElement().asType())).getQualifiedName().toString());
         }
       }
     }

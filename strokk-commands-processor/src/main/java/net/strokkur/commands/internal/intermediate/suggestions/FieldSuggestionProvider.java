@@ -17,7 +17,7 @@
  */
 package net.strokkur.commands.internal.intermediate.suggestions;
 
-import net.strokkur.commands.internal.StrokkCommandsPreprocessor;
+import net.strokkur.commands.internal.StrokkCommandsProcessor;
 import net.strokkur.commands.internal.util.Utils;
 import org.jspecify.annotations.Nullable;
 
@@ -28,12 +28,12 @@ public record FieldSuggestionProvider(TypeMirror classElement, String field) imp
 
   @Override
   public String getProvider() {
-    return Utils.getTypeName(StrokkCommandsPreprocessor.getTypes().asElement(classElement)) + "." + field;
+    return Utils.getTypeName(StrokkCommandsProcessor.getTypes().asElement(classElement)) + "." + field;
   }
 
   @Override
   @Nullable
   public TypeElement getClassElement() {
-    return (TypeElement) StrokkCommandsPreprocessor.getTypes().asElement(classElement);
+    return (TypeElement) StrokkCommandsProcessor.getTypes().asElement(classElement);
   }
 }
