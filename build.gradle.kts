@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "net.strokkur"
-version = "1.4.0"
+version = "1.4.1"
 
 allprojects {
   apply {
@@ -58,11 +58,27 @@ subprojects {
       }
 
       publications.create<MavenPublication>("maven") {
-        artifact(project.tasks.jar)
+        from(components["java"])
+
         version = project.version.toString()
         artifactId = project.name
         groupId = project.group.toString()
+
+        versionMapping {
+          usage("java-api") {
+            fromResolutionOf("runtimeClasspath")
+          }
+          usage("java-runtime") {
+            fromResolutionResult()
+          }
+        }
+
+        withBuildIdentifier()
       }
+    }
+
+    tasks.withType<GenerateModuleMetadata> {
+      enabled = true
     }
   }
 }
