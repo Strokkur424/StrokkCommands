@@ -58,7 +58,7 @@ record FillBlockCommand(BlockPosition pos1, BlockPosition pos2, BlockState state
 }
 ```
 
-Whoah, that's so much shorter! I hope this makes the use case of this library very clear, so just right in by
+Whoah, that's so much shorter! I hope this makes the use case of this library very clear, so jump right in by
 [adding the dependency](https://commands.strokkur.net/docs/dependency/) and creating your own tiny commands.
 
 ## What is the difference to other command frameworks (like cloud)?
