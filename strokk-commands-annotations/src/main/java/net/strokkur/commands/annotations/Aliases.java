@@ -22,8 +22,19 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/// Declares aliases of a command. Can only be used on classes annotated with `@Command`.
+///
+/// Example usage:
+/// ```java
+/// @Command("welcomeback")
+/// @Aliases({"wb", "welcomeb", "wback"})
+/// class WelcomeBackCommand {
+///   /* ... */
+/// }
+/// ```
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
 public @interface Aliases {
+  /// The aliases for this command.
   String[] value();
 }

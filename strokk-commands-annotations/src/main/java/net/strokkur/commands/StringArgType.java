@@ -17,9 +17,28 @@
  */
 package net.strokkur.commands;
 
+import com.mojang.brigadier.arguments.StringArgumentType;
+import net.strokkur.commands.annotations.arguments.StringArg;
+import org.jetbrains.annotations.ApiStatus;
+
+/// The type of a string argument. Can be declared with the [StringArg] annotation.
+///
+/// @see StringArg
 public enum StringArgType {
+  /// A word type.
+  ///
+  /// @see StringArg
+  /// @see StringArgumentType#word()
   WORD("word"),
+  /// A string type.
+  ///
+  /// @see StringArg
+  /// @see StringArgumentType#string()
   STRING("string"),
+  /// A greedy string type.
+  ///
+  /// @see StringArg
+  /// @see StringArgumentType#greedyString()
   GREEDY("greedyString");
 
   private final String brigadierType;
@@ -28,6 +47,9 @@ public enum StringArgType {
     this.brigadierType = brigadierType;
   }
 
+  /// The method name of the Brigadier string argument type definition
+  /// for this specific type. Used internally in the command printer.
+  @ApiStatus.Internal
   public String getBrigadierType() {
     return brigadierType;
   }

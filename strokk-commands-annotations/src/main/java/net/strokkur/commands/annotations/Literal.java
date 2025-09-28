@@ -22,8 +22,34 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/// Declares one or more literal value paths for an argument.
+///
+/// If no parameter is provided to this annotation, it uses the
+/// argument name as the literal. This
+/// ```java
+/// @Executes
+/// void execute(CommandSender sender, @Literal String hi);
+/// ```
+/// is the same as writing
+/// ```java
+/// @Executes
+/// void execute(CommandSender sender, @Literal("hi") String theNameDoesNotMatter);
+/// ```
+///
+/// This annotation also allows for declaring multiple literals;
+/// ```java
+/// @Executes
+/// void executeChoice(CommandSender sender, @Literal({"fly", "die"}) String choice) {
+///   switch (choice) {
+///     case "fly" -> /* handle fly */
+///     case "die" -> /* handle die */
+///     default -> throw new IllegalStateException("this will never be called");
+///   }
+/// }
+/// ```
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.PARAMETER)
 public @interface Literal {
+  /// The literal path(s) to insert at the argument position.
   String[] value() default {};
 }

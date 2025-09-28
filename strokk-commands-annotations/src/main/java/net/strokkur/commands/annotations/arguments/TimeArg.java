@@ -22,8 +22,21 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/// Declares that an `int` parameter should be interpreted as a time argument.
+///
+/// The time argument allows for entering a duration in ticks. It is used in the `/time set <ticks>` command
+/// in Vanilla.
+///
+/// The value of this annotation defaults to `0`. It declares the **minimum required time** a user has to input.
+///
+/// Example usage:
+/// ```java
+/// @Executes
+/// void executes(CommandSender sender, @TimeArg int time);
+/// ```
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.PARAMETER)
 public @interface TimeArg {
+  /// The lowest possible input duration, in ticks.
   int value() default 0;
 }

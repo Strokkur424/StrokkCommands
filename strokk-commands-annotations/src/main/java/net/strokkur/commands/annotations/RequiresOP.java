@@ -22,6 +22,20 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/// That a command element requires the command sender to be an operator.
+///
+/// This annotation can be used on root command classes,
+/// executes-methods, nested subcommand classes, and external
+/// subcommands (both on the field and on the definition itself).
+///
+/// Example usage:
+/// ```java
+/// @Command("mycommand")
+/// @RequiresOP
+/// class MyCommand {
+///   /* ... */
+/// }
+/// ```
 @Retention(RetentionPolicy.SOURCE)
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
 public @interface RequiresOP {}

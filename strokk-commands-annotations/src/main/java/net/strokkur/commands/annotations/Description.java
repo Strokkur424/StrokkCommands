@@ -22,8 +22,22 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/// Sets the command description.
+///
+/// This optional annotation declares the description used when registering the command.
+/// This only affects the output of the `/help` command.
+///
+/// Example usage:
+/// ```java
+/// @Command("whenpigsfly")
+/// @Description("A command to summon a flying pig")
+/// class WhenPigsFlyCommand {
+///   /* ... */
+/// }
+/// ```
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
 public @interface Description {
+  /// The command description.
   String value();
 }

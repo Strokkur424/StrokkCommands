@@ -24,8 +24,19 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/// Declares that an executes method parameter should use
+/// the here declared custom argument type for the argument.
+///
+/// Example usage:
+/// ```java
+/// @Executes
+/// void executes(CommandSender sender, @CustomArg(MyCustomArgument.class) CustomType custom);
+/// ```
+///
+/// The value **must** implement [CustomArgumentType].
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.PARAMETER)
 public @interface CustomArg {
+  /// The [CustomArgumentType] to map to the annotated parameter.
   Class<? extends CustomArgumentType<?, ?>> value();
 }

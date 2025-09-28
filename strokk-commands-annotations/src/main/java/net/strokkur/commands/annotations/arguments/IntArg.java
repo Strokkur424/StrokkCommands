@@ -22,10 +22,26 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/// Configures an int argument type.
+///
+/// The following configurations are possible:
+///   1. `min` set the lowest value a user is allowed to enter. Defaults to [Integer#MIN_VALUE].
+///   2. `max` set the highest value a user is allowed to enter. Defaults to [Integer#MAX_VALUE].
+///
+/// The values are inclusive. Meaning if you want a user to only input the numbers `0, 1, ..., 10`,
+/// you would want to choose `0` as the `min` and `10` as the `max`.
+///
+/// Example usage:
+/// ```java
+/// @Executes
+/// void executes(CommandSender sender, @IntArg(min = 0, max = 10) int value);
+/// ```
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.PARAMETER)
 public @interface IntArg {
+  /// The lowest possible input value. Inclusive.
   int min() default Integer.MIN_VALUE;
 
+  /// The highest possible input value. Inclusive.
   int max() default Integer.MAX_VALUE;
 }

@@ -41,6 +41,14 @@ subprojects {
       plugin<MavenPublishPlugin>()
     }
 
+    if (name.contains("annotations")) {
+      tasks.withType<Javadoc> {
+        javadocTool.set(javaToolchains.javadocToolFor {
+          this.languageVersion = JavaLanguageVersion.of(25)
+        })
+      }
+    }
+
     java {
       if (name.contains("annotations")) {
         withSourcesJar()

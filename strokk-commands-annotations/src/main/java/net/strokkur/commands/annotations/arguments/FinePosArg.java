@@ -17,10 +17,23 @@
  */
 package net.strokkur.commands.annotations.arguments;
 
-public @interface FinePosArg {
+import io.papermc.paper.math.FinePosition;
 
-  /**
-   * Whether to center integers to .5
-   */
+/// Configures a [FinePosition] argument.
+///
+/// The value of this annotation specifies whether
+/// integer input (for example: `25 0 21`) gets centered to `.5`
+/// or whether it is left as `.0`, which would point towards the
+/// corner of a block. **Defaults to `false`**.
+///
+/// This only affects the x/z coordinates.
+///
+/// Example usage:
+/// ```java
+/// @Executes
+/// void executes(CommandSender sender, @FinePosArg(true) FinePosition pos);
+/// ```
+public @interface FinePosArg {
+  /// Whether to center integer x/z values to the center of the block.
   boolean value() default false;
 }

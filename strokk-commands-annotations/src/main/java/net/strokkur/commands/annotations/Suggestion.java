@@ -17,20 +17,59 @@
  */
 package net.strokkur.commands.annotations;
 
+import com.mojang.brigadier.suggestion.SuggestionProvider;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/// Declares a suggestion provider for an argument.
+///
+/// - [#base()] declares the base class to look for the suggestion provider. Defaults to the current class.
+///
+/// - If [#field()] is set, it will that field (assuming its type is a [SuggestionProvider<CommandSourceStack>])
+///   to set the suggestion provider on the argument. For `@Suggestion(field = "myProvider")`, the following
+///   Brigadier code would get printed out:
+///   ```java
+///   Commands.argument("argname", /* type */)
+///     .suggests(MyCommand.myProvider)
+///   ```
+///
+/// - [#method()] does the same as [#field()], except that it calls the method to retrieve an instance of the
+///   [SuggestionProvider]:
+///   ```java
+///   Commands.argument("argname", /* type */)
+///     .suggests(MyCommand.myProvider())
+///   ```
+///
+/// - [#reference()] declares that, if the method was set, it should be printed as a method reference (an implementing
+///   method of the [SuggestionProvider] functional interface) instead of a method *returning* a [SuggestionProvider]:
+///   ```java
+///   Commands.argument("argname", /* type */)
+///     .suggests(MyCommand::myProvider)
+///   ```
+///
+/// If only the [#base()] class is provided, and it implements the [SuggestionProvider] interface, and instance
+/// of that class will be passed to the `suggests` method instead:
+/// ```java
+/// Commands.argument("argname", /* type */)
+///   .suggests(new ProvidedBaseClass())
+/// ```
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.PARAMETER)
 public @interface Suggestion {
-
+  /// The base class to look for the provider.
   Class<?> base() default Class.class;
 
+  /// A field returning [SuggestionProvider] inside the base class.
   String field() default "";
 
+  /// A method either returning a [SuggestionProvider] (with [#reference()] set to `false`)
+  /// or implementing the [SuggestionProvider#getSuggestions(com.mojang.brigadier.context.CommandContext, com.mojang.brigadier.suggestion.SuggestionsBuilder)] method
+  /// (with [#reference()] set to `true`).
   String method() default "";
 
+  /// Whether to treat the [#method()] as a method reference or a method returning a [SuggestionProvider].
   boolean reference() default true;
 }

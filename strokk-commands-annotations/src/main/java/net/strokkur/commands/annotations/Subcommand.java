@@ -22,8 +22,29 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/// Declares a subcommand of a command definition.
+///
+/// This annotation can be used on all nested command-definition
+/// instances of a root command-definition, including nested
+/// classes and external subcommand fields.
+///
+/// The value of this annotation specifies the literal path to prepend
+/// to the nested subcommand.
+///
+/// Example usage:
+/// ```java
+/// @Command("mycommand")
+/// class MyCommand {
+///
+///   @Subcommand("hi")
+///   static class HiSub {
+///     /* ... /*
+///   }
+/// }
+/// ```
 @Retention(RetentionPolicy.SOURCE)
 @Target({ElementType.TYPE, ElementType.FIELD})
 public @interface Subcommand {
+  /// The literal path to prepend to the nested subcommand.
   String value() default "";
 }

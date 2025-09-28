@@ -22,8 +22,32 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/// Declares that a method should be used as a reachable command path, interpreting its parameters are
+/// command arguments and calling the method if those arguments were provided.
+///
+/// Also allows for declaring a literal path to prepend to the method.
+///
+/// Example usage:
+/// ```java
+/// @Executes("tree")
+/// void executeTree(CommandSender sender, BlockPosition pos) {
+///   // spawns a tree at <pos> if `/<command> tree` was executed
+/// }
+/// ```
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.METHOD)
 public @interface Executes {
+  /// A literal path to prepend to the method.
+  ///
+  /// This
+  /// ```java
+  /// @Executes("the literal path")
+  /// void executes(CommandSender sender, /* rest of arguments */);
+  /// ```
+  /// is the same as writing
+  /// ```java
+  /// @Executes
+  /// void executes(CommandSender sender, @Literal("the literal path") String lit, /* rest of arguments */);
+  /// ```
   String value() default "";
 }
