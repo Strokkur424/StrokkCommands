@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "net.strokkur"
-version = "1.4.1"
+version = "1.4.2"
 
 allprojects {
   apply {
@@ -30,7 +30,6 @@ subprojects {
 
   repositories {
     mavenCentral()
-    mavenLocal()
     maven("https://repo.papermc.io/repository/maven-public/")
   }
 
@@ -40,6 +39,16 @@ subprojects {
   if (name.contains("processor") || name.contains("annotations")) {
     apply {
       plugin<MavenPublishPlugin>()
+    }
+
+    java {
+      if (name.contains("annotations")) {
+        withSourcesJar()
+        withJavadocJar()
+      }
+      toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+      sourceCompatibility = JavaVersion.VERSION_21
+      targetCompatibility = JavaVersion.VERSION_21
     }
 
     publishing {
@@ -81,8 +90,4 @@ subprojects {
       enabled = true
     }
   }
-}
-
-java {
-  toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }

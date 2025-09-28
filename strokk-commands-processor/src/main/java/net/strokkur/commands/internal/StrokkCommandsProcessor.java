@@ -30,7 +30,6 @@ import net.strokkur.commands.internal.parsing.CommandParserImpl;
 import net.strokkur.commands.internal.printer.CommandTreePrinter;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
@@ -46,7 +45,6 @@ import java.io.PrintWriter;
 import java.util.Objects;
 import java.util.Set;
 
-@NullMarked
 public class StrokkCommandsProcessor extends AbstractProcessor {
 
   private static @Nullable Types types = null;
@@ -72,7 +70,7 @@ public class StrokkCommandsProcessor extends AbstractProcessor {
 
   @Override
   public SourceVersion getSupportedSourceVersion() {
-    return SourceVersion.RELEASE_21;
+    return SourceVersion.latestSupported();
   }
 
   @Override
