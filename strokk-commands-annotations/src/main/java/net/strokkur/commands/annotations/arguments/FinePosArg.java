@@ -34,6 +34,6 @@ import io.papermc.paper.math.FinePosition;
 /// void executes(CommandSender sender, @FinePosArg(true) FinePosition pos);
 /// ```
 public @interface FinePosArg {
-  /// Whether to center integer x/z values to the center of the block.
+  /// {@return whether to center integer x/z values to the center of the block}
   boolean value() default false;
 }

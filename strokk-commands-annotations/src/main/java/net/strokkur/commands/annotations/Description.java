@@ -38,6 +38,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
 public @interface Description {
-  /// The command description.
+  /// {@return the command description}
   String value();
 }

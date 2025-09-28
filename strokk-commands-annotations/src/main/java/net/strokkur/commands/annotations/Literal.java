@@ -50,6 +50,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.PARAMETER)
 public @interface Literal {
-  /// The literal path(s) to insert at the argument position.
+  /// {@return the literal path(s) to insert at the argument position}
   String[] value() default {};
 }

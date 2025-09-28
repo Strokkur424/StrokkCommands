@@ -45,6 +45,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target({ElementType.TYPE, ElementType.FIELD})
 public @interface Subcommand {
-  /// The literal path to prepend to the nested subcommand.
+  /// {@return the literal path to prepend to the nested subcommand}
   String value() default "";
 }

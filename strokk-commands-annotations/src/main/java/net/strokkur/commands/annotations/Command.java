@@ -39,6 +39,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
 public @interface Command {
-  /// The name of the command.
+  /// {@return the name of the command}
   String value();
 }

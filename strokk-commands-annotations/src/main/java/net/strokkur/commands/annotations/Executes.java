@@ -49,5 +49,7 @@ public @interface Executes {
   /// @Executes
   /// void executes(CommandSender sender, @Literal("the literal path") String lit, /* rest of arguments */);
   /// ```
+  ///
+  /// @return the literal path to prepend to the argument path
   String value() default "";
 }

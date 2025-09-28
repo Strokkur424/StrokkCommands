@@ -39,9 +39,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.PARAMETER)
 public @interface DoubleArg {
-  /// The lowest possible input value. Inclusive.
+  /// {@return the lowest possible input value. Inclusive}
   double min() default Double.MIN_VALUE;
 
-  /// The highest possible input value. Inclusive.
+  /// {@return the highest possible input value. Inclusive}
   double max() default Double.MAX_VALUE;
 }

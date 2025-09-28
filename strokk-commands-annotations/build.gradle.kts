@@ -1,4 +1,4 @@
 dependencies {
   compileOnly(libs.jspecify)
-  compileOnly(libs.paper.api)
+  implementation(libs.paper.api)
 }

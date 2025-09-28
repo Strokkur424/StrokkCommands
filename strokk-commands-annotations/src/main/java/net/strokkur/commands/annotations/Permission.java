@@ -39,6 +39,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
 public @interface Permission {
-  /// The permission string that the command sender needs to have in order to be able to execute this node.
+  /// {@return the permission string that the command sender needs to have in order to be able to execute this node}
   String value();
 }

@@ -51,8 +51,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.PARAMETER)
 public @interface StringArg {
-  /// The [StringArgType] value.
-  ///
-  /// **Defaults to [StringArgType#WORD]**.
+  /// {@return the [StringArgType] value}
+  /// Defaults to [StringArgType#WORD].
   StringArgType value() default StringArgType.WORD;
 }

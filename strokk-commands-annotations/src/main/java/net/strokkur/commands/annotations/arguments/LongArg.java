@@ -39,9 +39,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.PARAMETER)
 public @interface LongArg {
-  /// The lowest possible input value. Inclusive.
+  /// {@return the lowest possible input value. Inclusive}
   long max() default Long.MAX_VALUE;
 
-  /// The highest possible input value. Inclusive.
+  /// {@return the highest possible input value. Inclusive}
   long min() default Long.MIN_VALUE;
 }

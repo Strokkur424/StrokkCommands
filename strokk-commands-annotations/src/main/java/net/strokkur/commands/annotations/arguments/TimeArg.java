@@ -37,6 +37,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.PARAMETER)
 public @interface TimeArg {
-  /// The lowest possible input duration, in ticks.
+  /// {@return the lowest possible input duration, in ticks}
   int value() default 0;
 }

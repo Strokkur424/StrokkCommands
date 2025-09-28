@@ -47,8 +47,9 @@ public enum StringArgType {
     this.brigadierType = brigadierType;
   }
 
-  /// The method name of the Brigadier string argument type definition
-  /// for this specific type. Used internally in the command printer.
+  /// {@return the method name of the Brigadier string argument type definition for this type}
+  ///
+  /// Used internally in the command printer.
   @ApiStatus.Internal
   public String getBrigadierType() {
     return brigadierType;

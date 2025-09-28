@@ -35,6 +35,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
 public @interface Aliases {
-  /// The aliases for this command.
+  /// {@return the aliases for this command.}
   String[] value();
 }

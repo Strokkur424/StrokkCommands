@@ -39,9 +39,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.PARAMETER)
 public @interface FloatArg {
-  /// The lowest possible input value. Inclusive.
+  /// {@return the lowest possible input value. Inclusive}
   float min() default Float.MIN_VALUE;
 
-  /// The highest possible input value. Inclusive.
+  /// {@return the highest possible input value. Inclusive}
   float max() default Float.MAX_VALUE;
 }

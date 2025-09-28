@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
 ///
 /// - [#base()] declares the base class to look for the suggestion provider. Defaults to the current class.
 ///
-/// - If [#field()] is set, it will that field (assuming its type is a [SuggestionProvider<CommandSourceStack>])
+/// - If [#field()] is set, it will that field (assuming its type is a [SuggestionProvider])
 ///   to set the suggestion provider on the argument. For `@Suggestion(field = "myProvider")`, the following
 ///   Brigadier code would get printed out:
 ///   ```java
@@ -59,17 +59,19 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.PARAMETER)
 public @interface Suggestion {
-  /// The base class to look for the provider.
+  /// {@return the base class to look for the provider}
   Class<?> base() default Class.class;
 
-  /// A field returning [SuggestionProvider] inside the base class.
+  /// {@return a field returning a suggestion provider inside the base class}
   String field() default "";
 
-  /// A method either returning a [SuggestionProvider] (with [#reference()] set to `false`)
+  /// {@return a method name inside the base class}
+  ///
+  /// The method should either return a [SuggestionProvider] (with [#reference()] set to `false`
   /// or implementing the [SuggestionProvider#getSuggestions(com.mojang.brigadier.context.CommandContext, com.mojang.brigadier.suggestion.SuggestionsBuilder)] method
   /// (with [#reference()] set to `true`).
   String method() default "";
 
-  /// Whether to treat the [#method()] as a method reference or a method returning a [SuggestionProvider].
+  /// {@return whether to treat the [#method()] as a method reference or a method returning a suggestion provider}
   boolean reference() default true;
 }

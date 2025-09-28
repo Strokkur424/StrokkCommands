@@ -37,6 +37,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.PARAMETER)
 public @interface CustomArg {
-  /// The [CustomArgumentType] to map to the annotated parameter.
+  /// {@return the [CustomArgumentType] to map to the annotated parameter}
   Class<? extends CustomArgumentType<?, ?>> value();
 }
