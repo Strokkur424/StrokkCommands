@@ -28,7 +28,6 @@ import net.strokkur.commands.annotations.Literal;
 import org.bukkit.command.CommandSender;
 import org.bukkit.inventory.ItemStack;
 
-@SuppressWarnings("UnstableApiUsage")
 @Command("does")
 public class PredicateArgumentsCommand {
 

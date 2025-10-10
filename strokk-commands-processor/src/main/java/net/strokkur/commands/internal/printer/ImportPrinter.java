@@ -99,12 +99,10 @@ interface ImportPrinter extends Printable, PrinterInformation {
         Utils.populateParameterImports(imports, param);
       }
       for (final Element typeParam : ctor.getTypeParameters()) {
-        System.out.println(typeParam);
         Utils.populateParameterImports(imports, typeParam);
       }
     }
     for (final TypeParameterElement typeParameter : getCommandInformation().classElement().getTypeParameters()) {
-      System.out.println(typeParameter);
       Utils.populateParameterImports(imports, typeParameter);
     }
 
