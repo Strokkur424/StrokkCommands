@@ -38,6 +38,8 @@ import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -158,11 +160,22 @@ public class StrokkCommandsProcessor extends AbstractProcessor {
 
   @NullUnmarked
   private CommandInformation getCommandInformation(@NonNull TypeElement typeElement) {
-    Description description = typeElement.getAnnotation(Description.class);
-    Aliases aliases = typeElement.getAnnotation(Aliases.class);
+    final Description description = typeElement.getAnnotation(Description.class);
+    final Aliases aliases = typeElement.getAnnotation(Aliases.class);
+
+    ExecutableElement constructor = null;
+    if (typeElement.getKind() == ElementKind.CLASS) {
+      for (final Element enclosedElement : typeElement.getEnclosedElements()) {
+        if (enclosedElement.getKind() == ElementKind.CONSTRUCTOR) {
+          constructor = (ExecutableElement) enclosedElement;
+          break;
+        }
+      }
+    }
 
     return new CommandInformation(
         typeElement,
+        constructor,
         description != null ? description.value() : null,
         aliases != null ? aliases.value() : null
     );

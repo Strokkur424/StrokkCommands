@@ -30,7 +30,11 @@ import net.strokkur.commands.internal.intermediate.paths.LiteralCommandPath;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.util.Utils;
 
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.element.VariableElement;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
@@ -89,6 +93,21 @@ interface ImportPrinter extends Printable, PrinterInformation {
   }
 
   private void gatherImports(Set<String> imports, CommandPath<?> commandPath) {
+    if (getCommandInformation().constructor() instanceof ExecutableElement ctor) {
+      Utils.populateParameterImports(imports, ctor);
+      for (final VariableElement param : ctor.getParameters()) {
+        Utils.populateParameterImports(imports, param);
+      }
+      for (final Element typeParam : ctor.getTypeParameters()) {
+        System.out.println(typeParam);
+        Utils.populateParameterImports(imports, typeParam);
+      }
+    }
+    for (final TypeParameterElement typeParameter : getCommandInformation().classElement().getTypeParameters()) {
+      System.out.println(typeParameter);
+      Utils.populateParameterImports(imports, typeParameter);
+    }
+
     if (commandPath.hasAttribute(AttributeKey.ACCESS_STACK)) {
       for (final ExecuteAccess<?> access : commandPath.getAttributeNotNull(AttributeKey.ACCESS_STACK)) {
         if (access instanceof InstanceAccess instanceAccess) {

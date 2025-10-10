@@ -25,11 +25,13 @@ import net.strokkur.commands.internal.intermediate.paths.CommandPath;
 import net.strokkur.commands.internal.intermediate.paths.ExecutablePath;
 import net.strokkur.commands.internal.util.Utils;
 
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 interface InstanceFieldPrinter extends Printable, PrinterInformation {
@@ -91,9 +93,15 @@ interface InstanceFieldPrinter extends Printable, PrinterInformation {
         return false;
       }
       final String typeName = accesses.getFirst().getTypeName();
-      println("final {} instance = new {}();",
+      println("final {} instance = new {}({});",
           typeName,
-          typeName
+          typeName,
+          String.join(", ", getCommandInformation().constructor() instanceof ExecutableElement ctor
+              ? ctor.getParameters().stream()
+              .map(var -> var.getSimpleName().toString())
+              .toList()
+              : Collections.emptyList()
+          )
       );
       getPrintedInstances().add("instance");
       return true;

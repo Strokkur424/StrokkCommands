@@ -19,10 +19,12 @@ package net.strokkur.commands.internal.intermediate;
 
 import org.jspecify.annotations.Nullable;
 
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 
 public record CommandInformation(
     TypeElement classElement,
+    @Nullable ExecutableElement constructor,
     @Nullable String description,
     String @Nullable [] aliases
 ) {}
