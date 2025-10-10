@@ -20,9 +20,3 @@ class ComplexDICommand<T extends JavaPlugin> {
     sender.sendPlainMessage("Found " + plugin.getName());
   }
 }
-
-
-
-
-
-

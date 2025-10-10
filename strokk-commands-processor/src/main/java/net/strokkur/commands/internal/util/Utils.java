@@ -33,6 +33,7 @@ import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.IntersectionType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.TypeVisitor;
@@ -46,11 +47,6 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface Utils {
-
-  @Nullable
-  static TypeMirror getAnnotationMirror(Element element, Class<? extends Annotation> annotationClass) {
-    return getAnnotationMirror(element, annotationClass, "value");
-  }
 
   @Nullable
   static TypeMirror getAnnotationMirror(Element element, Class<? extends Annotation> annotationClass, String fieldName) {
@@ -67,12 +63,8 @@ public interface Utils {
         .orElse(null);
   }
 
-  static PackageElement getPackageElement(TypeElement typeElement) {
-    if (typeElement.getNestingKind() == NestingKind.TOP_LEVEL) {
-      return (PackageElement) typeElement.getEnclosingElement();
-    }
-
-    return getPackageElement((TypeElement) typeElement.getEnclosingElement());
+  static PackageElement getPackageElement(Element element) {
+    return StrokkCommandsProcessor.getElements().getPackageOf(element);
   }
 
   static String getTypeName(TypeMirror typeMirror) {
@@ -210,5 +202,18 @@ public interface Utils {
       variables.add(StrokkCommandsProcessor.getTrees().getTree(parameter).toString());
     }
     return variables;
+  }
+
+  static String getParameterTypes(final List<? extends VariableElement> elements) {
+    final List<String> variables = new LinkedList<>();
+    for (final VariableElement parameter : elements) {
+      if (parameter.asType().getKind() == TypeKind.DECLARED) {
+        variables.add(((DeclaredType) parameter.asType()).asElement().getSimpleName().toString());
+        continue;
+      }
+
+      variables.add(parameter.asType().toString());
+    }
+    return String.join(", ", variables);
   }
 }

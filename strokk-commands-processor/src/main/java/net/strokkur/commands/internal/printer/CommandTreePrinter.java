@@ -26,6 +26,7 @@ import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
+import javax.lang.model.element.TypeParameterElement;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -97,11 +98,15 @@ public final class CommandTreePrinter extends AbstractPrinter implements Printer
     registerParameters.add("Commands commands");
     registerParameters.addAll(createParameters);
 
+    final String parameterTypes = this.commandInformation.constructor() == null
+        ? ""
+        : Utils.getParameterTypes(this.commandInformation.constructor().getParameters());
+
     println();
     printBlock("""
             /**
              * Shortcut for registering the command node returned from
-             * {@link #create()}. This method uses the provided aliases
+             * {@link #create({})}. This method uses the provided aliases
              * and description from the original source file.
              * <p>
              * <h3>Registering the command</h3>
@@ -125,6 +130,7 @@ public final class CommandTreePrinter extends AbstractPrinter implements Printer
             public static{} void register({}) {
                 commands.register(create({}), {}, List.of({}));
             }""",
+        parameterTypes,
         brigadierClassName,
         constructorTypeParameters,
         String.join(", ", registerParameters),
@@ -144,10 +150,11 @@ public final class CommandTreePrinter extends AbstractPrinter implements Printer
             /**
              * A method for creating a Brigadier command node which denotes the declared command
              * in {@link {}}. You can either retrieve the unregistered node with this method
-             * or register it directly with {@link #register(Commands)}.
+             * or register it directly with {@link #register({})}.
              */
             public static{} LiteralCommandNode<CommandSourceStack> create({}) {""",
         commandInformation.classElement().getSimpleName().toString(),
+        (parameterTypes.isBlank() ? "Commands" : "Commands, " + parameterTypes),
         constructorTypeParameters,
         String.join(", ", createParameters)
     );
