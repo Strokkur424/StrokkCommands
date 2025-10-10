@@ -19,15 +19,20 @@ package net.strokkur.testplugin;
 
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import net.strokkur.testplugin.di.ComplexDICommandBrigadier;
+import net.strokkur.testplugin.di.SimpleDICommandBrigadier;
 import org.bukkit.plugin.java.JavaPlugin;
 
-@SuppressWarnings("UnstableApiUsage")
 public final class TestPlugin extends JavaPlugin {
 
   @Override
   public void onLoad() {
     this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS.newHandler(event -> {
       Commands commands = event.registrar();
+
+      ComplexDICommandBrigadier.register(commands, () -> this);
+      SimpleDICommandBrigadier.register(commands, this, 24);
+
 //
 //            GameModeCommandBrigadier.register(commands);
 //            GameModeCreativeCommandBrigadier.register(commands);

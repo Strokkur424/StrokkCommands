@@ -15,16 +15,25 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate;
+package net.strokkur.testplugin.di;
 
-import org.jspecify.annotations.Nullable;
+import net.strokkur.commands.annotations.Command;
+import net.strokkur.commands.annotations.Executes;
+import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.java.JavaPlugin;
 
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
+import java.util.function.Supplier;
 
-public record CommandInformation(
-    TypeElement classElement,
-    @Nullable ExecutableElement constructor,
-    @Nullable String description,
-    String @Nullable [] aliases
-) {}
+@Command("complex-di")
+class ComplexDICommand<T extends JavaPlugin> {
+  private final T plugin;
+
+  public <S extends Supplier<T>> ComplexDICommand(final S pluginSupplier) {
+    this.plugin = pluginSupplier.get();
+  }
+
+  @Executes
+  void execute(CommandSender sender) {
+    sender.sendPlainMessage("Found " + plugin.getName());
+  }
+}

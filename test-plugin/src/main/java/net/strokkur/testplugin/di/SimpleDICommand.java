@@ -15,16 +15,25 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate;
+package net.strokkur.testplugin.di;
 
-import org.jspecify.annotations.Nullable;
+import net.strokkur.commands.annotations.Command;
+import net.strokkur.commands.annotations.Executes;
+import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.java.JavaPlugin;
 
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
+@Command("simpledi")
+class SimpleDICommand {
+  private final JavaPlugin plugin;
+  private final int magicValue;
 
-public record CommandInformation(
-    TypeElement classElement,
-    @Nullable ExecutableElement constructor,
-    @Nullable String description,
-    String @Nullable [] aliases
-) {}
+  public SimpleDICommand(final JavaPlugin plugin, final int magicValue) {
+    this.plugin = plugin;
+    this.magicValue = magicValue;
+  }
+
+  @Executes
+  void execute(CommandSender sender) {
+    this.plugin.getSLF4JLogger().info("Magic value: {}", magicValue);
+  }
+}

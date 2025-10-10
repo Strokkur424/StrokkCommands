@@ -21,11 +21,16 @@ import net.strokkur.commands.internal.BuildConstants;
 import net.strokkur.commands.internal.intermediate.CommandInformation;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
+import net.strokkur.commands.internal.util.Utils;
 import org.jspecify.annotations.Nullable;
 
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
+import javax.lang.model.element.TypeParameterElement;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
@@ -82,11 +87,26 @@ public final class CommandTreePrinter extends AbstractPrinter implements Printer
     println("public final class {} {", brigadierClassName);
     incrementIndent();
 
+    final String constructorTypeParameters = this.commandInformation.constructor() == null
+        ? ""
+        : Utils.getMethodTypeParameterString(this.commandInformation.constructor());
+
+    final List<String> createParameters = this.commandInformation.constructor() == null
+        ? new ArrayList<>()
+        : Utils.getParameterStrings(this.commandInformation.constructor().getParameters());
+    final List<String> registerParameters = new ArrayList<>(createParameters.size() + 1);
+    registerParameters.add("Commands commands");
+    registerParameters.addAll(createParameters);
+
+    final String parameterTypes = this.commandInformation.constructor() == null
+        ? ""
+        : Utils.getParameterTypes(this.commandInformation.constructor().getParameters());
+
     println();
     printBlock("""
             /**
              * Shortcut for registering the command node returned from
-             * {@link #create()}. This method uses the provided aliases
+             * {@link #create({})}. This method uses the provided aliases
              * and description from the original source file.
              * <p>
              * <h3>Registering the command</h3>
@@ -107,10 +127,19 @@ public final class CommandTreePrinter extends AbstractPrinter implements Printer
              * }
              * }</pre>
              */
-            public static void register(Commands commands) {
-                commands.register(create(), {}, List.of({}));
+            public static{} void register({}) {
+                commands.register(create({}), {}, List.of({}));
             }""",
+        parameterTypes,
         brigadierClassName,
+        constructorTypeParameters,
+        String.join(", ", registerParameters),
+        String.join(", ", getCommandInformation().constructor() instanceof ExecutableElement ctor
+            ? ctor.getParameters().stream()
+            .map(var -> var.getSimpleName().toString())
+            .toList()
+            : Collections.emptyList()
+        ),
         description,
         aliases
     );
@@ -121,10 +150,13 @@ public final class CommandTreePrinter extends AbstractPrinter implements Printer
             /**
              * A method for creating a Brigadier command node which denotes the declared command
              * in {@link {}}. You can either retrieve the unregistered node with this method
-             * or register it directly with {@link #register(Commands)}.
+             * or register it directly with {@link #register({})}.
              */
-            public static LiteralCommandNode<CommandSourceStack> create() {""",
-        commandInformation.classElement().getSimpleName().toString()
+            public static{} LiteralCommandNode<CommandSourceStack> create({}) {""",
+        commandInformation.classElement().getSimpleName().toString(),
+        (parameterTypes.isBlank() ? "Commands" : "Commands, " + parameterTypes),
+        constructorTypeParameters,
+        String.join(", ", createParameters)
     );
     incrementIndent();
 
