@@ -1,11 +1,11 @@
 [versions]
 publishdata = "1.4.0"
-spotless = "7.0.2"
+spotless = "8.0.0"
 run = "3.0.0-beta.1"
 blossom = "2.1.0"
 
-paper = "1.21.8-R0.1-SNAPSHOT"
-minecraft = "1.21.8"
+paper = "1.21.10-R0.1-SNAPSHOT"
+minecraft = "1.21.10"
 
 jspecify = "1.0.0"
 jetbrains-annotations = "24.0.0"
