@@ -42,14 +42,9 @@ jobs:
           cp _headers dist/
           cp _redirects dist/
 
-      - name: Debug folder structure
-        run: |
-          ls -a .
-          ls ./dist
-
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: preview-build
-          path: ./dist
+          path: ./docs/dist
           if-no-files-found: error
