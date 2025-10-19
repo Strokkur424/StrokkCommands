@@ -38,8 +38,8 @@ import static net.strokkur.commands.StringArgType.STRING;
 class AdventureArgumentsCommand {
 
   @Executes("send message")
-  void executes(CommandSender sender, @StringArg(STRING) String message, @Literal("with") String $with, @Literal("color") String $color, NamedTextColor color) {
-    Bukkit.broadcast(Component.text(message, color));
+  void executes(CommandSender sender, @StringArg(STRING) String message, @Literal String with, @Literal String color, NamedTextColor named) {
+    Bukkit.broadcast(Component.text(message, named));
   }
 
   @Executes("send signed message")

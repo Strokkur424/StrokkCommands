@@ -18,6 +18,7 @@
 package net.strokkur.commands.internal.arguments;
 
 import net.strokkur.commands.StringArgType;
+import net.strokkur.commands.annotations.arguments.AngleArg;
 import net.strokkur.commands.annotations.arguments.CustomArg;
 import net.strokkur.commands.annotations.arguments.DoubleArg;
 import net.strokkur.commands.annotations.arguments.FinePosArg;
@@ -36,6 +37,7 @@ import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -144,6 +146,25 @@ public class BrigadierArgumentConverter {
             "io.papermc.paper.command.brigadier.argument.resolvers.FinePositionResolver"
         )
     ), "io.papermc.paper.math.FinePosition");
+
+    putFor((p, name) -> BrigadierArgumentType.of(
+        "ArgumentTypes.columnBlockPosition()",
+        "ctx.getArgument(\"%s\", ColumnBlockPositionResolver.class).resolve(ctx.getSource())".formatted(name),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "io.papermc.paper.command.brigadier.argument.resolvers.ColumnBlockPositionResolver"
+        )
+    ), "io.papermc.paper.command.brigadier.argument.position.ColumnBlockPosition");
+
+    putFor((p, name) -> annotatedOr(p, FinePosArg.class,
+        a -> "ArgumentTypes.columnFinePosition(%s)".formatted(a.value()),
+        "ArgumentTypes.columnFinePosition()",
+        "ctx.getArgument(\"%s\", ColumnFinePositionResolver.class).resolve(ctx.getSource())".formatted(name),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "io.papermc.paper.command.brigadier.argument.resolvers.ColumnFinePositionResolver"
+        )
+    ), "io.papermc.paper.command.brigadier.argument.position.ColumnFinePosition");
 
     putFor((p, name) -> BrigadierArgumentType.of(
         "ArgumentTypes.world()",
@@ -259,7 +280,11 @@ public class BrigadierArgumentConverter {
         simpleEntry("itemStack", "ItemStack", "org.bukkit.inventory.ItemStack"),
         simpleEntry("namespacedKey", "NamespacedKey", "org.bukkit.NamespacedKey"),
         simpleEntry("uuid", "UUID", "java.util.UUID"),
-        simpleEntry("objectiveCriteria", "Criteria", "org.bukkit.scoreboard.Criteria")
+        simpleEntry("objectiveCriteria", "Criteria", "org.bukkit.scoreboard.Criteria"),
+        simpleEntry("axes", "AxisSet", "io.papermc.paper.command.brigadier.argument.AxisSet"),
+
+        simpleEntry("itemPredicate", "ItemStackPredicate", "io.papermc.paper.command.brigadier.argument.predicate.ItemStackPredicate"),
+        simpleEntry("blockInWorldPredicate", "BlockInWorldPredicate", "io.papermc.paper.command.brigadier.argument.predicate.BlockInWorldPredicate")
     ).forEach(BrigadierArgumentConverter::putSimple);
 
     //<editor-fold desc=Predicate arguments">
@@ -298,8 +323,6 @@ public class BrigadierArgumentConverter {
             "io.papermc.paper.command.brigadier.argument.range.IntegerRangeProvider"
         )
     ), "com.google.common.collect.Range<java.lang.Integer>");
-
-    putSimple(simpleEntry("itemPredicate", "ItemStackPredicate", "io.papermc.paper.command.brigadier.argument.predicate.ItemStackPredicate"));
     //</editor-fold>
 
     //<editor-fold desc="Adventure arguments">
@@ -307,6 +330,7 @@ public class BrigadierArgumentConverter {
         simpleEntry("component", "Component", "net.kyori.adventure.text.Component"),
         simpleEntry("key", "Key", "net.kyori.adventure.key.Key"),
         simpleEntry("namedColor", "NamedTextColor", "net.kyori.adventure.text.format.NamedTextColor"),
+        simpleEntry("hexColor", "TextColor", "net.kyori.adventure.text.format.TextColor"),
         simpleEntry("style", "Style", "net.kyori.adventure.text.format.Style")
     ).forEach(BrigadierArgumentConverter::putSimple);
 
@@ -395,9 +419,9 @@ public class BrigadierArgumentConverter {
     final String argumentName = parameter.getSimpleName().toString();
     final String type = parameter.asType().toString();
 
-    CustomArg customArg = parameter.getAnnotation(CustomArg.class);
+    final CustomArg customArg = parameter.getAnnotation(CustomArg.class);
     if (customArg != null) {
-      TypeMirror mirror = Utils.getAnnotationMirror(parameter, CustomArg.class, "value");
+      final TypeMirror mirror = Utils.getAnnotationMirror(parameter, CustomArg.class, "value");
       if (mirror != null) {
         return new BrigadierArgumentType("new " + mirror + "()", "ctx.getArgument(\"" + argumentName + "\", " + type + ".class)", Set.of());
       } else {
@@ -411,7 +435,7 @@ public class BrigadierArgumentConverter {
     }
 
     // We *have* to give the time argument precedence, since its return type is also 'int'.
-    TimeArg timeArg = parameter.getAnnotation(TimeArg.class);
+    final TimeArg timeArg = parameter.getAnnotation(TimeArg.class);
     if (timeArg != null) {
       if (!type.equals("int") && !type.equals("java.lang.Integer")) {
         messagerWrapper.errorElement("An argument annotated with @TimeArg has to be of type 'int'", parameter);
@@ -428,7 +452,25 @@ public class BrigadierArgumentConverter {
       );
     }
 
-    BrigadierArgumentType out = CONVERSION_MAP.get(type).apply(parameter, argumentName);
+    // Same with the angle argument
+    final AngleArg angleArt = parameter.getAnnotation(AngleArg.class);
+    if (angleArt != null) {
+      if (!type.equals("float") && !type.equals("java.lang.Float")) {
+        messagerWrapper.errorElement("An argument annotated with @AngleArg has to be of type 'float'", parameter);
+        throw new HandledConversionException();
+      }
+
+      return BrigadierArgumentType.of(
+          "ArgumentTypes.angle()",
+          "ctx.getArgument(\"%s\", AngleResolver.class).resolve(ctx.getSource())".formatted(argumentName),
+          Set.of(
+              "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+              "io.papermc.paper.command.brigadier.argument.resolvers.AngleResolver"
+          )
+      );
+    }
+
+    final BrigadierArgumentType out = Optional.ofNullable(CONVERSION_MAP.get(type)).map(it -> it.apply(parameter, argumentName)).orElse(null);
     if (out != null) {
       return out;
     }
