@@ -1,0 +1,5 @@
+<root>
+    <item name='javax.lang.model.element.Element A getAnnotation(java.lang.Class&lt;A&gt;)'>
+        <annotation name='org.jetbrains.annotations.Nullable'/>
+    </item>
+</root>
