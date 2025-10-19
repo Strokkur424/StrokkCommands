@@ -22,8 +22,9 @@ import net.strokkur.commands.annotations.Executor;
 import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.intermediate.ExecutorType;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.attributes.ExecutableImpl;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
-import net.strokkur.commands.internal.intermediate.paths.ExecutablePathImpl;
+import net.strokkur.commands.internal.intermediate.paths.SequentialCommandPathImpl;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.commands.internal.util.MessagerWrapper;
@@ -55,12 +56,12 @@ sealed class ExecutesTransform implements PathTransform<ExecutableElement>, Forw
     return parameters.size();
   }
 
-  protected CommandPath<?> createPath(final ExecutableElement element, final List<CommandArgument> args, final List<? extends VariableElement> parameters) {
-    return new ExecutablePathImpl(args, element);
+  protected void populatePath(final ExecutableElement method, final CommandPath<?> path, final ExecutorType type, final List<CommandArgument> args, final List<? extends VariableElement> parameters) {
+    path.setAttribute(AttributeKey.EXECUTABLE, new ExecutableImpl(type, method, args));
   }
 
-  protected CommandPath<?> createNoArgumentsPath(final ExecutableElement element, final List<? extends VariableElement> parameters) {
-    return new ExecutablePathImpl(List.of(), element);
+  protected void populatePathNoArguments(final ExecutableElement method, final CommandPath<?> path, final ExecutorType type, final List<? extends VariableElement> parameters) {
+    path.setAttribute(AttributeKey.EXECUTABLE, new ExecutableImpl(type, method, List.of()));
   }
 
   @Override
@@ -91,19 +92,21 @@ sealed class ExecutesTransform implements PathTransform<ExecutableElement>, Forw
 
     final List<List<CommandArgument>> args = this.parser.parseArguments(arguments, (TypeElement) element.getEnclosingElement());
     if (args.isEmpty()) {
-      final CommandPath<?> out = createNoArgumentsPath(element, parameters);
+      final CommandPath<?> out = new SequentialCommandPathImpl(List.of());
+      populatePathNoArguments(element, out, type, parameters);
       out.setAttribute(AttributeKey.EXECUTOR_TYPE, type);
       thisPath.addChild(out);
-      debug("> {}: no arguments found. Current tree for thisPath: {}", transformName(), thisPath);
+      debug("  | {}: no arguments found. Current tree for thisPath: {}", transformName(), thisPath);
       return;
     }
 
     for (final List<CommandArgument> argList : args) {
-      final CommandPath<?> out = createPath(element, argList, parameters);
+      final CommandPath<?> out = new SequentialCommandPathImpl(argList);
+      populatePath(element, out, type, argList, parameters);
       out.setAttribute(AttributeKey.EXECUTOR_TYPE, type);
       thisPath.addChild(out);
     }
-    debug("> {}: found arguments! Current tree for thisPath: {}", transformName(), thisPath);
+    debug("  | {}: found arguments! Current tree for thisPath: {}", transformName(), thisPath);
   }
 
   @Override

@@ -87,7 +87,13 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
 
   @Override
   public void parseClass(final CommandPath<?> path, final TypeElement element) {
-    this.classTransform.transform(path, element);
+    if (element.getKind() == ElementKind.RECORD) {
+      this.recordTransform.transform(path, element);
+    } else if (element.getKind() == ElementKind.CLASS) {
+      this.classTransform.transform(path, element);
+    } else {
+      throw new IllegalStateException("Unknown class type: " + element.getKind().name());
+    }
   }
 
   @Override

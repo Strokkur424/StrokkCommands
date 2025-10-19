@@ -70,6 +70,13 @@ public interface CommandPath<S extends CommandArgument> {
 
   String toStringNoChildren();
 
+  default <U, V extends U> @Nullable U getEitherAttribute(AttributeKey<U> firstKey, AttributeKey<V> orElse) {
+    if (hasAttribute(firstKey)) {
+      return getAttributeNotNull(firstKey);
+    }
+    return getAttribute(orElse);
+  }
+
   default <V> void editAttribute(AttributeKey<V> key, Function<V, V> action, @Nullable Supplier<V> ifNotExists) {
     if (hasAttribute(key)) {
       setAttribute(key, action.apply(getAttributeNotNull(key)));

@@ -28,13 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public class PathFlattener implements ForwardingMessagerWrapper {
-
-  private final MessagerWrapper messager;
-
-  public PathFlattener(final MessagerWrapper messager) {
-    this.messager = messager;
-  }
+public record PathPostProcessor(MessagerWrapper delegateMessager) implements ForwardingMessagerWrapper {
 
   public void cleanupEmptyPaths(CommandPath<?> path) {
     // So here is the deal:
@@ -216,6 +210,25 @@ public class PathFlattener implements ForwardingMessagerWrapper {
     handlePermissions(path);
   }
 
+//  public void applyDefaultExecutorPaths(CommandPath<?> path) {
+//    for (final CommandPath<?> child : path.getChildren()) {
+//      if (child instanceof DefaultExecutablePath def) {
+//
+//      }
+//      applyDefaultExecutorPaths(child);
+//    }
+//  }
+//
+//  private void applyDefaultExecutorPathIfUnset(final CommandPath<?> path, final DefaultExecutablePath def) {
+//    boolean dontApplySelf = false;
+//    for (final CommandPath<?> child : path.getChildren()) {
+//      if (child instanceof DefaultExecutablePath newDef) {
+//
+//        return;
+//      }
+//    }
+//  }
+
   /**
    * Here, the case is similar to the REQUIRES_OP attribute, which the slight difference that
    * the **minimum requirement** will be used, meaning if a child has an ENTITY, and another a PLAYER
@@ -249,11 +262,7 @@ public class PathFlattener implements ForwardingMessagerWrapper {
       path.setAttribute(AttributeKey.EXECUTOR_TYPE, lowestRequirement);
       for (final CommandPath<?> child : path.getChildren()) {
         if (lowestRequirement.isMoreRestrictiveOrEqualThan(child.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE))) {
-          if (child instanceof ExecutablePath) {
-            child.setAttribute(AttributeKey.EXECUTOR_HANDLED, true);
-          } else {
-            child.removeAttribute(AttributeKey.EXECUTOR_TYPE);
-          }
+          child.removeAttribute(AttributeKey.EXECUTOR_TYPE);
         }
       }
     }
@@ -310,10 +319,5 @@ public class PathFlattener implements ForwardingMessagerWrapper {
         path.setAttribute(AttributeKey.PERMISSIONS, thisPermissions);
       }
     }
-  }
-
-  @Override
-  public MessagerWrapper delegateMessager() {
-    return messager;
   }
 }

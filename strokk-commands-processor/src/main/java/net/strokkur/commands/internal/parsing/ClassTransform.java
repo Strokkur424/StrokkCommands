@@ -34,7 +34,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-class ClassTransform implements PathTransform<TypeElement>, ForwardingMessagerWrapper {
+sealed class ClassTransform implements PathTransform<TypeElement>, ForwardingMessagerWrapper permits RecordTransform {
   private static final Set<ElementKind> ENCLOSED_ELEMENTS_TO_PARSE = Set.of(
       ElementKind.METHOD,
       ElementKind.FIELD,
@@ -50,9 +50,13 @@ class ClassTransform implements PathTransform<TypeElement>, ForwardingMessagerWr
     this.messager = messager;
   }
 
+  protected String transformName() {
+    return "ClassTransform";
+  }
+
   @Override
-  public void transform(final CommandPath<?> parent, final TypeElement element) {
-    debug("> ClassTransform: parsing {}...", element);
+  public final void transform(final CommandPath<?> parent, final TypeElement element) {
+    debug("> {}: parsing {}...", transformName(), element);
 
     final CommandPath<?> thisPath = this.createThisPath(parent, this.parser, element);
     addAccessAttribute(thisPath, element);

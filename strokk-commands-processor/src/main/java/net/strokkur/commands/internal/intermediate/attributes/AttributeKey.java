@@ -29,7 +29,9 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 public interface AttributeKey<T> {
-
+  AttributeKey<Parameterizable> RECORD_ARGUMENTS = create("record_arguments", null);
+  AttributeKey<Executable> EXECUTABLE = create("executable", null);
+  AttributeKey<DefaultExecutable> DEFAULT_EXECUTABLE = create("default_executable", null);
   AttributeKey<ExecutorType> EXECUTOR_TYPE = create("executor_type", ExecutorType.NONE);
   AttributeKey<Boolean> EXECUTOR_HANDLED = create("executor_handled", false);
 
@@ -38,10 +40,6 @@ public interface AttributeKey<T> {
   AttributeKey<Set<String>> PERMISSIONS = createDynamic("permission", HashSet::new);
 
   AttributeKey<List<ExecuteAccess<?>>> ACCESS_STACK = create("access_stack", null);
-
-  // Splitting
-  AttributeKey<Boolean> INHERIT_PARENT_ARGS = create("inherit_parent_args", false);
-  AttributeKey<Boolean> SPLIT_EXECUTOR = create("split_executor", false);
 
   static <T> AttributeKey<T> create(String key, @Nullable T defaultValue) {
     return new StaticAttributeKey<>(key, defaultValue);

@@ -18,9 +18,11 @@
 package net.strokkur.commands.internal.parsing;
 
 import net.strokkur.commands.internal.arguments.CommandArgument;
+import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.attributes.ParameterizableImpl;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
-import net.strokkur.commands.internal.intermediate.paths.RecordPath;
-import net.strokkur.commands.internal.intermediate.paths.RecordPathImpl;
+import net.strokkur.commands.internal.intermediate.paths.SequentialCommandPath;
+import net.strokkur.commands.internal.intermediate.paths.SequentialCommandPathImpl;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 
 import javax.lang.model.element.Element;
@@ -30,10 +32,15 @@ import javax.lang.model.element.VariableElement;
 import java.util.ArrayList;
 import java.util.List;
 
-class RecordTransform extends ClassTransform {
+final class RecordTransform extends ClassTransform {
 
   public RecordTransform(final CommandParser parser, final MessagerWrapper messager) {
     super(parser, messager);
+  }
+
+  @Override
+  protected String transformName() {
+    return "RecordTransform";
   }
 
   @Override
@@ -56,7 +63,8 @@ class RecordTransform extends ClassTransform {
     final List<CommandPath<?>> paths = new ArrayList<>(possibleArguments.size());
 
     for (final List<CommandArgument> arguments : possibleArguments) {
-      final RecordPath recordPath = new RecordPathImpl(arguments);
+      final SequentialCommandPath recordPath = new SequentialCommandPathImpl(arguments);
+      recordPath.setAttribute(AttributeKey.RECORD_ARGUMENTS, new ParameterizableImpl(arguments));
       parent.addChild(recordPath);
       paths.add(recordPath);
     }

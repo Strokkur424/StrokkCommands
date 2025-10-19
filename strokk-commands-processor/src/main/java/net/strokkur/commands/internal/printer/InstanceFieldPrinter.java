@@ -22,7 +22,6 @@ import net.strokkur.commands.internal.intermediate.access.FieldAccess;
 import net.strokkur.commands.internal.intermediate.access.InstanceAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
-import net.strokkur.commands.internal.intermediate.paths.ExecutablePath;
 import net.strokkur.commands.internal.util.Utils;
 
 import javax.lang.model.element.ExecutableElement;
@@ -59,7 +58,7 @@ interface InstanceFieldPrinter extends Printable, PrinterInformation {
     }
 
     int printed = 0;
-    if (commandPath instanceof ExecutablePath) {
+    if (commandPath.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE) != null) {
       final List<ExecuteAccess<?>> pathToUse;
       if (getAccessStack().size() > 1 && getAccessStack().reversed().get(1) instanceof FieldAccess) {
         pathToUse = getAccessStack().subList(0, getAccessStack().size() - 1);

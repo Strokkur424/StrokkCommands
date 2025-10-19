@@ -20,15 +20,14 @@ package net.strokkur.commands.internal.printer;
 import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
-import net.strokkur.commands.internal.intermediate.DefaultExecutorArgumentType;
 import net.strokkur.commands.internal.intermediate.ExecutorType;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.access.FieldAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.attributes.DefaultExecutable;
+import net.strokkur.commands.internal.intermediate.attributes.Executable;
+import net.strokkur.commands.internal.intermediate.attributes.Parameterizable;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
-import net.strokkur.commands.internal.intermediate.paths.DefaultExecutablePath;
-import net.strokkur.commands.internal.intermediate.paths.ExecutablePath;
-import net.strokkur.commands.internal.intermediate.paths.RecordPath;
 import net.strokkur.commands.internal.intermediate.requirement.Requirement;
 import net.strokkur.commands.internal.util.Utils;
 import org.jspecify.annotations.Nullable;
@@ -40,22 +39,23 @@ import java.util.List;
 interface PathPrinter extends Printable, PrinterInformation {
 
   default void printPath(CommandPath<?> path) throws IOException {
-    if (path instanceof ExecutablePath executablePath && !executablePath.getAttributeNotNull(AttributeKey.SPLIT_EXECUTOR)) {
-      printExecutablePath(executablePath);
+    final Executable executable = path.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE);
+    if (executable != null) {
+      printExecutablePath(path, executable);
       return;
     }
 
     printGenericPath(path, () -> {});
   }
 
-  private void printExecutablePath(ExecutablePath path) throws IOException {
+  private void printExecutablePath(CommandPath<?> path, Executable executable) throws IOException {
     this.printGenericPath(path, () -> {
       // print the .executes method
       println();
       println(".executes(ctx -> {");
       incrementIndent();
 
-      final ExecutorType executorType = path.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE);
+      final ExecutorType executorType = executable.executorType();
       if (executorType != ExecutorType.NONE) {
         printBlock("""
                 if (!(ctx.getSource().getExecutor() instanceof {} executor)) {
@@ -74,15 +74,16 @@ interface PathPrinter extends Printable, PrinterInformation {
       CommandPath<?> parentPath = path;
 
       while ((parentPath = parentPath.getParent()) != null) {
-        if (parentPath instanceof RecordPath recordPath) {
-          printWithRecord(path, recordPath);
+        final Parameterizable recordArguments = parentPath.getAttribute(AttributeKey.RECORD_ARGUMENTS);
+        if (recordArguments != null) { // TODO: THIS IS NEVER CALLED. FIX THIS.
+          printWithRecord(recordArguments, executable);
           instancePrint = false;
           break;
         }
       }
 
       if (instancePrint) {
-        printWithInstance(path);
+        printWithInstance(executable);
       }
 
       println("return Command.SINGLE_SUCCESS;");
@@ -91,7 +92,7 @@ interface PathPrinter extends Printable, PrinterInformation {
     });
   }
 
-  private void printWithInstance(ExecutablePath path) throws IOException {
+  private void printWithInstance(Executable executable) throws IOException {
     final List<ExecuteAccess<?>> pathToUse;
     if (getAccessStack().size() > 1 && getAccessStack().reversed().get(1) instanceof FieldAccess) {
       pathToUse = getAccessStack().subList(0, getAccessStack().size() - 1);
@@ -99,40 +100,42 @@ interface PathPrinter extends Printable, PrinterInformation {
       pathToUse = getAccessStack();
     }
 
-    printExecutesMethodCall(path, Utils.getInstanceName(pathToUse));
+    printExecutesMethodCall(executable, Utils.getInstanceName(pathToUse));
   }
 
-  private void printExecutesMethodCall(ExecutablePath path, String typeName) throws IOException {
-    println("{}.{}(", typeName, path.getMethod().getSimpleName().toString());
+  private void printExecutesMethodCall(Executable executable, String typeName) throws IOException {
+    println("{}.{}(", typeName, executable.executesMethod().getSimpleName().toString());
     incrementIndent();
 
     // Arguments
-    printExecutesArguments(path);
+    printExecutesArguments(executable);
 
     decrementIndent();
     println(");");
   }
 
-  private void printWithRecord(ExecutablePath path, RecordPath recordPath) throws IOException {
-    final String typeName = Utils.getTypeName(path.getMethod().getEnclosingElement());
+  private void printWithRecord(Parameterizable record, Executable executable) throws IOException {
+    final String typeName = Utils.getTypeName(executable.executesMethod().getEnclosingElement());
 
-    if (recordPath.getArguments().isEmpty()) {
+    if (record.parameterArguments().isEmpty()) {
       println("final {} executorClass = new {}();", typeName, typeName);
     } else {
       println("final {} executorClass = new {}(", typeName, typeName);
       incrementIndent();
-      printExecutorArguments(recordPath, false);
+      printArguments(record.parameterArguments());
       decrementIndent();
       println(");");
     }
 
-    printExecutesMethodCall(path, "executorClass");
+    printExecutesMethodCall(executable, "executorClass");
   }
 
-  private void printExecutesArguments(ExecutablePath path) throws IOException {
-    final ExecutorType executorType = path.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE);
-    final boolean hasExcessArgumentTypesToPrint = path instanceof DefaultExecutablePath def && def.argumentType() != DefaultExecutorArgumentType.NONE;
-    if (path.getArguments().isEmpty() && executorType == ExecutorType.NONE && !hasExcessArgumentTypesToPrint) {
+  private void printExecutesArguments(Executable executable) throws IOException {
+    final ExecutorType executorType = executable.executorType();
+    final String argumentsTypeGetter = executable instanceof DefaultExecutable def ? def.defaultExecutableArgumentTypes().getGetter() : null;
+    final List<? extends CommandArgument> arguments = executable.parameterArguments();
+
+    if (arguments.isEmpty() && executorType == ExecutorType.NONE && argumentsTypeGetter == null) {
       println("ctx.getSource().getSender()");
       return;
     }
@@ -144,7 +147,7 @@ interface PathPrinter extends Printable, PrinterInformation {
         case ENTITY, PLAYER -> print("executor");
       }
 
-      if (path.getArguments().isEmpty() && !hasExcessArgumentTypesToPrint) {
+      if (arguments.isEmpty() && argumentsTypeGetter == null) {
         println();
         return;
       }
@@ -152,23 +155,21 @@ interface PathPrinter extends Printable, PrinterInformation {
       print(",");
       println();
     }
-    printExecutorArguments(path, false);
-  }
-
-  private void printExecutorArguments(final CommandPath<?> path, boolean parentOfSplit) throws IOException {
-    if (path.getAttributeNotNull(AttributeKey.INHERIT_PARENT_ARGS) && path.getParent() != null) {
-      printExecutorArguments(path.getParent(), true);
-    }
-
-    final String argumentsTypeGetter = ((!parentOfSplit && path instanceof DefaultExecutablePath def) ? def.argumentType() : DefaultExecutorArgumentType.NONE).getGetter();
-
-    final List<? extends CommandArgument> arguments = path.getArguments();
 
     if (arguments.isEmpty() && argumentsTypeGetter != null) {
       println(argumentsTypeGetter);
       return;
     }
 
+    printArguments(arguments);
+
+    if (argumentsTypeGetter != null) {
+      print(argumentsTypeGetter);
+      println();
+    }
+  }
+
+  private void printArguments(List<? extends CommandArgument> arguments) throws IOException {
     for (int i = 0, argumentsSize = arguments.size(); i < argumentsSize; i++) {
       final CommandArgument argument = arguments.get(i);
 
@@ -179,15 +180,10 @@ interface PathPrinter extends Printable, PrinterInformation {
         print("\"{}\"", argument.getName());
       }
 
-      if (i + 1 < argumentsSize || parentOfSplit || argumentsTypeGetter != null) {
+      if (i + 1 < argumentsSize) {
         print(",");
       }
 
-      println();
-    }
-
-    if (argumentsTypeGetter != null) {
-      print(argumentsTypeGetter);
       println();
     }
   }

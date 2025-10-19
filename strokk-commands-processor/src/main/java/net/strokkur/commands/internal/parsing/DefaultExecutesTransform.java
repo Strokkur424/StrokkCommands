@@ -19,9 +19,11 @@ package net.strokkur.commands.internal.parsing;
 
 import net.strokkur.commands.annotations.DefaultExecutes;
 import net.strokkur.commands.internal.arguments.CommandArgument;
-import net.strokkur.commands.internal.intermediate.DefaultExecutorArgumentType;
+import net.strokkur.commands.internal.intermediate.ExecutorType;
+import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.attributes.DefaultExecutable;
+import net.strokkur.commands.internal.intermediate.attributes.DefaultExecutableImpl;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
-import net.strokkur.commands.internal.intermediate.paths.DefaultExecutablePathImpl;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 
@@ -36,14 +38,14 @@ final class DefaultExecutesTransform extends ExecutesTransform {
     super(parser, delegateMessager);
   }
 
-  private DefaultExecutorArgumentType getType(final TypeMirror type) {
+  private DefaultExecutable.Type getType(final TypeMirror type) {
     if (type.toString().equals(Classes.LIST_STRING)) {
-      return DefaultExecutorArgumentType.LIST;
+      return DefaultExecutable.Type.LIST;
     }
     if (type.toString().equals("java.lang.String[]")) {
-      return DefaultExecutorArgumentType.ARRAY;
+      return DefaultExecutable.Type.ARRAY;
     }
-    return DefaultExecutorArgumentType.NONE;
+    return DefaultExecutable.Type.NONE;
   }
 
   @Override
@@ -60,20 +62,20 @@ final class DefaultExecutesTransform extends ExecutesTransform {
   @Override
   protected int parametersToParse(final List<? extends VariableElement> parameters) {
     final TypeMirror last = parameters.getLast().asType();
-    if (getType(last) != DefaultExecutorArgumentType.NONE) {
+    if (getType(last) != DefaultExecutable.Type.NONE) {
       return parameters.size() - 1;
     }
     return parameters.size();
   }
 
   @Override
-  protected CommandPath<?> createPath(final ExecutableElement element, final List<CommandArgument> args, final List<? extends VariableElement> parameters) {
-    return new DefaultExecutablePathImpl(args, element, getType(parameters.getLast().asType()));
+  protected void populatePath(final ExecutableElement method, final CommandPath<?> path, final ExecutorType type, final List<CommandArgument> args, final List<? extends VariableElement> parameters) {
+    path.setAttribute(AttributeKey.DEFAULT_EXECUTABLE, new DefaultExecutableImpl(type, method, args, getType(parameters.getLast().asType())));
   }
 
   @Override
-  protected CommandPath<?> createNoArgumentsPath(final ExecutableElement element, final List<? extends VariableElement> parameters) {
-    return new DefaultExecutablePathImpl(List.of(), element, getType(parameters.getLast().asType()));
+  protected void populatePathNoArguments(final ExecutableElement method, final CommandPath<?> path, final ExecutorType type, final List<? extends VariableElement> parameters) {
+    path.setAttribute(AttributeKey.DEFAULT_EXECUTABLE, new DefaultExecutableImpl(type, method, List.of(), getType(parameters.getLast().asType())));
   }
 
   @Override

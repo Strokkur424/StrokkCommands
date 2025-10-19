@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.TreeMap;
 
 abstract class SimpleCommandPathImpl<S extends CommandArgument> implements CommandPath<S> {
-
   protected final List<CommandPath<?>> children;
   protected @Nullable CommandPath<?> parent;
   protected List<S> arguments;
@@ -114,6 +113,10 @@ abstract class SimpleCommandPathImpl<S extends CommandArgument> implements Comma
     final SimpleCommandPathImpl<S> leftPath = createLeftSplit(left);
     leftPath.attributes = new HashMap<>(attributes);
 
+    // There are certain attributes we **do not want to copy**. Remove those here.
+    leftPath.attributes.remove(AttributeKey.EXECUTABLE.key());
+    leftPath.attributes.remove(AttributeKey.RECORD_ARGUMENTS.key());
+
     if (this.parent != null) {
       final CommandPath<?> parent = this.parent;
       parent.removeChild(this);
@@ -135,12 +138,7 @@ abstract class SimpleCommandPathImpl<S extends CommandArgument> implements Comma
     final StringBuilder builder = new StringBuilder();
     builder.append("| ".repeat(indent));
 
-    if (this instanceof ExecutablePath exec) {
-      builder.append("Execute: ")
-          .append(exec.getMethod().getEnclosingElement().getSimpleName())
-          .append("#")
-          .append(exec.getMethod().getSimpleName());
-    } else if (this instanceof EmptyCommandPath) {
+    if (this instanceof EmptyCommandPath) {
       builder.append("<empty_path>");
     } else if (this.arguments.isEmpty() && this.children.isEmpty()) {
       return builder.append("<empty>").toString();
@@ -152,7 +150,7 @@ abstract class SimpleCommandPathImpl<S extends CommandArgument> implements Comma
 
     // Add attributes
     if (!attributes.isEmpty()) {
-      builder.append(" ".repeat(Math.max(80 - builder.length(), 0)));
+      builder.append(" ".repeat(Math.max(40 - builder.length(), 0)));
       builder.append("Attributes: {");
       this.attributes.forEach((key, value) -> builder.append(key).append(" = ").append(value).append(" "));
       builder.deleteCharAt(builder.length() - 1);

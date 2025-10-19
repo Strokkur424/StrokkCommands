@@ -24,7 +24,7 @@ import net.strokkur.commands.annotations.Description;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
 import net.strokkur.commands.internal.intermediate.CommandInformation;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
-import net.strokkur.commands.internal.intermediate.paths.PathFlattener;
+import net.strokkur.commands.internal.intermediate.paths.PathPostProcessor;
 import net.strokkur.commands.internal.parsing.CommandParser;
 import net.strokkur.commands.internal.parsing.CommandParserImpl;
 import net.strokkur.commands.internal.printer.CommandTreePrinter;
@@ -85,7 +85,7 @@ public class StrokkCommandsProcessor extends AbstractProcessor {
     final MessagerWrapper messagerWrapper = MessagerWrapper.wrap(super.processingEnv.getMessager());
     final BrigadierArgumentConverter converter = new BrigadierArgumentConverter(messagerWrapper);
     final CommandParser parser = new CommandParserImpl(messagerWrapper, converter);
-    final PathFlattener pathFlattener = new PathFlattener(messagerWrapper);
+    final PathPostProcessor pathPostProcessor = new PathPostProcessor(messagerWrapper);
 
     final String debugOnly = System.getProperty(MessagerWrapper.DEBUG_ONLY_SYSTEM_PROPERTY);
     if (debugOnly != null) {
@@ -103,7 +103,7 @@ public class StrokkCommandsProcessor extends AbstractProcessor {
       }
 
       try {
-        processElement(typeElement, messagerWrapper, parser, pathFlattener);
+        processElement(typeElement, messagerWrapper, parser, pathPostProcessor);
       } catch (Exception e) {
         messagerWrapper.errorElement("An error occurred: {}", typeElement, e.getMessage());
         e.printStackTrace(new PrintWriter(System.out));
@@ -119,7 +119,7 @@ public class StrokkCommandsProcessor extends AbstractProcessor {
     return true;
   }
 
-  private void processElement(TypeElement typeElement, MessagerWrapper messagerWrapper, CommandParser parser, PathFlattener pathFlattener) {
+  private void processElement(TypeElement typeElement, MessagerWrapper messagerWrapper, CommandParser parser, PathPostProcessor pathPostProcessor) {
     boolean debug = System.getProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY) != null;
 
     final CommandInformation commandInformation = getCommandInformation(typeElement);
@@ -133,9 +133,9 @@ public class StrokkCommandsProcessor extends AbstractProcessor {
     // Before we print the paths, we do a step I like to refer to as "flattening".
     // This does not actually change the structure of the paths, but it moves up any attributes
     // relevant for certain things to print correctly (a.e. executor requirements).
-    pathFlattener.cleanupEmptyPaths(commandPath);
-    pathFlattener.cleanupPath(commandPath);
-    pathFlattener.flattenPath(commandPath);
+    pathPostProcessor.cleanupEmptyPaths(commandPath);
+    pathPostProcessor.cleanupPath(commandPath);
+    pathPostProcessor.flattenPath(commandPath);
 
     if (debug) {
       // debug log all paths.

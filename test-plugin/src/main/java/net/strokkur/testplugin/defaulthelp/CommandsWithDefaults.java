@@ -26,7 +26,7 @@ import org.bukkit.command.CommandSender;
 import java.util.List;
 
 @Command("command-with-help")
-class SomeCommandWhichNeedsAHelpingHand {
+class One {
 
   @Executes("a lot of literals so yeah")
   void execute(CommandSender sender, int num, String stringArg) {
@@ -53,5 +53,18 @@ class SomeCommandWhichNeedsAHelpingHand {
             Thank you for choosing StrokkCommands.""",
         Placeholder.parsed("cmd", cmd)
     );
+  }
+}
+
+@Command("two")
+class Two {
+  @Executes("hehe")
+  void executes(CommandSender sender, int number, String str) {
+    //
+  }
+
+  @DefaultExecutes("hehe")
+  void executeshelp(CommandSender sender, int number) {
+    // ..
   }
 }
