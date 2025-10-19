@@ -137,9 +137,9 @@ abstract class SimpleCommandPathImpl<S extends CommandArgument> implements Comma
 
     if (this instanceof ExecutablePath exec) {
       builder.append("Execute: ")
-          .append(exec.getExecutesMethod().getEnclosingElement().getSimpleName())
+          .append(exec.getMethod().getEnclosingElement().getSimpleName())
           .append("#")
-          .append(exec.getExecutesMethod().getSimpleName());
+          .append(exec.getMethod().getSimpleName());
     } else if (this instanceof EmptyCommandPath) {
       builder.append("<empty_path>");
     } else if (this.arguments.isEmpty() && this.children.isEmpty()) {

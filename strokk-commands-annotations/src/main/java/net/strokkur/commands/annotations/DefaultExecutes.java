@@ -35,7 +35,7 @@ import java.util.List;
 ///
 ///   @DefaultExecutes
 ///   void help(CommandSender sender, String[] extraArgs) {
-///     sender.sendPlainMessage("/command " + String.join(" ", extraArgs) + " is missing some arguments!")
+///     sender.sendPlainMessage("/" + String.join(" ", extraArgs) + " is missing some arguments!")
 ///   }
 ///
 ///   @Executes("some literals")
@@ -54,7 +54,7 @@ import java.util.List;
 /// ```
 ///
 /// You can add either a `String[]` or `List<String>` parameter to the end of the method parameters
-/// to obtain any additional arguments a user has provided. The [List] is **mutable**.
+/// to obtain all arguments (including the command name, without the slash) a user has provided. The [List] is **immutable**.
 ///
 /// If both a method is annotated [Executes], it will take precedence in execution. [DefaultExecutes]
 /// is simply a fallback if no custom [Executes] is provided.
@@ -67,4 +67,19 @@ import java.util.List;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.METHOD)
 public @interface DefaultExecutes {
+  /// A literal path to prepend to the method.
+  ///
+  /// This
+  /// ```java
+  /// @DefaultExecutes("the literal path")
+  /// void help(CommandSender sender, /* rest of arguments */);
+  /// ```
+  /// is the same as writing
+  /// ```java
+  /// @DefaultExecutes
+  /// void help(CommandSender sender, @Literal("the literal path") String lit, /* rest of arguments */);
+  /// ```
+  ///
+  /// @return the literal path to prepend to the argument path
+  String value() default "";
 }

@@ -34,6 +34,8 @@ import net.strokkur.commands.internal.util.Utils;
 import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
@@ -41,46 +43,64 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapper {
+  private final PathTransform<TypeElement> classTransform;
+  private final PathTransform<TypeElement> recordTransform;
+  private final PathTransform<ExecutableElement> methodTransform;
+  private final PathTransform<VariableElement> fieldTransform;
 
   private final MessagerWrapper messager;
   private final BrigadierArgumentConverter converter;
-  private final List<PathTransform> transforms;
 
   public CommandParserImpl(final MessagerWrapper messager, final BrigadierArgumentConverter converter) {
     this.messager = messager;
     this.converter = converter;
-    this.transforms = List.of(
-        new ClassTransform(this, messager),
-        new RecordTransform(this, messager),
-        new MethodTransform(this, messager),
-        new FieldTransform(this, messager)
-    );
+
+    this.classTransform = new ClassTransform(this, messager);
+    this.recordTransform = new RecordTransform(this, messager);
+    this.methodTransform = new MethodTransform(this, messager);
+    this.fieldTransform = new FieldTransform(this, messager);
   }
 
   @Override
   public CommandPath<?> createCommandTree(final TypeElement typeElement) {
     final CommandPath<?> empty = new EmptyCommandPath();
-    weakParse(empty, typeElement);
+    parseElement(empty, typeElement);
     return empty.getChildren().getFirst();
   }
 
   @Override
-  public void weakParse(final CommandPath<?> path, final Element element) {
-    for (final PathTransform transform : transforms) {
-      if (transform.shouldTransform(element)) {
-        transform.transform(path, element);
-        break;
+  public void parseElement(final CommandPath<?> path, final Element element) {
+    switch (element) {
+      case TypeElement type -> {
+        if (type.getKind() == ElementKind.RECORD) {
+          this.recordTransform.transformIfRequirement(path, type);
+        } else {
+          this.classTransform.transformIfRequirement(path, type);
+        }
+      }
+      case ExecutableElement method -> this.methodTransform.transformIfRequirement(path, method);
+      case VariableElement var -> this.fieldTransform.transformIfRequirement(path, var);
+      default -> {
       }
     }
   }
 
   @Override
-  public void hardParse(final CommandPath<?> path, final Element element) {
-    for (final PathTransform transform : transforms) {
-      if (transform.hardRequirement(element)) {
-        transform.transform(path, element);
-        break;
-      }
+  public void parseClass(final CommandPath<?> path, final TypeElement element) {
+    this.classTransform.transform(path, element);
+  }
+
+  @Override
+  public void parseMethod(final CommandPath<?> path, final ExecutableElement element) {
+    this.methodTransform.transform(path, element);
+  }
+
+  @Override
+  public void parseField(final CommandPath<?> path, final VariableElement element) {
+    if (element.getKind() == ElementKind.FIELD) {
+      this.fieldTransform.transform(path, element);
+    } else {
+      this.infoElement("Tried to parse variable elements as field", element);
     }
   }
 
@@ -93,7 +113,6 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
       debug("| Parsing parameter: " + parameter.getSimpleName());
 
       final Literal literal = parameter.getAnnotation(Literal.class);
-      //noinspection ConstantValue
       if (literal != null) {
         final String[] declared = literal.value();
         if (declared.length == 0) {
@@ -103,7 +122,6 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
         } else {
           // This is a worst-case scenario. All nested lists need to be duplicated as many times as there are literals, with each
           // list being added a different literal.
-
           final List<List<CommandArgument>> empty = new ArrayList<>();
           for (final String lit : declared) {
             for (final List<CommandArgument> argument : arguments) {
@@ -146,7 +164,6 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
   @Nullable
   private SuggestionProvider getSuggestionProvider(final TypeElement classElement, final VariableElement parameter) {
     final Suggestion suggestion = parameter.getAnnotation(Suggestion.class);
-    //noinspection ConstantValue
     if (suggestion == null) {
       return null;
     }

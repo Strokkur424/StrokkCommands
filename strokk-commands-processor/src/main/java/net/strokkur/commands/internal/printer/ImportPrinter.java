@@ -26,6 +26,7 @@ import net.strokkur.commands.internal.intermediate.access.FieldAccess;
 import net.strokkur.commands.internal.intermediate.access.InstanceAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
+import net.strokkur.commands.internal.intermediate.paths.DefaultExecutablePath;
 import net.strokkur.commands.internal.intermediate.paths.LiteralCommandPath;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.util.Utils;
@@ -93,6 +94,10 @@ interface ImportPrinter extends Printable, PrinterInformation {
   }
 
   private void gatherImports(Set<String> imports, CommandPath<?> commandPath) {
+    if (commandPath instanceof DefaultExecutablePath def) {
+      imports.addAll(def.argumentType().getImports());
+    }
+
     if (getCommandInformation().constructor() instanceof ExecutableElement ctor) {
       Utils.populateParameterImports(imports, ctor);
       for (final VariableElement param : ctor.getParameters()) {

@@ -34,8 +34,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-class ClassTransform implements PathTransform, ForwardingMessagerWrapper {
-
+class ClassTransform implements PathTransform<TypeElement>, ForwardingMessagerWrapper {
   private static final Set<ElementKind> ENCLOSED_ELEMENTS_TO_PARSE = Set.of(
       ElementKind.METHOD,
       ElementKind.FIELD,
@@ -52,11 +51,11 @@ class ClassTransform implements PathTransform, ForwardingMessagerWrapper {
   }
 
   @Override
-  public void transform(final CommandPath<?> parent, final Element element) {
+  public void transform(final CommandPath<?> parent, final TypeElement element) {
     debug("> ClassTransform: parsing {}...", element);
 
     final CommandPath<?> thisPath = this.createThisPath(parent, this.parser, element);
-    addAccessAttribute(thisPath, (TypeElement) element);
+    addAccessAttribute(thisPath, element);
 
     final List<CommandPath<?>> relevant = parseRecordComponents(thisPath, element);
 
@@ -66,7 +65,7 @@ class ClassTransform implements PathTransform, ForwardingMessagerWrapper {
       }
 
       for (final CommandPath<?> recordPath : relevant) {
-        this.parser.weakParse(recordPath, enclosed);
+        this.parser.parseElement(recordPath, enclosed);
       }
     }
   }
@@ -80,18 +79,12 @@ class ClassTransform implements PathTransform, ForwardingMessagerWrapper {
     );
   }
 
-  protected List<CommandPath<?>> parseRecordComponents(final CommandPath<?> parent, final Element element) {
+  protected List<CommandPath<?>> parseRecordComponents(final CommandPath<?> parent, final TypeElement element) {
     return Collections.singletonList(parent);
   }
 
   @Override
-  public boolean hardRequirement(final Element element) {
-    return element.getKind() == ElementKind.CLASS;
-  }
-
-  @Override
-  public boolean weakRequirement(final Element element) {
-    //noinspection ConstantValue
+  public boolean requirement(final TypeElement element) {
     return element.getAnnotation(Command.class) != null || element.getAnnotation(Subcommand.class) != null;
   }
 

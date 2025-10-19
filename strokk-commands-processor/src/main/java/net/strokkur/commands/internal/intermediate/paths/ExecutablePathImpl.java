@@ -20,12 +20,10 @@ package net.strokkur.commands.internal.intermediate.paths;
 import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 
-import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
 public class ExecutablePathImpl extends SimpleCommandPathImpl<CommandArgument> implements ExecutablePath {
-
   private final ExecutableElement executesMethod;
 
   public ExecutablePathImpl(final List<CommandArgument> arguments, final ExecutableElement executesMethod) {
@@ -34,7 +32,7 @@ public class ExecutablePathImpl extends SimpleCommandPathImpl<CommandArgument> i
   }
 
   @Override
-  public Element getExecutesMethod() {
+  public ExecutableElement getMethod() {
     return executesMethod;
   }
 

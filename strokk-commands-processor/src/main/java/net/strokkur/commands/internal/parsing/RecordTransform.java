@@ -42,7 +42,7 @@ class RecordTransform extends ClassTransform {
   }
 
   @Override
-  protected List<CommandPath<?>> parseRecordComponents(final CommandPath<?> parent, final Element element) {
+  protected List<CommandPath<?>> parseRecordComponents(final CommandPath<?> parent, final TypeElement element) {
     final List<? extends Element> enclosedElements = element.getEnclosedElements();
 
     final List<VariableElement> recordComponents = new ArrayList<>(enclosedElements.size());
@@ -52,7 +52,7 @@ class RecordTransform extends ClassTransform {
       }
     }
 
-    final List<List<CommandArgument>> possibleArguments = this.parser.parseArguments(recordComponents, (TypeElement) element);
+    final List<List<CommandArgument>> possibleArguments = this.parser.parseArguments(recordComponents, element);
     final List<CommandPath<?>> paths = new ArrayList<>(possibleArguments.size());
 
     for (final List<CommandArgument> arguments : possibleArguments) {
@@ -62,10 +62,5 @@ class RecordTransform extends ClassTransform {
     }
 
     return paths;
-  }
-
-  @Override
-  public boolean hardRequirement(final Element element) {
-    return element.getKind() == ElementKind.RECORD;
   }
 }

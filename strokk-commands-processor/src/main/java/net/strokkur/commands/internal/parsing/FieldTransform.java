@@ -26,45 +26,25 @@ import net.strokkur.commands.internal.intermediate.paths.CommandPath;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import java.util.ArrayList;
 import java.util.List;
 
-class FieldTransform implements PathTransform, ForwardingMessagerWrapper {
-
-  private final CommandParser parser;
-  private final MessagerWrapper messager;
-
-  public FieldTransform(final CommandParser parser, final MessagerWrapper messager) {
-    this.parser = parser;
-    this.messager = messager;
-  }
+record FieldTransform(CommandParser parser, MessagerWrapper delegateMessager) implements PathTransform<VariableElement>, ForwardingMessagerWrapper {
 
   @Override
-  public void transform(final CommandPath<?> parent, final Element element) {
+  public void transform(final CommandPath<?> parent, final VariableElement element) {
     debug("> FieldTransform: {}.{}", element.getEnclosingElement().getSimpleName(), element.getSimpleName());
     final CommandPath<?> thisPath = createThisPath(parent, this.parser, element);
 
-    thisPath.setAttribute(AttributeKey.ACCESS_STACK, new ArrayList<>(List.of(ExecuteAccess.of((VariableElement) element))));
+    thisPath.setAttribute(AttributeKey.ACCESS_STACK, new ArrayList<>(List.of(ExecuteAccess.of(element))));
 
-    this.parser.hardParse(thisPath, StrokkCommandsProcessor.getTypes().asElement(element.asType()));
+    this.parser.parseClass(thisPath, (TypeElement) StrokkCommandsProcessor.getTypes().asElement(element.asType()));
   }
 
   @Override
-  public boolean hardRequirement(final Element element) {
-    return element.getKind() == ElementKind.FIELD;
-  }
-
-  @Override
-  public boolean weakRequirement(final Element element) {
-    //noinspection ConstantValue
+  public boolean requirement(final VariableElement element) {
     return element.getAnnotation(Command.class) != null || element.getAnnotation(Subcommand.class) != null;
-  }
-
-  @Override
-  public MessagerWrapper delegateMessager() {
-    return this.messager;
   }
 }

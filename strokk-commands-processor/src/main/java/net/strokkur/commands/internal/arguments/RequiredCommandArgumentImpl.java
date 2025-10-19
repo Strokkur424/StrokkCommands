@@ -24,7 +24,6 @@ import javax.lang.model.element.Element;
 import java.util.Objects;
 
 public class RequiredCommandArgumentImpl implements RequiredCommandArgument {
-
   private final BrigadierArgumentType argumentType;
   private final String name;
   private final Element element;
@@ -37,7 +36,7 @@ public class RequiredCommandArgumentImpl implements RequiredCommandArgument {
     this.suggestionProvider = null;
   }
 
-  public RequiredCommandArgumentImpl(final BrigadierArgumentType argumentType, final String name, final Element element, final SuggestionProvider suggestionProvider) {
+  public RequiredCommandArgumentImpl(final BrigadierArgumentType argumentType, final String name, final Element element, final @Nullable SuggestionProvider suggestionProvider) {
     this.argumentType = argumentType;
     this.name = name;
     this.element = element;

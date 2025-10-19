@@ -30,16 +30,16 @@ import org.jetbrains.annotations.Nullable;
 import javax.lang.model.element.Element;
 import java.util.Set;
 
-interface PathTransform {
+interface PathTransform<S extends Element> {
 
-  void transform(CommandPath<?> parent, Element element);
+  void transform(CommandPath<?> parent, S element);
 
-  boolean hardRequirement(Element element);
+  boolean requirement(S element);
 
-  boolean weakRequirement(Element element);
-
-  default boolean shouldTransform(Element element) {
-    return hardRequirement(element) && weakRequirement(element);
+  default void transformIfRequirement(CommandPath<?> parent, S element) {
+    if (requirement(element)) {
+      transform(parent, element);
+    }
   }
 
   default CommandPath<?> createThisPath(CommandPath<?> parent, CommandParser parser, Element element) {
@@ -55,7 +55,7 @@ interface PathTransform {
     return populatePath(parent, thisPath, element);
   }
 
-  private CommandPath<?> populatePath(CommandPath<?> parent, @Nullable CommandPath<?> thisPath, Element element) {
+  default CommandPath<?> populatePath(CommandPath<?> parent, @Nullable CommandPath<?> thisPath, Element element) {
     if (thisPath == null) {
       thisPath = new EmptyCommandPath();
     }

@@ -15,12 +15,31 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.paths;
+package net.strokkur.commands.internal.intermediate;
 
-import net.strokkur.commands.internal.arguments.CommandArgument;
+import net.strokkur.commands.internal.util.Classes;
+import org.jspecify.annotations.Nullable;
 
-import javax.lang.model.element.ExecutableElement;
+import java.util.Set;
 
-public interface ExecutablePath extends CommandPath<CommandArgument> {
-  ExecutableElement getMethod();
+public enum DefaultExecutorArgumentType {
+  NONE(null, Set.of()),
+  ARRAY("ctx.getInput().split(\" \")", Set.of()),
+  LIST("Collections.unmodifiableList(Arrays.asList(ctx.getInput().split(\" \")))", Set.of(Classes.COLLECTIONS, Classes.ARRAYS));
+
+  private final @Nullable String getter;
+  private final Set<String> imports;
+
+  DefaultExecutorArgumentType(@Nullable final String getter, final Set<String> imports) {
+    this.getter = getter;
+    this.imports = imports;
+  }
+
+  public @Nullable String getGetter() {
+    return this.getter;
+  }
+
+  public Set<String> getImports() {
+    return this.imports;
+  }
 }

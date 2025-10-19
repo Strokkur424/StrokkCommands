@@ -17,10 +17,8 @@
  */
 package net.strokkur.commands.internal.intermediate.paths;
 
-import net.strokkur.commands.internal.arguments.CommandArgument;
+import net.strokkur.commands.internal.intermediate.DefaultExecutorArgumentType;
 
-import javax.lang.model.element.ExecutableElement;
-
-public interface ExecutablePath extends CommandPath<CommandArgument> {
-  ExecutableElement getMethod();
+public interface DefaultExecutablePath extends ExecutablePath {
+  DefaultExecutorArgumentType argumentType();
 }

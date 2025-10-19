@@ -24,6 +24,7 @@ import net.strokkur.commands.internal.intermediate.paths.LiteralCommandPath;
 import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import java.lang.annotation.Annotation;
@@ -35,9 +36,13 @@ public interface CommandParser {
 
   CommandPath<?> createCommandTree(TypeElement typeElement);
 
-  void weakParse(CommandPath<?> path, Element element);
+  void parseElement(CommandPath<?> path, Element element);
 
-  void hardParse(CommandPath<?> path, Element element);
+  void parseClass(CommandPath<?> path, TypeElement element);
+
+  void parseMethod(CommandPath<?> path, ExecutableElement element);
+
+  void parseField(CommandPath<?> path, VariableElement element);
 
   List<List<CommandArgument>> parseArguments(List<VariableElement> elements, TypeElement typeElement);
 

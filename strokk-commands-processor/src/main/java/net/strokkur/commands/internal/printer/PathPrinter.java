@@ -20,11 +20,13 @@ package net.strokkur.commands.internal.printer;
 import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
+import net.strokkur.commands.internal.intermediate.DefaultExecutorArgumentType;
 import net.strokkur.commands.internal.intermediate.ExecutorType;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.access.FieldAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.paths.CommandPath;
+import net.strokkur.commands.internal.intermediate.paths.DefaultExecutablePath;
 import net.strokkur.commands.internal.intermediate.paths.ExecutablePath;
 import net.strokkur.commands.internal.intermediate.paths.RecordPath;
 import net.strokkur.commands.internal.intermediate.requirement.Requirement;
@@ -101,7 +103,7 @@ interface PathPrinter extends Printable, PrinterInformation {
   }
 
   private void printExecutesMethodCall(ExecutablePath path, String typeName) throws IOException {
-    println("{}.{}(", typeName, path.getExecutesMethod().getSimpleName().toString());
+    println("{}.{}(", typeName, path.getMethod().getSimpleName().toString());
     incrementIndent();
 
     // Arguments
@@ -112,7 +114,7 @@ interface PathPrinter extends Printable, PrinterInformation {
   }
 
   private void printWithRecord(ExecutablePath path, RecordPath recordPath) throws IOException {
-    final String typeName = Utils.getTypeName(path.getExecutesMethod().getEnclosingElement());
+    final String typeName = Utils.getTypeName(path.getMethod().getEnclosingElement());
 
     if (recordPath.getArguments().isEmpty()) {
       println("final {} executorClass = new {}();", typeName, typeName);
@@ -129,7 +131,8 @@ interface PathPrinter extends Printable, PrinterInformation {
 
   private void printExecutesArguments(ExecutablePath path) throws IOException {
     final ExecutorType executorType = path.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE);
-    if (path.getArguments().isEmpty() && executorType == ExecutorType.NONE) {
+    final boolean hasExcessArgumentTypesToPrint = path instanceof DefaultExecutablePath def && def.argumentType() != DefaultExecutorArgumentType.NONE;
+    if (path.getArguments().isEmpty() && executorType == ExecutorType.NONE && !hasExcessArgumentTypesToPrint) {
       println("ctx.getSource().getSender()");
       return;
     }
@@ -141,7 +144,7 @@ interface PathPrinter extends Printable, PrinterInformation {
         case ENTITY, PLAYER -> print("executor");
       }
 
-      if (path.getArguments().isEmpty()) {
+      if (path.getArguments().isEmpty() && !hasExcessArgumentTypesToPrint) {
         println();
         return;
       }
@@ -152,12 +155,20 @@ interface PathPrinter extends Printable, PrinterInformation {
     printExecutorArguments(path, false);
   }
 
-  private void printExecutorArguments(final CommandPath<?> path, boolean forceTrailingComma) throws IOException {
+  private void printExecutorArguments(final CommandPath<?> path, boolean parentOfSplit) throws IOException {
     if (path.getAttributeNotNull(AttributeKey.INHERIT_PARENT_ARGS) && path.getParent() != null) {
       printExecutorArguments(path.getParent(), true);
     }
 
+    final String argumentsTypeGetter = ((!parentOfSplit && path instanceof DefaultExecutablePath def) ? def.argumentType() : DefaultExecutorArgumentType.NONE).getGetter();
+
     final List<? extends CommandArgument> arguments = path.getArguments();
+
+    if (arguments.isEmpty() && argumentsTypeGetter != null) {
+      println(argumentsTypeGetter);
+      return;
+    }
+
     for (int i = 0, argumentsSize = arguments.size(); i < argumentsSize; i++) {
       final CommandArgument argument = arguments.get(i);
 
@@ -168,10 +179,15 @@ interface PathPrinter extends Printable, PrinterInformation {
         print("\"{}\"", argument.getName());
       }
 
-      if (i + 1 < argumentsSize || forceTrailingComma) {
+      if (i + 1 < argumentsSize || parentOfSplit || argumentsTypeGetter != null) {
         print(",");
       }
 
+      println();
+    }
+
+    if (argumentsTypeGetter != null) {
+      print(argumentsTypeGetter);
       println();
     }
   }
