@@ -19,12 +19,13 @@ package net.strokkur.commands.internal.parsing;
 
 import net.strokkur.commands.annotations.Executes;
 import net.strokkur.commands.annotations.Executor;
+import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
 import net.strokkur.commands.internal.arguments.CommandArgument;
+import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
 import net.strokkur.commands.internal.intermediate.ExecutorType;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.attributes.ExecutableImpl;
-import net.strokkur.commands.internal.intermediate.paths.CommandPath;
-import net.strokkur.commands.internal.intermediate.paths.SequentialCommandPathImpl;
+import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.commands.internal.util.MessagerWrapper;
@@ -35,39 +36,50 @@ import javax.lang.model.element.VariableElement;
 import java.util.ArrayList;
 import java.util.List;
 
-sealed class ExecutesTransform implements PathTransform<ExecutableElement>, ForwardingMessagerWrapper permits DefaultExecutesTransform {
+sealed class ExecutesTransform implements NodeTransform<ExecutableElement>, ForwardingMessagerWrapper permits DefaultExecutesTransform {
   protected final CommandParser parser;
   private final MessagerWrapper delegateMessager;
+  private final BrigadierArgumentConverter converter;
 
-  protected ExecutesTransform(CommandParser parser, MessagerWrapper delegateMessager) {
+  protected ExecutesTransform(CommandParser parser, MessagerWrapper delegateMessager, BrigadierArgumentConverter converter) {
     this.parser = parser;
     this.delegateMessager = delegateMessager;
+    this.converter = converter;
   }
 
   protected String transformName() {
     return "ExecutesTransform";
   }
 
-  protected CommandPath<?> createThisPath(final CommandPath<?> parent, final ExecutableElement element) {
-    return this.createThisExecutesPath(parent, this.parser, element);
+  protected CommandNode createThisPath(final CommandNode parent, final ExecutableElement element) {
+    return this.createExecutesNode(parent, element);
   }
 
   protected int parametersToParse(final List<? extends VariableElement> parameters) {
     return parameters.size();
   }
 
-  protected void populatePath(final ExecutableElement method, final CommandPath<?> path, final ExecutorType type, final List<CommandArgument> args, final List<? extends VariableElement> parameters) {
-    path.setAttribute(AttributeKey.EXECUTABLE, new ExecutableImpl(type, method, args));
+  protected void populatePath(
+      final ExecutableElement method,
+      final CommandNode node,
+      final ExecutorType type,
+      final List<CommandArgument> args,
+      final List<? extends VariableElement> parameters) {
+    node.setAttribute(AttributeKey.EXECUTABLE, new ExecutableImpl(type, method, args));
   }
 
-  protected void populatePathNoArguments(final ExecutableElement method, final CommandPath<?> path, final ExecutorType type, final List<? extends VariableElement> parameters) {
-    path.setAttribute(AttributeKey.EXECUTABLE, new ExecutableImpl(type, method, List.of()));
+  protected void populatePathNoArguments(
+      final ExecutableElement method,
+      final CommandNode node,
+      final ExecutorType type,
+      final List<? extends VariableElement> parameters) {
+    node.setAttribute(AttributeKey.EXECUTABLE, new ExecutableImpl(type, method, List.of()));
   }
 
   @Override
-  public final void transform(final CommandPath<?> parent, final ExecutableElement element) {
-    debug("> {}: parsing {} for '{}'", transformName(), element, parent.toStringNoChildren());
-    final CommandPath<?> thisPath = this.createThisPath(parent, element);
+  public final void transform(final CommandNode root, final ExecutableElement element) throws MismatchedArgumentTypeException {
+//    debug("> {}: parsing {} for '{}'", transformName(), element, root.toStringNoChildren());
+    final CommandNode thisPath = this.createThisPath(root, element);
 
     ExecutorType type = ExecutorType.NONE;
 
@@ -90,28 +102,28 @@ sealed class ExecutesTransform implements PathTransform<ExecutableElement>, Forw
       arguments.add(param);
     }
 
-    final List<List<CommandArgument>> args = this.parser.parseArguments(arguments, (TypeElement) element.getEnclosingElement());
+    final List<CommandArgument> args = parseArguments(arguments, (TypeElement) element.getEnclosingElement());
     if (args.isEmpty()) {
-      final CommandPath<?> out = new SequentialCommandPathImpl(List.of());
-      populatePathNoArguments(element, out, type, parameters);
-      out.setAttribute(AttributeKey.EXECUTOR_TYPE, type);
-      thisPath.addChild(out);
+      populatePathNoArguments(element, thisPath, type, parameters);
+      thisPath.setAttribute(AttributeKey.EXECUTOR_TYPE, type);
       debug("  | {}: no arguments found. Current tree for thisPath: {}", transformName(), thisPath);
       return;
     }
 
-    for (final List<CommandArgument> argList : args) {
-      final CommandPath<?> out = new SequentialCommandPathImpl(argList);
-      populatePath(element, out, type, argList, parameters);
-      out.setAttribute(AttributeKey.EXECUTOR_TYPE, type);
-      thisPath.addChild(out);
-    }
+    final CommandNode out = root.addChildren(args);
+    populatePath(element, out, type, args, parameters);
+    out.setAttribute(AttributeKey.EXECUTOR_TYPE, type);
     debug("  | {}: found arguments! Current tree for thisPath: {}", transformName(), thisPath);
   }
 
   @Override
   public boolean requirement(final ExecutableElement element) {
     return element.getAnnotation(Executes.class) != null;
+  }
+
+  @Override
+  public BrigadierArgumentConverter argumentConverter() {
+    return this.converter;
   }
 
   @Override

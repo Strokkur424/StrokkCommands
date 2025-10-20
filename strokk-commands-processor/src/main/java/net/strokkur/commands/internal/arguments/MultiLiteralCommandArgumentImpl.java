@@ -15,21 +15,18 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.paths;
+package net.strokkur.commands.internal.arguments;
 
-import net.strokkur.commands.internal.arguments.CommandArgument;
+import org.jetbrains.annotations.UnmodifiableView;
 
+import javax.lang.model.element.Element;
 import java.util.Collections;
-import java.util.List;
+import java.util.Set;
 
-public class EmptyCommandPath extends SimpleCommandPathImpl<CommandArgument> {
-
-  public EmptyCommandPath() {
-    super(Collections.emptyList());
-  }
+record MultiLiteralCommandArgumentImpl(Set<String> literals, Element element) implements MultiLiteralCommandArgument {
 
   @Override
-  SimpleCommandPathImpl<CommandArgument> createLeftSplit(final List<CommandArgument> args) {
-    return new EmptyCommandPath();
+  public @UnmodifiableView Set<String> literals() {
+    return Collections.unmodifiableSet(this.literals);
   }
 }

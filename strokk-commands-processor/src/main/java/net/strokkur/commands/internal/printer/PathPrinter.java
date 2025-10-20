@@ -19,16 +19,19 @@ package net.strokkur.commands.internal.printer;
 
 import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
+import net.strokkur.commands.internal.arguments.MultiLiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
 import net.strokkur.commands.internal.intermediate.ExecutorType;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.access.FieldAccess;
+import net.strokkur.commands.internal.intermediate.attributes.Attributable;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.attributes.DefaultExecutable;
 import net.strokkur.commands.internal.intermediate.attributes.Executable;
 import net.strokkur.commands.internal.intermediate.attributes.Parameterizable;
-import net.strokkur.commands.internal.intermediate.paths.CommandPath;
 import net.strokkur.commands.internal.intermediate.requirement.Requirement;
+import net.strokkur.commands.internal.intermediate.tree.CommandNode;
+import net.strokkur.commands.internal.util.IOExceptionIgnoringConsumer;
 import net.strokkur.commands.internal.util.Utils;
 import org.jspecify.annotations.Nullable;
 
@@ -38,61 +41,97 @@ import java.util.List;
 
 interface PathPrinter extends Printable, PrinterInformation {
 
-  default void printPath(CommandPath<?> path) throws IOException {
-    final Executable executable = path.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE);
-    if (executable != null) {
-      printExecutablePath(path, executable);
-      return;
+  String nextLiteral();
+
+  void pushLiteral(String literal);
+
+  void popLiteral();
+
+  default void printNode(final CommandNode node) throws IOException {
+    printNode(node, false);
+  }
+
+  private void printNode(final CommandNode root, boolean printThen) throws IOException {
+    for (final CommandNode node : root.children()) {
+      printForArguments(node, initializer -> {
+        if (printThen) {
+          println();
+          printIndent();
+          print(".then(");
+        }
+
+        print(initializer);
+
+        if (node.argument() instanceof RequiredCommandArgument req) {
+          if (req.getSuggestionProvider() != null) {
+            incrementIndent();
+            println();
+            printIndent();
+            print(".suggests(" + req.getSuggestionProvider().getProvider() + ")");
+            decrementIndent();
+          }
+        }
+
+        printRequires(node);
+
+        final Executable executable = node.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE);
+        if (executable != null) {
+          printExecutableInner(node, executable);
+        }
+
+        printNode(node, true);
+        decrementIndent();
+
+        if (printThen) {
+          println(")");
+        }
+      });
+    }
+  }
+
+  private void printExecutableInner(final CommandNode node, final Executable executable) throws IOException {
+    // print the .executes method
+    println();
+    println(".executes(ctx -> {");
+    incrementIndent();
+
+    final ExecutorType executorType = executable.executorType();
+    if (executorType != ExecutorType.NONE) {
+      printBlock("""
+              if (!(ctx.getSource().getExecutor() instanceof {} executor)) {
+                  throw new SimpleCommandExceptionType(MessageComponentSerializer.message().serialize(
+                      Component.text("This command requires {} {} executor!")
+                  )).create();
+              }""",
+          executorType.toString().charAt(0) + executorType.toString().toLowerCase().substring(1),
+          executorType == ExecutorType.ENTITY ? "an" : "a",
+          executorType.toString().toLowerCase()
+      );
+      println();
     }
 
-    printGenericPath(path, () -> {});
+    boolean instancePrint = true;
+    CommandNode parentNode = node;
+
+    while ((parentNode = parentNode.parent()) != null) {
+      final Parameterizable recordArguments = parentNode.getAttribute(AttributeKey.RECORD_ARGUMENTS);
+      if (recordArguments != null) {
+        printWithRecord(recordArguments, executable);
+        instancePrint = false;
+        break;
+      }
+    }
+
+    if (instancePrint) {
+      printWithInstance(executable);
+    }
+
+    println("return Command.SINGLE_SUCCESS;");
+    decrementIndent();
+    println("})");
   }
 
-  private void printExecutablePath(CommandPath<?> path, Executable executable) throws IOException {
-    this.printGenericPath(path, () -> {
-      // print the .executes method
-      println();
-      println(".executes(ctx -> {");
-      incrementIndent();
-
-      final ExecutorType executorType = executable.executorType();
-      if (executorType != ExecutorType.NONE) {
-        printBlock("""
-                if (!(ctx.getSource().getExecutor() instanceof {} executor)) {
-                    throw new SimpleCommandExceptionType(MessageComponentSerializer.message().serialize(
-                        Component.text("This command requires {} {} executor!")
-                    )).create();
-                }""",
-            executorType.toString().charAt(0) + executorType.toString().toLowerCase().substring(1),
-            executorType == ExecutorType.ENTITY ? "an" : "a",
-            executorType.toString().toLowerCase()
-        );
-        println();
-      }
-
-      boolean instancePrint = true;
-      CommandPath<?> parentPath = path;
-
-      while ((parentPath = parentPath.getParent()) != null) {
-        final Parameterizable recordArguments = parentPath.getAttribute(AttributeKey.RECORD_ARGUMENTS);
-        if (recordArguments != null) { // TODO: THIS IS NEVER CALLED. FIX THIS.
-          printWithRecord(recordArguments, executable);
-          instancePrint = false;
-          break;
-        }
-      }
-
-      if (instancePrint) {
-        printWithInstance(executable);
-      }
-
-      println("return Command.SINGLE_SUCCESS;");
-      decrementIndent();
-      println("})");
-    });
-  }
-
-  private void printWithInstance(Executable executable) throws IOException {
+  private void printWithInstance(final Executable executable) throws IOException {
     final List<ExecuteAccess<?>> pathToUse;
     if (getAccessStack().size() > 1 && getAccessStack().reversed().get(1) instanceof FieldAccess) {
       pathToUse = getAccessStack().subList(0, getAccessStack().size() - 1);
@@ -103,7 +142,7 @@ interface PathPrinter extends Printable, PrinterInformation {
     printExecutesMethodCall(executable, Utils.getInstanceName(pathToUse));
   }
 
-  private void printExecutesMethodCall(Executable executable, String typeName) throws IOException {
+  private void printExecutesMethodCall(final Executable executable, final String typeName) throws IOException {
     println("{}.{}(", typeName, executable.executesMethod().getSimpleName().toString());
     incrementIndent();
 
@@ -114,7 +153,7 @@ interface PathPrinter extends Printable, PrinterInformation {
     println(");");
   }
 
-  private void printWithRecord(Parameterizable record, Executable executable) throws IOException {
+  private void printWithRecord(final Parameterizable record, final Executable executable) throws IOException {
     final String typeName = Utils.getTypeName(executable.executesMethod().getEnclosingElement());
 
     if (record.parameterArguments().isEmpty()) {
@@ -130,7 +169,7 @@ interface PathPrinter extends Printable, PrinterInformation {
     printExecutesMethodCall(executable, "executorClass");
   }
 
-  private void printExecutesArguments(Executable executable) throws IOException {
+  private void printExecutesArguments(final Executable executable) throws IOException {
     final ExecutorType executorType = executable.executorType();
     final String argumentsTypeGetter = executable instanceof DefaultExecutable def ? def.defaultExecutableArgumentTypes().getGetter() : null;
     final List<? extends CommandArgument> arguments = executable.parameterArguments();
@@ -169,16 +208,17 @@ interface PathPrinter extends Printable, PrinterInformation {
     }
   }
 
-  private void printArguments(List<? extends CommandArgument> arguments) throws IOException {
+  private void printArguments(final List<? extends CommandArgument> arguments) throws IOException {
     for (int i = 0, argumentsSize = arguments.size(); i < argumentsSize; i++) {
       final CommandArgument argument = arguments.get(i);
 
       printIndent();
-      if (argument instanceof RequiredCommandArgument requiredArgument) {
-        print(requiredArgument.getArgumentType().retriever());
-      } else {
-        print("\"{}\"", argument.getName());
-      }
+      print(switch (argument) {
+        case RequiredCommandArgument req -> req.getArgumentType().retriever();
+        case MultiLiteralCommandArgument ignored -> '"' + nextLiteral() + '"';
+        case LiteralCommandArgument lit -> '"' + lit.literal() + '"';
+        default -> throw new IllegalArgumentException("Unknown argument class: " + argument.getClass());
+      });
 
       if (i + 1 < argumentsSize) {
         print(",");
@@ -188,52 +228,25 @@ interface PathPrinter extends Printable, PrinterInformation {
     }
   }
 
-  private void printArgument(CommandArgument argument) throws IOException {
-    switch (argument) {
-      case LiteralCommandArgument literalArgument -> printLiteral(literalArgument);
-      case RequiredCommandArgument requiredArgument -> printRequiredArg(requiredArgument);
-      default -> throw new IllegalStateException("Unknown argument: " + argument);
-    }
-  }
-
-  private void printLiteral(LiteralCommandArgument literalArg) throws IOException {
-    print("Commands.literal(\"{}\")", literalArg.literal());
-  }
-
-  private void printRequiredArg(RequiredCommandArgument requiredArg) throws IOException {
-    print("Commands.argument(\"{}\", {})",
-        requiredArg.getName(),
-        requiredArg.getArgumentType().initializer()
-    );
-
-    if (requiredArg.getSuggestionProvider() != null) {
-      incrementIndent();
-      println();
-      printIndent();
-      print(".suggests(" + requiredArg.getSuggestionProvider().getProvider() + ")");
-      decrementIndent();
-    }
-  }
-
-  private void printRequires(@Nullable CommandPath<?> path) throws IOException {
-    if (path != null) {
+  private void printRequires(@Nullable Attributable attributable) throws IOException {
+    if (attributable != null) {
       final List<Requirement> requirements = new ArrayList<>();
 
-      final boolean operator = path.getAttributeNotNull(AttributeKey.REQUIRES_OP);
+      final boolean operator = attributable.getAttributeNotNull(AttributeKey.REQUIRES_OP);
       final ExecutorType executorType;
 
-      if (path.hasAttribute(AttributeKey.EXECUTOR_TYPE) && !path.getAttributeNotNull(AttributeKey.EXECUTOR_HANDLED)) {
-        executorType = path.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE);
+      if (attributable.hasAttribute(AttributeKey.EXECUTOR_TYPE)) {
+        executorType = attributable.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE);
       } else {
         executorType = ExecutorType.NONE;
       }
 
-      final Requirement req = path.getAttribute(AttributeKey.REQUIREMENT);
+      final Requirement req = attributable.getAttribute(AttributeKey.REQUIREMENT);
       if (req != null) {
         requirements.add(req);
       }
 
-      requirements.addAll(path.getAttributeNotNull(AttributeKey.PERMISSIONS)
+      requirements.addAll(attributable.getAttributeNotNull(AttributeKey.PERMISSIONS)
           .stream()
           .map(Requirement::permission)
           .toList());
@@ -249,52 +262,18 @@ interface PathPrinter extends Printable, PrinterInformation {
     }
   }
 
-  private <T extends CommandArgument> void printArguments(List<T> arguments, @Nullable CommandPath<?> printRequirements, InsidePrinter insidePrinter, boolean noStartingThen) throws IOException {
-    if (arguments.isEmpty()) {
-      insidePrinter.print();
-      return;
-    }
-
-    T arg = arguments.removeFirst();
-    if (!noStartingThen) {
-      println();
-      printIndent();
-      print(".then(");
-    }
-
-    printArgument(arg);
-    incrementIndent();
-
-    printRequires(printRequirements);
-    printArguments(arguments, null, insidePrinter, false);
-    decrementIndent();
-
-    if (!noStartingThen) {
-      println(")");
-    }
-  }
-
-  private <T extends CommandArgument> void printGenericPath(CommandPath<T> path, InsidePrinter insidePrinter) throws IOException {
-    printArguments(new ArrayList<>(path.getArguments()), path, () -> {
-      if (path.hasAttribute(AttributeKey.ACCESS_STACK)) {
-        path.getAttributeNotNull(AttributeKey.ACCESS_STACK).forEach(getAccessStack()::push);
+  private void printForArguments(final CommandNode node, final IOExceptionIgnoringConsumer<String> initializer) throws IOException {
+    switch (node.argument()) {
+      case LiteralCommandArgument lit -> initializer.accept("Commands.literal(\"%s\")".formatted(lit.literal()));
+      case RequiredCommandArgument req -> initializer.accept("Commands.argument(\"%s\", %s)".formatted(req.getName(), req.getArgumentType().initializer()));
+      case MultiLiteralCommandArgument multi -> {
+        for (final String literal : multi.literals()) {
+          pushLiteral(literal);
+          initializer.accept("Commands.literal(\"%s\")".formatted(literal));
+          popLiteral();
+        }
       }
-
-      for (final CommandPath<?> child : path.getChildren()) {
-        printPath(child);
-      }
-
-      insidePrinter.print();
-      if (path.hasAttribute(AttributeKey.ACCESS_STACK)) {
-        path.getAttributeNotNull(AttributeKey.ACCESS_STACK).forEach(
-            access -> getAccessStack().pop()
-        );
-      }
-    }, path.getParent() == null);
-  }
-
-  @FunctionalInterface
-  interface InsidePrinter {
-    void print() throws IOException;
+      default -> throw new IllegalArgumentException("Unknown argument class: " + node.argument().getClass());
+    }
   }
 }

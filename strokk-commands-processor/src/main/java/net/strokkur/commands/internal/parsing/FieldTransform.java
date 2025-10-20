@@ -20,9 +20,11 @@ package net.strokkur.commands.internal.parsing;
 import net.strokkur.commands.annotations.Command;
 import net.strokkur.commands.annotations.Subcommand;
 import net.strokkur.commands.internal.StrokkCommandsProcessor;
+import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
+import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
-import net.strokkur.commands.internal.intermediate.paths.CommandPath;
+import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 
@@ -31,16 +33,16 @@ import javax.lang.model.element.VariableElement;
 import java.util.ArrayList;
 import java.util.List;
 
-record FieldTransform(CommandParser parser, MessagerWrapper delegateMessager) implements PathTransform<VariableElement>, ForwardingMessagerWrapper {
+record FieldTransform(CommandParser parser, MessagerWrapper delegateMessager, BrigadierArgumentConverter argumentConverter) implements NodeTransform<VariableElement>, ForwardingMessagerWrapper {
 
   @Override
-  public void transform(final CommandPath<?> parent, final VariableElement element) {
+  public void transform(final CommandNode root, final VariableElement element) throws MismatchedArgumentTypeException {
     debug("> FieldTransform: {}.{}", element.getEnclosingElement().getSimpleName(), element.getSimpleName());
-    final CommandPath<?> thisPath = createThisPath(parent, this.parser, element);
+    final CommandNode node = createSubcommandNode(root, element);
 
-    thisPath.setAttribute(AttributeKey.ACCESS_STACK, new ArrayList<>(List.of(ExecuteAccess.of(element))));
+    node.setAttribute(AttributeKey.ACCESS_STACK, new ArrayList<>(List.of(ExecuteAccess.of(element))));
 
-    this.parser.parseClass(thisPath, (TypeElement) StrokkCommandsProcessor.getTypes().asElement(element.asType()));
+    this.parser.parseClass(node, (TypeElement) StrokkCommandsProcessor.getTypes().asElement(element.asType()));
   }
 
   @Override

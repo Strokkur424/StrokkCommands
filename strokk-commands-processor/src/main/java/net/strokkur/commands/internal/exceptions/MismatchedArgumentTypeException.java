@@ -15,12 +15,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.attributes;
+package net.strokkur.commands.internal.exceptions;
 
-import net.strokkur.commands.internal.arguments.CommandArgument;
-
-import java.util.List;
-
-public interface Parameterizable {
-  List<CommandArgument> parameterArguments();
+public class MismatchedArgumentTypeException extends Exception {
+  public MismatchedArgumentTypeException(String message) {
+    super(message);
+  }
 }

@@ -18,12 +18,13 @@
 package net.strokkur.commands.internal.parsing;
 
 import net.strokkur.commands.annotations.DefaultExecutes;
+import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
 import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.intermediate.ExecutorType;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.attributes.DefaultExecutable;
 import net.strokkur.commands.internal.intermediate.attributes.DefaultExecutableImpl;
-import net.strokkur.commands.internal.intermediate.paths.CommandPath;
+import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 
@@ -34,8 +35,8 @@ import java.util.List;
 
 final class DefaultExecutesTransform extends ExecutesTransform {
 
-  public DefaultExecutesTransform(final CommandParser parser, final MessagerWrapper delegateMessager) {
-    super(parser, delegateMessager);
+  DefaultExecutesTransform(final CommandParser parser, final MessagerWrapper delegateMessager, final BrigadierArgumentConverter converter) {
+    super(parser, delegateMessager, converter);
   }
 
   private DefaultExecutable.Type getType(final TypeMirror type) {
@@ -54,9 +55,9 @@ final class DefaultExecutesTransform extends ExecutesTransform {
   }
 
   @Override
-  protected CommandPath<?> createThisPath(final CommandPath<?> parent, final ExecutableElement element) {
-    final CommandPath<?> out = this.parser.getLiteralPath(element, DefaultExecutes.class, DefaultExecutes::value);
-    return this.populatePath(parent, out, element);
+  protected CommandNode createThisPath(final CommandNode parent, final ExecutableElement element) {
+    final CommandNode out = createLiteralSequence(parent, element, DefaultExecutes.class, DefaultExecutes::value);
+    return this.populateNode(parent, out, element);
   }
 
   @Override
@@ -69,13 +70,22 @@ final class DefaultExecutesTransform extends ExecutesTransform {
   }
 
   @Override
-  protected void populatePath(final ExecutableElement method, final CommandPath<?> path, final ExecutorType type, final List<CommandArgument> args, final List<? extends VariableElement> parameters) {
-    path.setAttribute(AttributeKey.DEFAULT_EXECUTABLE, new DefaultExecutableImpl(type, method, args, getType(parameters.getLast().asType())));
+  protected void populatePath(
+      final ExecutableElement method,
+      final CommandNode node,
+      final ExecutorType type,
+      final List<CommandArgument> args,
+      final List<? extends VariableElement> parameters) {
+    node.setAttribute(AttributeKey.DEFAULT_EXECUTABLE, new DefaultExecutableImpl(type, method, args, getType(parameters.getLast().asType())));
   }
 
   @Override
-  protected void populatePathNoArguments(final ExecutableElement method, final CommandPath<?> path, final ExecutorType type, final List<? extends VariableElement> parameters) {
-    path.setAttribute(AttributeKey.DEFAULT_EXECUTABLE, new DefaultExecutableImpl(type, method, List.of(), getType(parameters.getLast().asType())));
+  protected void populatePathNoArguments(
+      final ExecutableElement method,
+      final CommandNode node,
+      final ExecutorType type,
+      final List<? extends VariableElement> parameters) {
+    node.setAttribute(AttributeKey.DEFAULT_EXECUTABLE, new DefaultExecutableImpl(type, method, List.of(), getType(parameters.getLast().asType())));
   }
 
   @Override

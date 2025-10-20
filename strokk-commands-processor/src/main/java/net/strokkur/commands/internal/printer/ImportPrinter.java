@@ -18,15 +18,13 @@
 package net.strokkur.commands.internal.printer;
 
 import net.strokkur.commands.internal.StrokkCommandsProcessor;
-import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
 import net.strokkur.commands.internal.intermediate.ExecutorType;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.access.FieldAccess;
 import net.strokkur.commands.internal.intermediate.access.InstanceAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
-import net.strokkur.commands.internal.intermediate.paths.CommandPath;
-import net.strokkur.commands.internal.intermediate.paths.LiteralCommandPath;
+import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.util.Utils;
 
@@ -74,7 +72,7 @@ interface ImportPrinter extends Printable, PrinterInformation {
 
   default Set<String> getImports() {
     final Set<String> imports = new HashSet<>(STANDARD_IMPORTS);
-    gatherImports(imports, getCommandPath());
+    gatherImports(imports, getNode());
 
     imports.removeIf(importString -> {
       if (importString.startsWith("java.lang")) {
@@ -92,9 +90,9 @@ interface ImportPrinter extends Printable, PrinterInformation {
     return imports;
   }
 
-  private void gatherImports(Set<String> imports, CommandPath<?> commandPath) {
-    if (commandPath.hasAttribute(AttributeKey.DEFAULT_EXECUTABLE)) {
-      imports.addAll(commandPath.getAttributeNotNull(AttributeKey.DEFAULT_EXECUTABLE).defaultExecutableArgumentTypes().getImports());
+  private void gatherImports(Set<String> imports, CommandNode node) {
+    if (node.hasAttribute(AttributeKey.DEFAULT_EXECUTABLE)) {
+      imports.addAll(node.getAttributeNotNull(AttributeKey.DEFAULT_EXECUTABLE).defaultExecutableArgumentTypes().getImports());
     }
 
     if (getCommandInformation().constructor() instanceof ExecutableElement ctor) {
@@ -110,8 +108,8 @@ interface ImportPrinter extends Printable, PrinterInformation {
       Utils.populateParameterImports(imports, typeParameter);
     }
 
-    if (commandPath.hasAttribute(AttributeKey.ACCESS_STACK)) {
-      for (final ExecuteAccess<?> access : commandPath.getAttributeNotNull(AttributeKey.ACCESS_STACK)) {
+    if (node.hasAttribute(AttributeKey.ACCESS_STACK)) {
+      for (final ExecuteAccess<?> access : node.getAttributeNotNull(AttributeKey.ACCESS_STACK)) {
         if (access instanceof InstanceAccess instanceAccess) {
           imports.add(instanceAccess.getElement().getQualifiedName().toString());
         } else if (access instanceof FieldAccess fieldAccess) {
@@ -120,22 +118,18 @@ interface ImportPrinter extends Printable, PrinterInformation {
       }
     }
 
-    if (!(commandPath instanceof LiteralCommandPath)) {
-      for (final CommandArgument arg : commandPath.getArguments()) {
-        if (arg instanceof RequiredCommandArgument requiredArgument) {
-          imports.addAll(requiredArgument.getArgumentType().imports());
+    if (node.argument() instanceof RequiredCommandArgument req) {
+      imports.addAll(req.getArgumentType().imports());
 
-          if (requiredArgument.getSuggestionProvider() != null) {
-            final TypeElement suggestionsTypeElement = requiredArgument.getSuggestionProvider().getClassElement();
-            if (suggestionsTypeElement != null) {
-              imports.add(suggestionsTypeElement.getQualifiedName().toString());
-            }
-          }
+      if (req.getSuggestionProvider() != null) {
+        final TypeElement suggestionsTypeElement = req.getSuggestionProvider().getClassElement();
+        if (suggestionsTypeElement != null) {
+          imports.add(suggestionsTypeElement.getQualifiedName().toString());
         }
       }
     }
 
-    final ExecutorType executorType = commandPath.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE);
+    final ExecutorType executorType = node.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE);
     if (executorType == ExecutorType.PLAYER) {
       imports.add(Classes.PLAYER);
     } else if (executorType == ExecutorType.ENTITY) {
@@ -148,7 +142,7 @@ interface ImportPrinter extends Printable, PrinterInformation {
       imports.add(Classes.COMPONENT);
     }
 
-    for (final CommandPath<?> child : commandPath.getChildren()) {
+    for (final CommandNode child : node.children()) {
       gatherImports(imports, child);
     }
   }

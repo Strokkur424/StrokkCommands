@@ -21,7 +21,7 @@ import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.access.FieldAccess;
 import net.strokkur.commands.internal.intermediate.access.InstanceAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
-import net.strokkur.commands.internal.intermediate.paths.CommandPath;
+import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.Utils;
 
 import javax.lang.model.element.ExecutableElement;
@@ -36,15 +36,15 @@ import java.util.List;
 interface InstanceFieldPrinter extends Printable, PrinterInformation {
 
   default void printInstanceFields() throws IOException {
-    if (printInstanceFields(getCommandPath()) > 0) {
+    if (printInstanceFields(getNode()) > 0) {
       println(); // Extra newline for styling reasons
     }
   }
 
-  private int printInstanceFields(final CommandPath<?> commandPath) throws IOException {
+  private int printInstanceFields(final CommandNode node) throws IOException {
     int pushed = 0;
-    if (commandPath.hasAttribute(AttributeKey.ACCESS_STACK)) {
-      for (ExecuteAccess<?> executeAccess : commandPath.getAttributeNotNull(AttributeKey.ACCESS_STACK)) {
+    if (node.hasAttribute(AttributeKey.ACCESS_STACK)) {
+      for (ExecuteAccess<?> executeAccess : node.getAttributeNotNull(AttributeKey.ACCESS_STACK)) {
         if (executeAccess.isRecord()) {
           for (int i = 0; i < pushed; i++) {
             getAccessStack().pop();
@@ -58,7 +58,7 @@ interface InstanceFieldPrinter extends Printable, PrinterInformation {
     }
 
     int printed = 0;
-    if (commandPath.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE) != null) {
+    if (node.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE) != null) {
       final List<ExecuteAccess<?>> pathToUse;
       if (getAccessStack().size() > 1 && getAccessStack().reversed().get(1) instanceof FieldAccess) {
         pathToUse = getAccessStack().subList(0, getAccessStack().size() - 1);
@@ -70,7 +70,7 @@ interface InstanceFieldPrinter extends Printable, PrinterInformation {
         printed++;
       }
     } else {
-      for (final CommandPath<?> child : commandPath.getChildren()) {
+      for (final CommandNode child : node.children()) {
         printed += printInstanceFields(child);
       }
     }

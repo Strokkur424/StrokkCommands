@@ -33,7 +33,6 @@ public interface AttributeKey<T> {
   AttributeKey<Executable> EXECUTABLE = create("executable", null);
   AttributeKey<DefaultExecutable> DEFAULT_EXECUTABLE = create("default_executable", null);
   AttributeKey<ExecutorType> EXECUTOR_TYPE = create("executor_type", ExecutorType.NONE);
-  AttributeKey<Boolean> EXECUTOR_HANDLED = create("executor_handled", false);
 
   AttributeKey<Requirement> REQUIREMENT = create("requirement", Requirement.EMPTY);
   AttributeKey<Boolean> REQUIRES_OP = create("requires_op", false);

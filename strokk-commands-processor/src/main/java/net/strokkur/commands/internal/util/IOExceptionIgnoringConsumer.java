@@ -15,20 +15,12 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.paths;
+package net.strokkur.commands.internal.util;
 
-import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
+import java.io.IOException;
 
-import java.util.List;
+@FunctionalInterface
+public interface IOExceptionIgnoringConsumer<T> {
 
-public class LiteralCommandPath extends SimpleCommandPathImpl<LiteralCommandArgument> {
-
-  public LiteralCommandPath(final List<LiteralCommandArgument> arguments) {
-    super(arguments);
-  }
-
-  @Override
-  SimpleCommandPathImpl<LiteralCommandArgument> createLeftSplit(final List<LiteralCommandArgument> args) {
-    return new LiteralCommandPath(args);
-  }
+  void accept(T value) throws IOException;
 }

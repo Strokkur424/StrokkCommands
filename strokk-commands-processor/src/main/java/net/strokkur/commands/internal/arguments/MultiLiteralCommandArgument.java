@@ -15,12 +15,24 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.attributes;
+package net.strokkur.commands.internal.arguments;
 
-import net.strokkur.commands.internal.arguments.CommandArgument;
+import org.jetbrains.annotations.UnmodifiableView;
 
-import java.util.List;
+import javax.lang.model.element.Element;
+import java.util.Set;
 
-public interface Parameterizable {
-  List<CommandArgument> parameterArguments();
+public interface MultiLiteralCommandArgument extends CommandArgument {
+
+  static MultiLiteralCommandArgument multiLiteral(Set<String> literals, Element element) {
+    return new MultiLiteralCommandArgumentImpl(literals, element);
+  }
+
+  @UnmodifiableView
+  Set<String> literals();
+
+  @Override
+  default String getName() {
+    return "<multiliteral>";
+  }
 }

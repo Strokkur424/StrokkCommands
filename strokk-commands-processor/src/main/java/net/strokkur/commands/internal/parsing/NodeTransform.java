@@ -17,60 +17,53 @@
  */
 package net.strokkur.commands.internal.parsing;
 
-import net.strokkur.commands.annotations.Command;
 import net.strokkur.commands.annotations.Executes;
 import net.strokkur.commands.annotations.Permission;
 import net.strokkur.commands.annotations.RequiresOP;
 import net.strokkur.commands.annotations.Subcommand;
+import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
-import net.strokkur.commands.internal.intermediate.paths.CommandPath;
-import net.strokkur.commands.internal.intermediate.paths.EmptyCommandPath;
+import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import org.jetbrains.annotations.Nullable;
 
 import javax.lang.model.element.Element;
 import java.util.Set;
 
-interface PathTransform<S extends Element> {
+interface NodeTransform<S extends Element> extends PathUtils {
 
-  void transform(CommandPath<?> parent, S element);
+  void transform(CommandNode parent, S element) throws MismatchedArgumentTypeException;
 
   boolean requirement(S element);
 
-  default void transformIfRequirement(CommandPath<?> parent, S element) {
+  default void transformIfRequirement(CommandNode parent, S element) throws MismatchedArgumentTypeException {
     if (requirement(element)) {
       transform(parent, element);
     }
   }
 
-  default CommandPath<?> createThisPath(CommandPath<?> parent, CommandParser parser, Element element) {
-    CommandPath<?> thisPath = parser.getLiteralPath(element, Command.class, Command::value);
-    if (thisPath == null) {
-      thisPath = parser.getLiteralPath(element, Subcommand.class, Subcommand::value);
-    }
-    return populatePath(parent, thisPath, element);
+  default CommandNode createSubcommandNode(CommandNode parent, Element element) {
+    final CommandNode node = createLiteralSequence(parent, element, Subcommand.class, Subcommand::value);
+    return populateNode(parent, node, element);
   }
 
-  default CommandPath<?> createThisExecutesPath(CommandPath<?> parent, CommandParser parser, Element element) {
-    CommandPath<?> thisPath = parser.getLiteralPath(element, Executes.class, Executes::value);
-    return populatePath(parent, thisPath, element);
+  default CommandNode createExecutesNode(CommandNode parent, Element element) {
+    CommandNode thisPath = createLiteralSequence(parent, element, Executes.class, Executes::value);
+    return populateNode(parent, thisPath, element);
   }
 
-  default CommandPath<?> populatePath(CommandPath<?> parent, @Nullable CommandPath<?> thisPath, Element element) {
-    if (thisPath == null) {
-      thisPath = new EmptyCommandPath();
-    }
+  default CommandNode populateNode(final CommandNode parent, final @Nullable CommandNode thisPath, final Element element) {
+    final CommandNode out = thisPath == null ? parent : thisPath;
 
     // Add permission and RequiresOP clauses
     final Permission permission = element.getAnnotation(Permission.class);
     if (permission != null) {
-      thisPath.setAttribute(AttributeKey.PERMISSIONS, Set.of(permission.value()));
+      out.editAttributeMutable(AttributeKey.PERMISSIONS, s -> s.add(permission.value()), () -> Set.of(permission.value()));
     }
 
     if (element.getAnnotation(RequiresOP.class) != null) {
-      thisPath.setAttribute(AttributeKey.REQUIRES_OP, true);
+      out.setAttribute(AttributeKey.REQUIRES_OP, true);
     }
 
-    parent.addChild(thisPath);
-    return thisPath;
+    return out;
   }
 }

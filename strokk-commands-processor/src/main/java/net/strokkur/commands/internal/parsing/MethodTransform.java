@@ -17,36 +17,52 @@
  */
 package net.strokkur.commands.internal.parsing;
 
-import net.strokkur.commands.internal.intermediate.paths.CommandPath;
+import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
+import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
+import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 
 import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
-public class MethodTransform implements PathTransform<ExecutableElement> {
-  private final List<PathTransform<ExecutableElement>> innerTransforms;
+public class MethodTransform implements NodeTransform<ExecutableElement> {
+  private final List<NodeTransform<ExecutableElement>> innerTransforms;
+  private final MessagerWrapper messagerWrapper;
+  private final BrigadierArgumentConverter converter;
 
-  public MethodTransform(final CommandParser parser, final MessagerWrapper messager) {
+  public MethodTransform(final CommandParser parser, final MessagerWrapper messager, final BrigadierArgumentConverter converter) {
     this.innerTransforms = List.of(
-        new ExecutesTransform(parser, messager),
-        new DefaultExecutesTransform(parser, messager)
+        new ExecutesTransform(parser, messager, converter),
+        new DefaultExecutesTransform(parser, messager, converter)
     );
+    this.messagerWrapper = messager;
+    this.converter = converter;
   }
 
   @Override
-  public void transform(final CommandPath<?> parent, final ExecutableElement element) {
-    for (final PathTransform<ExecutableElement> innerTransform : innerTransforms) {
-      innerTransform.transformIfRequirement(parent, element);
+  public void transform(final CommandNode node, final ExecutableElement element) throws MismatchedArgumentTypeException {
+    for (final NodeTransform<ExecutableElement> innerTransform : innerTransforms) {
+      innerTransform.transformIfRequirement(node, element);
     }
   }
 
   @Override
   public boolean requirement(final ExecutableElement element) {
-    for (final PathTransform<ExecutableElement> innerTransform : innerTransforms) {
+    for (final NodeTransform<ExecutableElement> innerTransform : innerTransforms) {
       if (innerTransform.requirement(element)) {
         return true;
       }
     }
     return false;
+  }
+
+  @Override
+  public BrigadierArgumentConverter argumentConverter() {
+    return this.converter;
+  }
+
+  @Override
+  public MessagerWrapper delegateMessager() {
+    return this.messagerWrapper;
   }
 }
