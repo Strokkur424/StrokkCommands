@@ -84,7 +84,7 @@ interface InstanceFieldPrinter extends Printable, PrinterInformation {
 
   private boolean printAccessInstance(List<ExecuteAccess<?>> accesses) throws IOException {
     if (accesses.isEmpty()) {
-      return false; // IDK how this even happens, but what the hell am I supposed to do if the access stack is empty?
+      throw new IllegalStateException("Accesses stack was empty");
     }
 
     if (accesses.size() == 1) {

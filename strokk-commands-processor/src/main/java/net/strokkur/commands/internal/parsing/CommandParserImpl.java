@@ -31,7 +31,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 
 public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapper {
-  private final NodeTransform<TypeElement> classTransform;
+  private final ClassTransform classTransform;
   private final NodeTransform<TypeElement> recordTransform;
   private final NodeTransform<ExecutableElement> methodTransform;
   private final NodeTransform<VariableElement> fieldTransform;
@@ -50,6 +50,8 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
   @Override
   public CommandNode createCommandTree(final String name, final TypeElement typeElement) {
     final CommandNode root = CommandNode.createRoot(LiteralCommandArgument.literal(name, typeElement));
+    this.classTransform.populateNode(null, root, typeElement);
+    this.classTransform.addAccessAttribute(root, typeElement);
     try {
       ClassTransform.parseInnerElements(root, typeElement, this);
     } catch (MismatchedArgumentTypeException e) {
@@ -77,7 +79,8 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
       }
     } catch (MismatchedArgumentTypeException ex) {
       // TODO: Replace with more sophisticated handling
-      throw new RuntimeException(ex);
+      //noinspection CallToPrintStackTrace
+      ex.printStackTrace();
     }
   }
 
@@ -89,20 +92,6 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
       this.classTransform.transform(node, element);
     } else {
       throw new IllegalStateException("Unknown class type: " + element.getKind().name());
-    }
-  }
-
-  @Override
-  public void parseMethod(final CommandNode node, final ExecutableElement element) throws MismatchedArgumentTypeException {
-    this.methodTransform.transform(node, element);
-  }
-
-  @Override
-  public void parseField(final CommandNode node, final VariableElement element) throws MismatchedArgumentTypeException {
-    if (element.getKind() == ElementKind.FIELD) {
-      this.fieldTransform.transform(node, element);
-    } else {
-      this.infoElement("Tried to parse variable elements as field", element);
     }
   }
 

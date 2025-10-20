@@ -97,4 +97,6 @@ public interface CommandNode extends Attributable {
     }
     return node;
   }
+
+  String toString(int indent);
 }

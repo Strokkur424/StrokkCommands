@@ -166,8 +166,8 @@ public final class CommandTreePrinter extends AbstractPrinter implements Printer
 
     printIndent();
     print("return ");
-    printNode(node);
     incrementIndent();
+    printNode(node);
     println(".build();");
     decrementIndent();
     decrementIndent();

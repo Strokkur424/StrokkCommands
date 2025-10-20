@@ -21,9 +21,7 @@ import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
 
 public interface CommandParser {
 
@@ -32,8 +30,4 @@ public interface CommandParser {
   void parseElement(CommandNode root, Element element) throws MismatchedArgumentTypeException;
 
   void parseClass(CommandNode root, TypeElement element) throws MismatchedArgumentTypeException;
-
-  void parseMethod(CommandNode root, ExecutableElement element) throws MismatchedArgumentTypeException;
-
-  void parseField(CommandNode root, VariableElement element) throws MismatchedArgumentTypeException;
 }

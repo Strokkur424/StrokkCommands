@@ -78,7 +78,7 @@ sealed class ExecutesTransform implements NodeTransform<ExecutableElement>, Forw
 
   @Override
   public final void transform(final CommandNode root, final ExecutableElement element) throws MismatchedArgumentTypeException {
-//    debug("> {}: parsing {} for '{}'", transformName(), element, root.toStringNoChildren());
+    debug("> {}: parsing {} for '{}'", transformName(), element, root.argument().getName());
     final CommandNode thisPath = this.createThisPath(root, element);
 
     ExecutorType type = ExecutorType.NONE;
@@ -110,7 +110,7 @@ sealed class ExecutesTransform implements NodeTransform<ExecutableElement>, Forw
       return;
     }
 
-    final CommandNode out = root.addChildren(args);
+    final CommandNode out = thisPath.addChildren(args);
     populatePath(element, out, type, args, parameters);
     out.setAttribute(AttributeKey.EXECUTOR_TYPE, type);
     debug("  | {}: found arguments! Current tree for thisPath: {}", transformName(), thisPath);

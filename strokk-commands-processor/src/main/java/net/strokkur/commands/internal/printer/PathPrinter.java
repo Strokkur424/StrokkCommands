@@ -52,41 +52,40 @@ interface PathPrinter extends Printable, PrinterInformation {
   }
 
   private void printNode(final CommandNode root, boolean printThen) throws IOException {
-    for (final CommandNode node : root.children()) {
-      printForArguments(node, initializer -> {
-        if (printThen) {
+    printForArguments(root, initializer -> {
+      if (printThen) {
+        println();
+        printIndent();
+        print(".then(");
+        incrementIndent();
+      }
+
+      print(initializer);
+
+      if (root.argument() instanceof RequiredCommandArgument req) {
+        if (req.getSuggestionProvider() != null) {
           println();
           printIndent();
-          print(".then(");
+          print(".suggests(" + req.getSuggestionProvider().getProvider() + ")");
         }
+      }
 
-        print(initializer);
+      printRequires(root);
 
-        if (node.argument() instanceof RequiredCommandArgument req) {
-          if (req.getSuggestionProvider() != null) {
-            incrementIndent();
-            println();
-            printIndent();
-            print(".suggests(" + req.getSuggestionProvider().getProvider() + ")");
-            decrementIndent();
-          }
-        }
+      final Executable executable = root.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE);
+      if (executable != null) {
+        printExecutableInner(root, executable);
+      }
 
-        printRequires(node);
-
-        final Executable executable = node.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE);
-        if (executable != null) {
-          printExecutableInner(node, executable);
-        }
-
+      for (final CommandNode node : root.children()) {
         printNode(node, true);
-        decrementIndent();
+      }
 
-        if (printThen) {
-          println(")");
-        }
-      });
-    }
+      if (printThen) {
+        decrementIndent();
+        println(")");
+      }
+    });
   }
 
   private void printExecutableInner(final CommandNode node, final Executable executable) throws IOException {

@@ -24,4 +24,8 @@ import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
 public record ExecutableImpl(ExecutorType executorType, ExecutableElement executesMethod, List<CommandArgument> parameterArguments) implements Executable {
+  @Override
+  public String toString() {
+    return "ExecutableImpl[" + executorType.name() + "]";
+  }
 }

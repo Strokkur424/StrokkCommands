@@ -72,7 +72,7 @@ sealed class ClassTransform implements NodeTransform<TypeElement>, ForwardingMes
     debug("> {}: parsing {}...", transformName(), element);
 
     final CommandNode node = this.createSubcommandNode(parent, element);
-    addAccessAttribute(node, element);
+    this.addAccessAttribute(node, element);
 
     parseInnerElements(parseRecordComponents(node, element), element, this.parser);
   }

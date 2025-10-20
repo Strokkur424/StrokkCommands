@@ -69,19 +69,19 @@ class CommandNodeImpl implements CommandNode {
       if (child.argument() instanceof MultiLiteralCommandArgument childMulti) {
         if (argument instanceof MultiLiteralCommandArgument argMulti) {
           if (childMulti.literals().equals(argMulti.literals())) {
-            // The same multiliterals
+            // The same multi literals
             return child;
           }
           for (final String literal : childMulti.literals()) {
             if (argMulti.literals().contains(literal)) {
-              throw new MismatchedArgumentTypeException("The multiliteral " + childMulti.literals() + " contains duplicate literals from the existing multiliteral " + argMulti.literals());
+              throw new MismatchedArgumentTypeException("The multi literal " + childMulti.literals() + " contains duplicate literals from the existing multiliteral " + argMulti.literals());
             }
           }
           continue;
         }
 
         if (childMulti.literals().contains(argument.getName())) {
-          throw new MismatchedArgumentTypeException("The multiliteral " + childMulti.literals() + " already contains the name " + argument.getName() + ".");
+          throw new MismatchedArgumentTypeException("The multi literal " + childMulti.literals() + " already contains the name " + argument.getName() + ".");
         }
         continue;
       }
@@ -107,7 +107,9 @@ class CommandNodeImpl implements CommandNode {
         ));
       }
 
-      throw new MismatchedArgumentTypeException("An argument with the name of '%s' already exists, but one was a literal and one was an argument.");
+      throw new MismatchedArgumentTypeException("An argument with the name of '%s' already exists, but one was a literal and one was an argument.".formatted(
+          child.argument().getName()
+      ));
     }
 
     final CommandNodeImpl newNode = new CommandNodeImpl(this, argument);
@@ -133,5 +135,33 @@ class CommandNodeImpl implements CommandNode {
   @Override
   public boolean hasAttribute(final AttributeKey<?> key) {
     return this.attributes.containsKey(key.key());
+  }
+
+  public String toString() {
+    return this.toString(0);
+  }
+
+  @Override
+  public String toString(final int indent) {
+    final StringBuilder builder = new StringBuilder();
+    builder.append("| ".repeat(indent));
+
+    switch (this.argument) {
+      case MultiLiteralCommandArgument multi -> builder.append(String.join(",", multi.literals()));
+      case LiteralCommandArgument lit -> builder.append(lit.literal());
+      case RequiredCommandArgument req -> builder.append(req.getName()).append(" (").append(req.getArgumentType().initializer()).append(')');
+      default -> throw new IllegalStateException("Unknown argument type class: " + this.argument.getClass());
+    }
+
+    if (!this.attributes.isEmpty()) {
+      builder.append(" ".repeat(60 - builder.length()));
+      this.attributes.forEach((k, v) -> builder.append(k).append('=').append(v).append(' '));
+    }
+
+    for (final CommandNode child : this.children) {
+      builder.append('\n').append(child.toString(indent + 1));
+    }
+
+    return builder.toString();
   }
 }
