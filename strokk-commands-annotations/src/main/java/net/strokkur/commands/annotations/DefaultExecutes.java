@@ -56,9 +56,6 @@ import java.util.List;
 /// You can add either a `String[]` or `List<String>` parameter to the end of the method parameters
 /// to obtain all arguments (including the command name, without the slash) a user has provided. The [List] is **immutable**.
 ///
-/// If both a method is annotated [Executes], it will take precedence in execution. [DefaultExecutes]
-/// is simply a fallback if no custom [Executes] is provided.
-///
 /// You can provide a literal path to precede to the [DefaultExecutes] method, exactly the same way as
 /// with the [Executes] annotation. You can also add arguments the exactly same way.
 ///
