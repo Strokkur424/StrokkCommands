@@ -17,7 +17,6 @@
  */
 package net.strokkur.commands.internal.parsing;
 
-import net.strokkur.commands.annotations.Command;
 import net.strokkur.commands.annotations.Subcommand;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
@@ -71,10 +70,10 @@ sealed class ClassTransform implements NodeTransform<TypeElement>, ForwardingMes
   public final void transform(final CommandNode parent, final TypeElement element) throws MismatchedArgumentTypeException {
     debug("> {}: parsing {}...", transformName(), element);
 
-    final CommandNode node = this.createSubcommandNode(parent, element);
+    final CommandNode node = parseRecordComponents(createSubcommandNode(parent, element), element);
     this.addAccessAttribute(node, element);
 
-    parseInnerElements(parseRecordComponents(node, element), element, this.parser);
+    parseInnerElements(node, element, this.parser);
   }
 
   protected void addAccessAttribute(final CommandNode node, final TypeElement element) {
@@ -92,7 +91,7 @@ sealed class ClassTransform implements NodeTransform<TypeElement>, ForwardingMes
 
   @Override
   public boolean requirement(final TypeElement element) {
-    return element.getAnnotation(Command.class) != null || element.getAnnotation(Subcommand.class) != null;
+    return element.getAnnotation(Subcommand.class) != null;
   }
 
   @Override

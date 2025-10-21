@@ -35,7 +35,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
 
-public final class CommandTreePrinter extends AbstractPrinter implements PrinterInformation, ImportPrinter, InstanceFieldPrinter, PathPrinter {
+public final class CommandTreePrinter extends AbstractPrinter implements PrinterInformation, ImportPrinter, InstanceFieldPrinter, TreePrinter {
 
   private final Stack<String> multiLiteralStack = new Stack<>();
   private final Stack<ExecuteAccess<?>> executeAccessStack = new Stack<>();
@@ -204,6 +204,10 @@ public final class CommandTreePrinter extends AbstractPrinter implements Printer
   @Override
   public void popLiteral() {
     this.multiLiteralStack.pop();
+  }
+
+  @Override
+  public void popLiteralPosition() {
     this.multiLiteralStackPosition--;
   }
 

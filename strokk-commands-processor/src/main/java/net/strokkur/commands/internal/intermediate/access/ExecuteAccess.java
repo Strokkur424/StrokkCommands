@@ -21,7 +21,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 
-public interface ExecuteAccess<E extends Element> {
+public sealed interface ExecuteAccess<E extends Element> permits ExecuteAccessImpl, FieldAccess, InstanceAccess {
 
   static FieldAccess of(VariableElement fieldElement) {
     return new FieldAccessImpl(fieldElement);

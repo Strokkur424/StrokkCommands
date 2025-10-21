@@ -29,7 +29,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.inventory.ItemStack;
 
 @Command("does")
-public class PredicateArgumentsCommand {
+class PredicateArgumentsCommand {
 
   @Executes("item")
   void executor(CommandSender sender, ItemStack item, @Literal("match") String $match, ItemStackPredicate predicate) {

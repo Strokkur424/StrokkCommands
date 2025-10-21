@@ -39,13 +39,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-interface PathPrinter extends Printable, PrinterInformation {
+interface TreePrinter extends Printable, PrinterInformation {
 
   String nextLiteral();
 
   void pushLiteral(String literal);
 
   void popLiteral();
+
+  void popLiteralPosition();
 
   default void printNode(final CommandNode node) throws IOException {
     printNode(node, false);
@@ -110,16 +112,16 @@ interface PathPrinter extends Printable, PrinterInformation {
     }
 
     boolean instancePrint = true;
-    CommandNode parentNode = node;
+    CommandNode recordNode = node;
 
-    while ((parentNode = parentNode.parent()) != null) {
-      final Parameterizable recordArguments = parentNode.getAttribute(AttributeKey.RECORD_ARGUMENTS);
+    do {
+      final Parameterizable recordArguments = recordNode.getAttribute(AttributeKey.RECORD_ARGUMENTS);
       if (recordArguments != null) {
         printWithRecord(recordArguments, executable);
         instancePrint = false;
         break;
       }
-    }
+    } while ((recordNode = recordNode.parent()) != null);
 
     if (instancePrint) {
       printWithInstance(executable);
@@ -166,6 +168,12 @@ interface PathPrinter extends Printable, PrinterInformation {
     }
 
     printExecutesMethodCall(executable, "executorClass");
+
+    for (final CommandArgument arguments : record.parameterArguments()) {
+      if (arguments instanceof MultiLiteralCommandArgument) {
+        popLiteralPosition();
+      }
+    }
   }
 
   private void printExecutesArguments(final Executable executable) throws IOException {
@@ -200,6 +208,11 @@ interface PathPrinter extends Printable, PrinterInformation {
     }
 
     printArguments(arguments);
+    for (final CommandArgument argument : arguments) {
+      if (argument instanceof MultiLiteralCommandArgument) {
+        popLiteralPosition();
+      }
+    }
 
     if (argumentsTypeGetter != null) {
       print(argumentsTypeGetter);
@@ -232,8 +245,8 @@ interface PathPrinter extends Printable, PrinterInformation {
       final List<Requirement> requirements = new ArrayList<>();
 
       final boolean operator = attributable.getAttributeNotNull(AttributeKey.REQUIRES_OP);
-      final ExecutorType executorType;
 
+      final ExecutorType executorType;
       if (attributable.hasAttribute(AttributeKey.EXECUTOR_TYPE)) {
         executorType = attributable.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE);
       } else {
@@ -262,6 +275,10 @@ interface PathPrinter extends Printable, PrinterInformation {
   }
 
   private void printForArguments(final CommandNode node, final IOExceptionIgnoringConsumer<String> initializer) throws IOException {
+    if (node.hasAttribute(AttributeKey.ACCESS_STACK)) {
+      node.getAttributeNotNull(AttributeKey.ACCESS_STACK).forEach(getAccessStack()::push);
+    }
+
     switch (node.argument()) {
       case LiteralCommandArgument lit -> initializer.accept("Commands.literal(\"%s\")".formatted(lit.literal()));
       case RequiredCommandArgument req -> initializer.accept("Commands.argument(\"%s\", %s)".formatted(req.getName(), req.getArgumentType().initializer()));
@@ -273,6 +290,9 @@ interface PathPrinter extends Printable, PrinterInformation {
         }
       }
       default -> throw new IllegalArgumentException("Unknown argument class: " + node.argument().getClass());
+    }
+    if (node.hasAttribute(AttributeKey.ACCESS_STACK)) {
+      node.getAttributeNotNull(AttributeKey.ACCESS_STACK).forEach(access -> getAccessStack().pop());
     }
   }
 }

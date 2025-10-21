@@ -66,13 +66,13 @@ interface InstanceFieldPrinter extends Printable, PrinterInformation {
         pathToUse = getAccessStack();
       }
 
-      if (printAccessInstance(pathToUse)) {
+      if (!pathToUse.isEmpty() && printAccessInstance(pathToUse)) {
         printed++;
       }
-    } else {
-      for (final CommandNode child : node.children()) {
-        printed += printInstanceFields(child);
-      }
+    }
+
+    for (final CommandNode child : node.children()) {
+      printed += printInstanceFields(child);
     }
 
     for (int i = 0; i < pushed; i++) {

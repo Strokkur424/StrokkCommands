@@ -17,11 +17,9 @@
  */
 package net.strokkur.commands.internal.intermediate.access;
 
-import net.strokkur.commands.internal.util.Utils;
-
 import javax.lang.model.element.VariableElement;
 
-class FieldAccessImpl extends ExecuteAccessImpl<VariableElement> implements FieldAccess {
+final class FieldAccessImpl extends ExecuteAccessImpl<VariableElement> implements FieldAccess {
 
   public FieldAccessImpl(final VariableElement element) {
     super(element);
@@ -29,9 +27,6 @@ class FieldAccessImpl extends ExecuteAccessImpl<VariableElement> implements Fiel
 
   @Override
   public String toString() {
-    return "FieldAccessImpl{" +
-        "element=" + element + ',' +
-        "initialized=" + Utils.isFieldInitialized(element) +
-        '}';
+    return "FieldAccessImpl["+ element + ']';
   }
 }

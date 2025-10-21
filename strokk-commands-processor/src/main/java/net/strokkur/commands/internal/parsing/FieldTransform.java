@@ -17,7 +17,6 @@
  */
 package net.strokkur.commands.internal.parsing;
 
-import net.strokkur.commands.annotations.Command;
 import net.strokkur.commands.annotations.Subcommand;
 import net.strokkur.commands.internal.StrokkCommandsProcessor;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
@@ -40,13 +39,17 @@ record FieldTransform(CommandParser parser, MessagerWrapper delegateMessager, Br
     debug("> FieldTransform: {}.{}", element.getEnclosingElement().getSimpleName(), element.getSimpleName());
     final CommandNode node = createSubcommandNode(root, element);
 
-    node.setAttribute(AttributeKey.ACCESS_STACK, new ArrayList<>(List.of(ExecuteAccess.of(element))));
+    node.editAttributeMutable(
+        AttributeKey.ACCESS_STACK,
+        list -> list.add(ExecuteAccess.of(element)),
+        () -> new ArrayList<>(List.of(ExecuteAccess.of(element)))
+    );
 
     this.parser.parseClass(node, (TypeElement) StrokkCommandsProcessor.getTypes().asElement(element.asType()));
   }
 
   @Override
   public boolean requirement(final VariableElement element) {
-    return element.getAnnotation(Command.class) != null || element.getAnnotation(Subcommand.class) != null;
+    return element.getAnnotation(Subcommand.class) != null;
   }
 }

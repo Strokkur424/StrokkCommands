@@ -20,6 +20,7 @@ package net.strokkur.testplugin.flattening;
 import net.strokkur.commands.annotations.Command;
 import net.strokkur.commands.annotations.Executes;
 import net.strokkur.commands.annotations.Literal;
+import net.strokkur.commands.annotations.Subcommand;
 import org.bukkit.command.CommandSender;
 
 @Command("combined")
@@ -35,7 +36,7 @@ class LiteralCombining {
     sender.sendRichMessage("<gold>Literal executes method.");
   }
 
-  @Command("sub class")
+  @Subcommand("sub class")
   static class SubClass {
 
     @Executes

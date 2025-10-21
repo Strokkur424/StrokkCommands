@@ -32,7 +32,7 @@ import javax.lang.model.element.VariableElement;
 
 public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapper {
   private final ClassTransform classTransform;
-  private final NodeTransform<TypeElement> recordTransform;
+  private final RecordTransform recordTransform;
   private final NodeTransform<ExecutableElement> methodTransform;
   private final NodeTransform<VariableElement> fieldTransform;
 
@@ -50,10 +50,12 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
   @Override
   public CommandNode createCommandTree(final String name, final TypeElement typeElement) {
     final CommandNode root = CommandNode.createRoot(LiteralCommandArgument.literal(name, typeElement));
-    this.classTransform.populateNode(null, root, typeElement);
-    this.classTransform.addAccessAttribute(root, typeElement);
     try {
-      ClassTransform.parseInnerElements(root, typeElement, this);
+      final ClassTransform transform = typeElement.getKind() == ElementKind.RECORD ? this.recordTransform : this.classTransform;
+      final CommandNode node = transform.parseRecordComponents(root, typeElement);
+      transform.populateNode(null, node, typeElement);
+      transform.addAccessAttribute(node, typeElement);
+      ClassTransform.parseInnerElements(node, typeElement, this);
     } catch (MismatchedArgumentTypeException e) {
       // TODO: replace with more sophisticated logging
       throw new RuntimeException(e);

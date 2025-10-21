@@ -31,7 +31,7 @@ class ArgumentFlattening {
   }
 
   @Executes
-  void stringThenFloat(CommandSender sender, String string, float i) {
+  void stringThenFloat(CommandSender sender, String string, float f) {
 
   }
 

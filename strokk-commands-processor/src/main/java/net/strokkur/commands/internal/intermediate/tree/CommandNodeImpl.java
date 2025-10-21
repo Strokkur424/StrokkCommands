@@ -147,7 +147,7 @@ class CommandNodeImpl implements CommandNode {
     builder.append("| ".repeat(indent));
 
     switch (this.argument) {
-      case MultiLiteralCommandArgument multi -> builder.append(String.join(",", multi.literals()));
+      case MultiLiteralCommandArgument multi -> builder.append('[').append(String.join("|", multi.literals())).append(']');
       case LiteralCommandArgument lit -> builder.append(lit.literal());
       case RequiredCommandArgument req -> builder.append(req.getName()).append(" (").append(req.getArgumentType().initializer()).append(')');
       default -> throw new IllegalStateException("Unknown argument type class: " + this.argument.getClass());

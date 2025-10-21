@@ -24,6 +24,7 @@ import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.access.FieldAccess;
 import net.strokkur.commands.internal.intermediate.access.InstanceAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.attributes.Executable;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.util.Utils;
@@ -129,21 +130,30 @@ interface ImportPrinter extends Printable, PrinterInformation {
       }
     }
 
-    final ExecutorType executorType = node.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE);
-    if (executorType == ExecutorType.PLAYER) {
-      imports.add(Classes.PLAYER);
-    } else if (executorType == ExecutorType.ENTITY) {
-      imports.add(Classes.ENTITY);
-    }
-
-    if (executorType != ExecutorType.NONE) {
-      imports.add(Classes.SIMPLE_COMMAND_EXCEPTION_TYPE);
-      imports.add(Classes.MESSAGE_COMPONENT_SERIALIZER);
-      imports.add(Classes.COMPONENT);
+    addExecutorTypeImports(imports, node.getAttributeNotNull(AttributeKey.EXECUTOR_TYPE));
+    final Executable executable = node.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE);
+    if (executable != null) {
+      addExecutorTypeImports(imports, executable.executorType());
     }
 
     for (final CommandNode child : node.children()) {
       gatherImports(imports, child);
     }
+  }
+
+  private void addExecutorTypeImports(final Set<String> imports, final ExecutorType type) {
+    if (type == ExecutorType.NONE) {
+      return;
+    }
+
+    if (type == ExecutorType.PLAYER) {
+      imports.add(Classes.PLAYER);
+    } else if (type == ExecutorType.ENTITY) {
+      imports.add(Classes.ENTITY);
+    }
+
+    imports.add(Classes.SIMPLE_COMMAND_EXCEPTION_TYPE);
+    imports.add(Classes.MESSAGE_COMPONENT_SERIALIZER);
+    imports.add(Classes.COMPONENT);
   }
 }
