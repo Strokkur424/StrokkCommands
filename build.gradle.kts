@@ -7,9 +7,6 @@ plugins {
   alias(libs.plugins.blossom) apply false
 }
 
-group = "net.strokkur"
-version = "1.4.2"
-
 allprojects {
   apply {
     plugin<SpotlessPlugin>()
@@ -32,9 +29,6 @@ subprojects {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
   }
-
-  version = rootProject.version
-  group = rootProject.group
 
   if (name.contains("processor") || name.contains("annotations")) {
     apply {

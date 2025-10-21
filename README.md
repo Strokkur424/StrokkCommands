@@ -71,8 +71,6 @@ The primary reason for StrokkCommands existence is the lack of an **ultra-lightw
 simply takes away the complexity from Brigadier. For many developers, the feature set of most command frameworks is just
 not required and just increases your plugin jar's file size for very little reasons.
 
-BONUS POINT: Annotation processors (and code generation as a whole) is cool 😎.
-
 ## Star History
 <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Strokkur424/StrokkCommands&type=Date&theme=dark" />
