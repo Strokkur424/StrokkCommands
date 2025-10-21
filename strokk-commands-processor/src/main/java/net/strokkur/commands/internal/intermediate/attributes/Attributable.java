@@ -20,6 +20,7 @@ package net.strokkur.commands.internal.intermediate.attributes;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -28,6 +29,18 @@ public interface Attributable {
 
   @Nullable
   <T> T getAttribute(AttributeKey<T> key);
+
+  default <T> T getAttributeOr(AttributeKey<T> key, T defaultValue) {
+    return Optional.ofNullable(getAttribute(key)).orElse(defaultValue);
+  }
+
+  default <T> T getAttributeOrSet(AttributeKey<T> key, T defaultValue) {
+    if (!hasAttribute(key)) {
+      setAttribute(key, defaultValue);
+      return defaultValue;
+    }
+    return getAttributeNotNull(key);
+  }
 
   <T> void setAttribute(AttributeKey<T> key, T value);
 

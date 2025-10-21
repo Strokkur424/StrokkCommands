@@ -24,7 +24,6 @@ import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 
 import java.util.Collection;
-import java.util.Objects;
 import java.util.Set;
 
 public record TreePostProcessor(MessagerWrapper delegateMessager) implements ForwardingMessagerWrapper {
@@ -47,19 +46,21 @@ public record TreePostProcessor(MessagerWrapper delegateMessager) implements For
 
   public void applyDefaultExecutorPaths(final CommandNode node) {
     final DefaultExecutable defaultExecutable = node.getAttribute(AttributeKey.DEFAULT_EXECUTABLE);
-    for (final CommandNode child : node.children()) {
-      if (defaultExecutable != null) {
-        applyDefaultExecutorPathIfUnset(child, defaultExecutable);
-      } else {
-        applyDefaultExecutorPaths(child);
-      }
+
+    if (defaultExecutable == null) {
+      node.children().forEach(this::applyDefaultExecutorPaths);
+      return;
     }
+
+    node.children().forEach(
+        child -> applyDefaultExecutorPathIfUnset(child, defaultExecutable)
+    );
   }
 
   private void applyDefaultExecutorPathIfUnset(final CommandNode node, final DefaultExecutable def) {
-    final DefaultExecutable defaultExecutable = node.getAttribute(AttributeKey.DEFAULT_EXECUTABLE);
+    final DefaultExecutable defaultExecutable = node.getAttributeOrSet(AttributeKey.DEFAULT_EXECUTABLE, def);
     for (final CommandNode child : node.children()) {
-      applyDefaultExecutorPathIfUnset(child, Objects.requireNonNullElse(defaultExecutable, def));
+      applyDefaultExecutorPathIfUnset(child, defaultExecutable);
     }
   }
 
