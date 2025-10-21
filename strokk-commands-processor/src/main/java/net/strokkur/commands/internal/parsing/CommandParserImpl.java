@@ -23,6 +23,7 @@ import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.commands.internal.util.MessagerWrapper;
+import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -48,7 +49,7 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
   }
 
   @Override
-  public CommandNode createCommandTree(final String name, final TypeElement typeElement) {
+  public @Nullable CommandNode createCommandTree(final String name, final TypeElement typeElement) {
     final CommandNode root = CommandNode.createRoot(LiteralCommandArgument.literal(name, typeElement));
     try {
       final ClassTransform transform = typeElement.getKind() == ElementKind.RECORD ? this.recordTransform : this.classTransform;
@@ -57,8 +58,7 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
       transform.addAccessAttribute(node, typeElement);
       ClassTransform.parseInnerElements(node, typeElement, this);
     } catch (MismatchedArgumentTypeException e) {
-      // TODO: replace with more sophisticated logging
-      throw new RuntimeException(e);
+      errorElement(e.getMessage(), typeElement);
     }
     return root;
   }
@@ -80,9 +80,7 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
         }
       }
     } catch (MismatchedArgumentTypeException ex) {
-      // TODO: Replace with more sophisticated handling
-      //noinspection CallToPrintStackTrace
-      ex.printStackTrace();
+      errorElement(ex.getMessage(), element);
     }
   }
 

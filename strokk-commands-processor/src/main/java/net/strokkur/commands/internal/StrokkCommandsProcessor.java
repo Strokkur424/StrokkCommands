@@ -124,6 +124,9 @@ public class StrokkCommandsProcessor extends AbstractProcessor {
 
     final CommandInformation commandInformation = getCommandInformation(typeElement);
     final CommandNode commandTree = parser.createCommandTree(typeElement.getAnnotation(Command.class).value(), typeElement);
+    if (commandTree == null) {
+      return;
+    }
 
     // Before we print the paths we do some post-processing to move some stuff around, which
     // is relevant for certain things to print correctly (a.e. executor requirements).

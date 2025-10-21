@@ -19,12 +19,15 @@ package net.strokkur.commands.internal.parsing;
 
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
+import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
 public interface CommandParser {
 
+  /// @return null, if an exception occurred parsing the element
+  @Nullable
   CommandNode createCommandTree(String name, TypeElement typeElement);
 
   void parseElement(CommandNode root, Element element) throws MismatchedArgumentTypeException;

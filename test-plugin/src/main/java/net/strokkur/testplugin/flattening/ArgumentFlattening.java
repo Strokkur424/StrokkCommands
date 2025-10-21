@@ -36,7 +36,7 @@ class ArgumentFlattening {
   }
 
   @Executes
-  void stringThenLiteral(CommandSender sender, String string, @Literal String i) {
+  void stringThenLiteral(CommandSender sender, String string, @Literal String il) {
 
   }
 }
