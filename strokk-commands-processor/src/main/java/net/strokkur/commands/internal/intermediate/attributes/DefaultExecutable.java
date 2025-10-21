@@ -15,22 +15,35 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.parsing;
+package net.strokkur.commands.internal.intermediate.attributes;
 
-import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
-import net.strokkur.commands.internal.intermediate.tree.CommandNode;
+import net.strokkur.commands.internal.util.Classes;
 import org.jspecify.annotations.Nullable;
 
-import javax.lang.model.element.Element;
-import javax.lang.model.element.TypeElement;
+import java.util.Set;
 
-public interface CommandParser {
+public interface DefaultExecutable extends Executable {
+  Type defaultExecutableArgumentTypes();
 
-  /// @return null, if an exception occurred parsing the element
-  @Nullable
-  CommandNode createCommandTree(String name, TypeElement typeElement);
+  enum Type {
+    NONE(null, Set.of()),
+    ARRAY("ctx.getInput().split(\" \")", Set.of()),
+    LIST("Collections.unmodifiableList(Arrays.asList(ctx.getInput().split(\" \")))", Set.of(Classes.COLLECTIONS, Classes.ARRAYS));
 
-  void parseElement(CommandNode root, Element element) throws MismatchedArgumentTypeException;
+    private final @Nullable String getter;
+    private final Set<String> imports;
 
-  void parseClass(CommandNode root, TypeElement element) throws MismatchedArgumentTypeException;
+    Type(@Nullable final String getter, final Set<String> imports) {
+      this.getter = getter;
+      this.imports = imports;
+    }
+
+    public @Nullable String getGetter() {
+      return this.getter;
+    }
+
+    public Set<String> getImports() {
+      return this.imports;
+    }
+  }
 }

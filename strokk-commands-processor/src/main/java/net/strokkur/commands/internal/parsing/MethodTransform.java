@@ -17,94 +17,52 @@
  */
 package net.strokkur.commands.internal.parsing;
 
-import net.strokkur.commands.annotations.Executes;
-import net.strokkur.commands.annotations.Executor;
-import net.strokkur.commands.internal.arguments.CommandArgument;
-import net.strokkur.commands.internal.intermediate.ExecutorType;
-import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
-import net.strokkur.commands.internal.intermediate.paths.CommandPath;
-import net.strokkur.commands.internal.intermediate.paths.ExecutablePath;
-import net.strokkur.commands.internal.intermediate.paths.ExecutablePathImpl;
-import net.strokkur.commands.internal.util.Classes;
-import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
+import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
+import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
+import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
-import java.util.ArrayList;
 import java.util.List;
 
-class MethodTransform implements PathTransform, ForwardingMessagerWrapper {
+public class MethodTransform implements NodeTransform<ExecutableElement> {
+  private final List<NodeTransform<ExecutableElement>> innerTransforms;
+  private final MessagerWrapper messagerWrapper;
+  private final BrigadierArgumentConverter converter;
 
-  private final CommandParser parser;
-  private final MessagerWrapper messager;
-
-  public MethodTransform(final CommandParser parser, final MessagerWrapper messager) {
-    this.parser = parser;
-    this.messager = messager;
+  public MethodTransform(final CommandParser parser, final MessagerWrapper messager, final BrigadierArgumentConverter converter) {
+    this.innerTransforms = List.of(
+        new ExecutesTransform(parser, messager, converter),
+        new DefaultExecutesTransform(parser, messager, converter)
+    );
+    this.messagerWrapper = messager;
+    this.converter = converter;
   }
 
   @Override
-  public void transform(final CommandPath<?> parent, final Element element) {
-    debug("> MethodTransform: parsing {} for '{}'", element, parent.toStringNoChildren());
-    final ExecutableElement method = (ExecutableElement) element;
-    final CommandPath<?> thisPath = this.createThisExecutesPath(parent, this.parser, element);
+  public void transform(final CommandNode node, final ExecutableElement element) throws MismatchedArgumentTypeException {
+    for (final NodeTransform<ExecutableElement> innerTransform : innerTransforms) {
+      innerTransform.transformIfRequirement(node, element);
+    }
+  }
 
-    ExecutorType type = ExecutorType.NONE;
-
-    final List<? extends VariableElement> parameters = method.getParameters();
-    final List<VariableElement> arguments = new ArrayList<>(parameters.size() - 1);
-
-    for (int i = 1, parametersSize = parameters.size(); i < parametersSize; i++) {
-      final VariableElement param = parameters.get(i);
-
-      //noinspection ConstantValue
-      if (i == 1 && param.getAnnotation(Executor.class) != null) {
-        if (param.asType().toString().equals(Classes.PLAYER)) {
-          type = ExecutorType.PLAYER;
-          continue;
-        } else if (param.asType().toString().equals(Classes.ENTITY)) {
-          type = ExecutorType.ENTITY;
-          continue;
-        }
+  @Override
+  public boolean requirement(final ExecutableElement element) {
+    for (final NodeTransform<ExecutableElement> innerTransform : innerTransforms) {
+      if (innerTransform.requirement(element)) {
+        return true;
       }
-
-      arguments.add(param);
     }
-
-    final List<List<CommandArgument>> args = this.parser.parseArguments(arguments, (TypeElement) method.getEnclosingElement());
-    if (args.isEmpty()) {
-      final ExecutablePath out = new ExecutablePathImpl(List.of(), method);
-      out.setAttribute(AttributeKey.EXECUTOR_TYPE, type);
-      thisPath.addChild(out);
-      debug("> MethodTransform: no arguments found. Current tree for thisPath: {}", thisPath);
-      return;
-    }
-
-    for (final List<CommandArgument> argList : args) {
-      final ExecutablePath out = new ExecutablePathImpl(argList, method);
-      out.setAttribute(AttributeKey.EXECUTOR_TYPE, type);
-      thisPath.addChild(out);
-    }
-    debug("> MethodTransform: found arguments! Current tree for thisPath: {}", thisPath);
+    return false;
   }
 
   @Override
-  public boolean hardRequirement(final Element element) {
-    return element.getKind() == ElementKind.METHOD;
-  }
-
-  @Override
-  public boolean weakRequirement(final Element element) {
-    //noinspection ConstantValue
-    return element.getAnnotation(Executes.class) != null;
+  public BrigadierArgumentConverter argumentConverter() {
+    return this.converter;
   }
 
   @Override
   public MessagerWrapper delegateMessager() {
-    return this.messager;
+    return this.messagerWrapper;
   }
 }

@@ -15,20 +15,17 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.paths;
+package net.strokkur.commands.internal.intermediate.attributes;
 
-import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
+import net.strokkur.commands.internal.arguments.CommandArgument;
+import net.strokkur.commands.internal.intermediate.ExecutorType;
 
+import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
-public class LiteralCommandPath extends SimpleCommandPathImpl<LiteralCommandArgument> {
-
-  public LiteralCommandPath(final List<LiteralCommandArgument> arguments) {
-    super(arguments);
-  }
-
+public record ExecutableImpl(ExecutorType executorType, ExecutableElement executesMethod, List<CommandArgument> parameterArguments) implements Executable {
   @Override
-  SimpleCommandPathImpl<LiteralCommandArgument> createLeftSplit(final List<LiteralCommandArgument> args) {
-    return new LiteralCommandPath(args);
+  public String toString() {
+    return "ExecutableImpl[" + executorType.name() + "]";
   }
 }

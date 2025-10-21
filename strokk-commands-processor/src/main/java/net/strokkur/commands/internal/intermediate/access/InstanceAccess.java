@@ -22,7 +22,7 @@ import net.strokkur.commands.internal.util.Utils;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 
-public interface InstanceAccess extends ExecuteAccess<TypeElement> {
+public sealed interface InstanceAccess extends ExecuteAccess<TypeElement> permits InstanceAccessImpl {
 
   @Override
   default String getTypeName() {

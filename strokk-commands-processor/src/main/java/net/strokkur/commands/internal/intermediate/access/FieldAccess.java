@@ -23,7 +23,7 @@ import net.strokkur.commands.internal.util.Utils;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.VariableElement;
 
-public interface FieldAccess extends ExecuteAccess<VariableElement> {
+public sealed interface FieldAccess extends ExecuteAccess<VariableElement> permits FieldAccessImpl {
 
   @Override
   default String getTypeName() {

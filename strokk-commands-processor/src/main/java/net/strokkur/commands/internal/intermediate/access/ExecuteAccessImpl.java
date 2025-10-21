@@ -19,8 +19,7 @@ package net.strokkur.commands.internal.intermediate.access;
 
 import javax.lang.model.element.Element;
 
-abstract class ExecuteAccessImpl<E extends Element> implements ExecuteAccess<E> {
-
+sealed abstract class ExecuteAccessImpl<E extends Element> implements ExecuteAccess<E> permits FieldAccessImpl, InstanceAccessImpl {
   protected final E element;
 
   public ExecuteAccessImpl(final E element) {
@@ -30,12 +29,5 @@ abstract class ExecuteAccessImpl<E extends Element> implements ExecuteAccess<E> 
   @Override
   public E getElement() {
     return this.element;
-  }
-
-  @Override
-  public String toString() {
-    return this.getClass().getSimpleName() + "{" +
-        "element=" + this.getElement().getSimpleName() +
-        '}';
   }
 }

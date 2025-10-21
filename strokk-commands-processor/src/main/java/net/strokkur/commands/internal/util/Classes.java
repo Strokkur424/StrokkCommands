@@ -26,6 +26,9 @@ public interface Classes {
 
   // Java types
   String LIST = "java.util.List";
+  String COLLECTIONS = "java.util.Collections";
+  String ARRAYS = "java.util.Arrays";
+  String LIST_STRING = LIST + "<java.lang.String>";
 
   // Brigadier types
   String COMMAND = "com.mojang.brigadier.Command";

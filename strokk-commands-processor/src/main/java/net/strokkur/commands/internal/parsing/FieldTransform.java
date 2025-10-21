@@ -17,54 +17,39 @@
  */
 package net.strokkur.commands.internal.parsing;
 
-import net.strokkur.commands.annotations.Command;
 import net.strokkur.commands.annotations.Subcommand;
 import net.strokkur.commands.internal.StrokkCommandsProcessor;
+import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
+import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
-import net.strokkur.commands.internal.intermediate.paths.CommandPath;
+import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import java.util.ArrayList;
 import java.util.List;
 
-class FieldTransform implements PathTransform, ForwardingMessagerWrapper {
-
-  private final CommandParser parser;
-  private final MessagerWrapper messager;
-
-  public FieldTransform(final CommandParser parser, final MessagerWrapper messager) {
-    this.parser = parser;
-    this.messager = messager;
-  }
+record FieldTransform(CommandParser parser, MessagerWrapper delegateMessager, BrigadierArgumentConverter argumentConverter) implements NodeTransform<VariableElement>, ForwardingMessagerWrapper {
 
   @Override
-  public void transform(final CommandPath<?> parent, final Element element) {
+  public void transform(final CommandNode root, final VariableElement element) throws MismatchedArgumentTypeException {
     debug("> FieldTransform: {}.{}", element.getEnclosingElement().getSimpleName(), element.getSimpleName());
-    final CommandPath<?> thisPath = createThisPath(parent, this.parser, element);
+    final CommandNode node = createSubcommandNode(root, element);
 
-    thisPath.setAttribute(AttributeKey.ACCESS_STACK, new ArrayList<>(List.of(ExecuteAccess.of((VariableElement) element))));
+    node.editAttributeMutable(
+        AttributeKey.ACCESS_STACK,
+        list -> list.add(ExecuteAccess.of(element)),
+        () -> new ArrayList<>(List.of(ExecuteAccess.of(element)))
+    );
 
-    this.parser.hardParse(thisPath, StrokkCommandsProcessor.getTypes().asElement(element.asType()));
+    this.parser.parseClass(node, (TypeElement) StrokkCommandsProcessor.getTypes().asElement(element.asType()));
   }
 
   @Override
-  public boolean hardRequirement(final Element element) {
-    return element.getKind() == ElementKind.FIELD;
-  }
-
-  @Override
-  public boolean weakRequirement(final Element element) {
-    //noinspection ConstantValue
-    return element.getAnnotation(Command.class) != null || element.getAnnotation(Subcommand.class) != null;
-  }
-
-  @Override
-  public MessagerWrapper delegateMessager() {
-    return this.messager;
+  public boolean requirement(final VariableElement element) {
+    return element.getAnnotation(Subcommand.class) != null;
   }
 }

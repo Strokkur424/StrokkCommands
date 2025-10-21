@@ -31,12 +31,12 @@ class ArgumentFlattening {
   }
 
   @Executes
-  void stringThenFloat(CommandSender sender, String string, float i) {
+  void stringThenFloat(CommandSender sender, String string, float f) {
 
   }
 
   @Executes
-  void stringThenLiteral(CommandSender sender, String string, @Literal String i) {
+  void stringThenLiteral(CommandSender sender, String string, @Literal String il) {
 
   }
 }

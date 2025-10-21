@@ -17,12 +17,13 @@
  */
 package net.strokkur.commands.internal.parsing;
 
-import net.strokkur.commands.annotations.Command;
 import net.strokkur.commands.annotations.Subcommand;
+import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
+import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.access.InstanceAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
-import net.strokkur.commands.internal.intermediate.paths.CommandPath;
+import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 
@@ -30,12 +31,10 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-class ClassTransform implements PathTransform, ForwardingMessagerWrapper {
-
+sealed class ClassTransform implements NodeTransform<TypeElement>, ForwardingMessagerWrapper permits RecordTransform {
   private static final Set<ElementKind> ENCLOSED_ELEMENTS_TO_PARSE = Set.of(
       ElementKind.METHOD,
       ElementKind.FIELD,
@@ -45,54 +44,59 @@ class ClassTransform implements PathTransform, ForwardingMessagerWrapper {
 
   protected final CommandParser parser;
   private final MessagerWrapper messager;
+  private final BrigadierArgumentConverter converter;
 
-  public ClassTransform(final CommandParser parser, final MessagerWrapper messager) {
+  public ClassTransform(final CommandParser parser, final MessagerWrapper messager, final BrigadierArgumentConverter converter) {
     this.parser = parser;
     this.messager = messager;
+    this.converter = converter;
   }
 
-  @Override
-  public void transform(final CommandPath<?> parent, final Element element) {
-    debug("> ClassTransform: parsing {}...", element);
+  protected String transformName() {
+    return "ClassTransform";
+  }
 
-    final CommandPath<?> thisPath = this.createThisPath(parent, this.parser, element);
-    addAccessAttribute(thisPath, (TypeElement) element);
-
-    final List<CommandPath<?>> relevant = parseRecordComponents(thisPath, element);
-
+  static void parseInnerElements(final CommandNode root, final TypeElement element, final CommandParser parser) throws MismatchedArgumentTypeException {
     for (final Element enclosed : element.getEnclosedElements()) {
       if (!ENCLOSED_ELEMENTS_TO_PARSE.contains(enclosed.getKind())) {
         continue;
       }
 
-      for (final CommandPath<?> recordPath : relevant) {
-        this.parser.weakParse(recordPath, enclosed);
-      }
+      parser.parseElement(root, enclosed);
     }
   }
 
-  protected void addAccessAttribute(final CommandPath<?> path, final TypeElement element) {
+  @Override
+  public final void transform(final CommandNode parent, final TypeElement element) throws MismatchedArgumentTypeException {
+    debug("> {}: parsing {}...", transformName(), element);
+
+    final CommandNode node = parseRecordComponents(createSubcommandNode(parent, element), element);
+    this.addAccessAttribute(node, element);
+
+    parseInnerElements(node, element, this.parser);
+  }
+
+  protected void addAccessAttribute(final CommandNode node, final TypeElement element) {
     final InstanceAccess access = ExecuteAccess.of(element);
-    path.editAttributeMutable(
+    node.editAttributeMutable(
         AttributeKey.ACCESS_STACK,
         accesses -> accesses.add(access),
         () -> new ArrayList<>(List.of(access))
     );
   }
 
-  protected List<CommandPath<?>> parseRecordComponents(final CommandPath<?> parent, final Element element) {
-    return Collections.singletonList(parent);
+  protected CommandNode parseRecordComponents(final CommandNode parent, final TypeElement element) throws MismatchedArgumentTypeException {
+    return parent;
   }
 
   @Override
-  public boolean hardRequirement(final Element element) {
-    return element.getKind() == ElementKind.CLASS;
+  public boolean requirement(final TypeElement element) {
+    return element.getAnnotation(Subcommand.class) != null;
   }
 
   @Override
-  public boolean weakRequirement(final Element element) {
-    //noinspection ConstantValue
-    return element.getAnnotation(Command.class) != null || element.getAnnotation(Subcommand.class) != null;
+  public BrigadierArgumentConverter argumentConverter() {
+    return this.converter;
   }
 
   @Override

@@ -20,13 +20,12 @@ package net.strokkur.commands.internal.printer;
 import net.strokkur.commands.internal.BuildConstants;
 import net.strokkur.commands.internal.intermediate.CommandInformation;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
-import net.strokkur.commands.internal.intermediate.paths.CommandPath;
+import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.Utils;
 import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
-import javax.lang.model.element.TypeParameterElement;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -36,16 +35,19 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
 
-public final class CommandTreePrinter extends AbstractPrinter implements PrinterInformation, ImportPrinter, InstanceFieldPrinter, PathPrinter {
+public final class CommandTreePrinter extends AbstractPrinter implements PrinterInformation, ImportPrinter, InstanceFieldPrinter, TreePrinter {
 
+  private final Stack<String> multiLiteralStack = new Stack<>();
   private final Stack<ExecuteAccess<?>> executeAccessStack = new Stack<>();
-  private final CommandPath<?> commandPath;
+  private final CommandNode node;
   private final CommandInformation commandInformation;
   private final Set<String> printedInstances = new TreeSet<>();
 
-  public CommandTreePrinter(final int indent, final @Nullable Writer writer, final CommandPath<?> commandPath, final CommandInformation commandInformation) {
+  private int multiLiteralStackPosition = 0;
+
+  public CommandTreePrinter(final int indent, final @Nullable Writer writer, final CommandNode node, final CommandInformation commandInformation) {
     super(indent, writer);
-    this.commandPath = commandPath;
+    this.node = node;
     this.commandInformation = commandInformation;
   }
 
@@ -164,8 +166,8 @@ public final class CommandTreePrinter extends AbstractPrinter implements Printer
 
     printIndent();
     print("return ");
-    printPath(commandPath);
     incrementIndent();
+    printNode(node);
     println(".build();");
     decrementIndent();
     decrementIndent();
@@ -190,6 +192,26 @@ public final class CommandTreePrinter extends AbstractPrinter implements Printer
   }
 
   @Override
+  public String nextLiteral() {
+    return this.multiLiteralStack.elementAt(this.multiLiteralStackPosition++);
+  }
+
+  @Override
+  public void pushLiteral(final String literal) {
+    this.multiLiteralStack.push(literal);
+  }
+
+  @Override
+  public void popLiteral() {
+    this.multiLiteralStack.pop();
+  }
+
+  @Override
+  public void popLiteralPosition() {
+    this.multiLiteralStackPosition--;
+  }
+
+  @Override
   public Set<String> getPrintedInstances() {
     return printedInstances;
   }
@@ -200,8 +222,8 @@ public final class CommandTreePrinter extends AbstractPrinter implements Printer
   }
 
   @Override
-  public CommandPath<?> getCommandPath() {
-    return commandPath;
+  public CommandNode getNode() {
+    return node;
   }
 
   @Override

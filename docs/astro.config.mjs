@@ -30,6 +30,7 @@ export default defineConfig({
             { slug: "docs" },
             { slug: "docs/dependency" },
             { slug: "docs/commands" },
+            { slug: "docs/default-executors" },
             { slug: "docs/arguments" },
             { slug: "docs/permissions" },
             { slug: "docs/records" },

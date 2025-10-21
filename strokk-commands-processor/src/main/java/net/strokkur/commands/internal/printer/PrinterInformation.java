@@ -19,14 +19,14 @@ package net.strokkur.commands.internal.printer;
 
 import net.strokkur.commands.internal.intermediate.CommandInformation;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
-import net.strokkur.commands.internal.intermediate.paths.CommandPath;
+import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 
 import java.util.Set;
 import java.util.Stack;
 
 interface PrinterInformation {
 
-  CommandPath<?> getCommandPath();
+  CommandNode getNode();
 
   CommandInformation getCommandInformation();
 

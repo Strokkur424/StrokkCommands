@@ -15,18 +15,13 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.access;
+package net.strokkur.commands.internal.intermediate.attributes;
 
-import javax.lang.model.element.VariableElement;
+import net.strokkur.commands.internal.intermediate.ExecutorType;
 
-final class FieldAccessImpl extends ExecuteAccessImpl<VariableElement> implements FieldAccess {
+import javax.lang.model.element.ExecutableElement;
 
-  public FieldAccessImpl(final VariableElement element) {
-    super(element);
-  }
-
-  @Override
-  public String toString() {
-    return "FieldAccessImpl["+ element + ']';
-  }
+public interface Executable extends Parameterizable {
+  ExecutorType executorType();
+  ExecutableElement executesMethod();
 }

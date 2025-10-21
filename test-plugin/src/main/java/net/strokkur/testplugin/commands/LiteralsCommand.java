@@ -23,7 +23,7 @@ import net.strokkur.commands.annotations.Literal;
 import org.bukkit.command.CommandSender;
 
 @Command("literals")
-public class LiteralsCommand {
+class LiteralsCommand {
 
   @Executes("hey there, how")
   void executes(CommandSender sender,

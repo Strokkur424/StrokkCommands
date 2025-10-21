@@ -17,8 +17,10 @@
  */
 package net.strokkur.testplugin.docs;
 
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.strokkur.commands.annotations.Aliases;
 import net.strokkur.commands.annotations.Command;
+import net.strokkur.commands.annotations.DefaultExecutes;
 import net.strokkur.commands.annotations.Description;
 import net.strokkur.commands.annotations.Executes;
 import net.strokkur.commands.annotations.Executor;
@@ -32,6 +34,25 @@ import org.bukkit.util.Vector;
 @Aliases("fc")
 @Description("My first StrokkCommands-command!")
 class MyFirstCommand {
+
+  @DefaultExecutes
+  void help(CommandSender sender, String[] args) {
+    sender.sendRichMessage("""
+            <blue>Command Help for /<cmd></blue><dark_gray>
+             - <gray><aqua>/<cmd> two three four</aqua> a regular fun command >_<</gray>
+             - <gray><aqua>/<cmd> fling</aqua> yeet yourself!</gray>""",
+        Placeholder.parsed("cmd", args[0])
+    );
+  }
+
+  @DefaultExecutes("two")
+  @RequiresOP
+  void helpTwo(CommandSender sender, String[] args) {
+    sender.sendRichMessage("<aqua>/<cmd></aqua> is incomplete! You probably meant <gold>/<cmd_name> two three four<gold> :^)",
+        Placeholder.parsed("cmd", String.join(" ", args)),
+        Placeholder.parsed("cmd_name", args[0])
+    );
+  }
 
   @Executes("two three four")
   @RequiresOP

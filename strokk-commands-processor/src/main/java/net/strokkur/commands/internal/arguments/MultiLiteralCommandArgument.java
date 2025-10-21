@@ -15,18 +15,24 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.access;
+package net.strokkur.commands.internal.arguments;
 
-import javax.lang.model.element.VariableElement;
+import org.jetbrains.annotations.UnmodifiableView;
 
-final class FieldAccessImpl extends ExecuteAccessImpl<VariableElement> implements FieldAccess {
+import javax.lang.model.element.Element;
+import java.util.Set;
 
-  public FieldAccessImpl(final VariableElement element) {
-    super(element);
+public interface MultiLiteralCommandArgument extends CommandArgument {
+
+  static MultiLiteralCommandArgument multiLiteral(Set<String> literals, Element element) {
+    return new MultiLiteralCommandArgumentImpl(literals, element);
   }
 
+  @UnmodifiableView
+  Set<String> literals();
+
   @Override
-  public String toString() {
-    return "FieldAccessImpl["+ element + ']';
+  default String getName() {
+    return "<multiliteral>";
   }
 }

@@ -15,18 +15,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.access;
+package net.strokkur.commands.internal.exceptions;
 
-import javax.lang.model.element.VariableElement;
-
-final class FieldAccessImpl extends ExecuteAccessImpl<VariableElement> implements FieldAccess {
-
-  public FieldAccessImpl(final VariableElement element) {
-    super(element);
-  }
-
-  @Override
-  public String toString() {
-    return "FieldAccessImpl["+ element + ']';
+public class MismatchedArgumentTypeException extends Exception {
+  public MismatchedArgumentTypeException(String message) {
+    super(message);
   }
 }

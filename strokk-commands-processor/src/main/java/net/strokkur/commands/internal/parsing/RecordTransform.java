@@ -17,10 +17,12 @@
  */
 package net.strokkur.commands.internal.parsing;
 
+import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
 import net.strokkur.commands.internal.arguments.CommandArgument;
-import net.strokkur.commands.internal.intermediate.paths.CommandPath;
-import net.strokkur.commands.internal.intermediate.paths.RecordPath;
-import net.strokkur.commands.internal.intermediate.paths.RecordPathImpl;
+import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
+import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.attributes.ParameterizableImpl;
+import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 
 import javax.lang.model.element.Element;
@@ -30,19 +32,24 @@ import javax.lang.model.element.VariableElement;
 import java.util.ArrayList;
 import java.util.List;
 
-class RecordTransform extends ClassTransform {
+final class RecordTransform extends ClassTransform {
 
-  public RecordTransform(final CommandParser parser, final MessagerWrapper messager) {
-    super(parser, messager);
+  public RecordTransform(final CommandParser parser, final MessagerWrapper messager, final BrigadierArgumentConverter converter) {
+    super(parser, messager, converter);
   }
 
   @Override
-  protected void addAccessAttribute(final CommandPath<?> path, final TypeElement element) {
+  protected String transformName() {
+    return "RecordTransform";
+  }
+
+  @Override
+  protected void addAccessAttribute(final CommandNode path, final TypeElement element) {
     // no impl
   }
 
   @Override
-  protected List<CommandPath<?>> parseRecordComponents(final CommandPath<?> parent, final Element element) {
+  protected CommandNode parseRecordComponents(final CommandNode parent, final TypeElement element) throws MismatchedArgumentTypeException {
     final List<? extends Element> enclosedElements = element.getEnclosedElements();
 
     final List<VariableElement> recordComponents = new ArrayList<>(enclosedElements.size());
@@ -52,20 +59,11 @@ class RecordTransform extends ClassTransform {
       }
     }
 
-    final List<List<CommandArgument>> possibleArguments = this.parser.parseArguments(recordComponents, (TypeElement) element);
-    final List<CommandPath<?>> paths = new ArrayList<>(possibleArguments.size());
+    final List<CommandArgument> arguments = parseArguments(recordComponents, element);
+    final CommandNode out = parent.addChildren(arguments);
 
-    for (final List<CommandArgument> arguments : possibleArguments) {
-      final RecordPath recordPath = new RecordPathImpl(arguments);
-      parent.addChild(recordPath);
-      paths.add(recordPath);
-    }
+    out.setAttribute(AttributeKey.RECORD_ARGUMENTS, new ParameterizableImpl(arguments));
 
-    return paths;
-  }
-
-  @Override
-  public boolean hardRequirement(final Element element) {
-    return element.getKind() == ElementKind.RECORD;
+    return out;
   }
 }

@@ -15,12 +15,17 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.paths;
+package net.strokkur.commands.internal.intermediate.attributes;
 
 import net.strokkur.commands.internal.arguments.CommandArgument;
+import net.strokkur.commands.internal.intermediate.ExecutorType;
 
-import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import java.util.List;
 
-public interface ExecutablePath extends CommandPath<CommandArgument> {
-  Element getExecutesMethod();
+public record DefaultExecutableImpl(
+    ExecutorType executorType,
+    ExecutableElement executesMethod,
+    List<CommandArgument> parameterArguments,
+    Type defaultExecutableArgumentTypes) implements Executable, DefaultExecutable {
 }
