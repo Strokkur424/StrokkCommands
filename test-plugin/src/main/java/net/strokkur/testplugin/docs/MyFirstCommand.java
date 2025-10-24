@@ -19,10 +19,7 @@ package net.strokkur.testplugin.docs;
 
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.strokkur.commands.annotations.Aliases;
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.DefaultExecutes;
 import net.strokkur.commands.annotations.Description;
-import net.strokkur.commands.annotations.Executes;
 import net.strokkur.commands.annotations.Executor;
 import net.strokkur.commands.annotations.Permission;
 import net.strokkur.commands.annotations.RequiresOP;
@@ -30,12 +27,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
-@Command("firstcommand")
 @Aliases("fc")
 @Description("My first StrokkCommands-command!")
 class MyFirstCommand {
 
-  @DefaultExecutes
   void help(CommandSender sender, String[] args) {
     sender.sendRichMessage("""
             <blue>Command Help for /<cmd></blue><dark_gray>
@@ -45,7 +40,6 @@ class MyFirstCommand {
     );
   }
 
-  @DefaultExecutes("two")
   @RequiresOP
   void helpTwo(CommandSender sender, String[] args) {
     sender.sendRichMessage("<aqua>/<cmd></aqua> is incomplete! You probably meant <gold>/<cmd_name> two three four<gold> :^)",
@@ -54,13 +48,11 @@ class MyFirstCommand {
     );
   }
 
-  @Executes("two three four")
   @RequiresOP
   void onExecute(CommandSender sender, @Executor Player player) {
     sender.sendRichMessage("<#f29def>Hey there! You just executed your first command ^-^");
   }
 
-  @Executes("fling")
   @Permission("some.permission")
   void onFling(CommandSender sender, @Executor Player player) {
     player.setVelocity(player.getVelocity().add(new Vector(0, 10, 0)));

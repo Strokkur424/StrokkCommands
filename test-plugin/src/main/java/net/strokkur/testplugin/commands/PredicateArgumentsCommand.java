@@ -22,17 +22,12 @@ import io.papermc.paper.command.brigadier.argument.predicate.ItemStackPredicate;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.Executes;
-import net.strokkur.commands.annotations.Literal;
 import org.bukkit.command.CommandSender;
 import org.bukkit.inventory.ItemStack;
 
-@Command("does")
 class PredicateArgumentsCommand {
 
-  @Executes("item")
-  void executor(CommandSender sender, ItemStack item, @Literal("match") String $match, ItemStackPredicate predicate) {
+  void executor(CommandSender sender, ItemStack item, String $match, ItemStackPredicate predicate) {
     if (predicate.test(item)) {
       sender.sendMessage(Component.text("Yes, yes it does.", NamedTextColor.GREEN));
     } else {
@@ -40,13 +35,11 @@ class PredicateArgumentsCommand {
     }
   }
 
-  @Executes("number")
-  void executor(CommandSender sender, double value, @Literal("fit") String $fit, @Literal("into") String $into, Range<Double> range) {
+  void executor(CommandSender sender, double value, String $fit, String $into, Range<Double> range) {
     checkNumberInRange(sender, value, range);
   }
 
-  @Executes("int-range")
-  void executor(CommandSender sender, int value, @Literal("fit") String $fit, @Literal("into") String $into, Range<Integer> range) {
+  void executor(CommandSender sender, int value, String $fit, String $into, Range<Integer> range) {
     checkNumberInRange(sender, value, range);
   }
 

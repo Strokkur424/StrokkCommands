@@ -28,9 +28,16 @@ subprojects {
   repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
+    maven("https://libraries.minecraft.net")
   }
 
-  if (name.contains("processor") || name.contains("annotations")) {
+  java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+  }
+
+  if ((name.contains("processor") || name.contains("annotations")) && !name.contains("-common")) {
     apply {
       plugin<MavenPublishPlugin>()
     }
@@ -48,9 +55,6 @@ subprojects {
         withSourcesJar()
         withJavadocJar()
       }
-      toolchain.languageVersion.set(JavaLanguageVersion.of(21))
-      sourceCompatibility = JavaVersion.VERSION_21
-      targetCompatibility = JavaVersion.VERSION_21
     }
 
     publishing {

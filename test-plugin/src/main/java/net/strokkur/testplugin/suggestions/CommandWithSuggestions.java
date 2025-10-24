@@ -22,10 +22,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.Executes;
 import net.strokkur.commands.annotations.Suggestion;
-import net.strokkur.commands.annotations.arguments.IntArg;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -33,7 +30,6 @@ import org.jspecify.annotations.NullMarked;
 
 import java.util.concurrent.CompletableFuture;
 
-@Command("withsuggestions")
 @NullMarked
 class CommandWithSuggestions {
 
@@ -53,23 +49,19 @@ class CommandWithSuggestions {
     };
   }
 
-  @Executes("field")
   void executesField(CommandSender sender, @Suggestion(base = SuggestionsRepository.class, field = "STATIC_FIELD") String value) {
     // ...
   }
 
-  @Executes("methodRef")
   void executesMethodRef(CommandSender sender, @Suggestion(method = "mySuggestions") String value) {
     // ...
   }
 
-  @Executes("method")
   void executesMethod(CommandSender sender, @Suggestion(method = "mySuggestions", reference = false) String value) {
     // ...
   }
 
-  @Executes("class")
-  void executesClass(CommandSender sender, @Suggestion(base = SuggestionsRepository.SomeClass.class) @IntArg(min = 1, max = 64) int value) {
+  void executesClass(CommandSender sender, @Suggestion(base = SuggestionsRepository.SomeClass.class) int value) {
     // ...
   }
 }

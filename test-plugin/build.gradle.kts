@@ -3,8 +3,8 @@ plugins {
 }
 
 dependencies {
-  compileOnly(project(":commands-annotations"))
-  annotationProcessor(project(":commands-processor"))
+  compileOnly(project(":commands-annotations-paper"))
+  annotationProcessor(project(":commands-processor-paper"))
 
   compileOnly(libs.paper.api)
 }

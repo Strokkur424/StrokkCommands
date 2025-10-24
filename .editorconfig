@@ -10,6 +10,8 @@ ij_continuation_indent_size = 4
 
 [*.java]
 ij_java_if_brace_force = always
+ij_java_align_multiline_parameters = false
+
 
 [.editorconfig]
 ij_editorconfig_align_group_field_declarations = false
