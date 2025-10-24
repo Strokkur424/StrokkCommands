@@ -17,16 +17,12 @@
  */
 package net.strokkur.testplugin.docs.gamemode;
 
-import net.strokkur.commands.annotations.Command;
 import net.strokkur.commands.annotations.Permission;
-import net.strokkur.commands.annotations.Subcommand;
 import net.strokkur.testplugin.docs.gamemode.preset.GameModePreset;
 import org.bukkit.GameMode;
 
-@Command("gmsp")
 @Permission("testplugin.gamemode.spectator")
 class GameModeSpectatorCommand {
 
-  @Subcommand
   GameModePreset gameMode = new GameModePreset(GameMode.SPECTATOR);
 }

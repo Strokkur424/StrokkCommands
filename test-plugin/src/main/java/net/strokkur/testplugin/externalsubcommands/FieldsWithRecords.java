@@ -19,12 +19,8 @@ package net.strokkur.testplugin.externalsubcommands;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
 import io.papermc.paper.command.brigadier.Commands;
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.Executes;
-import net.strokkur.commands.annotations.Subcommand;
 import org.bukkit.command.CommandSender;
 
-@Command("recordfields")
 class FieldsWithRecords {
 
   static {
@@ -44,12 +40,10 @@ class FieldsWithRecords {
         .build();
   }
 
-  @Subcommand
   SomeRecord someRecord;
 
   record SomeRecord(String wordArg) {
 
-    @Executes
     void execute(CommandSender sender) {
       sender.sendMessage(wordArg);
     }

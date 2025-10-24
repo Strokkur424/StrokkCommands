@@ -6,12 +6,14 @@ blossom = "2.1.0"
 
 paper = "1.21.10-R0.1-SNAPSHOT"
 minecraft = "1.21.10"
+brigadier = "1.0.18"
 
 jspecify = "1.0.0"
 jetbrains-annotations = "24.0.0"
 
 [libraries]
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
+brigadier = { module = "com.mojang:brigadier", version.ref = "brigadier" }
 jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrains-annotations" }
 

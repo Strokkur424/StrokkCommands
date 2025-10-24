@@ -18,41 +18,32 @@
 package net.strokkur.testplugin.subcommands;
 
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.Executes;
 import net.strokkur.commands.annotations.Permission;
 import net.strokkur.commands.annotations.RequiresOP;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-@Command("subcommands")
 public class BetterSubCommands {
 
-  @Command("give")
   record Give(Player target) {
 
-    @Executes("holy-relic")
     @Permission("aaa")
     void holyRelic(CommandSender sender) {
 
     }
 
-    @Executes("excalibur")
     @Permission("bbb")
     void excalibur(CommandSender sender) {
 
     }
   }
 
-  @Command("kill")
   record Kill(Player target, String reason) {
 
-    @Executes
     void kill(CommandSender sender) {
       killForce(sender, false);
     }
 
-    @Executes
     @RequiresOP
     void killForce(CommandSender sender, boolean force) {
       if (!force) {
@@ -66,10 +57,8 @@ public class BetterSubCommands {
     }
   }
 
-  @Command("help")
   class Help {
 
-    @Executes
     void help(CommandSender sender) {
       sender.sendRichMessage("Not a help message.");
     }

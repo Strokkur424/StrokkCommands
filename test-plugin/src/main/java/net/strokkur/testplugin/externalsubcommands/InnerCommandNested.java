@@ -18,12 +18,8 @@
 package net.strokkur.testplugin.externalsubcommands;
 
 import io.papermc.paper.command.brigadier.Commands;
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.Executes;
-import net.strokkur.commands.annotations.Subcommand;
 import org.bukkit.command.CommandSender;
 
-@Command("innercommandnested")
 class InnerCommandNested {
 
   static {
@@ -46,16 +42,13 @@ class InnerCommandNested {
 
   static class MyNestedClass {
 
-    @Executes("a")
     void execute(CommandSender sender) {
       sender.sendRichMessage("<green>Hi double nested.");
     }
   }
 
-  @Subcommand("nested")
   class Nested {
 
-    @Subcommand
     MyNestedClass myNestedClass;
   }
 }

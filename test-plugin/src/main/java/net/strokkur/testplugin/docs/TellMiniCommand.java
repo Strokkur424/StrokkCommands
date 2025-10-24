@@ -19,21 +19,14 @@ package net.strokkur.testplugin.docs;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.Executes;
-import net.strokkur.commands.annotations.arguments.StringArg;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.List;
 
-import static net.strokkur.commands.StringArgType.GREEDY;
-
-@Command("tellmini")
 public class TellMiniCommand {
 
-  @Executes
-  void tellMini(CommandSender sender, List<Player> players, @StringArg(GREEDY) String message) {
+  void tellMini(CommandSender sender, List<Player> players, String message) {
     Component component = MiniMessage.miniMessage().deserialize(message);
     players.forEach(p -> p.sendMessage(component));
   }

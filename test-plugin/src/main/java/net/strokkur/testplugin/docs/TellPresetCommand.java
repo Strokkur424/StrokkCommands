@@ -17,19 +17,14 @@
  */
 package net.strokkur.testplugin.docs;
 
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.Executes;
-import net.strokkur.commands.annotations.Literal;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-@Command("tellpreset")
 public class TellPresetCommand {
 
-  @Executes
   void executeTellPreset(CommandSender sender,
                          Player player,
-                         @Literal({"first", "second", "last"}) String preset) {
+                         String preset) {
     String message = switch (preset) {
       case "first" -> "You selected the first choice!";
       case "second" -> "This is the second one...";

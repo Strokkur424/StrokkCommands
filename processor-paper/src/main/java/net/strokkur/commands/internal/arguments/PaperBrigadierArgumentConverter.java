@@ -1,0 +1,412 @@
+/*
+ * StrokkCommands - A super simple annotation based zero-shade Paper command API library.
+ * Copyright (C) 2025 Strokkur24
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <https://www.gnu.org/licenses/>.
+ */
+package net.strokkur.commands.internal.arguments;
+
+import net.strokkur.commands.annotations.arguments.AngleArg;
+import net.strokkur.commands.annotations.arguments.CustomArg;
+import net.strokkur.commands.annotations.arguments.FinePosArg;
+import net.strokkur.commands.annotations.arguments.TimeArg;
+import net.strokkur.commands.internal.abstraction.SourceClass;
+import net.strokkur.commands.internal.abstraction.SourceVariable;
+import net.strokkur.commands.internal.exceptions.ConversionException;
+import net.strokkur.commands.internal.util.MessagerWrapper;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
+
+import static net.strokkur.commands.internal.arguments.PaperBrigadierArgumentConverter.RegistryEntry.registryEntry;
+import static net.strokkur.commands.internal.arguments.PaperBrigadierArgumentConverter.SimpleEntry.simpleEntry;
+
+@NullMarked
+public final class PaperBrigadierArgumentConverter extends BrigadierArgumentConverter {
+
+  //<editor-fold desc="Registry Entries">
+  private static final List<RegistryEntry> REGISTRY_ENTRIES = List.of(
+      registryEntry("Attribute", "org.bukkit.attribute.Attribute", "ATTRIBUTE"),
+      registryEntry("PatternType", "org.bukkit.block.banner.PatternType", "BANNER_PATTERN"),
+      registryEntry("Biome", "org.bukkit.block.Biome", "BIOME"),
+      registryEntry("Cat.Type", "org.bukkit.entity.Cat", "org.bukkit.entity.Cat.Type", "CAT_VARIANT"),
+      registryEntry("Chicken.Variant", "org.bukkit.entity.Chicken", "org.bukkit.entity.Chicken.Variant", "CHICKEN_VARIANT"),
+      registryEntry("Cow.Variant", "org.bukkit.entity.Cow", "org.bukkit.entity.Cow.Variant", "COW_VARIANT"),
+      registryEntry("DamageType", "org.bukkit.damage.DamageType", "DAMAGE_TYPE"),
+      registryEntry("DataComponentType", "io.papermc.paper.datacomponent.DataComponentType", "DATA_COMPONENT_TYPE"),
+      registryEntry("Enchantment", "org.bukkit.enchantments.Enchantment", "ENCHANTMENT"),
+      registryEntry("EntityType", "org.bukkit.entity.EntityType", "ENTITY_TYPE"),
+      registryEntry("Fluid", "org.bukkit.Fluid", "FLUID"),
+      registryEntry("Frog.Variant", "org.bukkit.entity.Frog", "org.bukkit.entity.Frog.Variant", "FROG_VARIANT"),
+      registryEntry("GameEvent", "org.bukkit.GameEvent", "GAME_EVENT"),
+      registryEntry("ItemType", "org.bukkit.inventory.ItemType", "ITEM"),
+      registryEntry("JukeboxSong", "org.bukkit.JukeboxSong", "JUKEBOX_SONG"),
+      registryEntry("MapCursor.Type", "org.bukkit.map.MapCursor", "org.bukkit.map.MapCursor.Type", "MAP_DECORATION_TYPE"),
+      registryEntry("MemoryKey", "org.bukkit.entity.memory.MemoryKey", "org.bukkit.entity.memory.MemoryKey<?>", "MEMORY_MODULE_TYPE"),
+      registryEntry("MenuType", "org.bukkit.inventory.MenuType", "MENU"),
+      registryEntry("PotionEffectType", "org.bukkit.potion.PotionEffectType", "MOB_EFFECT"),
+      registryEntry("Art", "org.bukkit.Art", "PAINTING_VARIANT"),
+      registryEntry("Particle", "org.bukkit.Particle", "PARTICLE_TYPE"),
+      registryEntry("Pig.Variant", "org.bukkit.entity.Pig", "org.bukkit.entity.Pig.Variant", "PIG_VARIANT"),
+      registryEntry("PotionType", "org.bukkit.potion.PotionType", "POTION"),
+      registryEntry("Sound", "org.bukkit.Sound", "SOUND_EVENT"),
+      registryEntry("Structure", "org.bukkit.structure.Structure", "STRUCTURE"),
+      registryEntry("TrimMaterial", "org.bukkit.inventory.meta.trim.TrimMaterial", "TRIM_MATERIAL"),
+      registryEntry("TrimPattern", "org.bukkit.inventory.meta.trim.TrimPattern", "TRIM_PATTERN"),
+      registryEntry("Villager.Profession", "org.bukkit.entity.Villager", "org.bukkit.entity.Villager.Profession", "VILLAGER_PROFESSION"),
+      registryEntry("Villager.Type", "org.bukkit.entity.Villager", "org.bukkit.entity.Villager.Type", "VILLAGER_TYPE"),
+      registryEntry("Wolf.SoundVariant", "org.bukkit.entity.Wolf", "org.bukkit.entity.Wolf.SoundVariant", "WOLF_SOUND_VARIANT"),
+      registryEntry("Wolf.Variant", "org.bukkit.entity.Wolf", "org.bukkit.entity.Wolf.Variant", "WOLF_VARIANT")
+  );
+  //</editor-fold>
+
+  public PaperBrigadierArgumentConverter(final MessagerWrapper messagerWrapper) {
+    super(messagerWrapper);
+  }
+
+  @Override
+  protected @Nullable BrigadierArgumentType handleCustomArgumentAnnotations(
+      final String argumentName,
+      final String type,
+      final SourceVariable variable
+  ) throws ConversionException {
+    final CustomArg customArg = variable.getAnnotation(CustomArg.class);
+    if (customArg != null) {
+      final SourceClass value = variable.getAnnotationSourceClassField(CustomArg.class, "value");
+      if (value != null) {
+        return new BrigadierArgumentType("new " + value.getFullyQualifiedName() + "()", "ctx.getArgument(\"" + argumentName + "\", " + type + ".class)", Set.of());
+      } else {
+        throw new ConversionException("Invalid value for @CustomArg annotation");
+      }
+    }
+
+    final TimeArg timeArg = variable.getAnnotation(TimeArg.class);
+    if (timeArg != null) {
+      if (!type.equals("int") && !type.equals("java.lang.Integer")) {
+        throw new ConversionException("An argument annotated with @TimeArg has to be of type 'int'");
+      }
+
+      return BrigadierArgumentType.of(
+          "ArgumentTypes.time()",
+          "IntegerArgumentType.getInteger(ctx, \"%s\")".formatted(argumentName),
+          Set.of(
+              "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+              "com.mojang.brigadier.arguments.IntegerArgumentType"
+          )
+      );
+    }
+
+    final AngleArg angleArt = variable.getAnnotation(AngleArg.class);
+    if (angleArt != null) {
+      if (!type.equals("float") && !type.equals("java.lang.Float")) {
+        throw new ConversionException("An argument annotated with @AngleArg has to be of type 'float'");
+      }
+
+      return BrigadierArgumentType.of(
+          "ArgumentTypes.angle()",
+          "ctx.getArgument(\"%s\", AngleResolver.class).resolve(ctx.getSource())".formatted(argumentName),
+          Set.of(
+              "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+              "io.papermc.paper.command.brigadier.argument.resolvers.AngleResolver"
+          )
+      );
+    }
+
+    return null;
+  }
+
+  @Override
+  protected void initializeArguments() {
+    super.initializeArguments();
+
+    //<editor-fold desc="Location arguments">
+    putFor((p, name) -> BrigadierArgumentType.of(
+        "ArgumentTypes.blockPosition()",
+        "ctx.getArgument(\"%s\", BlockPositionResolver.class).resolve(ctx.getSource())".formatted(name),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "io.papermc.paper.command.brigadier.argument.resolvers.BlockPositionResolver"
+        )
+    ), "io.papermc.paper.math.BlockPosition");
+
+    putFor((p, name) -> annotatedOr(p, FinePosArg.class,
+        a -> "ArgumentTypes.finePosition(%s)".formatted(a.value()),
+        "ArgumentTypes.finePosition()",
+        "ctx.getArgument(\"%s\", FinePositionResolver.class).resolve(ctx.getSource())".formatted(name),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "io.papermc.paper.command.brigadier.argument.resolvers.FinePositionResolver"
+        )
+    ), "io.papermc.paper.math.FinePosition");
+
+    putFor((p, name) -> BrigadierArgumentType.of(
+        "ArgumentTypes.columnBlockPosition()",
+        "ctx.getArgument(\"%s\", ColumnBlockPositionResolver.class).resolve(ctx.getSource())".formatted(name),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "io.papermc.paper.command.brigadier.argument.resolvers.ColumnBlockPositionResolver"
+        )
+    ), "io.papermc.paper.command.brigadier.argument.position.ColumnBlockPosition");
+
+    putFor((p, name) -> annotatedOr(p, FinePosArg.class,
+        a -> "ArgumentTypes.columnFinePosition(%s)".formatted(a.value()),
+        "ArgumentTypes.columnFinePosition()",
+        "ctx.getArgument(\"%s\", ColumnFinePositionResolver.class).resolve(ctx.getSource())".formatted(name),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "io.papermc.paper.command.brigadier.argument.resolvers.ColumnFinePositionResolver"
+        )
+    ), "io.papermc.paper.command.brigadier.argument.position.ColumnFinePosition");
+
+    putFor((p, name) -> BrigadierArgumentType.of(
+        "ArgumentTypes.world()",
+        "ctx.getArgument(\"%s\", World.class)".formatted(name),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "org.bukkit.World"
+        )
+    ), "org.bukkit.World");
+    //</editor-fold>
+
+    //<editor-fold desc="Entity and player arguments">
+    putFor((p, name) -> BrigadierArgumentType.of(
+        "ArgumentTypes.entity()",
+        "ctx.getArgument(\"%s\", EntitySelectorArgumentResolver.class).resolve(ctx.getSource()).getFirst()".formatted(name),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "io.papermc.paper.command.brigadier.argument.resolvers.selector.EntitySelectorArgumentResolver"
+        )
+    ), "org.bukkit.entity.Entity");
+
+    putFor((p, name) -> BrigadierArgumentType.of(
+        "ArgumentTypes.entities()",
+        "ctx.getArgument(\"%s\", EntitySelectorArgumentResolver.class).resolve(ctx.getSource())".formatted(name),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "io.papermc.paper.command.brigadier.argument.resolvers.selector.EntitySelectorArgumentResolver"
+        )
+    ), "java.util.List<org.bukkit.entity.Entity>", "java.util.Collection<org.bukkit.entity.Entity>");
+
+    putFor((p, name) -> BrigadierArgumentType.of(
+        "ArgumentTypes.entities()",
+        "ctx.getArgument(\"%s\", EntitySelectorArgumentResolver.class).resolve(ctx.getSource()).toArray(Entity[]::new)".formatted(name),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "io.papermc.paper.command.brigadier.argument.resolvers.selector.EntitySelectorArgumentResolver",
+            "org.bukkit.entity.Entity"
+        )
+    ), "org.bukkit.entity.Entity[]");
+
+    putFor((p, name) -> BrigadierArgumentType.of(
+        "ArgumentTypes.player()",
+        "ctx.getArgument(\"%s\", PlayerSelectorArgumentResolver.class).resolve(ctx.getSource()).getFirst()".formatted(name),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver"
+        )
+    ), "org.bukkit.entity.Player");
+
+    putFor((p, name) -> BrigadierArgumentType.of(
+        "ArgumentTypes.players()",
+        "ctx.getArgument(\"%s\", PlayerSelectorArgumentResolver.class).resolve(ctx.getSource())".formatted(name),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver"
+        )
+    ), "java.util.List<org.bukkit.entity.Player>", "java.util.Collection<org.bukkit.entity.Player>");
+
+    putFor((p, name) -> BrigadierArgumentType.of(
+        "ArgumentTypes.players()",
+        "ctx.getArgument(\"%s\", PlayerSelectorArgumentResolver.class).resolve(ctx.getSource()).toArray(Player[]::new)".formatted(name),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver",
+            "org.bukkit.entity.Player"
+        )
+    ), "org.bukkit.entity.Player[]");
+
+    putFor((p, name) -> BrigadierArgumentType.of(
+        "ArgumentTypes.playerProfiles()",
+        "ctx.getArgument(\"%s\", PlayerProfileListResolver.class).resolve(ctx.getSource()).stream().toList().getFirst()".formatted(name),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "io.papermc.paper.command.brigadier.argument.resolvers.PlayerProfileListResolver"
+        )
+    ), "com.destroystokyo.paper.profile.PlayerProfile");
+
+    putFor((p, name) -> BrigadierArgumentType.of(
+        "ArgumentTypes.playerProfiles()",
+        "ctx.getArgument(\"%s\", PlayerProfileListResolver.class).resolve(ctx.getSource())".formatted(name),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "io.papermc.paper.command.brigadier.argument.resolvers.PlayerProfileListResolver"
+        )
+    ), "java.util.Collection<com.destroystokyo.paper.profile.PlayerProfile>");
+
+    putFor((p, name) -> BrigadierArgumentType.of(
+        "ArgumentTypes.playerProfiles()",
+        "ctx.getArgument(\"%s\", PlayerProfileListResolver.class).resolve(ctx.getSource()).stream().toList()".formatted(name),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "io.papermc.paper.command.brigadier.argument.resolvers.PlayerProfileListResolver"
+        )
+    ), "java.util.Collection<com.destroystokyo.paper.profile.PlayerProfile>", "java.util.List<com.destroystokyo.paper.profile.PlayerProfile>");
+
+    putFor((p, name) -> BrigadierArgumentType.of(
+        "ArgumentTypes.playerProfiles()",
+        "ctx.getArgument(\"%s\", PlayerProfileListResolver.class).resolve(ctx.getSource()).toArray(PlayerProfile[]::new)".formatted(name),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "io.papermc.paper.command.brigadier.argument.resolvers.PlayerProfileListResolver",
+            "com.destroystokyo.paper.profile.PlayerProfile"
+        )
+    ), "com.destroystokyo.paper.profile.PlayerProfile[]");
+    //</editor-fold>
+
+    // All registry related arguments
+    REGISTRY_ENTRIES.forEach(this::addResourceAndResourceKeyArguments);
+
+    // "Paper"-related arguments
+    Stream.of(
+        simpleEntry("blockState", "BlockState", "org.bukkit.block.BlockState"),
+        simpleEntry("itemStack", "ItemStack", "org.bukkit.inventory.ItemStack"),
+        simpleEntry("namespacedKey", "NamespacedKey", "org.bukkit.NamespacedKey"),
+        simpleEntry("uuid", "UUID", "java.util.UUID"),
+        simpleEntry("objectiveCriteria", "Criteria", "org.bukkit.scoreboard.Criteria"),
+        simpleEntry("axes", "AxisSet", "io.papermc.paper.command.brigadier.argument.AxisSet"),
+
+        simpleEntry("itemPredicate", "ItemStackPredicate", "io.papermc.paper.command.brigadier.argument.predicate.ItemStackPredicate"),
+        simpleEntry("blockInWorldPredicate", "BlockInWorldPredicate", "io.papermc.paper.command.brigadier.argument.predicate.BlockInWorldPredicate")
+    ).forEach(this::putSimple);
+
+    //<editor-fold desc=Predicate arguments">
+    putFor((p, name) -> BrigadierArgumentType.of(
+        "ArgumentTypes.doubleRange()",
+        "ctx.getArgument(\"%s\", DoubleRangeProvider.class)".formatted(name),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "io.papermc.paper.command.brigadier.argument.range.DoubleRangeProvider"
+        )
+    ), "io.papermc.paper.command.brigadier.argument.range.DoubleRangeProvider", "io.papermc.paper.command.brigadier.argument.range.RangeProvider<java.lang.Double>");
+
+    putFor((p, name) -> BrigadierArgumentType.of(
+        "ArgumentTypes.doubleRange()",
+        "ctx.getArgument(\"%s\", DoubleRangeProvider.class).range()".formatted(name),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "io.papermc.paper.command.brigadier.argument.range.DoubleRangeProvider"
+        )
+    ), "com.google.common.collect.Range<java.lang.Double>");
+
+    putFor((p, name) -> BrigadierArgumentType.of(
+        "ArgumentTypes.integerRange()",
+        "ctx.getArgument(\"%s\", IntegerRangeProvider.class)".formatted(name),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "io.papermc.paper.command.brigadier.argument.range.IntegerRangeProvider"
+        )
+    ), "io.papermc.paper.command.brigadier.argument.range.IntegerRangeProvider", "io.papermc.paper.command.brigadier.argument.range.RangeProvider<java.lang.Integer>");
+
+    putFor((p, name) -> BrigadierArgumentType.of(
+        "ArgumentTypes.integerRange()",
+        "ctx.getArgument(\"%s\", IntegerRangeProvider.class).range()".formatted(name),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "io.papermc.paper.command.brigadier.argument.range.IntegerRangeProvider"
+        )
+    ), "com.google.common.collect.Range<java.lang.Integer>");
+    //</editor-fold>
+
+    //<editor-fold desc="Adventure arguments">
+    Stream.of(
+        simpleEntry("component", "Component", "net.kyori.adventure.text.Component"),
+        simpleEntry("key", "Key", "net.kyori.adventure.key.Key"),
+        simpleEntry("namedColor", "NamedTextColor", "net.kyori.adventure.text.format.NamedTextColor"),
+        simpleEntry("hexColor", "TextColor", "net.kyori.adventure.text.format.TextColor"),
+        simpleEntry("style", "Style", "net.kyori.adventure.text.format.Style")
+    ).forEach(this::putSimple);
+
+    conversionMap.put("java.util.concurrent.CompletableFuture<net.kyori.adventure.chat.SignedMessage>", (p, name) -> BrigadierArgumentType.of(
+        "ArgumentTypes.signedMessage()",
+        "ctx.getArgument(\"%s\", SignedMessageResolver.class).resolveSignedMessage(\"%s\", ctx)".formatted(name, name),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "io.papermc.paper.command.brigadier.argument.SignedMessageResolver"
+        )
+    ));
+
+    conversionMap.put("io.papermc.paper.command.brigadier.argument.SignedMessageResolver", (p, name) -> BrigadierArgumentType.of(
+        "ArgumentTypes.signedMessage()",
+        "ctx.getArgument(\"%s\", SignedMessageResolver.class)".formatted(name),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "io.papermc.paper.command.brigadier.argument.SignedMessageResolver"
+        )
+    ));
+    //</editor-fold>
+  }
+
+  private void addResourceAndResourceKeyArguments(RegistryEntry entry) {
+    putFor((p, name) -> BrigadierArgumentType.of(
+        "ArgumentTypes.resource(RegistryKey.%s)".formatted(entry.registryKeyName()),
+        "ctx.getArgument(\"%s\", %s.class)".formatted(name, entry.type()),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "io.papermc.paper.registry.RegistryKey",
+            entry.typeImport()
+        )
+    ), entry.fullType());
+
+    putFor((p, name) -> BrigadierArgumentType.of(
+        "ArgumentTypes.resourceKey(RegistryKey.%s)".formatted(entry.registryKeyName()),
+        "RegistryArgumentExtractor.getTypedKey(ctx, RegistryKey.%s, \"%s\")".formatted(entry.type(), name),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "io.papermc.paper.registry.RegistryKey",
+            "io.papermc.paper.command.brigadier.argument.RegistryArgumentExtractor",
+            entry.typeImport()
+        )
+    ), "io.papermc.paper.registry.TypedKey<%s>".formatted(entry.fullType()));
+  }
+
+  private void putSimple(SimpleEntry entry) {
+    conversionMap.put(entry.classImport(), (p, name) -> BrigadierArgumentType.of(
+        "ArgumentTypes.%s()".formatted(entry.argumentTypeName()),
+        "ctx.getArgument(\"%s\", %s.class)".formatted(name, entry.className()),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            entry.classImport()
+        )
+    ));
+  }
+
+  record SimpleEntry(String argumentTypeName, String className, String classImport) {
+    public static SimpleEntry simpleEntry(String argumentTypeName, String className, String classImport) {
+      return new SimpleEntry(argumentTypeName, className, classImport);
+    }
+  }
+
+  record RegistryEntry(String type, String typeImport, String fullType, String registryKeyName) {
+    public static RegistryEntry registryEntry(String type, String typeImport, String registryKeyName) {
+      return new RegistryEntry(type, typeImport, typeImport, registryKeyName);
+    }
+
+    public static RegistryEntry registryEntry(String type, String typeImport, String fullType, String registryKeyName) {
+      return new RegistryEntry(type, typeImport, fullType, registryKeyName);
+    }
+  }
+}
