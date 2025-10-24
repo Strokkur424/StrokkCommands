@@ -18,8 +18,10 @@
 package net.strokkur.commands.internal.printer;
 
 import net.strokkur.commands.internal.BuildConstants;
+import net.strokkur.commands.internal.abstraction.SourceConstructor;
 import net.strokkur.commands.internal.abstraction.SourceParameter;
 import net.strokkur.commands.internal.abstraction.SourceType;
+import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
 import net.strokkur.commands.internal.intermediate.ExecutorType;
 import net.strokkur.commands.internal.intermediate.attributes.Attributable;
@@ -36,7 +38,6 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.ExecutableElement;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -90,11 +91,11 @@ public class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComma
 
     final String constructorTypeParameters = this.getCommandInformation().constructor() == null
         ? ""
-        : this.getCommandInformation().constructor().getTypeAnnotationsString();
+        : this.getCommandInformation().constructor().getCombinedTypeAnnotationsString();
 
     final List<String> createParameters = this.getCommandInformation().constructor() == null
         ? new ArrayList<>()
-        : this.getCommandInformation().constructor().getParameters().stream().map(SourceParameter::getFullDefinition).toList();
+        : this.getCommandInformation().constructor().getParameterStrings();
     final List<String> registerParameters = new ArrayList<>(createParameters.size() + 1);
     registerParameters.add("Commands commands");
     registerParameters.addAll(createParameters);
@@ -135,11 +136,11 @@ public class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComma
         brigadierClassName,
         constructorTypeParameters,
         String.join(", ", registerParameters),
-        String.join(", ", getCommandInformation().constructor() instanceof ExecutableElement ctor
-            ? ctor.getParameters().stream()
-            .map(var -> var.getSimpleName().toString())
-            .toList()
-            : Collections.emptyList()
+        String.join(", ", getCommandInformation().constructor() instanceof SourceConstructor ctor ?
+            ctor.getParameters().stream()
+                .map(SourceVariable::getName)
+                .toList() :
+            Collections.emptyList()
         ),
         description,
         aliases
@@ -277,6 +278,7 @@ public class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComma
       return;
     }
 
+    print(",");
     println();
     printIndent();
     print("executor");

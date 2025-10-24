@@ -17,9 +17,6 @@
  */
 package net.strokkur.commands.internal.abstraction;
 
-import javax.lang.model.element.Modifier;
-import java.util.Set;
-
 /// Represents a type in the Java source code.
 ///
 /// This can be a [VoidSourceType] for `void`, a [SourcePrimitive] for any form of
@@ -35,6 +32,10 @@ public interface SourceType extends SourceElement {
   ///
   /// @return the fully qualified name
   String getFullyQualifiedName();
+
+  default String getFullyQualifiedAndTypedName() {
+    return getFullyQualifiedName();
+  }
 
   /// The package name of this class.
   ///
@@ -58,11 +59,7 @@ public interface SourceType extends SourceElement {
   String getName();
 
   /// {@return whether this type is an array}
-  boolean isArray();
-
-  /// {@return the modifiers of this source type}
-  Set<Modifier> getModifiers();
-
-  /// {@return the imports needed for this type}
-  Set<String> getImports();
+  default boolean isArray() {
+    return false;
+  }
 }

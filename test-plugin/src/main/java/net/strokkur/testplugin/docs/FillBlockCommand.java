@@ -20,16 +20,21 @@ package net.strokkur.testplugin.docs;
 import io.papermc.paper.math.BlockPosition;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.strokkur.commands.annotations.Command;
+import net.strokkur.commands.annotations.Executes;
 import org.bukkit.block.BlockState;
 import org.bukkit.command.CommandSender;
 
 @SuppressWarnings("UnstableApiUsage")
+@Command("fillblock")
 record FillBlockCommand(BlockPosition pos1, BlockPosition pos2, BlockState state) {
 
+  @Executes
   void execute(CommandSender sender) {
     execute(sender, 1000);
   }
 
+  @Executes
   void execute(CommandSender sender, int perTick) {
     sender.sendRichMessage("You attempted to fill all blocks between <pos1> and <pos2> with <type> (placing <per_tick> blocks per tick.)",
         Placeholder.unparsed("pos1", "%d %d %d".formatted(pos1.blockX(), pos1.blockY(), pos1.blockZ())),

@@ -26,4 +26,9 @@ public record SourcePrimitiveImpl(PrimitiveType type) implements SourcePrimitive
   public String getSourceName() {
     return this.type.toString();
   }
+
+  @Override
+  public String toString() {
+    return "Primitive(" + getSourceName() + ')';
+  }
 }

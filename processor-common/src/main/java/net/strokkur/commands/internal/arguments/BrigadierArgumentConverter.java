@@ -125,7 +125,7 @@ public abstract class BrigadierArgumentConverter implements ForwardingMessagerWr
 
   public final BrigadierArgumentType getAsArgumentType(final SourceVariable parameter) throws ConversionException {
     final String argumentName = parameter.getName();
-    final String type = parameter.getType().getFullyQualifiedName();
+    final String type = parameter.getType().getFullyQualifiedAndTypedName();
 
     final BrigadierArgumentType customArg = handleCustomArgumentAnnotations(argumentName, type, parameter);
     if (customArg != null) {

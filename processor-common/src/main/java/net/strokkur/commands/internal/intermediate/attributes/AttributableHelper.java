@@ -27,7 +27,7 @@ public interface AttributableHelper extends Attributable {
 
   @Override
   default <T> @Nullable T getAttribute(AttributeKey<T> key) {
-    return (T) attributeMap().get(key.key());
+    return (T) attributeMap().getOrDefault(key.key(), key.defaultValue());
   }
 
   @Override

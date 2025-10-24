@@ -19,6 +19,8 @@ package net.strokkur.testplugin.commands;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.strokkur.commands.annotations.Command;
+import net.strokkur.commands.annotations.Executes;
 import net.strokkur.commands.annotations.Executor;
 import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
@@ -28,12 +30,15 @@ import org.bukkit.entity.memory.MemoryKey;
 import org.bukkit.inventory.ItemType;
 
 @SuppressWarnings("UnstableApiUsage")
+@Command("registryarg")
 class RegistryArgumentsCommand {
 
+  @Executes("itemtype")
   void execute(CommandSender sender, @Executor Player player, ItemType type) {
     execute(sender, player, type, 1);
   }
 
+  @Executes("itemtype")
   void execute(CommandSender sender, @Executor Player player, ItemType type, int amount) {
     player.give(type.createItemStack(amount));
     sender.sendRichMessage("<green>Successfully gave <white><player></white> <red><amount>x <type></red>",
@@ -43,12 +48,14 @@ class RegistryArgumentsCommand {
     );
   }
 
+  @Executes("cow-variant")
   void execute(CommandSender sender, Cow.Variant cowVariant) {
     sender.sendRichMessage("<green>You selected <white><variant></white>!",
         Placeholder.unparsed("variant", cowVariant.key().asString())
     );
   }
 
+  @Executes("memory-key")
   void execute(CommandSender sender, MemoryKey<?> memoryKey) {
     sender.sendRichMessage("<green>You selected <white><variant></white>!",
         Placeholder.unparsed("variant", memoryKey.key().asString())
@@ -56,6 +63,7 @@ class RegistryArgumentsCommand {
   }
 
   @SuppressWarnings("removal")
+  @Executes("play-sound")
   void execute(CommandSender sender, Sound sound) {
     sender.playSound(net.kyori.adventure.sound.Sound.sound(sound, net.kyori.adventure.sound.Sound.Source.AMBIENT, 1.0f, 1.0f));
     sender.sendRichMessage("<aqua>Played <white><sound>",

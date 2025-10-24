@@ -28,9 +28,11 @@ import net.strokkur.commands.internal.intermediate.attributes.DefaultExecutableI
 import net.strokkur.commands.internal.intermediate.attributes.PaperAttributeKeys;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.MessagerWrapper;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 
+@NullMarked
 public class PaperDefaultExecutesTransform extends DefaultExecutesTransform {
   public PaperDefaultExecutesTransform(final CommandParser parser, final PlatformUtils platformUtils) {
     super(parser, platformUtils);
@@ -45,6 +47,11 @@ public class PaperDefaultExecutesTransform extends DefaultExecutesTransform {
 
     node.setAttribute(AttributeKey.DEFAULT_EXECUTABLE, executable);
     node.setAttribute(PaperAttributeKeys.EXECUTOR_TYPE, type);
+  }
+
+  @Override
+  protected int firstParameterToParse(final List<SourceParameter> parameters) {
+    return PaperExecutesTransform.getExecutorType(parameters) == ExecutorType.NONE ? 1 : 2;
   }
 
   @Override

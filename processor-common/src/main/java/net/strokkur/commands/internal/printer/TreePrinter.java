@@ -168,6 +168,13 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
     final List<CommandArgument> arguments = executable.parameterArguments();
 
     printFirstArguments(executable);
+    if (arguments.isEmpty() && argumentsTypeGetter == null) {
+      println();
+      return;
+    }
+
+    print(",");
+    println();
 
     if (arguments.isEmpty() && argumentsTypeGetter != null) {
       println(argumentsTypeGetter);
@@ -175,6 +182,7 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
     }
 
     printArguments(arguments);
+
     for (final CommandArgument argument : arguments) {
       if (argument instanceof MultiLiteralCommandArgument) {
         popLiteralPosition();

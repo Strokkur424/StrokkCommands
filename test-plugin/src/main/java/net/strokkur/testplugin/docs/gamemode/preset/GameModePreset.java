@@ -19,6 +19,7 @@ package net.strokkur.testplugin.docs.gamemode.preset;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.strokkur.commands.annotations.Executes;
 import net.strokkur.commands.annotations.Executor;
 import org.bukkit.GameMode;
 import org.bukkit.command.CommandSender;
@@ -35,10 +36,12 @@ public class GameModePreset {
     this.mode = mode;
   }
 
+  @Executes
   public void executes(CommandSender sender, @Executor Player executor) {
     changeGameMode(sender, executor);
   }
 
+  @Executes
   public void executesTarget(CommandSender sender, Player target) {
     changeGameMode(sender, target);
   }

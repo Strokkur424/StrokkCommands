@@ -18,15 +18,19 @@
 package net.strokkur.testplugin.externalsubcommands;
 
 import io.papermc.paper.command.brigadier.Commands;
+import net.strokkur.commands.annotations.Command;
+import net.strokkur.commands.annotations.Executes;
+import net.strokkur.commands.annotations.Subcommand;
 import org.bukkit.command.CommandSender;
 
+@Command("innercommandnested")
 class InnerCommandNested {
 
   static {
     // Expectation
     final InnerCommandNested instance = new InnerCommandNested();
-    final InnerCommandNested.Nested instanceNested = instance.new Nested();
-    final InnerCommandNested.MyNestedClass instanceNestedMyNestedClass = instanceNested.myNestedClass;
+    final Nested instanceNested = instance.new Nested();
+    final MyNestedClass instanceNestedMyNestedClass = instanceNested.myNestedClass;
 
     var built = Commands.literal("innercommandnested")
         .then(Commands.literal("nested")
@@ -42,13 +46,16 @@ class InnerCommandNested {
 
   static class MyNestedClass {
 
+    @Executes("a")
     void execute(CommandSender sender) {
       sender.sendRichMessage("<green>Hi double nested.");
     }
   }
 
+  @Subcommand("nested")
   class Nested {
 
+    @Subcommand
     MyNestedClass myNestedClass;
   }
 }

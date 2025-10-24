@@ -17,6 +17,7 @@
  */
 package net.strokkur.commands.internal.abstraction;
 
+import javax.lang.model.element.Modifier;
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -49,14 +50,11 @@ public interface SourceClass extends SourceType, AnnotationsHolder {
 
   List<SourceClass> getNestedClasses(final Predicate<SourceClass> predicate);
 
-  @Override
-  default boolean isArray() {
-    return false;
-  }
-
   default boolean isRecord() {
     return false;
   }
+
+  Set<Modifier> getModifiers();
 
   @Override
   default Set<String> getImports() {

@@ -17,7 +17,6 @@
  */
 package net.strokkur.commands.internal.intermediate.attributes;
 
-import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.util.Classes;
 import org.jspecify.annotations.Nullable;
@@ -49,14 +48,10 @@ public interface DefaultExecutable extends Executable, Attributable {
     }
 
     public static DefaultExecutable.Type getType(final SourceVariable variable) {
-      if (!(variable.getType() instanceof SourceClass type)) {
-        return NONE;
-      }
-
-      if (type.getFullyQualifiedName().equals(Classes.LIST_STRING)) {
+      if (variable.getType().getFullyQualifiedAndTypedName().equals(Classes.LIST_STRING)) {
         return LIST;
       }
-      if (type.getFullyQualifiedName().equals("java.lang.String[]")) {
+      if (variable.getType().getFullyQualifiedName().equals("java.lang.String[]")) {
         return ARRAY;
       }
       return NONE;
