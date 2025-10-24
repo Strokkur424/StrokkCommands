@@ -139,7 +139,7 @@ class CommandNodeImpl implements CommandNode, AttributableHelper {
     }
 
     if (!this.attributes.isEmpty()) {
-      builder.append(" ".repeat(60 - builder.length()));
+      builder.append(" ".repeat(Math.max(2, 80 - builder.length())));
       this.attributes.forEach((k, v) -> builder.append(k).append('=').append(v).append(' '));
     }
 

@@ -25,4 +25,9 @@ public record SourceArrayImpl(SourceType arrayType) implements SourceArray {
   public SourceType getArrayType() {
     return this.arrayType;
   }
+
+  @Override
+  public String toString() {
+    return getName();
+  }
 }

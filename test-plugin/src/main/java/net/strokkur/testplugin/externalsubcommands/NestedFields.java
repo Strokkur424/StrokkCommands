@@ -18,8 +18,12 @@
 package net.strokkur.testplugin.externalsubcommands;
 
 import io.papermc.paper.command.brigadier.Commands;
+import net.strokkur.commands.annotations.Command;
+import net.strokkur.commands.annotations.Executes;
+import net.strokkur.commands.annotations.Subcommand;
 import org.bukkit.command.CommandSender;
 
+@Command("nestedfields")
 class NestedFields {
 
   static {
@@ -42,15 +46,18 @@ class NestedFields {
         .build();
   }
 
+  @Subcommand("first")
   FirstNesting firstNesting;
 
   static class FirstNesting {
 
+    @Subcommand("second")
     SecondNesting secondNesting;
   }
 
   static class SecondNesting {
 
+    @Executes
     void execute(CommandSender sender) {
       sender.sendMessage("Wohoo");
     }

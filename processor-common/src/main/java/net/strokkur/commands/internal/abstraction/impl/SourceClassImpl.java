@@ -117,9 +117,9 @@ public class SourceClassImpl implements SourceClass, ElementGettable<TypeElement
     final List<SourceClass> out = new LinkedList<>();
     for (final Element element : this.element.getEnclosedElements()) {
       if ((element.getKind() == ElementKind.CLASS || element.getKind() == ElementKind.RECORD)) {
-        final SourceClass method = SourceTypeUtils.getSourceClassType(this.environment, (DeclaredType) element.asType());
-        if (predicate.test(method)) {
-          out.add(method);
+        final SourceClass nested = SourceTypeUtils.getSourceClassType(this.environment, (DeclaredType) element.asType());
+        if (predicate.test(nested)) {
+          out.add(nested);
         }
       }
     }
@@ -145,6 +145,11 @@ public class SourceClassImpl implements SourceClass, ElementGettable<TypeElement
 
   @Override
   public String getFullyQualifiedName() {
+    return this.element.getQualifiedName().toString();
+  }
+
+  @Override
+  public String getFullyQualifiedAndTypedName() {
     return this.type.toString();
   }
 
@@ -170,5 +175,10 @@ public class SourceClassImpl implements SourceClass, ElementGettable<TypeElement
   @Override
   public Set<Modifier> getModifiers() {
     return Collections.unmodifiableSet(this.element.getModifiers());
+  }
+
+  @Override
+  public String toString() {
+    return getName();
   }
 }

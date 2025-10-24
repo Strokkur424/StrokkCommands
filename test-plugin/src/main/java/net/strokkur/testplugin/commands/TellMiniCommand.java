@@ -19,14 +19,21 @@ package net.strokkur.testplugin.commands;
 
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.strokkur.commands.annotations.Command;
+import net.strokkur.commands.annotations.Executes;
 import net.strokkur.commands.annotations.RequiresOP;
+import net.strokkur.commands.annotations.arguments.StringArg;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 
+import static net.strokkur.commands.StringArgType.GREEDY;
+
+@Command("tellmini")
 @RequiresOP
 class TellMiniCommand {
 
-  void executes(CommandSender sender, String message) {
+  @Executes
+  void executes(CommandSender sender, @StringArg(GREEDY) String message) {
     Bukkit.broadcast(MiniMessage.miniMessage().deserialize("<dark_gray>[<b><dark_red>BROADCAST</b>] <red><sender></red> »</dark_gray> <message>",
         Placeholder.component("sender", sender.name()),
         Placeholder.parsed("message", message)

@@ -20,10 +20,12 @@ package net.strokkur.commands.internal.intermediate;
 import net.strokkur.commands.internal.intermediate.attributes.PaperAttributeKeys;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.MessagerWrapper;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Collection;
 import java.util.Set;
 
+@NullMarked
 public class PaperTreePostProcessor extends CommonTreePostProcessor {
 
   public PaperTreePostProcessor(final MessagerWrapper delegateMessager) {

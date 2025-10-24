@@ -17,28 +17,26 @@
  */
 package net.strokkur.commands.internal.abstraction;
 
-import java.util.Collections;
 import java.util.Set;
 
-public interface SourcePrimitive extends SourceType {
+public interface SourceTypeVariable extends SourceType {
+  @Override
+  default String getFullyQualifiedName() {
+    return getName();
+  }
 
   @Override
   default String getPackageName() {
-    return "";
+    return getName();
   }
 
   @Override
-  default String getFullyQualifiedName() {
-    return getSourceName();
-  }
-
-  @Override
-  default String getName() {
-    return getSourceName();
+  default String getSourceName() {
+    return getName();
   }
 
   @Override
   default Set<String> getImports() {
-    return Collections.emptySet();
+    return Set.of();
   }
 }

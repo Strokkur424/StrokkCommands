@@ -36,12 +36,14 @@ import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
 import net.strokkur.commands.internal.printer.PaperCommandTreePrinter;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 import net.strokkur.commands.internal.util.PaperCommandInformation;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.Optional;
 
-final class PaperStrokkCommandsProcessor extends StrokkCommandsProcessor<PaperCommandInformation> {
+@NullMarked
+public final class PaperStrokkCommandsProcessor extends StrokkCommandsProcessor<PaperCommandInformation> {
   private @Nullable PlatformUtils platformUtils = null;
 
   @Override

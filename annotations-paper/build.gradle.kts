@@ -2,7 +2,7 @@ val commonAnnotations = project(":commands-annotations-common");
 val commonAnnotationsSource = commonAnnotations.sourceSets.main.get()
 
 dependencies {
-  api(commonAnnotations)
+  compileOnly(commonAnnotations)
   compileOnly(libs.paper.api)
 }
 

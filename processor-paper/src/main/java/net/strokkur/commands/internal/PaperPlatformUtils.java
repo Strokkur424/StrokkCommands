@@ -31,10 +31,12 @@ import net.strokkur.commands.internal.intermediate.attributes.PaperAttributeKeys
 import net.strokkur.commands.internal.intermediate.suggestions.SuggestionProvider;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.MessagerWrapper;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Set;
 
+@NullMarked
 class PaperPlatformUtils extends PlatformUtils {
   public PaperPlatformUtils(final MessagerWrapper messager, final BrigadierArgumentConverter converter) {
     super(messager, converter);

@@ -18,6 +18,7 @@
 package net.strokkur.commands.internal.abstraction;
 
 import javax.lang.model.element.Modifier;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -37,8 +38,9 @@ public interface SourceMethod extends AnnotationsHolder {
 
   List<SourceTypeAnnotation> getTypeAnnotations();
 
-  default String getTypeAnnotationsString() {
-    final List<SourceTypeAnnotation> annotations = getTypeAnnotations();
+  default String getCombinedTypeAnnotationsString() {
+    final List<SourceTypeAnnotation> annotations = new ArrayList<>(getEnclosed().getTypeAnnotations());
+    annotations.addAll(getTypeAnnotations());
     if (annotations.isEmpty()) {
       return "";
     }
@@ -46,6 +48,12 @@ public interface SourceMethod extends AnnotationsHolder {
     return "<" + String.join(", ", annotations.stream()
         .map(SourceTypeAnnotation::getDefinitionString)
         .toList()) + ">";
+  }
+
+  default List<String> getParameterStrings() {
+    return getParameters().stream()
+        .map(param -> param.getType().getName() + " " + param.getName())
+        .toList();
   }
 
   default boolean isConstructor() {

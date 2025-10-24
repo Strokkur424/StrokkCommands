@@ -18,20 +18,27 @@
 package net.strokkur.testplugin.defaulthelp;
 
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.strokkur.commands.annotations.Command;
+import net.strokkur.commands.annotations.DefaultExecutes;
+import net.strokkur.commands.annotations.Executes;
 import org.bukkit.command.CommandSender;
 
 import java.util.List;
 
+@Command("command-with-help")
 class One {
 
+  @Executes("a lot of literals so yeah")
   void execute(CommandSender sender, int num, String stringArg) {
     sender.sendPlainMessage("The normal executes was executed!");
   }
 
+  @Executes("another lot of literals")
   void execute(CommandSender sender) {
     sender.sendPlainMessage("Another normal executes was executed!");
   }
 
+  @DefaultExecutes
   void defaultExecute(CommandSender sender, List<String> args) {
     final String cmd = String.join(" ", args);
 
@@ -48,12 +55,15 @@ class One {
   }
 }
 
+@Command("two")
 class Two {
+  @Executes("hehe")
   void executes(CommandSender sender, int number, String str) {
     //
   }
 
-  void executeshelp(CommandSender sender, int number) {
+  @DefaultExecutes("hehe")
+  void executesHelp(CommandSender sender, int number) {
     // ..
   }
 }

@@ -17,12 +17,16 @@
  */
 package net.strokkur.testplugin.docs.gamemode;
 
+import net.strokkur.commands.annotations.Command;
 import net.strokkur.commands.annotations.Permission;
+import net.strokkur.commands.annotations.Subcommand;
 import net.strokkur.testplugin.docs.gamemode.preset.GameModePreset;
 import org.bukkit.GameMode;
 
+@Command("gma")
 @Permission("testplugin.gamemode.adventure")
 class GameModeAdventureCommand {
 
+  @Subcommand
   GameModePreset gameMode = new GameModePreset(GameMode.ADVENTURE);
 }

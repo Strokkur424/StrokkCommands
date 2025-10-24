@@ -97,4 +97,9 @@ public class SourceTypeAnnotationImpl implements SourceTypeAnnotation {
     this.element.asType().accept(visitor, null);
     return this.imports;
   }
+
+  @Override
+  public String toString() {
+    return getClass().getSimpleName() + '[' + getName() + ']';
+  }
 }

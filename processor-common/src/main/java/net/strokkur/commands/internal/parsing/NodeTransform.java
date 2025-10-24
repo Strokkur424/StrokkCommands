@@ -27,9 +27,11 @@ import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.commands.internal.util.MessagerWrapper;
+import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
+import java.util.Objects;
 import java.util.function.Function;
 
 interface NodeTransform<S extends SourceElement> extends ForwardingMessagerWrapper {
@@ -61,8 +63,10 @@ interface NodeTransform<S extends SourceElement> extends ForwardingMessagerWrapp
     return populateNode(parent, thisPath, element);
   }
 
-  default CommandNode populateNode(final CommandNode parent, final @Nullable CommandNode thisPath, final AnnotationsHolder element) {
+  @Contract("_,!null,_->!null;!null,_,_->!null")
+  default CommandNode populateNode(final @Nullable CommandNode parent, final @Nullable CommandNode thisPath, final AnnotationsHolder element) {
     final CommandNode out = thisPath == null ? parent : thisPath;
+    Objects.requireNonNull(out);
 
     // Add permission and RequiresOP clauses
     platformUtils().populateNode(out, element);

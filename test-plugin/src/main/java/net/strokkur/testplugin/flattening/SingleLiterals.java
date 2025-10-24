@@ -17,15 +17,21 @@
  */
 package net.strokkur.testplugin.flattening;
 
+import net.strokkur.commands.annotations.Command;
+import net.strokkur.commands.annotations.Executes;
+import net.strokkur.commands.annotations.Literal;
 import org.bukkit.command.CommandSender;
 
+@Command("single-literals")
 class SingleLiterals {
 
-  void accept(CommandSender sender, String accept) {
+  @Executes
+  void accept(CommandSender sender, @Literal String accept) {
     sender.sendRichMessage("<green>Accepted!");
   }
 
-  void decline(CommandSender sender, String decline) {
+  @Executes
+  void decline(CommandSender sender, @Literal String decline) {
     sender.sendRichMessage("<red>Declined!");
   }
 }
