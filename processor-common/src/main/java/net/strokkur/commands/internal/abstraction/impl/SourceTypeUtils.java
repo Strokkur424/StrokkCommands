@@ -49,6 +49,7 @@ final class SourceTypeUtils {
       case VOID -> new VoidSourceType();
       case ARRAY -> new SourceArrayImpl(getSourceType(environment, ((ArrayType) type).getComponentType()));
       case DECLARED -> getSourceClassType(environment, (DeclaredType) type);
+      case TYPEVAR -> new SourceTypeVariableImpl(type.toString());
       default -> throw new UnsupportedOperationException("Unknown type: " + type);
     };
   }

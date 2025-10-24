@@ -17,19 +17,10 @@
  */
 package net.strokkur.commands.internal.abstraction;
 
-import javax.lang.model.element.Modifier;
-import java.util.Collections;
-import java.util.Set;
-
 public final class VoidSourceType implements SourcePrimitive {
 
   @Override
   public String getSourceName() {
     return "void";
-  }
-
-  @Override
-  public Set<Modifier> getModifiers() {
-    return Collections.emptySet();
   }
 }

@@ -17,7 +17,6 @@
  */
 package net.strokkur.commands.internal.abstraction;
 
-import javax.lang.model.element.Modifier;
 import java.util.Set;
 
 public interface SourceArray extends SourceType, SourceElement {
@@ -52,10 +51,5 @@ public interface SourceArray extends SourceType, SourceElement {
   @Override
   default Set<String> getImports() {
     return getArrayType().getImports();
-  }
-
-  @Override
-  default Set<Modifier> getModifiers() {
-    return Set.of();
   }
 }

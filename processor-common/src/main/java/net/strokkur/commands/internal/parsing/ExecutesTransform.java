@@ -50,6 +50,10 @@ public abstract class ExecutesTransform implements NodeTransform<SourceMethod>, 
     return parameters.size();
   }
 
+  protected int firstParameterToParse(final List<SourceParameter> parameters) {
+    return 1;
+  }
+
   protected abstract void populatePath(
       final SourceMethod method,
       final CommandNode node,
@@ -73,7 +77,7 @@ public abstract class ExecutesTransform implements NodeTransform<SourceMethod>, 
     final List<SourceParameter> parameters = element.getParameters();
     final List<SourceParameter> arguments = new ArrayList<>(parameters.size() - 1);
 
-    for (int i = 1, parametersSize = parametersToParse(parameters); i < parametersSize; i++) {
+    for (int i = firstParameterToParse(parameters), parametersSize = parametersToParse(parameters); i < parametersSize; i++) {
       arguments.add(parameters.get(i));
     }
 

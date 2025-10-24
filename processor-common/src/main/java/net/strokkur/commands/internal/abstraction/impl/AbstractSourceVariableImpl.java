@@ -63,4 +63,9 @@ public abstract class AbstractSourceVariableImpl<E extends Element> implements S
   public <T extends Annotation> @Nullable T getAnnotation(final Class<T> type) {
     return element.getAnnotation(type);
   }
+
+  @Override
+  public String toString() {
+    return getName();
+  }
 }

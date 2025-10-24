@@ -15,8 +15,13 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal;
+package net.strokkur.commands.internal.abstraction.impl;
 
-public final class BuildConstants {
-  public static final String VERSION = "{{ version }}";
+import net.strokkur.commands.internal.abstraction.SourceTypeVariable;
+
+public record SourceTypeVariableImpl(String getName) implements SourceTypeVariable {
+  @Override
+  public String getName() {
+    return this.getName;
+  }
 }

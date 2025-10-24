@@ -33,7 +33,6 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 public sealed class SourceMethodImpl implements SourceMethod, ElementGettable<ExecutableElement> permits SourceConstructorImpl {
@@ -96,30 +95,7 @@ public sealed class SourceMethodImpl implements SourceMethod, ElementGettable<Ex
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (obj == this) {
-      return true;
-    }
-    if (obj == null || obj.getClass() != this.getClass()) {
-      return false;
-    }
-    var that = (SourceMethodImpl) obj;
-    return Objects.equals(this.environment, that.environment) &&
-        Objects.equals(this.element, that.element) &&
-        Objects.equals(this.enclosed, that.enclosed);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(environment, element, enclosed);
-  }
-
-  @Override
   public String toString() {
-    return "SourceMethodImpl[" +
-        "environment=" + environment + ", " +
-        "element=" + element + ", " +
-        "enclosed=" + enclosed + ']';
+    return getEnclosed() + "#" + getName();
   }
-
 }

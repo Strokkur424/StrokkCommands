@@ -44,4 +44,9 @@ public class SourceFieldImpl extends AbstractSourceVariableImpl<VariableElement>
     final VariableTree fieldTree = (VariableTree) trees.getTree(element);
     return fieldTree.getInitializer() != null;
   }
+
+  @Override
+  public String toString() {
+    return getEnclosed() + "." + getName();
+  }
 }

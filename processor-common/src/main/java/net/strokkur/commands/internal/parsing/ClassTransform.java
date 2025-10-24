@@ -21,6 +21,7 @@ import net.strokkur.commands.annotations.Subcommand;
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceField;
+import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.access.InstanceAccess;
@@ -51,8 +52,8 @@ sealed class ClassTransform implements NodeTransform<SourceClass>, ForwardingMes
     for (final SourceField nestedField : element.getNestedFields()) {
       parser.parseElement(root, nestedField);
     }
-    for (final SourceClass nestedClass : element.getNestedClasses()) {
-      parser.parseElement(root, nestedClass);
+    for (final SourceMethod nestedMethod : element.getNestedMethods()) {
+      parser.parseElement(root, nestedMethod);
     }
   }
 

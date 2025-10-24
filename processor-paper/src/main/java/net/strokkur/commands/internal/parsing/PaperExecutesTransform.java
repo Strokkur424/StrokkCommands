@@ -30,9 +30,11 @@ import net.strokkur.commands.internal.intermediate.attributes.PaperAttributeKeys
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 import net.strokkur.commands.internal.util.PaperClasses;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 
+@NullMarked
 public class PaperExecutesTransform extends ExecutesTransform {
   public PaperExecutesTransform(final CommandParser parser, final PlatformUtils platformUtils) {
     super(parser, platformUtils);
@@ -48,6 +50,11 @@ public class PaperExecutesTransform extends ExecutesTransform {
       case PaperClasses.ENTITY -> ExecutorType.ENTITY;
       default -> ExecutorType.NONE;
     };
+  }
+
+  @Override
+  protected int firstParameterToParse(final List<SourceParameter> parameters) {
+    return getExecutorType(parameters) == ExecutorType.NONE ? 1 : 2;
   }
 
   @Override
