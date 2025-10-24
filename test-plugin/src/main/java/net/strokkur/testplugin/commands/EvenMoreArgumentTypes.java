@@ -24,8 +24,6 @@ import io.papermc.paper.command.brigadier.argument.predicate.BlockInWorldPredica
 import io.papermc.paper.math.BlockPosition;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.Executes;
 import net.strokkur.commands.annotations.Executor;
 import net.strokkur.commands.annotations.arguments.AngleArg;
 import org.bukkit.Axis;
@@ -33,17 +31,14 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 @SuppressWarnings("UnstableApiUsage")
-@Command("test-more-argument-types")
 class EvenMoreArgumentTypes {
 
-  @Executes("angle")
   void angle(CommandSender sender, @AngleArg float angle) {
     sender.sendRichMessage("You input: <aqua><angle></aqua>!",
         Placeholder.parsed("angle", Float.toString(angle))
     );
   }
 
-  @Executes("swizzle")
   void swizzle(CommandSender sender, AxisSet axes) {
     final StringBuilder builder = new StringBuilder();
     if (axes.contains(Axis.Z)) {
@@ -61,7 +56,6 @@ class EvenMoreArgumentTypes {
     );
   }
 
-  @Executes("block-predicate")
   void blockPredicate(CommandSender sender, @Executor Player player, BlockPosition toTest, BlockInWorldPredicate predicate) {
     sender.sendRichMessage(switch (predicate.testBlock(toTest.toLocation(player.getWorld()).getBlock())) {
       case TRUE -> "The block at <loc> <green>matches with your predicate</green>!";
@@ -70,7 +64,6 @@ class EvenMoreArgumentTypes {
     }, Placeholder.parsed("loc", "<red>%d <green>%d <blue>%d</red>".formatted(toTest.blockX(), toTest.blockY(), toTest.blockZ())));
   }
 
-  @Executes("column-fine")
   void columnFine(CommandSender sender, ColumnFinePosition pos) {
     sender.sendRichMessage("You entered: <red><x></red> <blue><z></blue>!",
         Placeholder.parsed("x", Double.toString(pos.x())),
@@ -78,7 +71,6 @@ class EvenMoreArgumentTypes {
     );
   }
 
-  @Executes("column-block")
   void columnBlock(CommandSender sender, ColumnBlockPosition pos) {
     sender.sendRichMessage("You entered: <red><x></red> <blue><z></blue>!",
         Placeholder.parsed("x", Integer.toString(pos.blockX())),
@@ -86,7 +78,6 @@ class EvenMoreArgumentTypes {
     );
   }
 
-  @Executes("hex-color")
   void hexColor(CommandSender sender, TextColor color) {
     sender.sendRichMessage("Your color: <t_color>Whatever this is, lol</t_color>",
         Placeholder.styling("t_color", color)

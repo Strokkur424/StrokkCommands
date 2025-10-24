@@ -1,0 +1,15 @@
+plugins {
+  alias(libs.plugins.blossom)
+}
+
+dependencies {
+  implementation(project(":commands-annotations-paper"))
+  api(project(":commands-processor-common"))
+  compileOnly(libs.bundles.annotations)
+}
+
+sourceSets.main {
+  blossom.javaSources {
+    property("version", project.version.toString())
+  }
+}
