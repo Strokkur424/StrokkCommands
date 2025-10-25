@@ -19,39 +19,35 @@ package net.strokkur.commands.internal.paper;
 
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.abstraction.AnnotationsHolder;
-import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.abstraction.SourceVariable;
-import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
-import net.strokkur.commands.internal.arguments.BrigadierArgumentType;
-import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
-import net.strokkur.commands.internal.arguments.RequiredCommandArgumentImpl;
+import net.strokkur.commands.internal.abstraction.SourceParameter;
+import net.strokkur.commands.internal.intermediate.attributes.Executable;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
-import net.strokkur.commands.internal.paper.suggestions.SuggestionProvider;
+import net.strokkur.commands.internal.paper.util.ExecutorType;
 import net.strokkur.commands.internal.paper.util.PaperAttributeKeys;
-import net.strokkur.commands.internal.util.MessagerWrapper;
+import net.strokkur.commands.internal.paper.util.PaperClasses;
+import net.strokkur.commands.paper.Executor;
 import net.strokkur.commands.paper.Permission;
 import net.strokkur.commands.paper.RequiresOP;
-import net.strokkur.commands.paper.Suggestion;
-import org.jspecify.annotations.Nullable;
 
+import java.util.List;
 import java.util.Set;
 
-final class PaperPlatformUtils extends PlatformUtils {
-  public PaperPlatformUtils(final MessagerWrapper messager, final BrigadierArgumentConverter converter) {
-    super(messager, converter);
+final class PaperPlatformUtils implements PlatformUtils {
+  @Override
+  public int executableFirstIndexToParse(final List<SourceParameter> parameters) {
+    return getExecutorType(parameters) == ExecutorType.NONE ? 1 : 2;
   }
 
   @Override
-  protected RequiredCommandArgument constructRequiredCommandArgument(final BrigadierArgumentType type, final String name, final SourceVariable parameter, final SourceClass source) {
-    final RequiredCommandArgument out = new RequiredCommandArgumentImpl(type, name, parameter);
+  public void populateExecutesNode(final Executable executable, final CommandNode node, final List<SourceParameter> parameters) {
+    final ExecutorType type = getExecutorType(parameters);
+    executable.setAttribute(PaperAttributeKeys.EXECUTOR_TYPE, type);
+    node.setAttribute(PaperAttributeKeys.EXECUTOR_TYPE, type);
+  }
 
-    final SuggestionProvider suggestionProvider = getSuggestionProvider(source, parameter);
-    if (suggestionProvider != null) {
-      debug("  | Suggestion provider: {}", suggestionProvider);
-      out.setAttribute(PaperAttributeKeys.SUGGESTION_PROVIDER, suggestionProvider);
-    }
-
-    return out;
+  @Override
+  public String getPlatformType() {
+    return PaperClasses.COMMAND_SOURCE_STACK;
   }
 
   @Override
@@ -65,37 +61,15 @@ final class PaperPlatformUtils extends PlatformUtils {
     }
   }
 
-  @Nullable
-  private SuggestionProvider getSuggestionProvider(final SourceClass classElement, final SourceVariable parameter) {
-    final Suggestion suggestion = parameter.getAnnotation(Suggestion.class);
-    if (suggestion == null) {
-      return null;
+  private ExecutorType getExecutorType(final List<SourceParameter> parameters) {
+    if (parameters.size() < 2 || parameters.get(1).getAnnotation(Executor.class) == null) {
+      return ExecutorType.NONE;
     }
 
-    final SourceClass base = parameter.getAnnotationSourceClassField(Suggestion.class, "base");
-    final SourceClass baseClass = base == null ? classElement : base;
-
-    if (suggestion.method().isBlank() && suggestion.field().isBlank()) {
-      if (base == null) {
-        infoElement("@Suggestion annotation was used, but no parameters were passed.", parameter);
-        return null;
-      }
-
-      return SuggestionProvider.ofClass(baseClass);
-    }
-
-    if (!suggestion.method().isBlank()) {
-      if (suggestion.reference()) {
-        return SuggestionProvider.ofMethodReference(baseClass, suggestion.method());
-      }
-      return SuggestionProvider.ofMethod(baseClass, suggestion.method());
-    }
-
-    if (!suggestion.field().isBlank()) {
-      return SuggestionProvider.ofField(baseClass, suggestion.field());
-    }
-
-    errorSource("Internal exception: Suggestion annotation is not null, but no provider was found. Please report this at https://discord.strokkur.net.", parameter);
-    return null;
+    return switch (parameters.get(1).getType().getFullyQualifiedName()) {
+      case PaperClasses.PLAYER -> ExecutorType.PLAYER;
+      case PaperClasses.ENTITY -> ExecutorType.ENTITY;
+      default -> ExecutorType.NONE;
+    };
   }
 }

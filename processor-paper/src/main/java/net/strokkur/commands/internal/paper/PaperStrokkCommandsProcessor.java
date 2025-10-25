@@ -25,34 +25,24 @@ import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
 import net.strokkur.commands.internal.intermediate.CommonTreePostProcessor;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
-import net.strokkur.commands.internal.paper.transform.PaperDefaultExecutesTransform;
-import net.strokkur.commands.internal.paper.transform.PaperExecutesTransform;
 import net.strokkur.commands.internal.paper.util.PaperCommandInformation;
-import net.strokkur.commands.internal.parsing.CommandParser;
-import net.strokkur.commands.internal.parsing.DefaultExecutesTransform;
-import net.strokkur.commands.internal.parsing.ExecutesTransform;
 import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 import net.strokkur.commands.paper.Aliases;
 import net.strokkur.commands.paper.Description;
-import org.jspecify.annotations.Nullable;
 
-import java.util.Objects;
 import java.util.Optional;
 
 public final class PaperStrokkCommandsProcessor extends StrokkCommandsProcessor<PaperCommandInformation> {
-  private @Nullable PlatformUtils platformUtils = null;
-
-  @Override
-  protected void init() {
-    final MessagerWrapper messager = MessagerWrapper.wrap(this.processingEnv.getMessager());
-    final BrigadierArgumentConverter converter = new PaperBrigadierArgumentConverter(messager);
-    this.platformUtils = new PaperPlatformUtils(messager, converter);
-  }
 
   @Override
   protected PlatformUtils getPlatformUtils() {
-    return Objects.requireNonNull(this.platformUtils);
+    return new PaperPlatformUtils();
+  }
+
+  @Override
+  protected BrigadierArgumentConverter getConverter() {
+    return new PaperBrigadierArgumentConverter(MessagerWrapper.wrap(this.processingEnv.getMessager()));
   }
 
   @Override
@@ -63,16 +53,6 @@ public final class PaperStrokkCommandsProcessor extends StrokkCommandsProcessor<
   @Override
   protected CommonCommandTreePrinter<PaperCommandInformation> createPrinter(final CommandNode node, final PaperCommandInformation commandInformation) {
     return new PaperCommandTreePrinter(0, null, node, commandInformation, processingEnv);
-  }
-
-  @Override
-  protected ExecutesTransform createExecutesTransform(final CommandParser parser) {
-    return new PaperExecutesTransform(parser, Objects.requireNonNull(this.platformUtils));
-  }
-
-  @Override
-  protected DefaultExecutesTransform createDefaultExecutesTransform(final CommandParser parser) {
-    return new PaperDefaultExecutesTransform(parser, Objects.requireNonNull(this.platformUtils));
   }
 
   @Override

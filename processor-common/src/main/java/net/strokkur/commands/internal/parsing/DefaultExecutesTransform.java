@@ -18,19 +18,23 @@
 package net.strokkur.commands.internal.parsing;
 
 import net.strokkur.commands.DefaultExecutes;
-import net.strokkur.commands.internal.PlatformUtils;
+import net.strokkur.commands.internal.NodeUtils;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.abstraction.SourceParameter;
+import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
+import net.strokkur.commands.internal.exceptions.UnknownSenderException;
+import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.attributes.DefaultExecutable;
+import net.strokkur.commands.internal.intermediate.attributes.DefaultExecutableImpl;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 
 import java.util.List;
 
-public abstract class DefaultExecutesTransform extends ExecutesTransform {
+public final class DefaultExecutesTransform extends ExecutesTransform {
 
-  public DefaultExecutesTransform(final CommandParser parser, final PlatformUtils platformUtils) {
-    super(parser, platformUtils);
+  public DefaultExecutesTransform(final CommandParser parser, final NodeUtils nodeUtils) {
+    super(parser, nodeUtils);
   }
 
   @Override
@@ -42,6 +46,14 @@ public abstract class DefaultExecutesTransform extends ExecutesTransform {
   protected CommandNode createThisPath(final CommandNode parent, final SourceMethod element) throws MismatchedArgumentTypeException {
     final CommandNode out = createLiteralSequence(parent, element, DefaultExecutes.class, DefaultExecutes::value);
     return this.populateNode(parent, out, element);
+  }
+
+  @Override
+  protected void populatePath(final CommandNode node, final SourceMethod method, final List<CommandArgument> args, final List<SourceParameter> parameters)
+      throws UnknownSenderException {
+    final DefaultExecutable executable = new DefaultExecutableImpl(method, args, DefaultExecutable.Type.getType(parameters.getLast()));
+    node.setAttribute(AttributeKey.DEFAULT_EXECUTABLE, executable);
+    nodeUtils().platformUtils().populateExecutesNode(executable, node, parameters);
   }
 
   @Override

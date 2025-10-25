@@ -1,4 +1,4 @@
 dependencies {
-  compileOnlyApi(libs.brigadier)
+  compileOnly(libs.brigadier)
   compileOnlyApi(libs.bundles.annotations)
 }

@@ -27,7 +27,6 @@ import javax.tools.Diagnostic.Kind;
 public interface MessagerWrapper {
 
   String DEBUG_SYSTEM_PROPERTY = "strokk.commands.debug";
-  String DEBUG_ONLY_SYSTEM_PROPERTY = "strokk.commands.debug.only";
 
   static MessagerWrapper wrap(Messager messager) {
     return new MessagerWrapperImpl(messager);
@@ -95,7 +94,7 @@ public interface MessagerWrapper {
   /**
    * Prints a formatted message about this element to the {@link Kind#NOTE} channel.
    */
-  default void infoElement(String format, SourceElement element, Object... arguments) {
+  default void infoSource(String format, SourceElement element, Object... arguments) {
     printSource(Kind.NOTE, format, element, arguments);
   }
 

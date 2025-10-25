@@ -21,6 +21,7 @@ import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceConstructor;
 import net.strokkur.commands.internal.abstraction.SourceField;
 import net.strokkur.commands.internal.abstraction.SourceParameter;
+import net.strokkur.commands.internal.abstraction.SourceTypeAnnotation;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.access.FieldAccess;
 import net.strokkur.commands.internal.intermediate.access.InstanceAccess;
@@ -97,9 +98,17 @@ interface InstanceFieldPrinter<C extends CommandInformation> extends Printable, 
         return false;
       }
       final String typeName = accesses.getFirst().getSourceName();
-      println("final {} instance = new {}({});",
+      println("final %s%s instance = new %s%s(%s);",
           typeName,
+          getCommandInformation().sourceClass().getTypeAnnotations().isEmpty() ?
+              "" :
+              '<' + String.join(", ", getCommandInformation().sourceClass().getTypeAnnotations().stream()
+                  .map(SourceTypeAnnotation::getName)
+                  .toList()) + '>',
           typeName,
+          getCommandInformation().sourceClass().getTypeAnnotations().isEmpty() ?
+              "" :
+              "<>",
           String.join(", ", getCommandInformation().constructor() instanceof SourceConstructor ctor ?
               ctor.getParameters().stream()
                   .map(this::getParameterName)

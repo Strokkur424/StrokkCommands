@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.testplugin.reference;
+package net.strokkur.testplugin.velocity.reference;
 
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
@@ -49,7 +49,7 @@ final class TestCommand {
   }
 
   @Executes("run")
-  void run(CommandSource source, String target) {
+  void runWithTarget(CommandSource source, String target) {
     final Optional<Player> targetPlayer = this.proxy.getPlayer(target);
 
     if (targetPlayer.isEmpty()) {

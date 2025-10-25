@@ -22,13 +22,10 @@ import net.strokkur.commands.internal.abstraction.SourceConstructor;
 import net.strokkur.commands.internal.abstraction.SourceParameter;
 import net.strokkur.commands.internal.abstraction.SourceType;
 import net.strokkur.commands.internal.abstraction.SourceVariable;
-import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
 import net.strokkur.commands.internal.intermediate.attributes.Attributable;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.attributes.Executable;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
-import net.strokkur.commands.internal.paper.requirement.Requirement;
-import net.strokkur.commands.internal.paper.suggestions.SuggestionProvider;
 import net.strokkur.commands.internal.paper.util.ExecutorType;
 import net.strokkur.commands.internal.paper.util.PaperAttributeKeys;
 import net.strokkur.commands.internal.paper.util.PaperClasses;
@@ -205,16 +202,6 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
   }
 
   @Override
-  public void gatherAdditionalArgumentImports(final Set<String> imports, final RequiredCommandArgument argument) {
-    if (!argument.hasAttribute(PaperAttributeKeys.SUGGESTION_PROVIDER)) {
-      return;
-    }
-
-    final SuggestionProvider provider = argument.getAttributeNotNull(PaperAttributeKeys.SUGGESTION_PROVIDER);
-    imports.addAll(provider.getClassElement().getImports());
-  }
-
-  @Override
   public void gatherAdditionalNodeImports(final Set<String> imports, final CommandNode node) {
     addExecutorTypeImports(imports, node.getAttributeNotNull(PaperAttributeKeys.EXECUTOR_TYPE));
     final Executable executable = node.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE);
@@ -237,18 +224,6 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
     imports.add(Classes.SIMPLE_COMMAND_EXCEPTION_TYPE);
     imports.add(PaperClasses.MESSAGE_COMPONENT_SERIALIZER);
     imports.add(PaperClasses.COMPONENT);
-  }
-
-  @Override
-  public void printAdditionalNodesData(final RequiredCommandArgument req) throws IOException {
-    if (!req.hasAttribute(PaperAttributeKeys.SUGGESTION_PROVIDER)) {
-      return;
-    }
-
-    final SuggestionProvider provider = req.getAttributeNotNull(PaperAttributeKeys.SUGGESTION_PROVIDER);
-    println();
-    printIndent();
-    print(".suggests(" + provider.getProvider() + ")");
   }
 
   @Override
@@ -286,9 +261,7 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
   }
 
   @Override
-  public void printRequires(final Attributable node) throws IOException {
-    final List<Requirement> requirements = new ArrayList<>();
-
+  public @Nullable String getExtraRequirements(final Attributable node) {
     final boolean operator = node.getAttributeNotNull(PaperAttributeKeys.REQUIRES_OP);
 
     final ExecutorType executorType;
@@ -298,24 +271,17 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
       executorType = ExecutorType.NONE;
     }
 
-    final Requirement req = node.getAttribute(PaperAttributeKeys.REQUIREMENT);
-    if (req != null) {
-      requirements.add(req);
-    }
-
-    requirements.addAll(node.getAttributeNotNull(PaperAttributeKeys.PERMISSIONS)
-        .stream()
-        .map(Requirement::permission)
-        .toList());
-
-    if (!requirements.isEmpty()) {
-      final String requirementString = Requirement.combine(requirements).getRequirementString(operator, executorType);
-      if (!requirementString.isEmpty()) {
-        println();
-        printIndent();
-        print(".requires(source -> {})", requirementString);
+    if (operator) {
+      if (executorType != ExecutorType.NONE) {
+        return "source.getSender().isOp() && %s".formatted(executorType.getPredicate());
       }
+      return "source.getSender().isOp()";
     }
+
+    if (executorType != ExecutorType.NONE) {
+      return executorType.getPredicate();
+    }
+    return null;
   }
 
   @Override

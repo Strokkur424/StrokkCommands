@@ -18,8 +18,6 @@
 package net.strokkur.commands.internal.paper.util;
 
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
-import net.strokkur.commands.internal.paper.requirement.Requirement;
-import net.strokkur.commands.internal.paper.suggestions.SuggestionProvider;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.HashSet;
@@ -28,9 +26,6 @@ import java.util.Set;
 @NullMarked
 public class PaperAttributeKeys {
   public static final AttributeKey<ExecutorType> EXECUTOR_TYPE = AttributeKey.create("executor_type", ExecutorType.NONE);
-
-  public static final AttributeKey<Requirement> REQUIREMENT = AttributeKey.create("requirement", Requirement.EMPTY);
-  public static final AttributeKey<SuggestionProvider> SUGGESTION_PROVIDER = AttributeKey.create("suggestion_provider", null);
   public static final AttributeKey<Boolean> REQUIRES_OP = AttributeKey.create("requires_op", false);
   public static final AttributeKey<Set<String>> PERMISSIONS = AttributeKey.createDynamic("permission", HashSet::new);
 

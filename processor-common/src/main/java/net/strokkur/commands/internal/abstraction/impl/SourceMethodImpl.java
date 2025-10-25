@@ -95,6 +95,14 @@ public sealed class SourceMethodImpl implements SourceMethod, ElementGettable<Ex
   }
 
   @Override
+  public List<SourceClass> getAllAnnotations() {
+    return this.element.getAnnotationMirrors().stream()
+        .map(mirror -> new SourceClassImpl(this.environment, mirror.getAnnotationType()))
+        .map(SourceClass.class::cast)
+        .toList();
+  }
+
+  @Override
   public String toString() {
     return getEnclosed() + "#" + getName();
   }
