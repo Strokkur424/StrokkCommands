@@ -7,10 +7,10 @@ pluginManagement {
 
 rootProject.name = "StrokkCommands"
 
-sequenceOf("commands").forEach {
-  include("$it-processor")
-  include("$it-annotations")
-  project(":$it-processor").projectDir = file("strokk-$it-processor")
-  project(":$it-annotations").projectDir = file("strokk-$it-annotations")
+sequenceOf("common", "paper", "velocity").forEach {
+  include("processor-$it")
+  include("annotations-$it")
 }
-include(":test-plugin")
+sequenceOf("paper", "velocity").forEach {
+  include(":test-plugin-$it")
+}
