@@ -83,6 +83,10 @@ interface InstanceFieldPrinter<C extends CommandInformation> extends Printable, 
     return printed;
   }
 
+  default String getParameterName(final SourceParameter parameter) {
+    return parameter.getName();
+  }
+
   private boolean printAccessInstance(List<ExecuteAccess<?>> accesses) throws IOException {
     if (accesses.isEmpty()) {
       throw new IllegalStateException("Accesses stack was empty");
@@ -98,7 +102,7 @@ interface InstanceFieldPrinter<C extends CommandInformation> extends Printable, 
           typeName,
           String.join(", ", getCommandInformation().constructor() instanceof SourceConstructor ctor ?
               ctor.getParameters().stream()
-                  .map(SourceParameter::getName)
+                  .map(this::getParameterName)
                   .toList() :
               Collections.emptyList()
           )

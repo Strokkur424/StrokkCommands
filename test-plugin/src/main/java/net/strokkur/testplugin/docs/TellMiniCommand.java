@@ -19,15 +19,15 @@ package net.strokkur.testplugin.docs;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.Executes;
-import net.strokkur.commands.annotations.arguments.StringArg;
+import net.strokkur.commands.Command;
+import net.strokkur.commands.Executes;
+import net.strokkur.commands.arguments.StringArg;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.List;
 
-import static net.strokkur.commands.StringArgType.GREEDY;
+import static net.strokkur.commands.arguments.StringArgType.GREEDY;
 
 @Command("tellmini")
 public class TellMiniCommand {

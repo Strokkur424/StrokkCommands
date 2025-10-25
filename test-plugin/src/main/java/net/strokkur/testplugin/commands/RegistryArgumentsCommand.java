@@ -19,9 +19,9 @@ package net.strokkur.testplugin.commands;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.Executes;
-import net.strokkur.commands.annotations.Executor;
+import net.strokkur.commands.Command;
+import net.strokkur.commands.Executes;
+import net.strokkur.commands.paper.Executor;
 import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Cow;

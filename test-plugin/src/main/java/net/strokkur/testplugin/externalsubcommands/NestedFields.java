@@ -18,9 +18,9 @@
 package net.strokkur.testplugin.externalsubcommands;
 
 import io.papermc.paper.command.brigadier.Commands;
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.Executes;
-import net.strokkur.commands.annotations.Subcommand;
+import net.strokkur.commands.Command;
+import net.strokkur.commands.Executes;
+import net.strokkur.commands.Subcommand;
 import org.bukkit.command.CommandSender;
 
 @Command("nestedfields")

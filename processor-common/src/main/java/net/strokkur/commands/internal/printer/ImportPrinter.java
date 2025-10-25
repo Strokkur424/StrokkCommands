@@ -50,10 +50,12 @@ interface ImportPrinter<C extends CommandInformation> extends Printable, Printer
       println("import {};", i);
     }
 
-    println();
+    if (!javaImports.isEmpty()) {
+      println();
 
-    for (String i : javaImports) {
-      println("import {};", i);
+      for (String i : javaImports) {
+        println("import {};", i);
+      }
     }
   }
 

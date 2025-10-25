@@ -58,7 +58,7 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
   }
 
   public String getBrigadierClassName() {
-    return commandInformation.sourceClass().getName() + "Brigader";
+    return commandInformation.sourceClass().getName() + "Brigadier";
   }
 
   public abstract void print() throws IOException;

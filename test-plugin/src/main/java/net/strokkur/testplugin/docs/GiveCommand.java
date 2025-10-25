@@ -17,8 +17,8 @@
  */
 package net.strokkur.testplugin.docs;
 
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.Executes;
+import net.strokkur.commands.Command;
+import net.strokkur.commands.Executes;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -26,6 +26,7 @@ import org.bukkit.inventory.ItemStack;
 @Command("give")
 class GiveCommand {
 
+  // TODO: Nested records are broken
   @Command("item")
   record ItemSub(Player target, ItemStack item) {
 

@@ -18,14 +18,14 @@
 package net.strokkur.testplugin.docs;
 
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.strokkur.commands.annotations.Aliases;
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.DefaultExecutes;
-import net.strokkur.commands.annotations.Description;
-import net.strokkur.commands.annotations.Executes;
-import net.strokkur.commands.annotations.Executor;
-import net.strokkur.commands.annotations.Permission;
-import net.strokkur.commands.annotations.RequiresOP;
+import net.strokkur.commands.paper.Aliases;
+import net.strokkur.commands.Command;
+import net.strokkur.commands.DefaultExecutes;
+import net.strokkur.commands.paper.Description;
+import net.strokkur.commands.Executes;
+import net.strokkur.commands.paper.Executor;
+import net.strokkur.commands.paper.Permission;
+import net.strokkur.commands.paper.RequiresOP;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
