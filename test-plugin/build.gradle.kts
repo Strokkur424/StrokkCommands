@@ -3,10 +3,10 @@ plugins {
 }
 
 dependencies {
+  compileOnly(libs.paper.api)
+
   compileOnly(project(":commands-annotations-paper"))
   annotationProcessor(project(":commands-processor-paper"))
-
-  compileOnly(libs.paper.api)
 }
 
 tasks.runServer {

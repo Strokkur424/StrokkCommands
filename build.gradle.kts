@@ -4,7 +4,6 @@ plugins {
   id("java-library")
   id("maven-publish")
   alias(libs.plugins.spotless)
-  alias(libs.plugins.blossom) apply false
 }
 
 allprojects {
@@ -37,23 +36,21 @@ subprojects {
     targetCompatibility = JavaVersion.VERSION_21
   }
 
-  if ((name.contains("processor") || name.contains("annotations")) && !name.contains("-common")) {
+  if ((name.contains("processor") || name.contains("annotations"))) {
     apply {
       plugin<MavenPublishPlugin>()
     }
 
     if (name.contains("annotations")) {
+      java {
+        withSourcesJar()
+        withJavadocJar()
+      }
+
       tasks.withType<Javadoc> {
         javadocTool.set(javaToolchains.javadocToolFor {
           this.languageVersion = JavaLanguageVersion.of(25)
         })
-      }
-    }
-
-    java {
-      if (name.contains("annotations")) {
-        withSourcesJar()
-        withJavadocJar()
       }
     }
 
@@ -74,20 +71,6 @@ subprojects {
 
       publications.create<MavenPublication>("maven") {
         from(components["java"])
-
-        version = project.version.toString()
-        artifactId = project.name
-        groupId = project.group.toString()
-
-        versionMapping {
-          usage("java-api") {
-            fromResolutionOf("runtimeClasspath")
-          }
-          usage("java-runtime") {
-            fromResolutionResult()
-          }
-        }
-
         withBuildIdentifier()
       }
     }
