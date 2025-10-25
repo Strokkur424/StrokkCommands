@@ -15,22 +15,12 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.paper.suggestions;
+package net.strokkur.commands.internal.intermediate.registrable;
 
 import net.strokkur.commands.internal.abstraction.SourceClass;
 
-public record MethodSuggestionProvider(
-    SourceClass classElement,
-    String methodName
-) implements SuggestionProvider {
+public interface SuggestionProvider {
+  String getSuggestionString();
 
-  @Override
-  public String getProvider() {
-    return classElement.getName() + "." + methodName + "()";
-  }
-
-  @Override
-  public SourceClass getClassElement() {
-    return classElement;
-  }
+  SourceClass getSourceClass();
 }

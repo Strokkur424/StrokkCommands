@@ -18,7 +18,7 @@
 package net.strokkur.commands.internal.parsing;
 
 import net.strokkur.commands.Subcommand;
-import net.strokkur.commands.internal.PlatformUtils;
+import net.strokkur.commands.internal.NodeUtils;
 import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceField;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
@@ -34,11 +34,11 @@ import java.util.List;
 
 sealed class ClassTransform implements NodeTransform<SourceClass>, ForwardingMessagerWrapper permits RecordTransform {
   protected final CommandParser parser;
-  protected final PlatformUtils platformUtils;
+  protected final NodeUtils nodeUtils;
 
-  public ClassTransform(final CommandParser parser, final PlatformUtils platformUtils) {
+  public ClassTransform(final CommandParser parser, final NodeUtils nodeUtils) {
     this.parser = parser;
-    this.platformUtils = platformUtils;
+    this.nodeUtils = nodeUtils;
   }
 
   protected String transformName() {
@@ -64,6 +64,14 @@ sealed class ClassTransform implements NodeTransform<SourceClass>, ForwardingMes
     final CommandNode node = parseRecordComponents(createSubcommandNode(parent, element), element);
     this.addAccessAttribute(node, element);
 
+    this.nodeUtils().applyRegistrableProvider(
+        node,
+        element,
+        nodeUtils().requirementRegistry(),
+        AttributeKey.REQUIREMENT_PROVIDER,
+        "requirement"
+    );
+
     parseInnerElements(node, element, this.parser);
   }
 
@@ -86,7 +94,7 @@ sealed class ClassTransform implements NodeTransform<SourceClass>, ForwardingMes
   }
 
   @Override
-  public PlatformUtils platformUtils() {
-    return this.platformUtils;
+  public NodeUtils nodeUtils() {
+    return this.nodeUtils;
   }
 }

@@ -25,33 +25,23 @@ import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
 import net.strokkur.commands.internal.intermediate.CommonTreePostProcessor;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
-import net.strokkur.commands.internal.parsing.CommandParser;
-import net.strokkur.commands.internal.parsing.DefaultExecutesTransform;
-import net.strokkur.commands.internal.parsing.ExecutesTransform;
 import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
 import net.strokkur.commands.internal.util.MessagerWrapper;
-import net.strokkur.commands.internal.velocity.transform.VelocityDefaultExecutesTransform;
-import net.strokkur.commands.internal.velocity.transform.VelocityExecutesTransform;
 import net.strokkur.commands.internal.velocity.util.VelocityCommandInformation;
 import net.strokkur.commands.velocity.Aliases;
-import org.jspecify.annotations.Nullable;
 
-import java.util.Objects;
 import java.util.Optional;
 
 public final class VelocityStrokkCommandsProcessor extends StrokkCommandsProcessor<VelocityCommandInformation> {
-  private @Nullable PlatformUtils platformUtils;
-
-  @Override
-  protected void init() {
-    final MessagerWrapper messager = MessagerWrapper.wrap(this.processingEnv.getMessager());
-    final BrigadierArgumentConverter converter = new VelocityBrigadierArgumentConverter(messager);
-    this.platformUtils = new VelocityPlatformUtils(messager, converter);
-  }
 
   @Override
   protected PlatformUtils getPlatformUtils() {
-    return Objects.requireNonNull(this.platformUtils);
+    return new VelocityPlatformUtils();
+  }
+
+  @Override
+  protected BrigadierArgumentConverter getConverter() {
+    return new VelocityBrigadierArgumentConverter(MessagerWrapper.wrap(this.processingEnv.getMessager()));
   }
 
   @Override
@@ -62,16 +52,6 @@ public final class VelocityStrokkCommandsProcessor extends StrokkCommandsProcess
   @Override
   protected CommonCommandTreePrinter<VelocityCommandInformation> createPrinter(final CommandNode node, final VelocityCommandInformation commandInformation) {
     return new VelocityCommandTreePrinter(0, null, node, commandInformation, this.processingEnv);
-  }
-
-  @Override
-  protected ExecutesTransform createExecutesTransform(final CommandParser parser) {
-    return new VelocityExecutesTransform(parser, getPlatformUtils());
-  }
-
-  @Override
-  protected DefaultExecutesTransform createDefaultExecutesTransform(final CommandParser parser) {
-    return new VelocityDefaultExecutesTransform(parser, getPlatformUtils());
   }
 
   @Override

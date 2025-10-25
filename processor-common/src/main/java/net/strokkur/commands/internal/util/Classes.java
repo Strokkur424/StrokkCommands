@@ -23,6 +23,8 @@ public interface Classes {
   String COLLECTIONS = "java.util.Collections";
   String ARRAYS = "java.util.Arrays";
   String LIST_STRING = LIST + "<java.lang.String>";
+  String PREDICATE = "java.util.function.Predicate";
+  String COMPLETABLE_FUTURE = "java.util.concurrent.CompletableFuture";
 
   // Brigadier types
   String COMMAND = "com.mojang.brigadier.Command";
@@ -30,6 +32,10 @@ public interface Classes {
   String LITERAL_ARGUMENT_BUILDER = "com.mojang.brigadier.builder.LiteralArgumentBuilder";
   String SIMPLE_COMMAND_EXCEPTION_TYPE = "com.mojang.brigadier.exceptions.SimpleCommandExceptionType";
   String LITERAL_MESSAGE = "com.mojang.brigadier.LiteralMessage";
+  String COMMAND_CONTEXT = "com.mojang.brigadier.context.CommandContext";
+  String SUGGESTIONS = "com.mojang.brigadier.suggestion.Suggestions";
+  String SUGGESTION_PROVIDER = "com.mojang.brigadier.suggestion.SuggestionProvider";
+  String SUGGESTIONS_BUILDER = "com.mojang.brigadier.suggestion.SuggestionsBuilder";
 
   // Other
   String NULL_MARKED = "org.jspecify.annotations.NullMarked";

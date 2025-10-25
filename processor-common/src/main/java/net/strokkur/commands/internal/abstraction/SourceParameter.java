@@ -26,10 +26,6 @@ import java.util.function.Predicate;
 public interface SourceParameter extends SourceVariable {
   SourceMethod getEnclosed();
 
-  static String combineJavaDocsParameterString(final List<String> hardcoded, final @Nullable SourceMethod method) {
-    return combineJavaDocsParameterString(hardcoded, method, (m) -> true);
-  }
-
   static String combineJavaDocsParameterString(final List<String> hardcoded, final @Nullable SourceMethod method, final Predicate<SourceParameter> filter) {
     if (method == null) {
       return String.join(", ", hardcoded);
@@ -48,8 +44,21 @@ public interface SourceParameter extends SourceVariable {
     return String.join(", ", parameterTypes);
   }
 
-  static String combineMethodParameterString(final List<String> hardcoded, final @Nullable SourceMethod method) {
-    return combineMethodParameterString(hardcoded, method, (m) -> true);
+  static String combineMethodParameterNameString(final List<String> hardcoded, final @Nullable SourceMethod method, final Predicate<SourceParameter> filter) {
+    if (method == null) {
+      return String.join(", ", hardcoded);
+    }
+    return combineMethodParameterNameString(hardcoded, method.getParameters().stream()
+        .filter(filter)
+        .toList());
+  }
+
+  static String combineMethodParameterNameString(final List<String> hardcoded, final List<? extends SourceVariable> method) {
+    final List<String> parameterTypes = new ArrayList<>(hardcoded);
+    parameterTypes.addAll(method.stream()
+        .map(SourceVariable::getName)
+        .toList());
+    return String.join(", ", parameterTypes);
   }
 
   static String combineMethodParameterString(final List<String> hardcoded, final @Nullable SourceMethod method, final Predicate<SourceParameter> filter) {

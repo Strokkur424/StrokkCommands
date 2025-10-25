@@ -17,7 +17,7 @@
  */
 package net.strokkur.commands.internal.parsing;
 
-import net.strokkur.commands.internal.PlatformUtils;
+import net.strokkur.commands.internal.NodeUtils;
 import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceElement;
 import net.strokkur.commands.internal.abstraction.SourceField;
@@ -26,6 +26,7 @@ import net.strokkur.commands.internal.abstraction.SourceRecord;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
 import net.strokkur.commands.internal.exceptions.UnknownSenderException;
+import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.commands.internal.util.MessagerWrapper;
@@ -40,19 +41,21 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
   private final NodeTransform<SourceField> fieldTransform;
 
   private final MessagerWrapper messager;
+  private final NodeUtils nodeUtils;
 
   public CommandParserImpl(
       final MessagerWrapper messager,
-      final PlatformUtils platformUtils,
+      final NodeUtils nodeUtils,
       final Function<CommandParser, ExecutesTransform> executesTransform,
       final Function<CommandParser, DefaultExecutesTransform> defaultExecutesTransform
   ) {
     this.messager = messager;
+    this.nodeUtils = nodeUtils;
 
-    this.classTransform = new ClassTransform(this, platformUtils);
-    this.recordTransform = new RecordTransform(this, platformUtils);
-    this.methodTransform = new MethodTransform(platformUtils, executesTransform.apply(this), defaultExecutesTransform.apply(this));
-    this.fieldTransform = new FieldTransform(this, platformUtils);
+    this.classTransform = new ClassTransform(this, nodeUtils);
+    this.recordTransform = new RecordTransform(this, nodeUtils);
+    this.methodTransform = new MethodTransform(nodeUtils, executesTransform.apply(this), defaultExecutesTransform.apply(this));
+    this.fieldTransform = new FieldTransform(this, nodeUtils);
   }
 
   @Override
@@ -61,6 +64,13 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
     try {
       final ClassTransform transform = sourceClass.isRecord() ? this.recordTransform : this.classTransform;
       final CommandNode node = transform.parseRecordComponents(root, sourceClass);
+      nodeUtils.applyRegistrableProvider(
+          node,
+          sourceClass,
+          nodeUtils.requirementRegistry(),
+          AttributeKey.REQUIREMENT_PROVIDER,
+          "requirement"
+      );
       transform.populateNode(null, node, sourceClass);
       transform.addAccessAttribute(node, sourceClass);
       ClassTransform.parseInnerElements(node, sourceClass, this);

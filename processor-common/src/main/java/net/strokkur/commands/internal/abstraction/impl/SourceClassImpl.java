@@ -33,6 +33,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -78,6 +79,15 @@ public class SourceClassImpl implements SourceClass, ElementGettable<TypeElement
     final List<SourceTypeAnnotation> out = new ArrayList<>(this.element.getTypeParameters().size());
     for (final TypeParameterElement typeParameter : this.element.getTypeParameters()) {
       out.add(new SourceTypeAnnotationImpl(this.environment, typeParameter));
+    }
+    return Collections.unmodifiableList(out);
+  }
+
+  @Override
+  public List<SourceClass> getImplementedInterfaces() {
+    final List<SourceClass> out = new LinkedList<>();
+    for (final TypeMirror anInterface : this.element.getInterfaces()) {
+      out.add(new SourceClassImpl(this.environment, (DeclaredType) anInterface));
     }
     return Collections.unmodifiableList(out);
   }
@@ -129,6 +139,14 @@ public class SourceClassImpl implements SourceClass, ElementGettable<TypeElement
   @Override
   public <T extends Annotation> @Nullable T getAnnotation(final Class<T> type) {
     return this.element.getAnnotation(type);
+  }
+
+  @Override
+  public List<SourceClass> getAllAnnotations() {
+    return this.element.getAnnotationMirrors().stream()
+        .map(mirror -> new SourceClassImpl(this.environment, mirror.getAnnotationType()))
+        .map(SourceClass.class::cast)
+        .toList();
   }
 
   @Override

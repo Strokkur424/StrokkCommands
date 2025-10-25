@@ -19,6 +19,11 @@ package net.strokkur.commands.paper.arguments;
 
 import io.papermc.paper.math.FinePosition;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /// Configures a [FinePosition] argument.
 ///
 /// The value of this annotation specifies whether
@@ -33,6 +38,8 @@ import io.papermc.paper.math.FinePosition;
 /// @Executes
 /// void executes(CommandSender sender, @FinePosArg(true) FinePosition pos);
 /// ```
+@Retention(RetentionPolicy.SOURCE)
+@Target(ElementType.PARAMETER)
 public @interface FinePosArg {
   /// {@return whether to center integer x/z values to the center of the block}
   boolean value() default false;

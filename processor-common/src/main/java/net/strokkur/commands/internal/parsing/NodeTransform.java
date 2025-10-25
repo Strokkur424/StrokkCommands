@@ -19,7 +19,7 @@ package net.strokkur.commands.internal.parsing;
 
 import net.strokkur.commands.Executes;
 import net.strokkur.commands.Subcommand;
-import net.strokkur.commands.internal.PlatformUtils;
+import net.strokkur.commands.internal.NodeUtils;
 import net.strokkur.commands.internal.abstraction.AnnotationsHolder;
 import net.strokkur.commands.internal.abstraction.SourceElement;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
@@ -41,11 +41,11 @@ interface NodeTransform<S extends SourceElement> extends ForwardingMessagerWrapp
 
   boolean requirement(S element);
 
-  PlatformUtils platformUtils();
+  NodeUtils nodeUtils();
 
   @Override
   default MessagerWrapper delegateMessager() {
-    return this.platformUtils();
+    return this.nodeUtils();
   }
 
   default void transformIfRequirement(CommandNode parent, S element) throws MismatchedArgumentTypeException, UnknownSenderException {
@@ -70,7 +70,7 @@ interface NodeTransform<S extends SourceElement> extends ForwardingMessagerWrapp
     Objects.requireNonNull(out);
 
     // Add permission and RequiresOP clauses
-    platformUtils().populateNode(out, element);
+    nodeUtils().platformUtils().populateNode(out, element);
 
     return out;
   }

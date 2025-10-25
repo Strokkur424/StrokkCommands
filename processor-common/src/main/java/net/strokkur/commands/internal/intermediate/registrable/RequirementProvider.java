@@ -15,16 +15,14 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.abstraction;
+package net.strokkur.commands.internal.intermediate.registrable;
 
-import javax.lang.model.element.Modifier;
+import net.strokkur.commands.internal.abstraction.SourceClass;
 
-public interface SourceField extends SourceVariable {
-  boolean isInitialized();
+import java.util.List;
 
-  SourceClass getEnclosed();
+public interface RequirementProvider {
+  String getRequirementString();
 
-  default boolean isStaticallyAccessible() {
-    return getModifiers().contains(Modifier.STATIC);
-  }
+  List<SourceClass> getSourceClasses();
 }

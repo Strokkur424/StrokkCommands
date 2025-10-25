@@ -18,6 +18,7 @@
 package net.strokkur.commands.internal.abstraction.impl;
 
 import net.strokkur.commands.internal.abstraction.SourceClass;
+import net.strokkur.commands.internal.abstraction.SourceElement;
 import net.strokkur.commands.internal.abstraction.SourceType;
 import net.strokkur.commands.internal.abstraction.VoidSourceType;
 import org.jspecify.annotations.Nullable;
@@ -26,7 +27,9 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.PrimitiveType;
@@ -34,16 +37,59 @@ import javax.lang.model.type.TypeMirror;
 import java.lang.annotation.Annotation;
 import java.util.Optional;
 
-final class SourceTypeUtils {
+public final class SourceTypeUtils {
 
-  public static SourceClass getSourceClassType(final ProcessingEnvironment environment, final DeclaredType declared) {
+  public static SourceElement getSourceElement(final ProcessingEnvironment environment, final Element element) {
+    if (element.asType() instanceof DeclaredType declared) {
+      return getSourceClassType(environment, declared);
+    }
+    if (element.getKind() == ElementKind.FIELD) {
+      return new SourceFieldImpl(
+          environment,
+          (VariableElement) element,
+          new SourceClassImpl(environment, (DeclaredType) element.getEnclosingElement().asType())
+      );
+    }
+    if (element.getKind() == ElementKind.PARAMETER) {
+      final ExecutableElement methodElement = (ExecutableElement) element.getEnclosingElement();
+
+      return new SourceParameterImpl(
+          environment,
+          (VariableElement) element,
+          new SourceMethodImpl(
+              environment,
+              methodElement,
+              new SourceClassImpl(environment, (DeclaredType) methodElement.getEnclosingElement().asType())
+          )
+      );
+    }
+    if (element.getKind() == ElementKind.CONSTRUCTOR) {
+      final ExecutableElement methodElement = (ExecutableElement) element;
+      return new SourceConstructorImpl(
+          environment,
+          methodElement,
+          new SourceClassImpl(environment, (DeclaredType) element.getEnclosingElement().asType())
+      );
+    }
+    if (element.getKind() == ElementKind.METHOD) {
+      final ExecutableElement methodElement = (ExecutableElement) element;
+      return new SourceMethodImpl(
+          environment,
+          methodElement,
+          new SourceClassImpl(environment, (DeclaredType) element.getEnclosingElement().asType())
+      );
+    }
+    throw new UnsupportedOperationException("Conversion for " + element.getKind() + " to SourceElement is not yet supported.");
+  }
+
+  static SourceClass getSourceClassType(final ProcessingEnvironment environment, final DeclaredType declared) {
     if (declared.asElement().getKind() == ElementKind.RECORD) {
       return new SourceRecordImpl(environment, declared);
     }
     return new SourceClassImpl(environment, declared);
   }
 
-  public static SourceType getSourceType(final ProcessingEnvironment environment, final TypeMirror type) {
+  static SourceType getSourceType(final ProcessingEnvironment environment, final TypeMirror type) {
     return switch (type.getKind()) {
       case BYTE, CHAR, BOOLEAN, INT, LONG, FLOAT, DOUBLE, SHORT -> new SourcePrimitiveImpl((PrimitiveType) type);
       case VOID -> new VoidSourceType();
@@ -55,7 +101,7 @@ final class SourceTypeUtils {
   }
 
   @Nullable
-  public static TypeMirror getAnnotationMirror(final Element element, final Class<? extends Annotation> annotationClass, final String fieldName) {
+  static TypeMirror getAnnotationMirror(final Element element, final Class<? extends Annotation> annotationClass, final String fieldName) {
     String annotationName = annotationClass.getName();
 
     Optional<? extends AnnotationMirror> out = element.getAnnotationMirrors().stream()

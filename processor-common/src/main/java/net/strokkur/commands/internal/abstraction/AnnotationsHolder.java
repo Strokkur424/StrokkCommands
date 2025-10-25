@@ -20,12 +20,15 @@ package net.strokkur.commands.internal.abstraction;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
 public interface AnnotationsHolder extends SourceElement {
 
   <T extends Annotation> @Nullable T getAnnotation(Class<T> type);
+
+  List<SourceClass> getAllAnnotations();
 
   default boolean hasAnnotation(final Class<? extends Annotation> type) {
     return getAnnotationOptional(type).isPresent();

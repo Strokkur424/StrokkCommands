@@ -18,25 +18,28 @@
 package net.strokkur.commands.internal.parsing;
 
 import net.strokkur.commands.Executes;
-import net.strokkur.commands.internal.PlatformUtils;
+import net.strokkur.commands.internal.NodeUtils;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.abstraction.SourceParameter;
 import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
 import net.strokkur.commands.internal.exceptions.UnknownSenderException;
+import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.attributes.Executable;
+import net.strokkur.commands.internal.intermediate.attributes.ExecutableImpl;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class ExecutesTransform implements NodeTransform<SourceMethod>, ForwardingMessagerWrapper {
+public sealed class ExecutesTransform implements NodeTransform<SourceMethod>, ForwardingMessagerWrapper permits DefaultExecutesTransform {
   protected final CommandParser parser;
-  protected final PlatformUtils platformUtils;
+  protected final NodeUtils nodeUtils;
 
-  protected ExecutesTransform(CommandParser parser, PlatformUtils platformUtils) {
+  public ExecutesTransform(CommandParser parser, NodeUtils nodeUtils) {
     this.parser = parser;
-    this.platformUtils = platformUtils;
+    this.nodeUtils = nodeUtils;
   }
 
   protected String transformName() {
@@ -47,27 +50,15 @@ public abstract class ExecutesTransform implements NodeTransform<SourceMethod>, 
     return this.createExecutesNode(parent, element);
   }
 
+  protected void populatePath(final CommandNode node, final SourceMethod method, final List<CommandArgument> args, final List<SourceParameter> parameters)
+      throws UnknownSenderException {
+    final Executable executable = new ExecutableImpl(method, args);
+    node.setAttribute(AttributeKey.EXECUTABLE, executable);
+    nodeUtils().platformUtils().populateExecutesNode(executable, node, parameters);
+  }
+
   protected int parametersToParse(final List<SourceParameter> parameters) {
     return parameters.size();
-  }
-
-  protected int firstParameterToParse(final List<SourceParameter> parameters) {
-    return 1;
-  }
-
-  protected abstract void populatePath(
-      final SourceMethod method,
-      final CommandNode node,
-      final List<CommandArgument> args,
-      final List<SourceParameter> parameters
-  ) throws UnknownSenderException;
-
-  private void populatePathNoArguments(
-      final SourceMethod method,
-      final CommandNode node,
-      final List<SourceParameter> parameters
-  ) throws UnknownSenderException {
-    populatePath(method, node, List.of(), parameters);
   }
 
   @Override
@@ -78,20 +69,23 @@ public abstract class ExecutesTransform implements NodeTransform<SourceMethod>, 
     final List<SourceParameter> parameters = element.getParameters();
     final List<SourceParameter> arguments = new ArrayList<>(parameters.size() - 1);
 
-    for (int i = firstParameterToParse(parameters), parametersSize = parametersToParse(parameters); i < parametersSize; i++) {
+    for (int i = nodeUtils().platformUtils().executableFirstIndexToParse(parameters), parametersSize = parametersToParse(parameters); i < parametersSize; i++) {
       arguments.add(parameters.get(i));
     }
 
-    final List<CommandArgument> args = platformUtils().parseArguments(arguments, element.getEnclosed());
-    if (args.isEmpty()) {
-      populatePathNoArguments(element, thisPath, parameters);
-      debug("  | {}: no arguments found. Current tree for thisPath: {}", transformName(), thisPath);
-      return;
-    }
-
+    final List<CommandArgument> args = nodeUtils().parseArguments(arguments);
     final CommandNode out = thisPath.addChildren(args);
-    populatePath(element, out, args, parameters);
-    debug("  | {}: found arguments! Current tree for thisPath: {}", transformName(), thisPath);
+
+    this.nodeUtils().applyRegistrableProvider(
+        out,
+        element,
+        nodeUtils().requirementRegistry(),
+        AttributeKey.REQUIREMENT_PROVIDER,
+        "requirement"
+    );
+
+    populatePath(out, element, args, parameters);
+    debug("  | {}: Current tree for thisPath: {}", transformName(), thisPath);
   }
 
   @Override
@@ -100,7 +94,7 @@ public abstract class ExecutesTransform implements NodeTransform<SourceMethod>, 
   }
 
   @Override
-  public final PlatformUtils platformUtils() {
-    return this.platformUtils;
+  public final NodeUtils nodeUtils() {
+    return this.nodeUtils;
   }
 }

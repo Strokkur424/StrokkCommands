@@ -17,7 +17,7 @@
  */
 package net.strokkur.commands.internal.parsing;
 
-import net.strokkur.commands.internal.PlatformUtils;
+import net.strokkur.commands.internal.NodeUtils;
 import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceRecord;
 import net.strokkur.commands.internal.abstraction.SourceRecordComponent;
@@ -31,8 +31,8 @@ import java.util.List;
 
 final class RecordTransform extends ClassTransform {
 
-  public RecordTransform(final CommandParser parser, final PlatformUtils platformUtils) {
-    super(parser, platformUtils);
+  public RecordTransform(final CommandParser parser, final NodeUtils nodeUtils) {
+    super(parser, nodeUtils);
   }
 
   @Override
@@ -49,7 +49,7 @@ final class RecordTransform extends ClassTransform {
   protected CommandNode parseRecordComponents(final CommandNode parent, final SourceClass element) throws MismatchedArgumentTypeException {
     final List<SourceRecordComponent> components = ((SourceRecord) element).getRecordComponents();
 
-    final List<CommandArgument> arguments = platformUtils().parseArguments(components, element);
+    final List<CommandArgument> arguments = nodeUtils().parseArguments(components);
     final CommandNode out = parent.addChildren(arguments);
 
     out.setAttribute(AttributeKey.RECORD_ARGUMENTS, new ParameterizableImpl(arguments));

@@ -15,19 +15,19 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.paper.suggestions;
+package net.strokkur.commands.internal.exceptions;
 
 import net.strokkur.commands.internal.abstraction.SourceClass;
 
-public record ClassSuggestionProvider(SourceClass type) implements SuggestionProvider {
+public class ProviderAlreadyRegisteredException extends Exception {
+  private final SourceClass annotationClass;
 
-  @Override
-  public String getProvider() {
-    return "new " + type.getName() + "()";
+  public ProviderAlreadyRegisteredException(final SourceClass annotation) {
+    super("The annotation @" + annotation.getSourceName() + " already has a registered provider!");
+    this.annotationClass = annotation;
   }
 
-  @Override
-  public SourceClass getClassElement() {
-    return type;
+  public SourceClass getAnnotationClass() {
+    return annotationClass;
   }
 }
