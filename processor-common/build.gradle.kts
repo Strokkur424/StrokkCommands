@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  compileOnlyApi(project(":commands-annotations-common"))
+  compileOnlyApi(project(":annotations-common"))
 }
 
 sourceSets.main {
