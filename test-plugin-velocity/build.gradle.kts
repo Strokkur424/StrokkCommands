@@ -6,8 +6,8 @@ dependencies {
   compileOnly(libs.velocity.api)
   annotationProcessor(libs.velocity.api)
 
-  compileOnly(project(":commands-annotations-velocity"))
-  annotationProcessor(project(":commands-processor-velocity"))
+  compileOnly(project(":annotations-velocity"))
+  annotationProcessor(project(":processor-velocity"))
 }
 
 tasks.runVelocity {

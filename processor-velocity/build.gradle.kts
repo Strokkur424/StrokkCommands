@@ -1,4 +1,4 @@
 dependencies {
-  api(project(":commands-annotations-velocity"))
-  api(project(":commands-processor-common"))
+  api(project(":annotations-velocity"))
+  api(project(":processor-common"))
 }
