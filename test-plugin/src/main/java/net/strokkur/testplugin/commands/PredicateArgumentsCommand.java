@@ -22,9 +22,9 @@ import io.papermc.paper.command.brigadier.argument.predicate.ItemStackPredicate;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.Executes;
-import net.strokkur.commands.annotations.Literal;
+import net.strokkur.commands.Command;
+import net.strokkur.commands.Executes;
+import net.strokkur.commands.Literal;
 import org.bukkit.command.CommandSender;
 import org.bukkit.inventory.ItemStack;
 

@@ -17,12 +17,12 @@
  */
 package net.strokkur.commands.internal.arguments;
 
-import net.strokkur.commands.StringArgType;
-import net.strokkur.commands.annotations.arguments.DoubleArg;
-import net.strokkur.commands.annotations.arguments.FloatArg;
-import net.strokkur.commands.annotations.arguments.IntArg;
-import net.strokkur.commands.annotations.arguments.LongArg;
-import net.strokkur.commands.annotations.arguments.StringArg;
+import net.strokkur.commands.arguments.StringArgType;
+import net.strokkur.commands.arguments.DoubleArg;
+import net.strokkur.commands.arguments.FloatArg;
+import net.strokkur.commands.arguments.IntArg;
+import net.strokkur.commands.arguments.LongArg;
+import net.strokkur.commands.arguments.StringArg;
 import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.exceptions.ConversionException;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;

@@ -32,7 +32,6 @@ import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.CommandInformation;
 import net.strokkur.commands.internal.util.IOExceptionIgnoringConsumer;
 import net.strokkur.commands.internal.util.Utils;
-import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.List;
@@ -57,8 +56,7 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
     printForArguments(root, initializer -> {
       if (printThen) {
         println();
-        printIndent();
-        print(".then(");
+        printIndented(".then(");
         incrementIndent();
       }
 
@@ -81,9 +79,14 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
 
       if (printThen) {
         decrementIndent();
-        println(")");
+        println();
+        printIndented(")");
       }
     });
+  }
+
+  default String getSuccessInt() {
+    return "1";
   }
 
   void prefixPrintExecutableInner(final CommandNode node, final Executable executable) throws IOException;
@@ -112,9 +115,9 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
       printWithInstance(executable);
     }
 
-    println("return Command.SINGLE_SUCCESS;");
+    println("return %s;", getSuccessInt());
     decrementIndent();
-    println("})");
+    printIndented("})");
   }
 
   private void printWithInstance(final Executable executable) throws IOException {
@@ -215,7 +218,11 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
     }
   }
 
-  void printRequires(@Nullable Attributable attributable) throws IOException;
+  void printRequires(Attributable node) throws IOException;
+
+  String getLiteralMethodString();
+
+  String getArgumentMethodString();
 
   private void printForArguments(final CommandNode node, final IOExceptionIgnoringConsumer<String> initializer) throws IOException {
     if (node.hasAttribute(AttributeKey.ACCESS_STACK)) {
@@ -223,12 +230,12 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
     }
 
     switch (node.argument()) {
-      case LiteralCommandArgument lit -> initializer.accept("Commands.literal(\"%s\")".formatted(lit.literal()));
-      case RequiredCommandArgument req -> initializer.accept("Commands.argument(\"%s\", %s)".formatted(req.argumentName(), req.argumentType().initializer()));
+      case LiteralCommandArgument lit -> initializer.accept("%s(\"%s\")".formatted(getLiteralMethodString(), lit.literal()));
+      case RequiredCommandArgument req -> initializer.accept("%s(\"%s\", %s)".formatted(getArgumentMethodString(), req.argumentName(), req.argumentType().initializer()));
       case MultiLiteralCommandArgument multi -> {
         for (final String literal : multi.literals()) {
           pushLiteral(literal);
-          initializer.accept("Commands.literal(\"%s\")".formatted(literal));
+          initializer.accept("%s(\"%s\")".formatted(getLiteralMethodString(), literal));
           popLiteral();
         }
       }

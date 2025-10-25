@@ -17,7 +17,7 @@
  */
 package net.strokkur.commands.internal;
 
-import net.strokkur.commands.annotations.Literal;
+import net.strokkur.commands.Literal;
 import net.strokkur.commands.internal.abstraction.AnnotationsHolder;
 import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceVariable;
@@ -48,7 +48,7 @@ public abstract class PlatformUtils implements ForwardingMessagerWrapper {
     this.converter = converter;
   }
 
-  abstract RequiredCommandArgument constructRequiredCommandArgument(BrigadierArgumentType type, String name, SourceVariable parameter, SourceClass source);
+  protected abstract RequiredCommandArgument constructRequiredCommandArgument(BrigadierArgumentType type, String name, SourceVariable parameter, SourceClass source);
 
   public abstract void populateNode(CommandNode node, AnnotationsHolder element);
 

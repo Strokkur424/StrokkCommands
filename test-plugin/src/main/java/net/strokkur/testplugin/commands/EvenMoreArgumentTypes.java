@@ -24,10 +24,10 @@ import io.papermc.paper.command.brigadier.argument.predicate.BlockInWorldPredica
 import io.papermc.paper.math.BlockPosition;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.Executes;
-import net.strokkur.commands.annotations.Executor;
-import net.strokkur.commands.annotations.arguments.AngleArg;
+import net.strokkur.commands.Command;
+import net.strokkur.commands.Executes;
+import net.strokkur.commands.paper.Executor;
+import net.strokkur.commands.paper.arguments.AngleArg;
 import org.bukkit.Axis;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;

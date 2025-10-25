@@ -17,6 +17,55 @@
  */
 package net.strokkur.commands.internal.abstraction;
 
+import org.jspecify.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
+
 public interface SourceParameter extends SourceVariable {
   SourceMethod getEnclosed();
+
+  static String combineJavaDocsParameterString(final List<String> hardcoded, final @Nullable SourceMethod method) {
+    return combineJavaDocsParameterString(hardcoded, method, (m) -> true);
+  }
+
+  static String combineJavaDocsParameterString(final List<String> hardcoded, final @Nullable SourceMethod method, final Predicate<SourceParameter> filter) {
+    if (method == null) {
+      return String.join(", ", hardcoded);
+    }
+    return combineJavaDocsParameterString(hardcoded, method.getParameters().stream()
+        .filter(filter)
+        .toList());
+  }
+
+  static String combineJavaDocsParameterString(final List<String> hardcoded, final List<? extends SourceVariable> method) {
+    final List<String> parameterTypes = new ArrayList<>(hardcoded);
+    parameterTypes.addAll(method.stream()
+        .map(SourceVariable::getType)
+        .map(SourceType::getSourceName)
+        .toList());
+    return String.join(", ", parameterTypes);
+  }
+
+  static String combineMethodParameterString(final List<String> hardcoded, final @Nullable SourceMethod method) {
+    return combineMethodParameterString(hardcoded, method, (m) -> true);
+  }
+
+  static String combineMethodParameterString(final List<String> hardcoded, final @Nullable SourceMethod method, final Predicate<SourceParameter> filter) {
+    if (method == null) {
+      return String.join(", ", hardcoded);
+    }
+    return combineMethodParameterString(hardcoded, method.getParameters().stream()
+        .filter(filter)
+        .toList());
+  }
+
+  static String combineMethodParameterString(final List<String> hardcoded, final List<? extends SourceVariable> method) {
+    final List<String> parameterTypes = new ArrayList<>(hardcoded);
+    parameterTypes.addAll(method.stream()
+        .map(var -> "final " + var.getType().getSourceName() + " " + var.getName())
+        .toList());
+    return String.join(", ", parameterTypes);
+  }
 }

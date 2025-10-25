@@ -20,6 +20,7 @@ package net.strokkur.commands.internal.parsing;
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
+import net.strokkur.commands.internal.exceptions.UnknownSenderException;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 
 import java.util.List;
@@ -37,7 +38,7 @@ public class MethodTransform implements NodeTransform<SourceMethod> {
   }
 
   @Override
-  public void transform(final CommandNode node, final SourceMethod element) throws MismatchedArgumentTypeException {
+  public void transform(final CommandNode node, final SourceMethod element) throws MismatchedArgumentTypeException, UnknownSenderException {
     for (final NodeTransform<SourceMethod> innerTransform : innerTransforms) {
       innerTransform.transformIfRequirement(node, element);
     }

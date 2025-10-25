@@ -17,12 +17,13 @@
  */
 package net.strokkur.commands.internal.parsing;
 
-import net.strokkur.commands.annotations.Executes;
+import net.strokkur.commands.Executes;
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.abstraction.SourceParameter;
 import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
+import net.strokkur.commands.internal.exceptions.UnknownSenderException;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 
@@ -59,18 +60,18 @@ public abstract class ExecutesTransform implements NodeTransform<SourceMethod>, 
       final CommandNode node,
       final List<CommandArgument> args,
       final List<SourceParameter> parameters
-  );
+  ) throws UnknownSenderException;
 
   private void populatePathNoArguments(
       final SourceMethod method,
       final CommandNode node,
       final List<SourceParameter> parameters
-  ) {
+  ) throws UnknownSenderException {
     populatePath(method, node, List.of(), parameters);
   }
 
   @Override
-  public final void transform(final CommandNode root, final SourceMethod element) throws MismatchedArgumentTypeException {
+  public final void transform(final CommandNode root, final SourceMethod element) throws MismatchedArgumentTypeException, UnknownSenderException {
     debug("> {}: parsing {} for '{}'", transformName(), element, root.argument().argumentName());
     final CommandNode thisPath = this.createThisPath(root, element);
 

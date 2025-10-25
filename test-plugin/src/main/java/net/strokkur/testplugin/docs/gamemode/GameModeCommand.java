@@ -17,10 +17,10 @@
  */
 package net.strokkur.testplugin.docs.gamemode;
 
-import net.strokkur.commands.annotations.Aliases;
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.Permission;
-import net.strokkur.commands.annotations.Subcommand;
+import net.strokkur.commands.paper.Aliases;
+import net.strokkur.commands.Command;
+import net.strokkur.commands.paper.Permission;
+import net.strokkur.commands.Subcommand;
 import net.strokkur.testplugin.docs.gamemode.preset.GameModePreset;
 import org.bukkit.GameMode;
 

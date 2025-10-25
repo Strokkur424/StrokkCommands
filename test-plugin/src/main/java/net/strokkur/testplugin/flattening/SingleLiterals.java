@@ -17,9 +17,9 @@
  */
 package net.strokkur.testplugin.flattening;
 
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.Executes;
-import net.strokkur.commands.annotations.Literal;
+import net.strokkur.commands.Command;
+import net.strokkur.commands.Executes;
+import net.strokkur.commands.Literal;
 import org.bukkit.command.CommandSender;
 
 @Command("single-literals")

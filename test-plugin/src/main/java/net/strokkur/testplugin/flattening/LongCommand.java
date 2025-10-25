@@ -17,8 +17,8 @@
  */
 package net.strokkur.testplugin.flattening;
 
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.Executes;
+import net.strokkur.commands.Command;
+import net.strokkur.commands.Executes;
 import org.bukkit.command.CommandSender;
 
 @Command("this is a long command")
