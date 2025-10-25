@@ -17,7 +17,7 @@
  */
 package net.strokkur.commands.internal;
 
-import net.strokkur.commands.annotations.Command;
+import net.strokkur.commands.Command;
 import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.impl.SourceClassImpl;
 import net.strokkur.commands.internal.abstraction.impl.SourceRecordImpl;
@@ -55,19 +55,19 @@ public abstract class StrokkCommandsProcessor<C extends CommandInformation> exte
     return SourceVersion.latestSupported();
   }
 
-  abstract void init();
+  protected abstract void init();
 
-  abstract PlatformUtils getPlatformUtils();
+  protected abstract PlatformUtils getPlatformUtils();
 
-  abstract CommonTreePostProcessor createPostProcessor(MessagerWrapper messager);
+  protected abstract CommonTreePostProcessor createPostProcessor(MessagerWrapper messager);
 
-  abstract CommonCommandTreePrinter<C> createPrinter(CommandNode node, C commandInformation);
+  protected abstract CommonCommandTreePrinter<C> createPrinter(CommandNode node, C commandInformation);
 
-  abstract ExecutesTransform createExecutesTransform(CommandParser parser);
+  protected abstract ExecutesTransform createExecutesTransform(CommandParser parser);
 
-  abstract DefaultExecutesTransform createDefaultExecutesTransform(CommandParser parser);
+  protected abstract DefaultExecutesTransform createDefaultExecutesTransform(CommandParser parser);
 
-  abstract C getCommandInformation(SourceClass sourceClass);
+  protected abstract C getCommandInformation(SourceClass sourceClass);
 
   @Override
   @NullUnmarked

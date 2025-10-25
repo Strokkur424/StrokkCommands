@@ -18,10 +18,10 @@
 package net.strokkur.testplugin.subcommands;
 
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.Executes;
-import net.strokkur.commands.annotations.Permission;
-import net.strokkur.commands.annotations.RequiresOP;
+import net.strokkur.commands.Command;
+import net.strokkur.commands.Executes;
+import net.strokkur.commands.paper.Permission;
+import net.strokkur.commands.paper.RequiresOP;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 

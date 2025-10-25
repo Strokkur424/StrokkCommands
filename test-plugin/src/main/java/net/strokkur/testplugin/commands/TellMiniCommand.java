@@ -19,14 +19,14 @@ package net.strokkur.testplugin.commands;
 
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.Executes;
-import net.strokkur.commands.annotations.RequiresOP;
-import net.strokkur.commands.annotations.arguments.StringArg;
+import net.strokkur.commands.Command;
+import net.strokkur.commands.Executes;
+import net.strokkur.commands.paper.RequiresOP;
+import net.strokkur.commands.arguments.StringArg;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 
-import static net.strokkur.commands.StringArgType.GREEDY;
+import static net.strokkur.commands.arguments.StringArgType.GREEDY;
 
 @Command("tellmini")
 @RequiresOP

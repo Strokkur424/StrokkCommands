@@ -18,6 +18,7 @@
 package net.strokkur.commands.internal.printer;
 
 import org.intellij.lang.annotations.Language;
+import org.intellij.lang.annotations.PrintFormat;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
@@ -57,7 +58,7 @@ public abstract class AbstractPrinter implements Printable {
   }
 
   @Override
-  public void print(String message, Object... format) throws IOException {
+  public void print(@PrintFormat String message, Object... format) throws IOException {
     if (writer == null) {
       throw new IOException("No writer set.");
     }
@@ -98,7 +99,7 @@ public abstract class AbstractPrinter implements Printable {
   }
 
   @Override
-  public void printBlock(String block, Object... format) throws IOException {
+  public void printBlock(@PrintFormat String block, Object... format) throws IOException {
     if (writer == null) {
       throw new IOException("No writer set.");
     }

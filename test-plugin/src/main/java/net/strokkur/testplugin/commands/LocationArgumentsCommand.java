@@ -20,9 +20,9 @@ package net.strokkur.testplugin.commands;
 import io.papermc.paper.math.BlockPosition;
 import io.papermc.paper.math.FinePosition;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.Executes;
-import net.strokkur.commands.annotations.arguments.FinePosArg;
+import net.strokkur.commands.Command;
+import net.strokkur.commands.Executes;
+import net.strokkur.commands.paper.arguments.FinePosArg;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 

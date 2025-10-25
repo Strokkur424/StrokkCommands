@@ -19,8 +19,8 @@ package net.strokkur.testplugin.docs.gamemode.preset;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.strokkur.commands.annotations.Executes;
-import net.strokkur.commands.annotations.Executor;
+import net.strokkur.commands.Executes;
+import net.strokkur.commands.paper.Executor;
 import org.bukkit.GameMode;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;

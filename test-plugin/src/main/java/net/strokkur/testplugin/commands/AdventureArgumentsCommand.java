@@ -21,18 +21,18 @@ import net.kyori.adventure.chat.ChatType;
 import net.kyori.adventure.chat.SignedMessage;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.Executes;
-import net.strokkur.commands.annotations.Executor;
-import net.strokkur.commands.annotations.Literal;
-import net.strokkur.commands.annotations.arguments.StringArg;
+import net.strokkur.commands.Command;
+import net.strokkur.commands.Executes;
+import net.strokkur.commands.paper.Executor;
+import net.strokkur.commands.Literal;
+import net.strokkur.commands.arguments.StringArg;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.concurrent.CompletableFuture;
 
-import static net.strokkur.commands.StringArgType.STRING;
+import static net.strokkur.commands.arguments.StringArgType.STRING;
 
 @Command("adventure")
 class AdventureArgumentsCommand {

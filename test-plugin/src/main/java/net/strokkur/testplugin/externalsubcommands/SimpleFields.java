@@ -17,8 +17,8 @@
  */
 package net.strokkur.testplugin.externalsubcommands;
 
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.Subcommand;
+import net.strokkur.commands.Command;
+import net.strokkur.commands.Subcommand;
 
 @Command("simplefields")
 class SimpleFields {

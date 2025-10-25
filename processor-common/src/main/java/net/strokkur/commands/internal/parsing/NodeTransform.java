@@ -17,13 +17,14 @@
  */
 package net.strokkur.commands.internal.parsing;
 
-import net.strokkur.commands.annotations.Executes;
-import net.strokkur.commands.annotations.Subcommand;
+import net.strokkur.commands.Executes;
+import net.strokkur.commands.Subcommand;
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.abstraction.AnnotationsHolder;
 import net.strokkur.commands.internal.abstraction.SourceElement;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
+import net.strokkur.commands.internal.exceptions.UnknownSenderException;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.commands.internal.util.MessagerWrapper;
@@ -36,7 +37,7 @@ import java.util.function.Function;
 
 interface NodeTransform<S extends SourceElement> extends ForwardingMessagerWrapper {
 
-  void transform(CommandNode parent, S element) throws MismatchedArgumentTypeException;
+  void transform(CommandNode parent, S element) throws MismatchedArgumentTypeException, UnknownSenderException;
 
   boolean requirement(S element);
 
@@ -47,7 +48,7 @@ interface NodeTransform<S extends SourceElement> extends ForwardingMessagerWrapp
     return this.platformUtils();
   }
 
-  default void transformIfRequirement(CommandNode parent, S element) throws MismatchedArgumentTypeException {
+  default void transformIfRequirement(CommandNode parent, S element) throws MismatchedArgumentTypeException, UnknownSenderException {
     if (requirement(element)) {
       transform(parent, element);
     }

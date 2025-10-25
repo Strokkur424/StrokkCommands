@@ -18,9 +18,9 @@
 package net.strokkur.testplugin.iceacream;
 
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.strokkur.commands.annotations.Command;
-import net.strokkur.commands.annotations.Executes;
-import net.strokkur.commands.annotations.arguments.CustomArg;
+import net.strokkur.commands.Command;
+import net.strokkur.commands.Executes;
+import net.strokkur.commands.paper.arguments.CustomArg;
 import org.bukkit.command.CommandSender;
 
 @Command("icecream")
