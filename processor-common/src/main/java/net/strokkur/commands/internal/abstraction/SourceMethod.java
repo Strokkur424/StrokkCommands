@@ -38,6 +38,10 @@ public interface SourceMethod extends AnnotationsHolder {
 
   List<SourceTypeAnnotation> getTypeAnnotations();
 
+  default boolean isStaticallyAccessible() {
+    return getModifiers().contains(Modifier.STATIC);
+  }
+
   default String getCombinedTypeAnnotationsString() {
     final List<SourceTypeAnnotation> annotations = new ArrayList<>(getEnclosed().getTypeAnnotations());
     annotations.addAll(getTypeAnnotations());

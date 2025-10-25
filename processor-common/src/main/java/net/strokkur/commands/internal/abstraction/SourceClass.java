@@ -44,14 +44,29 @@ public interface SourceClass extends SourceType, AnnotationsHolder {
     return getNestedClasses(unused -> true);
   }
 
+  List<SourceClass> getImplementedInterfaces();
+
   List<SourceMethod> getNestedMethods(final Predicate<SourceMethod> predicate);
 
   List<SourceField> getNestedFields(final Predicate<SourceField> predicate);
 
   List<SourceClass> getNestedClasses(final Predicate<SourceClass> predicate);
 
+  default boolean implementsInterface(final String interfaceName) {
+    for (final SourceClass implementedInterface : getImplementedInterfaces()) {
+      if (implementedInterface.getFullyQualifiedAndTypedName().equals(interfaceName)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   default boolean isRecord() {
     return false;
+  }
+
+  default boolean hasNonStaticConstructor() {
+    return !isTopLevel() && !isRecord() && !getModifiers().contains(Modifier.STATIC);
   }
 
   Set<Modifier> getModifiers();

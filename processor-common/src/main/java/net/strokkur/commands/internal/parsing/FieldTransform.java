@@ -18,7 +18,7 @@
 package net.strokkur.commands.internal.parsing;
 
 import net.strokkur.commands.Subcommand;
-import net.strokkur.commands.internal.PlatformUtils;
+import net.strokkur.commands.internal.NodeUtils;
 import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceField;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
@@ -30,12 +30,20 @@ import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import java.util.ArrayList;
 import java.util.List;
 
-record FieldTransform(CommandParser parser, PlatformUtils platformUtils) implements NodeTransform<SourceField>, ForwardingMessagerWrapper {
+record FieldTransform(CommandParser parser, NodeUtils nodeUtils) implements NodeTransform<SourceField>, ForwardingMessagerWrapper {
 
   @Override
   public void transform(final CommandNode root, final SourceField element) throws MismatchedArgumentTypeException {
     debug("> FieldTransform: {}.{}", element.getEnclosed().getName(), element.getName());
     final CommandNode node = createSubcommandNode(root, element);
+
+    this.nodeUtils().applyRegistrableProvider(
+        node,
+        element,
+        nodeUtils().requirementRegistry(),
+        AttributeKey.REQUIREMENT_PROVIDER,
+        "requirement"
+    );
 
     node.editAttributeMutable(
         AttributeKey.ACCESS_STACK,

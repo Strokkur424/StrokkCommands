@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.testplugin.reference;
+package net.strokkur.testplugin.velocity.reference;
 
 import com.mojang.brigadier.LiteralMessage;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -39,7 +39,7 @@ import org.jspecify.annotations.NullMarked;
  * @see #register(ProxyServer, Object) registering the command
  */
 @NullMarked
-public final class TestCommandBrigadier0 {
+public final class TestCommandBrigadierRef {
 
   /**
    * Shortcut for registering the command node returned from
@@ -93,7 +93,7 @@ public final class TestCommandBrigadier0 {
             })
             .then(BrigadierCommand.requiredArgumentBuilder("target", StringArgumentType.word())
                 .executes((ctx) -> {
-                  instance.run(
+                  instance.runWithTarget(
                       ctx.getSource(),
                       StringArgumentType.getString(ctx, "target")
                   );
@@ -109,7 +109,7 @@ public final class TestCommandBrigadier0 {
    *
    * @throws IllegalAccessException always
    */
-  private TestCommandBrigadier0() throws IllegalAccessException {
+  private TestCommandBrigadierRef() throws IllegalAccessException {
     throw new IllegalAccessException("This class cannot be instantiated.");
   }
 }

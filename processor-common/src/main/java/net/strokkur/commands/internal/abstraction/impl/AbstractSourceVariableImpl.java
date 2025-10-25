@@ -18,6 +18,7 @@
 package net.strokkur.commands.internal.abstraction.impl;
 
 import com.sun.source.util.Trees;
+import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceType;
 import net.strokkur.commands.internal.abstraction.SourceVariable;
 import org.jspecify.annotations.Nullable;
@@ -26,6 +27,7 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import java.lang.annotation.Annotation;
+import java.util.List;
 import java.util.Set;
 
 public abstract class AbstractSourceVariableImpl<E extends Element> implements SourceVariable, ElementGettable<E> {
@@ -62,6 +64,14 @@ public abstract class AbstractSourceVariableImpl<E extends Element> implements S
 
   public <T extends Annotation> @Nullable T getAnnotation(final Class<T> type) {
     return element.getAnnotation(type);
+  }
+
+  @Override
+  public List<SourceClass> getAllAnnotations() {
+    return this.element.getAnnotationMirrors().stream()
+        .map(mirror -> new SourceClassImpl(this.environment, mirror.getAnnotationType()))
+        .map(SourceClass.class::cast)
+        .toList();
   }
 
   @Override

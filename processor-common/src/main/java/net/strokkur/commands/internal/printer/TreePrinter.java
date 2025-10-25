@@ -28,10 +28,13 @@ import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.attributes.DefaultExecutable;
 import net.strokkur.commands.internal.intermediate.attributes.Executable;
 import net.strokkur.commands.internal.intermediate.attributes.Parameterizable;
+import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
+import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.CommandInformation;
 import net.strokkur.commands.internal.util.IOExceptionIgnoringConsumer;
 import net.strokkur.commands.internal.util.Utils;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.List;
@@ -45,8 +48,6 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
   void popLiteral();
 
   void popLiteralPosition();
-
-  void printAdditionalNodesData(RequiredCommandArgument req) throws IOException;
 
   default void printNode(final CommandNode node) throws IOException {
     printNode(node, false);
@@ -62,11 +63,25 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
 
       print(initializer);
 
-      if (root.argument() instanceof RequiredCommandArgument req) {
-        printAdditionalNodesData(req);
+      if (root.argument() instanceof RequiredCommandArgument req && req.hasAttribute(AttributeKey.SUGGESTION_PROVIDER)) {
+        final SuggestionProvider provider = req.getAttributeNotNull(AttributeKey.SUGGESTION_PROVIDER);
+        println();
+        printIndented(".suggests(" + provider.getSuggestionString() + ")");
       }
 
-      printRequires(root);
+      final RequirementProvider requirementProvider = root.getAttribute(AttributeKey.REQUIREMENT_PROVIDER);
+      final String extraRequirement = getExtraRequirements(root);
+
+      if (requirementProvider != null && extraRequirement == null) {
+        println();
+        printIndented(".requires(source -> %s)", requirementProvider.getRequirementString());
+      } else if (requirementProvider == null && extraRequirement != null) {
+        println();
+        printIndented(".requires(source -> %s)", extraRequirement);
+      } else if (requirementProvider != null) {
+        println();
+        printIndented(".requires(source -> %s && %s)", requirementProvider.getRequirementString(), extraRequirement);
+      }
 
       final Executable executable = root.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE);
       if (executable != null) {
@@ -218,7 +233,8 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
     }
   }
 
-  void printRequires(Attributable node) throws IOException;
+  @Nullable
+  String getExtraRequirements(Attributable node);
 
   String getLiteralMethodString();
 

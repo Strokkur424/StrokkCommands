@@ -24,6 +24,8 @@ import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.access.FieldAccess;
 import net.strokkur.commands.internal.intermediate.access.InstanceAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
+import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.CommandInformation;
 
@@ -80,9 +82,13 @@ interface ImportPrinter<C extends CommandInformation> extends Printable, Printer
     return imports;
   }
 
-  void gatherAdditionalArgumentImports(Set<String> imports, RequiredCommandArgument argument);
+  default void gatherAdditionalArgumentImports(Set<String> imports, RequiredCommandArgument argument) {
+    // noop
+  }
 
-  void gatherAdditionalNodeImports(Set<String> imports, CommandNode node);
+  default void gatherAdditionalNodeImports(Set<String> imports, CommandNode node) {
+    // noop
+  }
 
   private void gatherImports(final Set<String> imports, final CommandNode node) {
     if (node.hasAttribute(AttributeKey.DEFAULT_EXECUTABLE)) {
@@ -108,6 +114,19 @@ interface ImportPrinter<C extends CommandInformation> extends Printable, Printer
 
     if (node.argument() instanceof RequiredCommandArgument req) {
       imports.addAll(req.argumentType().imports());
+
+      final SuggestionProvider suggestionProvider = req.getAttribute(AttributeKey.SUGGESTION_PROVIDER);
+      if (suggestionProvider != null) {
+        imports.addAll(suggestionProvider.getSourceClass().getImports());
+      }
+
+      final RequirementProvider requirementProvider = req.getAttribute(AttributeKey.REQUIREMENT_PROVIDER);
+      if (requirementProvider != null) {
+        imports.addAll(requirementProvider.getSourceClasses().stream()
+            .flatMap(source -> source.getImports().stream())
+            .toList());
+      }
+
       gatherAdditionalArgumentImports(imports, req);
     }
 

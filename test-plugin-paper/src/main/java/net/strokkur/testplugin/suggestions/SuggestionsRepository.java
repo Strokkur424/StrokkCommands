@@ -18,10 +18,12 @@
 package net.strokkur.testplugin.suggestions;
 
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
+import net.strokkur.commands.CustomSuggestion;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
@@ -31,12 +33,31 @@ import java.util.concurrent.CompletableFuture;
 @NullMarked
 interface SuggestionsRepository {
 
+  @CustomSuggestion
+  @interface YourProvider {}
+
   SuggestionProvider<CommandSourceStack> STATIC_FIELD = (ctx, builder) -> {
     builder.suggest(8);
     builder.suggest(16);
     builder.suggest(32);
     return builder.buildFuture();
   };
+
+  @YourProvider
+  default <S> SuggestionProvider<S> methodImplementation() {
+    return (ctx, builder) -> builder.buildFuture();
+  }
+
+  @YourProvider
+  class AClassSuggestionProvider<S> implements SuggestionProvider<S> {
+    @Override
+    public CompletableFuture<Suggestions> getSuggestions(
+        final CommandContext<S> context,
+        final SuggestionsBuilder builder
+    ) throws CommandSyntaxException {
+      return builder.buildFuture();
+    }
+  }
 
   class SomeClass implements SuggestionProvider<CommandSourceStack> {
     private final List<String> suggestions;

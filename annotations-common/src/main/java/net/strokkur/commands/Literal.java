@@ -28,18 +28,18 @@ import java.lang.annotation.Target;
 /// argument name as the literal. This
 /// ```java
 /// @Executes
-/// void execute(CommandSender sender, @Literal String hi);
+/// void execute(S source, @Literal String hi);
 /// ```
 /// is the same as writing
 /// ```java
 /// @Executes
-/// void execute(CommandSender sender, @Literal("hi") String theNameDoesNotMatter);
+/// void execute(S source, @Literal("hi") String theNameDoesNotMatter);
 /// ```
 ///
 /// This annotation also allows for declaring multiple literals;
 /// ```java
 /// @Executes
-/// void executeChoice(CommandSender sender, @Literal({"fly", "die"}) String choice) {
+/// void executeChoice(S source, @Literal({"fly", "die"}) String choice) {
 ///   switch (choice) {
 ///     case "fly" -> /* handle fly */
 ///     case "die" -> /* handle die */

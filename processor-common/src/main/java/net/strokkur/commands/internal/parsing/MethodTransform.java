@@ -17,7 +17,7 @@
  */
 package net.strokkur.commands.internal.parsing;
 
-import net.strokkur.commands.internal.PlatformUtils;
+import net.strokkur.commands.internal.NodeUtils;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
 import net.strokkur.commands.internal.exceptions.UnknownSenderException;
@@ -27,14 +27,14 @@ import java.util.List;
 
 public class MethodTransform implements NodeTransform<SourceMethod> {
   private final List<NodeTransform<SourceMethod>> innerTransforms;
-  private final PlatformUtils platformUtils;
+  private final NodeUtils nodeUtils;
 
-  public MethodTransform(final PlatformUtils platformUtils, final ExecutesTransform executesTransform, final DefaultExecutesTransform defaultExecutesTransform) {
+  public MethodTransform(final NodeUtils nodeUtils, final ExecutesTransform executesTransform, final DefaultExecutesTransform defaultExecutesTransform) {
     this.innerTransforms = List.of(
         executesTransform,
         defaultExecutesTransform
     );
-    this.platformUtils = platformUtils;
+    this.nodeUtils = nodeUtils;
   }
 
   @Override
@@ -55,7 +55,7 @@ public class MethodTransform implements NodeTransform<SourceMethod> {
   }
 
   @Override
-  public PlatformUtils platformUtils() {
-    return this.platformUtils;
+  public NodeUtils nodeUtils() {
+    return this.nodeUtils;
   }
 }

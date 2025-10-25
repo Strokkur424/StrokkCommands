@@ -15,22 +15,33 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.paper.suggestions;
+package net.strokkur.testplugin.velocity;
 
-import net.strokkur.commands.internal.abstraction.SourceClass;
+import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
+import com.velocitypowered.api.plugin.Plugin;
+import com.velocitypowered.api.proxy.ProxyServer;
 
-public record FieldSuggestionProvider(
-    SourceClass classElement,
-    String field
-) implements SuggestionProvider {
+import javax.inject.Inject;
 
-  @Override
-  public String getProvider() {
-    return classElement.getName() + "." + field;
+@Plugin(
+    id = "strokkcommands-testplugin",
+    name = "TestPlugin",
+    version = "1.0.0",
+    url = "https://commands.strokkur.net",
+    authors = "Strokkur24",
+    description = "The Velocity test plugin for StrokkCommands (Velocity)"
+)
+public class TestPluginVelocity {
+  private final ProxyServer proxy;
+
+  @Inject
+  public TestPluginVelocity(final ProxyServer proxy) {
+    this.proxy = proxy;
   }
 
-  @Override
-  public SourceClass getClassElement() {
-    return classElement;
+  @Subscribe
+  void onProxyInitialize(final ProxyInitializeEvent event) {
+//    TestCommandBrigadier.register(this.proxy, this);
   }
 }

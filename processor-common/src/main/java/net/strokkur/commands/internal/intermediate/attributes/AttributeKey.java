@@ -18,6 +18,8 @@
 package net.strokkur.commands.internal.intermediate.attributes;
 
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
+import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
+import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
 import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.Nullable;
 
@@ -29,6 +31,9 @@ public interface AttributeKey<T> {
   AttributeKey<Executable> EXECUTABLE = create("executable", null);
   AttributeKey<DefaultExecutable> DEFAULT_EXECUTABLE = create("default_executable", null);
   AttributeKey<List<ExecuteAccess<?>>> ACCESS_STACK = create("access_stack", null);
+
+  AttributeKey<RequirementProvider> REQUIREMENT_PROVIDER = create("requirement_provider", null);
+  AttributeKey<SuggestionProvider> SUGGESTION_PROVIDER = create("suggestion_provider", null);
 
   static <T> AttributeKey<T> create(String key, @Nullable T defaultValue) {
     return new StaticAttributeKey<>(key, defaultValue);

@@ -34,12 +34,12 @@ import java.util.List;
 /// class MyCommand {
 ///
 ///   @DefaultExecutes
-///   void help(CommandSender sender, String[] extraArgs) {
+///   void help(S source, String[] extraArgs) {
 ///     sender.sendPlainMessage("/" + String.join(" ", extraArgs) + " is missing some arguments!")
 ///   }
 ///
 ///   @Executes("some literals")
-///   void logic(CommandSender sender, int num, String word) {
+///   void logic(S source, int num, String word) {
 ///     // ...
 ///   }
 /// }
@@ -69,12 +69,12 @@ public @interface DefaultExecutes {
   /// This
   /// ```java
   /// @DefaultExecutes("the literal path")
-  /// void help(CommandSender sender, /* rest of arguments */);
+  /// void help(S source, /* rest of arguments */);
   /// ```
   /// is the same as writing
   /// ```java
   /// @DefaultExecutes
-  /// void help(CommandSender sender, @Literal("the literal path") String lit, /* rest of arguments */);
+  /// void help(S source, @Literal("the literal path") String lit, /* rest of arguments */);
   /// ```
   ///
   /// @return the literal path to prepend to the argument path

@@ -30,7 +30,7 @@ import java.lang.annotation.Target;
 /// Example usage:
 /// ```java
 /// @Executes("tree")
-/// void executeTree(CommandSender sender, BlockPosition pos) {
+/// void executeTree(S source, BlockPosition pos) {
 ///   // spawns a tree at <pos> if `/<command> tree` was executed
 /// }
 /// ```
@@ -42,12 +42,12 @@ public @interface Executes {
   /// This
   /// ```java
   /// @Executes("the literal path")
-  /// void executes(CommandSender sender, /* rest of arguments */);
+  /// void executes(S source, /* rest of arguments */);
   /// ```
   /// is the same as writing
   /// ```java
   /// @Executes
-  /// void executes(CommandSender sender, @Literal("the literal path") String lit, /* rest of arguments */);
+  /// void executes(S source, @Literal("the literal path") String lit, /* rest of arguments */);
   /// ```
   ///
   /// @return the literal path to prepend to the argument path

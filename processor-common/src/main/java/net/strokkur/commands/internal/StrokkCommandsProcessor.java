@@ -18,10 +18,19 @@
 package net.strokkur.commands.internal;
 
 import net.strokkur.commands.Command;
+import net.strokkur.commands.CustomRequirement;
+import net.strokkur.commands.CustomSuggestion;
+import net.strokkur.commands.meta.StrokkCommandsDebug;
 import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.impl.SourceClassImpl;
 import net.strokkur.commands.internal.abstraction.impl.SourceRecordImpl;
+import net.strokkur.commands.internal.abstraction.impl.SourceTypeUtils;
+import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
+import net.strokkur.commands.internal.exceptions.ProviderAlreadyRegisteredException;
 import net.strokkur.commands.internal.intermediate.CommonTreePostProcessor;
+import net.strokkur.commands.internal.intermediate.registrable.RegistrableRegistry;
+import net.strokkur.commands.internal.intermediate.registrable.RequirementRegistry;
+import net.strokkur.commands.internal.intermediate.registrable.SuggestionsRegistry;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.parsing.CommandParser;
 import net.strokkur.commands.internal.parsing.CommandParserImpl;
@@ -41,7 +50,10 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.tools.JavaFileObject;
 import java.io.PrintWriter;
+import java.lang.annotation.Annotation;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
 public abstract class StrokkCommandsProcessor<C extends CommandInformation> extends AbstractProcessor {
 
@@ -55,7 +67,9 @@ public abstract class StrokkCommandsProcessor<C extends CommandInformation> exte
     return SourceVersion.latestSupported();
   }
 
-  protected abstract void init();
+  protected void init() {
+    // noop
+  }
 
   protected abstract PlatformUtils getPlatformUtils();
 
@@ -63,9 +77,7 @@ public abstract class StrokkCommandsProcessor<C extends CommandInformation> exte
 
   protected abstract CommonCommandTreePrinter<C> createPrinter(CommandNode node, C commandInformation);
 
-  protected abstract ExecutesTransform createExecutesTransform(CommandParser parser);
-
-  protected abstract DefaultExecutesTransform createDefaultExecutesTransform(CommandParser parser);
+  protected abstract BrigadierArgumentConverter getConverter();
 
   protected abstract C getCommandInformation(SourceClass sourceClass);
 
@@ -75,13 +87,34 @@ public abstract class StrokkCommandsProcessor<C extends CommandInformation> exte
     init();
 
     final MessagerWrapper messagerWrapper = MessagerWrapper.wrap(super.processingEnv.getMessager());
-    final PlatformUtils platformUtils = getPlatformUtils();
-    final CommandParser parser = new CommandParserImpl(messagerWrapper, platformUtils, this::createExecutesTransform, this::createDefaultExecutesTransform);
+    final SuggestionsRegistry suggestionsRegistry = createAndFillRegistry(CustomSuggestion.class, SuggestionsRegistry::new, roundEnv, messagerWrapper);
+    final RequirementRegistry requirementRegistry = createAndFillRegistry(CustomRequirement.class, RequirementRegistry::new, roundEnv, messagerWrapper);
+
+    final NodeUtils nodeUtils = new NodeUtils(getPlatformUtils(), messagerWrapper, getConverter(), suggestionsRegistry, requirementRegistry);
+    final CommandParser parser = new CommandParserImpl(
+        messagerWrapper,
+        nodeUtils,
+        (p) -> new ExecutesTransform(p, nodeUtils),
+        (p) -> new DefaultExecutesTransform(p, nodeUtils)
+    );
     final CommonTreePostProcessor treePostProcessor = createPostProcessor(messagerWrapper);
 
-    final String debugOnly = System.getProperty(MessagerWrapper.DEBUG_ONLY_SYSTEM_PROPERTY);
-    if (debugOnly != null) {
+    final String debugOnly;
+
+    final Optional<? extends Element> debugAnnotation = roundEnv.getElementsAnnotatedWith(StrokkCommandsDebug.class).stream().findFirst();
+    if (debugAnnotation.isPresent()) {
       System.setProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY, "true");
+
+      final SourceClass annotated = new SourceClassImpl(this.processingEnv, (DeclaredType) debugAnnotation.get().asType());
+      final SourceClass only = annotated.getAnnotationSourceClassField(StrokkCommandsDebug.class, "only");
+      if (only != null && !only.getName().equals("Class")) {
+        debugOnly = only.getName();
+      } else {
+        debugOnly = null;
+      }
+    } else {
+      debugOnly = null;
+      System.clearProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY);
     }
 
     for (Element element : roundEnv.getElementsAnnotatedWith(Command.class)) {
@@ -149,5 +182,35 @@ public abstract class StrokkCommandsProcessor<C extends CommandInformation> exte
       messagerWrapper.errorSource("A fatal exception occurred whilst printing source file: {}", sourceClass, ex.getMessage());
       ex.printStackTrace();
     }
+  }
+
+  private <T extends RegistrableRegistry<?>> T createAndFillRegistry(
+      final Class<? extends Annotation> annotationClass,
+      final Function<String, T> ctor,
+      final RoundEnvironment roundEnv,
+      final MessagerWrapper messager
+  ) {
+    final T registry = ctor.apply(getPlatformUtils().getPlatformType());
+    for (final Element element : roundEnv.getElementsAnnotatedWith(annotationClass)) {
+      try {
+        if (element.getKind() != ElementKind.ANNOTATION_TYPE || !(element instanceof TypeElement typeElement)) {
+          messager.errorElement("non-annotation type annotated with @CustomSuggestion", element);
+          continue;
+        }
+
+        for (final Element annotatedElements : roundEnv.getElementsAnnotatedWith(typeElement)) {
+          if (registry.tryRegisterProvider(
+              messager,
+              new SourceClassImpl(this.processingEnv, (DeclaredType) typeElement.asType()),
+              SourceTypeUtils.getSourceElement(this.processingEnv, annotatedElements)
+          )) {
+            break;
+          }
+        }
+      } catch (ProviderAlreadyRegisteredException suggestion) {
+        messager.errorElement(suggestion.getMessage(), element);
+      }
+    }
+    return registry;
   }
 }

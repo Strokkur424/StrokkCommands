@@ -20,7 +20,6 @@ package net.strokkur.commands.internal.velocity;
 import net.strokkur.commands.internal.BuildConstants;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.abstraction.SourceParameter;
-import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
 import net.strokkur.commands.internal.intermediate.attributes.Attributable;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.attributes.Executable;
@@ -80,6 +79,11 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
         getCommandInformation().constructor(),
         (p) -> !p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)
     );
+    final String createParamNames = SourceParameter.combineMethodParameterNameString(
+        List.of("server"),
+        getCommandInformation().constructor(),
+        (p) -> !p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)
+    );
 
     printBlock("""
             /**
@@ -127,13 +131,7 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
         createJdParams,
         getBrigadierClassName(),
         registerParams,
-        Optional.ofNullable(getCommandInformation().constructor())
-            .map(ctor -> String.join(", ", ctor.getParameters().stream()
-                .map(param -> param.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER) ?
-                    "server" :
-                    param.getName())
-                .toList()))
-            .orElse("")
+        createParamNames
     );
 
     Optional<String @Nullable []> aliases = Optional.ofNullable(getCommandInformation().aliases());
@@ -214,11 +212,6 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
   }
 
   @Override
-  public void gatherAdditionalArgumentImports(final Set<String> imports, final RequiredCommandArgument argument) {
-    // noop
-  }
-
-  @Override
   public void gatherAdditionalNodeImports(final Set<String> imports, final CommandNode node) {
     addExecutorTypeImports(imports, node.getAttributeNotNull(VelocityAttributeKeys.SENDER_TYPE));
     final Executable executable = node.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE);
@@ -243,14 +236,9 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
   }
 
   @Override
-  public void printAdditionalNodesData(final RequiredCommandArgument req) throws IOException {
-    // noop
-  }
-
-  @Override
   public void prefixPrintExecutableInner(final CommandNode node, final Executable executable) throws IOException {
     final SenderType type = executable.getAttributeNotNull(VelocityAttributeKeys.SENDER_TYPE);
-    if (type != SenderType.CONSOLE) {
+    if (type != SenderType.NORMAL) {
       printBlock("""
               if (!(ctx.getSource() instanceof %s source)) {
                   throw new SimpleCommandExceptionType(
@@ -277,45 +265,36 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
   }
 
   @Override
-  public void printRequires(final Attributable node) throws IOException {
+  public @Nullable String getExtraRequirements(final Attributable node) {
     final Set<String> permissions = node.getAttributeNotNull(VelocityAttributeKeys.PERMISSIONS);
     final SenderType type = node.getAttributeNotNull(VelocityAttributeKeys.SENDER_TYPE);
 
     if (type == SenderType.NORMAL) {
       if (permissions.isEmpty()) {
-        return;
+        return null;
       }
 
-      println();
-      printIndent();
-      print(".requires(source -> %s)",
-          String.join(" || ", permissions.stream()
-              .map(perm -> "source.hasPermission(\"" + perm + "\")")
-              .toList())
-      );
-      return;
+      return String.join(" || ", permissions.stream()
+          .map(perm -> "source.hasPermission(\"" + perm + "\")")
+          .toList());
     }
 
-    println();
-    printIndent();
-
     if (permissions.isEmpty()) {
-      print(".requires(source -> %s)",
-          type.getPredicate()
-      );
-    } else if (permissions.size() == 1) {
-      print(".requires(source -> %s && source.hasPermission(\"%s\"))",
+      return type.getPredicate();
+    }
+    if (permissions.size() == 1) {
+      return "%s && source.hasPermission(\"%s\")".formatted(
           type.getPredicate(),
           permissions.stream().findFirst().get()
       );
-    } else {
-      print(".requires(source -> %s && (%s))",
-          type.getPredicate(),
-          String.join(" || ", permissions.stream()
-              .map(perm -> "source.hasPermission(\"" + perm + "\")")
-              .toList())
-      );
     }
+
+    return "source -> %s && (%s))".formatted(
+        type.getPredicate(),
+        String.join(" || ", permissions.stream()
+            .map(perm -> "source.hasPermission(\"" + perm + "\")")
+            .toList())
+    );
   }
 
   @Override

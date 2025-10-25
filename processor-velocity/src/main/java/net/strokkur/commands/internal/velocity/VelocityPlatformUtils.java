@@ -19,32 +19,29 @@ package net.strokkur.commands.internal.velocity;
 
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.abstraction.AnnotationsHolder;
-import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.abstraction.SourceVariable;
-import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
-import net.strokkur.commands.internal.arguments.BrigadierArgumentType;
-import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
-import net.strokkur.commands.internal.arguments.RequiredCommandArgumentImpl;
+import net.strokkur.commands.internal.abstraction.SourceParameter;
+import net.strokkur.commands.internal.exceptions.UnknownSenderException;
+import net.strokkur.commands.internal.intermediate.attributes.Executable;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
-import net.strokkur.commands.internal.util.MessagerWrapper;
+import net.strokkur.commands.internal.velocity.util.SenderType;
 import net.strokkur.commands.internal.velocity.util.VelocityAttributeKeys;
+import net.strokkur.commands.internal.velocity.util.VelocityClasses;
 import net.strokkur.commands.velocity.Permission;
 
+import java.util.List;
 import java.util.Set;
 
-final class VelocityPlatformUtils extends PlatformUtils {
-  public VelocityPlatformUtils(final MessagerWrapper messager, final BrigadierArgumentConverter converter) {
-    super(messager, converter);
+final class VelocityPlatformUtils implements PlatformUtils {
+  @Override
+  public void populateExecutesNode(final Executable executable, final CommandNode node, final List<SourceParameter> parameters) throws UnknownSenderException {
+    final SenderType type = getSenderType(parameters);
+    executable.setAttribute(VelocityAttributeKeys.SENDER_TYPE, type);
+    node.setAttribute(VelocityAttributeKeys.SENDER_TYPE, type);
   }
 
   @Override
-  protected RequiredCommandArgument constructRequiredCommandArgument(
-      final BrigadierArgumentType type,
-      final String name,
-      final SourceVariable parameter,
-      final SourceClass source
-  ) {
-    return new RequiredCommandArgumentImpl(type, name, parameter);
+  public String getPlatformType() {
+    return VelocityClasses.COMMAND_SOURCE;
   }
 
   @Override
@@ -52,5 +49,14 @@ final class VelocityPlatformUtils extends PlatformUtils {
     element.getAnnotationOptional(Permission.class).ifPresent(
         permission -> node.editAttributeMutable(VelocityAttributeKeys.PERMISSIONS, s -> s.add(permission.value()), () -> Set.of(permission.value()))
     );
+  }
+
+  private SenderType getSenderType(final List<SourceParameter> parameters) throws UnknownSenderException {
+    return switch (parameters.getFirst().getType().getFullyQualifiedName()) {
+      case VelocityClasses.COMMAND_SOURCE -> SenderType.NORMAL;
+      case VelocityClasses.CONSOLE_COMMAND_SOURCE -> SenderType.CONSOLE;
+      case VelocityClasses.PLAYER -> SenderType.PLAYER;
+      default -> throw new UnknownSenderException(parameters.getFirst().getType().getSourceName() + " is not a valid command source!");
+    };
   }
 }
