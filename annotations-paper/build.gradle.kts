@@ -1,4 +1,4 @@
 dependencies {
-  api(project(":commands-annotations-common"))
+  api(project(":annotations-common"))
   compileOnly(libs.paper.api)
 }

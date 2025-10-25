@@ -1,4 +1,4 @@
 dependencies {
-  api(project(":commands-annotations-paper"))
-  api(project(":commands-processor-common"))
+  api(project(":annotations-paper"))
+  api(project(":processor-common"))
 }
