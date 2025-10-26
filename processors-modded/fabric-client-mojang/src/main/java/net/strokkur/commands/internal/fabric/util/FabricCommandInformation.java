@@ -1,4 +1,4 @@
-package net.strokkur.commands.internal.fabric.client.mojang.util;
+package net.strokkur.commands.internal.fabric.util;
 
 import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceConstructor;

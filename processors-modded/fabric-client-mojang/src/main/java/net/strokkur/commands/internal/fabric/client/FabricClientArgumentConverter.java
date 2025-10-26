@@ -1,4 +1,4 @@
-package net.strokkur.commands.internal.fabric.client.mojang;
+package net.strokkur.commands.internal.fabric.client;
 
 import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
@@ -7,13 +7,14 @@ import net.strokkur.commands.internal.exceptions.ConversionException;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 import org.jspecify.annotations.Nullable;
 
-final class FabricArgumentConverter extends BrigadierArgumentConverter {
-  public FabricArgumentConverter(final MessagerWrapper messagerWrapper) {
+final class FabricClientArgumentConverter extends BrigadierArgumentConverter {
+  public FabricClientArgumentConverter(final MessagerWrapper messagerWrapper) {
     super(messagerWrapper);
   }
 
   @Override
-  protected @Nullable BrigadierArgumentType handleCustomArgumentAnnotations(final String argumentName, final String type, final SourceVariable parameter) throws ConversionException {
+  protected @Nullable BrigadierArgumentType handleCustomArgumentAnnotations(final String argumentName, final String type, final SourceVariable parameter)
+      throws ConversionException {
     return null;
   }
 }
