@@ -126,7 +126,7 @@ public class SourceClassImpl implements SourceClass, ElementGettable<TypeElement
   public List<SourceClass> getNestedClasses(final Predicate<SourceClass> predicate) {
     final List<SourceClass> out = new LinkedList<>();
     for (final Element element : this.element.getEnclosedElements()) {
-      if ((element.getKind() == ElementKind.CLASS || element.getKind() == ElementKind.RECORD)) {
+      if (element.getKind() == ElementKind.CLASS || element.getKind() == ElementKind.RECORD) {
         final SourceClass nested = SourceTypeUtils.getSourceClassType(this.environment, (DeclaredType) element.asType());
         if (predicate.test(nested)) {
           out.add(nested);

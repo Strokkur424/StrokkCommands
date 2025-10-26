@@ -99,6 +99,27 @@ public interface MessagerWrapper {
   }
 
   /**
+   * Prints a formatted message to the {@link Kind#WARNING} channel.
+   */
+  default void warn(String format, Object... arguments) {
+    print(Kind.WARNING, format, arguments);
+  }
+
+  /**
+   * Prints a formatted message about this element to the {@link Kind#WARNING} channel.
+   */
+  default void warnElement(String format, Element element, Object... arguments) {
+    printElement(Kind.WARNING, format, element, arguments);
+  }
+
+  /**
+   * Prints a formatted message about this element to the {@link Kind#WARNING} channel.
+   */
+  default void warnSource(String format, SourceElement element, Object... arguments) {
+    printSource(Kind.WARNING, format, element, arguments);
+  }
+
+  /**
    * Prints a formatted message to the {@link Kind#ERROR} channel.
    */
   default void error(String format, Object... arguments) {
