@@ -27,5 +27,6 @@ jobs:
       - name: Publish
         run: ./gradlew publish
         env:
+          SKIP_TESTS: "true"
           NEXUS_USERNAME: "${{ secrets.NEXUS_USERNAME }}"
           NEXUS_PASSWORD: "${{ secrets.NEXUS_PASSWORD }}"

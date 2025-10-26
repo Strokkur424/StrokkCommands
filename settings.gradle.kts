@@ -13,4 +13,6 @@ sequenceOf("commands").forEach {
   project(":$it-processor").projectDir = file("strokk-$it-processor")
   project(":$it-annotations").projectDir = file("strokk-$it-annotations")
 }
-include(":test-plugin")
+if (System.getenv("SKIP_TESTS") == null) {
+  include(":test-plugin")
+}
