@@ -17,10 +17,9 @@
  */
 package net.strokkur.commands.internal.paper;
 
-import net.strokkur.commands.internal.BuildConstants;
-import net.strokkur.commands.internal.abstraction.SourceConstructor;
+import net.strokkur.commands.internal.PlatformUtils;
+import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.abstraction.SourceParameter;
-import net.strokkur.commands.internal.abstraction.SourceType;
 import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.intermediate.attributes.Attributable;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
@@ -32,14 +31,14 @@ import net.strokkur.commands.internal.paper.util.PaperClasses;
 import net.strokkur.commands.internal.paper.util.PaperCommandInformation;
 import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
 import net.strokkur.commands.internal.util.Classes;
+import net.strokkur.commands.internal.util.PrintParamsHolder;
 import org.jspecify.annotations.Nullable;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperCommandInformation> {
@@ -49,70 +48,40 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
       final @Nullable Writer writer,
       final CommandNode node,
       final PaperCommandInformation commandInformation,
-      final ProcessingEnvironment environment
+      final ProcessingEnvironment environment,
+      final PlatformUtils platformUtils
   ) {
-    super(indent, writer, node, commandInformation, environment);
+    super(indent, writer, node, commandInformation, environment, platformUtils);
   }
 
   @Override
-  public void print() throws IOException {
-    final String packageName = getPackageName();
-    final String brigadierClassName = getBrigadierClassName();
+  protected PrintParamsHolder getParamsHolder() {
+    return new PrintParamsHolder(
+        SourceParameter.combineJavaDocsParameterString(List.of(), getCommandInformation().constructor(), (p) -> true),
+        SourceParameter.combineMethodParameterString(List.of(), getCommandInformation().constructor(), (p) -> true),
+        SourceParameter.combineMethodParameterNameString(List.of(), getCommandInformation().constructor(), (p) -> true),
+        SourceParameter.combineJavaDocsParameterString(List.of("Commands"), getCommandInformation().constructor(), (p) -> true),
+        SourceParameter.combineMethodParameterString(List.of("final Commands commands"), getCommandInformation().constructor(), (p) -> true),
+        SourceVariable::getName
+    );
+  }
 
+  @Override
+  protected void printRegisterMethod(final PrintParamsHolder holder) throws IOException {
     final String description = getCommandInformation().description() == null ? "null" : '"' + getCommandInformation().description() + '"';
     final String aliases = getCommandInformation().aliases() == null ? "" : '"' + String.join("\", \"", List.of(getCommandInformation().aliases())) + '"';
 
-    println("package {};", packageName);
-    println();
-    printImports(getImports());
-    println();
-
-    final String constructorTypeParameters = this.getCommandInformation().constructor() == null
-        ? ""
-        : this.getCommandInformation().constructor().getCombinedTypeAnnotationsString();
-
-    final List<String> createParameters = this.getCommandInformation().constructor() == null
-        ? new ArrayList<>()
-        : this.getCommandInformation().constructor().getParameterStrings();
-    final List<String> registerParameters = new ArrayList<>(createParameters.size() + 1);
-    registerParameters.add("Commands commands");
-    registerParameters.addAll(createParameters);
-
-    final String parameterTypes = this.getCommandInformation().constructor() == null
-        ? ""
-        : String.join(", ", this.getCommandInformation().constructor().getParameters().stream().map(SourceParameter::getType).map(SourceType::getName).toList());
-
-    printBlock("""
-            /**
-             * A class holding the Brigadier source tree generated from
-             * {@link %s} using <a href="https://commands.strokkur.net">StrokkCommands</a>.
-             *
-             * @author Strokkur24 - StrokkCommands
-             * @version %s
-             * @see #create(%s) Creating the LiteralArgumentNode.
-             * @see #register(Commands) Registering the command.
-             */
-            @NullMarked""",
-        getCommandInformation().sourceClass().getName(),
-        BuildConstants.VERSION,
-        parameterTypes
-    );
-
-    println("public final class {} {", brigadierClassName);
-    incrementIndent();
-
-    println();
     printBlock("""
             /**
              * Shortcut for registering the command node returned from
-             * {@link #create({})}. This method uses the provided aliases
+             * {@link #create(%s)}. This method uses the provided aliases
              * and description from the original source file.
              * <p>
              * <h3>Registering the command</h3>
              * <p>
              * This method can safely be called either in your plugin bootstrapper's
-             * {@link io.papermc.paper.plugin.bootstrap.PluginBootstrap#bootstrap(io.papermc.paper.plugin.bootstrap.BootstrapContext)}, your main
-             * class' {@link org.bukkit.plugin.java.JavaPlugin#onLoad()} or {@link org.bukkit.plugin.java.JavaPlugin#onEnable()}
+             * {@link PluginBootstrap#bootstrap(BootstrapContext)}, your main
+             * class' {@link JavaPlugin#onLoad()} or {@link JavaPlugin#onEnable()}
              * method.
              * <p>
              * You need to call it inside of a lifecycle event. General information can be found on the
@@ -122,71 +91,29 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
              * <pre>{@code
              * this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS.newHandler(event -> {
              *     final Commands commands = event.registrar();
-             *     {}.register(commands);
+             *     %s.register(commands);
              * }
              * }</pre>
              */
-            public static{} void register({}) {
-                commands.register(create({}), {}, List.of({}));
+            public static%s void register(%s) {
+                commands.register(create(%s), %s, List.of(%s));
             }""",
-        parameterTypes,
-        brigadierClassName,
-        constructorTypeParameters,
-        String.join(", ", registerParameters),
-        String.join(", ", getCommandInformation().constructor() instanceof SourceConstructor ctor ?
-            ctor.getParameters().stream()
-                .map(SourceVariable::getName)
-                .toList() :
-            Collections.emptyList()
-        ),
+        holder.createJdParams(),
+        getBrigadierClassName(),
+        Optional.ofNullable(getCommandInformation().constructor())
+            .map(SourceMethod::getCombinedTypeAnnotationsString)
+            .orElse(""),
+        holder.registerParams(),
+        holder.createParamNames(),
         description,
         aliases
     );
+  }
 
+  @Override
+  protected void printSemicolon() throws IOException {
     println();
-
-    printBlock("""
-            /**
-             * A method for creating a Brigadier command node which denotes the declared command
-             * in {@link {}}. You can either retrieve the unregistered node with this method
-             * or register it directly with {@link #register({})}.
-             */
-            public static{} LiteralCommandNode<CommandSourceStack> create({}) {""",
-        getCommandInformation().sourceClass().getName(),
-        (parameterTypes.isBlank() ? "Commands" : "Commands, " + parameterTypes),
-        constructorTypeParameters,
-        String.join(", ", createParameters)
-    );
-    incrementIndent();
-
-    printInstanceFields();
-
-    printIndent();
-    print("return ");
-    incrementIndent();
-    printNode(node);
-    println();
-    println(".build();");
-    decrementIndent();
-    decrementIndent();
-    println("}");
-    println();
-
-    printBlock("""
-            /**
-             * The constructor is not accessible. There is no need for an instance
-             * to be created, as no state is stored, and all methods are static.
-             *
-             * @throws IllegalAccessException
-             */
-            private {}() throws IllegalAccessException {
-                throw new IllegalAccessException("Cannot create instance of static class.");
-            }
-            """,
-        brigadierClassName);
-
-    decrementIndent();
-    println("}");
+    printIndented(".build();");
   }
 
   @Override
@@ -197,7 +124,10 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
         PaperClasses.COMMAND_SOURCE_STACK,
         PaperClasses.COMMANDS,
         Classes.LIST,
-        Classes.NULL_MARKED
+        Classes.NULL_MARKED,
+        "io.papermc.paper.plugin.bootstrap.PluginBootstrap",
+        "io.papermc.paper.plugin.bootstrap.BootstrapContext",
+        "org.bukkit.plugin.java.JavaPlugin"
     );
   }
 

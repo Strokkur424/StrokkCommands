@@ -51,6 +51,11 @@ final class PaperPlatformUtils implements PlatformUtils {
   }
 
   @Override
+  public String getNodeReturnType() {
+    return "LiteralCommandNode";
+  }
+
+  @Override
   public void populateNode(final CommandNode node, final AnnotationsHolder element) {
     element.getAnnotationOptional(Permission.class).ifPresent(
         permission -> node.editAttributeMutable(PaperAttributeKeys.PERMISSIONS, s -> s.add(permission.value()), () -> Set.of(permission.value()))

@@ -32,6 +32,10 @@ public interface PlatformUtils {
 
   void populateExecutesNode(final Executable executable, final CommandNode node, final List<SourceParameter> parameters) throws UnknownSenderException;
 
+  default String getNodeReturnType() {
+    return "LiteralArgumentBuilder";
+  }
+
   String getPlatformType();
 
   default void populateNode(CommandNode node, AnnotationsHolder element) {
