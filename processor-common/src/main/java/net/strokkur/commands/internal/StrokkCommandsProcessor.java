@@ -118,8 +118,14 @@ public abstract class StrokkCommandsProcessor<C extends CommandInformation> exte
     }
 
     for (Element element : roundEnv.getElementsAnnotatedWith(Command.class)) {
-      if (!(element instanceof TypeElement typeElement) || typeElement.getNestingKind().isNested()) {
+      if (!(element instanceof TypeElement typeElement)) {
         // Element is not a top-level class
+        continue;
+      }
+
+      if (typeElement.getNestingKind().isNested()) {
+        messagerWrapper.warnElement("This class is annoated with @Command, but is nested. This is unsupported behavior. If this " +
+            "class is meant as a subcommand, annotate it with @Subcommand instead", typeElement);
         continue;
       }
 

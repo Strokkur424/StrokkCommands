@@ -88,7 +88,10 @@ final class PaperBrigadierArgumentConverter extends BrigadierArgumentConverter {
     if (customArg != null) {
       final SourceClass value = variable.getAnnotationSourceClassField(CustomArg.class, "value");
       if (value != null) {
-        return new BrigadierArgumentType("new " + value.getFullyQualifiedName() + "()", "ctx.getArgument(\"" + argumentName + "\", " + type + ".class)", Set.of());
+        return new BrigadierArgumentType(
+            "new " + value.getSourceName() + "()",
+            "ctx.getArgument(\"" + argumentName + "\", " + variable.getType().getSourceName() + ".class)",
+            value.getImports());
       } else {
         throw new ConversionException("Invalid value for @CustomArg annotation");
       }
