@@ -65,7 +65,11 @@ subprojects {
           }
 
           name = "EldoNexus"
-          setUrl("https://eldonexus.de/repository/maven-releases/")
+          if (version.toString().endsWith("-SNAPSHOT")) {
+            setUrl("https://eldonexus.de/repository/maven-snapshots/")
+          } else {
+            setUrl("https://eldonexus.de/repository/maven-releases/")
+          }
         }
       }
 
