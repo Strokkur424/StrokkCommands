@@ -9,6 +9,10 @@ velocity = "3.4.0-SNAPSHOT"
 minecraft = "1.21.10"
 brigadier = "1.0.18"
 
+fabric-loader = "0.17.2"
+fabric-loom = "1.11-SNAPSHOT"
+fabric = "0.134.1+1.21.10"
+
 jspecify = "1.0.0"
 jetbrains-annotations = "24.0.0"
 
@@ -19,12 +23,18 @@ brigadier = { module = "com.mojang:brigadier", version.ref = "brigadier" }
 jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrains-annotations" }
 
+# Modded
+minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
+fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric-loader" }
+fabric-api = { module = "net.fabricmc.fabric-api:fabric-api", version.ref = "fabric" }
+
 [plugins]
 publishdata = { id = "de.chojo.publishdata", version.ref = "publishdata" }
 run-paper = { id = "xyz.jpenilla.run-paper", version.ref = "run" }
 run-velocity = { id = "xyz.jpenilla.run-velocity", version.ref = "run" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 blossom = { id = "net.kyori.blossom", version.ref = "blossom" }
+fabric-loom = { id = "fabric-loom", version.ref = "fabric-loom" }
 
 [bundles]
 annotations = ["jspecify", "jetbrains-annotations"]
