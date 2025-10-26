@@ -23,6 +23,7 @@ import net.strokkur.commands.internal.abstraction.SourceElement;
 import net.strokkur.commands.internal.abstraction.SourceField;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.abstraction.SourceRecord;
+import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
 import net.strokkur.commands.internal.exceptions.UnknownSenderException;
@@ -32,6 +33,7 @@ import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 import org.jspecify.annotations.Nullable;
 
+import java.util.List;
 import java.util.function.Function;
 
 public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapper {
@@ -60,8 +62,14 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
 
   @Override
   public @Nullable CommandNode createCommandTree(final String name, final SourceClass sourceClass) {
-    final CommandNode root = CommandNode.createRoot(LiteralCommandArgument.literal(name, sourceClass));
+    final List<String> split = List.of(name.split(" "));
+    final CommandNode first = CommandNode.createRoot(LiteralCommandArgument.literal(split.getFirst(), sourceClass));
+
     try {
+      final CommandNode root = split.size() == 1 ? first : first.addChildren(split.subList(1, split.size()).stream()
+          .map(str -> LiteralCommandArgument.literal(str, sourceClass))
+          .map(CommandArgument.class::cast)
+          .toList());
       final ClassTransform transform = sourceClass.isRecord() ? this.recordTransform : this.classTransform;
       final CommandNode node = transform.parseRecordComponents(root, sourceClass);
       nodeUtils.applyRegistrableProvider(
@@ -77,7 +85,7 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
     } catch (MismatchedArgumentTypeException e) {
       errorSource(e.getMessage(), sourceClass);
     }
-    return root;
+    return first;
   }
 
   @Override

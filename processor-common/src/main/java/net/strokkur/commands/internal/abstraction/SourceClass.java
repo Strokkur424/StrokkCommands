@@ -73,6 +73,6 @@ public interface SourceClass extends SourceType, AnnotationsHolder {
 
   @Override
   default Set<String> getImports() {
-    return Collections.singleton(getFullyQualifiedName());
+    return Collections.singleton(getPackageName() + '.' + getSourceName());
   }
 }

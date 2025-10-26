@@ -20,6 +20,7 @@ package net.strokkur.testplugin.subcommands;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
+import net.strokkur.commands.Subcommand;
 import net.strokkur.commands.paper.Permission;
 import net.strokkur.commands.paper.RequiresOP;
 import org.bukkit.command.CommandSender;
@@ -28,7 +29,7 @@ import org.bukkit.entity.Player;
 @Command("subcommands")
 public class BetterSubCommands {
 
-  @Command("give")
+  @Subcommand("give")
   record Give(Player target) {
 
     @Executes("holy-relic")
@@ -44,7 +45,7 @@ public class BetterSubCommands {
     }
   }
 
-  @Command("kill")
+  @Subcommand("kill")
   record Kill(Player target, String reason) {
 
     @Executes
@@ -66,7 +67,7 @@ public class BetterSubCommands {
     }
   }
 
-  @Command("help")
+  @Subcommand("help")
   class Help {
 
     @Executes
