@@ -28,6 +28,7 @@ public interface Classes {
 
   // Brigadier types
   String COMMAND = "com.mojang.brigadier.Command";
+  String COMMAND_DISPATCHER = "com.mojang.brigadier.CommandDispatcher";
   String LITERAL_COMMAND_NODE = "com.mojang.brigadier.tree.LiteralCommandNode";
   String LITERAL_ARGUMENT_BUILDER = "com.mojang.brigadier.builder.LiteralArgumentBuilder";
   String SIMPLE_COMMAND_EXCEPTION_TYPE = "com.mojang.brigadier.exceptions.SimpleCommandExceptionType";

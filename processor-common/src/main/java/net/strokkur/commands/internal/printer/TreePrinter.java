@@ -53,9 +53,9 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
     printNode(node, false);
   }
 
-  private void printNode(final CommandNode root, boolean printThen) throws IOException {
+  private void printNode(final CommandNode root, boolean isNested) throws IOException {
     printForArguments(root, initializer -> {
-      if (printThen) {
+      if (isNested) {
         println();
         printIndented(".then(");
         incrementIndent();
@@ -92,12 +92,12 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
         printNode(node, true);
       }
 
-      if (printThen) {
+      if (isNested) {
         decrementIndent();
         println();
         printIndented(")");
       }
-    });
+    }, isNested);
   }
 
   default String getSuccessInt() {
@@ -240,13 +240,17 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
 
   String getArgumentMethodString();
 
-  private void printForArguments(final CommandNode node, final IOExceptionIgnoringConsumer<String> initializer) throws IOException {
+  default String getCommandNameLiteralOverride(final LiteralCommandArgument lit) {
+    return '"' + lit.literal() + '"';
+  }
+
+  private void printForArguments(final CommandNode node, final IOExceptionIgnoringConsumer<String> initializer, final boolean isNested) throws IOException {
     if (node.hasAttribute(AttributeKey.ACCESS_STACK)) {
       node.getAttributeNotNull(AttributeKey.ACCESS_STACK).forEach(getAccessStack()::push);
     }
 
     switch (node.argument()) {
-      case LiteralCommandArgument lit -> initializer.accept("%s(\"%s\")".formatted(getLiteralMethodString(), lit.literal()));
+      case LiteralCommandArgument lit -> initializer.accept("%s(%s)".formatted(getLiteralMethodString(), isNested ? '"' + lit.literal() + '"' : getCommandNameLiteralOverride(lit)));
       case RequiredCommandArgument req -> initializer.accept("%s(\"%s\", %s)".formatted(getArgumentMethodString(), req.argumentName(), req.argumentType().initializer()));
       case MultiLiteralCommandArgument multi -> {
         for (final String literal : multi.literals()) {
