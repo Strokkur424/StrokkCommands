@@ -19,10 +19,12 @@ rootDir.resolve("processors-modded").listFiles()?.forEach {
 
 include("annotations-modded")
 
-sequenceOf("paper", "velocity").forEach {
-  include("test-plugin-$it")
-}
+if (System.getenv("SKIP_TESTS") == null) {
+  sequenceOf("paper", "velocity").forEach {
+    include("test-plugin-$it")
+  }
 
-sequenceOf("fabric").forEach {
-  include("test-mod-$it")
+  sequenceOf("fabric").forEach {
+    include("test-mod-$it")
+  }
 }
