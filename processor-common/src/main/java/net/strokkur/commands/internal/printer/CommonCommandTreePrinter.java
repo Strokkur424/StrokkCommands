@@ -17,14 +17,20 @@
  */
 package net.strokkur.commands.internal.printer;
 
+import net.strokkur.commands.internal.BuildConstants;
+import net.strokkur.commands.internal.PlatformUtils;
+import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.CommandInformation;
+import net.strokkur.commands.internal.util.PrintParamsHolder;
 import org.jspecify.annotations.Nullable;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
@@ -35,6 +41,7 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
   protected final CommandNode node;
   private final Set<String> printedInstances = new TreeSet<>();
   private final ProcessingEnvironment environment;
+  protected final PlatformUtils utils;
 
   private int multiLiteralStackPosition = 0;
 
@@ -45,66 +52,156 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
       final @Nullable Writer writer,
       final CommandNode node,
       final C commandInformation,
-      final ProcessingEnvironment environment
+      final ProcessingEnvironment environment,
+      final PlatformUtils utils
   ) {
     super(indent, writer);
     this.node = node;
     this.commandInformation = commandInformation;
     this.environment = environment;
+    this.utils = utils;
   }
 
-  public String getPackageName() {
+  public final String getPackageName() {
     return commandInformation.sourceClass().getPackageName();
   }
 
-  public String getBrigadierClassName() {
+  public final String getBrigadierClassName() {
     return commandInformation.sourceClass().getName() + "Brigadier";
   }
 
-  public abstract void print() throws IOException;
+  protected abstract PrintParamsHolder getParamsHolder();
+
+  protected abstract void printRegisterMethod(final PrintParamsHolder holder) throws IOException;
+
+  protected void printSemicolon() throws IOException {
+    print(";");
+  }
+
+  public void print() throws IOException {
+    final String packageName = getPackageName();
+    final PrintParamsHolder printParams = getParamsHolder();
+
+    println("package {};", packageName);
+    println();
+    printImports(getImports());
+    println();
+
+    printBlock("""
+            /**
+             * A class holding the Brigadier source tree generated from
+             * {@link %s} using <a href="https://commands.strokkur.net">StrokkCommands</a>.
+             *
+             * @author Strokkur24 - StrokkCommands
+             * @version %s
+             * @see #create(%s) creating the %s
+             * @see #register(%s) registering the command
+             */
+            @NullMarked""",
+        getCommandInformation().sourceClass().getName(),
+        BuildConstants.VERSION,
+        printParams.createJdParams(),
+        utils.getNodeReturnType(),
+        printParams.registerJdParams()
+    );
+
+    println("public final class {} {", getBrigadierClassName());
+    incrementIndent();
+    println();
+
+    printRegisterMethod(printParams);
+
+    println();
+
+    printBlock("""
+            /**
+             * A method for creating a Brigadier command node which denotes the declared command
+             * in {@link %s}. You can either retrieve the unregistered node with this method
+             * or register it directly with {@link #register(%s)}.
+             */
+            public static%s %s<%s> create(%s) {""",
+        getCommandInformation().sourceClass().getName(),
+        printParams.registerJdParams(),
+        Optional.ofNullable(getCommandInformation().constructor())
+            .map(SourceMethod::getCombinedTypeAnnotationsString)
+            .orElse(""),
+        utils.getNodeReturnType(),
+        List.of(utils.getPlatformType().split("\\.")).getLast(),
+        printParams.createParams()
+    );
+    incrementIndent();
+
+    printInstanceFields();
+
+    printIndent();
+    print("return ");
+    incrementIndent();
+    printNode(node);
+    printSemicolon();
+
+    println();
+    decrementIndent();
+    decrementIndent();
+    println("}");
+    println();
+
+    printBlock("""
+            /**
+             * The constructor is not accessible. There is no need for an instance
+             * to be created, as no state is stored and all methods are static.
+             *
+             * @throws IllegalAccessException always
+             */
+            private %s() throws IllegalAccessException {
+                throw new IllegalAccessException("This class cannot be instantiated.");
+            }""",
+        getBrigadierClassName());
+    decrementIndent();
+    println("}");
+  }
 
   @Override
-  public String nextLiteral() {
+  public final String nextLiteral() {
     return this.multiLiteralStack.elementAt(this.multiLiteralStackPosition++);
   }
 
   @Override
-  public void pushLiteral(final String literal) {
+  public final void pushLiteral(final String literal) {
     this.multiLiteralStack.push(literal);
   }
 
   @Override
-  public void popLiteral() {
+  public final void popLiteral() {
     this.multiLiteralStack.pop();
   }
 
   @Override
-  public ProcessingEnvironment environment() {
+  public final ProcessingEnvironment environment() {
     return this.environment;
   }
 
   @Override
-  public void popLiteralPosition() {
+  public final void popLiteralPosition() {
     this.multiLiteralStackPosition--;
   }
 
   @Override
-  public Set<String> getPrintedInstances() {
+  public final Set<String> getPrintedInstances() {
     return printedInstances;
   }
 
   @Override
-  public Stack<ExecuteAccess<?>> getAccessStack() {
+  public final Stack<ExecuteAccess<?>> getAccessStack() {
     return executeAccessStack;
   }
 
   @Override
-  public CommandNode getNode() {
+  public final CommandNode getNode() {
     return node;
   }
 
   @Override
-  public C getCommandInformation() {
+  public final C getCommandInformation() {
     return this.commandInformation;
   }
 }
