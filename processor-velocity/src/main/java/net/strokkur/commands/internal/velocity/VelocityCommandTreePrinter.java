@@ -17,8 +17,7 @@
  */
 package net.strokkur.commands.internal.velocity;
 
-import net.strokkur.commands.internal.BuildConstants;
-import net.strokkur.commands.internal.abstraction.SourceMethod;
+import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.abstraction.SourceParameter;
 import net.strokkur.commands.internal.intermediate.attributes.Attributable;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
@@ -26,6 +25,7 @@ import net.strokkur.commands.internal.intermediate.attributes.Executable;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
 import net.strokkur.commands.internal.util.Classes;
+import net.strokkur.commands.internal.util.PrintParamsHolder;
 import net.strokkur.commands.internal.velocity.util.SenderType;
 import net.strokkur.commands.internal.velocity.util.VelocityAttributeKeys;
 import net.strokkur.commands.internal.velocity.util.VelocityClasses;
@@ -47,65 +47,46 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
       final @Nullable Writer writer,
       final CommandNode node,
       final VelocityCommandInformation commandInformation,
-      final ProcessingEnvironment environment
+      final ProcessingEnvironment environment,
+      final PlatformUtils utils
   ) {
-    super(indent, writer, node, commandInformation, environment);
+    super(indent, writer, node, commandInformation, environment, utils);
   }
 
   @Override
-  public void print() throws IOException {
-    println("package {};", getPackageName());
-    println();
-    printImports(getImports());
-    println();
+  protected PrintParamsHolder getParamsHolder() {
+    return new PrintParamsHolder(
+        SourceParameter.combineJavaDocsParameterString(
+            List.of("ProxyServer"),
+            getCommandInformation().constructor(),
+            (p) -> !p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)
+        ),
+        SourceParameter.combineMethodParameterString(
+            List.of("final ProxyServer server"),
+            getCommandInformation().constructor(),
+            (p) -> !p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)
+        ),
+        SourceParameter.combineMethodParameterNameString(
+            List.of("server"),
+            getCommandInformation().constructor(),
+            (p) -> !p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)
+        ),
+        SourceParameter.combineJavaDocsParameterString(
+            List.of("ProxyServer", "Object"),
+            getCommandInformation().constructor(),
+            (p) -> !p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)
+        ),
+        SourceParameter.combineMethodParameterString(
+            List.of("final ProxyServer server", "final Object plugin"),
+            getCommandInformation().constructor(),
+            (p) -> !p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)
+        ),
+        (p) -> p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER) ? "server" : p.getName()
+    );
+  }
 
-    final String createJdParams = SourceParameter.combineJavaDocsParameterString(
-        List.of("ProxyServer"),
-        getCommandInformation().constructor(),
-        (p) -> !p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)
-    );
-    final String registerJdParams = SourceParameter.combineJavaDocsParameterString(
-        List.of("ProxyServer", "Object"),
-        getCommandInformation().constructor(),
-        (p) -> !p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)
-    );
-    final String createParams = SourceParameter.combineMethodParameterString(
-        List.of("final ProxyServer server"),
-        getCommandInformation().constructor(),
-        (p) -> !p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)
-    );
-    final String registerParams = SourceParameter.combineMethodParameterString(
-        List.of("final ProxyServer server", "final Object plugin"),
-        getCommandInformation().constructor(),
-        (p) -> !p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)
-    );
-    final String createParamNames = SourceParameter.combineMethodParameterNameString(
-        List.of("server"),
-        getCommandInformation().constructor(),
-        (p) -> !p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)
-    );
-
-    printBlock("""
-            /**
-             * A class holding the Brigadier source tree generated from
-             * {@link %s} using <a href="https://commands.strokkur.net">StrokkCommands</a>.
-             *
-             * @author Strokkur24 - StrokkCommands
-             * @version %s
-             * @see #create(%s) creating the LiteralArgumentBuilder
-             * @see #register(%s) registering the command
-             */
-            @NullMarked""",
-        getCommandInformation().sourceClass().getName(),
-        BuildConstants.VERSION,
-        createJdParams,
-        registerJdParams
-    );
-
-    println("public final class {} {", getBrigadierClassName());
-    incrementIndent();
-
-    println();
+  @Override
+  protected void printRegisterMethod(final PrintParamsHolder holder) throws IOException {
     printBlock("""
             /**
              * Shortcut for registering the command node returned from
@@ -128,13 +109,13 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
             public static void register(%s) {
                 final BrigadierCommand command = new BrigadierCommand(create(%s));
                 final CommandMeta meta = server.getCommandManager().metaBuilder(command)""",
-        createJdParams,
+        holder.createJdParams(),
         getBrigadierClassName(),
-        registerParams,
-        createParamNames
+        holder.registerParams(),
+        holder.createParamNames()
     );
 
-    Optional<String @Nullable []> aliases = Optional.ofNullable(getCommandInformation().aliases());
+    final Optional<String @Nullable []> aliases = Optional.ofNullable(getCommandInformation().aliases());
     if (aliases.isPresent()) {
       incrementIndent();
       incrementIndent();
@@ -151,51 +132,6 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
         
             server.getCommandManager().register(meta, command);
         }""");
-
-    println();
-
-    printBlock("""
-            /**
-             * A method for creating a Brigadier command node which denotes the declared command
-             * in {@link %s}. You can either retrieve the unregistered node with this method
-             * or register it directly with {@link #register(%s)}.
-             */
-            public static%s LiteralArgumentBuilder<CommandSource> create(%s) {""",
-        getCommandInformation().sourceClass().getName(),
-        registerJdParams,
-        Optional.ofNullable(getCommandInformation().constructor())
-            .map(SourceMethod::getCombinedTypeAnnotationsString)
-            .orElse(""),
-        createParams
-    );
-    incrementIndent();
-
-    printInstanceFields();
-
-    printIndent();
-    print("return ");
-    incrementIndent();
-    printNode(node);
-    print(";");
-    println();
-    decrementIndent();
-    decrementIndent();
-    println("}");
-    println();
-
-    printBlock("""
-            /**
-             * The constructor is not accessible. There is no need for an instance
-             * to be created, as no state is stored, and all methods are static.
-             *
-             * @throws IllegalAccessException always
-             */
-            private %s() throws IllegalAccessException {
-                throw new IllegalAccessException("This class cannot be instantiated.");
-            }""",
-        getBrigadierClassName());
-    decrementIndent();
-    println("}");
   }
 
   @Override
