@@ -20,10 +20,8 @@ package net.strokkur.commands.internal.paper.util;
 import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceConstructor;
 import net.strokkur.commands.internal.util.CommandInformation;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-@NullMarked
 public record PaperCommandInformation(
     @Nullable SourceConstructor constructor,
     SourceClass sourceClass,

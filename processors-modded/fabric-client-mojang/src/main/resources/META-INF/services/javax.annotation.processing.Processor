@@ -1,1 +1,2 @@
-net.strokkur.commands.internal.fabric.client.mojang.FabricStrokkCommandsProcessor
+net.strokkur.commands.internal.fabric.client.FabricClientStrokkCommandsProcessor
+net.strokkur.commands.internal.fabric.server.FabricServerStrokkCommandsProcessor

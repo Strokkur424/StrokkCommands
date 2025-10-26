@@ -17,6 +17,7 @@
  */
 package net.strokkur.commands.internal.paper;
 
+import net.strokkur.commands.Command;
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.StrokkCommandsProcessor;
 import net.strokkur.commands.internal.abstraction.SourceClass;
@@ -33,7 +34,17 @@ import net.strokkur.commands.paper.Description;
 
 import java.util.Optional;
 
-public final class PaperStrokkCommandsProcessor extends StrokkCommandsProcessor<PaperCommandInformation> {
+public final class PaperStrokkCommandsProcessor extends StrokkCommandsProcessor<Command, PaperCommandInformation> {
+
+  @Override
+  protected Class<Command> targetAnnotationClass() {
+    return Command.class;
+  }
+
+  @Override
+  protected String getCommandName(final Command annotation) {
+    return annotation.value();
+  }
 
   @Override
   protected PlatformUtils getPlatformUtils() {
