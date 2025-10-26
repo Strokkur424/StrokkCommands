@@ -1,4 +1,4 @@
-@NullMarked
+@ApiStatus.Internal
 package net.strokkur.commands.internal.abstraction.impl;
 
-import org.jspecify.annotations.NullMarked;
+import org.jetbrains.annotations.ApiStatus;

@@ -17,6 +17,7 @@
  */
 package net.strokkur.commands.internal.velocity;
 
+import net.strokkur.commands.Command;
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.StrokkCommandsProcessor;
 import net.strokkur.commands.internal.abstraction.SourceClass;
@@ -32,7 +33,17 @@ import net.strokkur.commands.velocity.Aliases;
 
 import java.util.Optional;
 
-public final class VelocityStrokkCommandsProcessor extends StrokkCommandsProcessor<VelocityCommandInformation> {
+public final class VelocityStrokkCommandsProcessor extends StrokkCommandsProcessor<Command, VelocityCommandInformation> {
+
+  @Override
+  protected Class<Command> targetAnnotationClass() {
+    return Command.class;
+  }
+
+  @Override
+  protected String getCommandName(final Command annotation) {
+    return annotation.value();
+  }
 
   @Override
   protected PlatformUtils getPlatformUtils() {

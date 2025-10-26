@@ -17,10 +17,8 @@
  */
 package net.strokkur.commands.internal;
 
-import net.strokkur.commands.Command;
 import net.strokkur.commands.CustomRequirement;
 import net.strokkur.commands.CustomSuggestion;
-import net.strokkur.commands.meta.StrokkCommandsDebug;
 import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.impl.SourceClassImpl;
 import net.strokkur.commands.internal.abstraction.impl.SourceRecordImpl;
@@ -39,6 +37,7 @@ import net.strokkur.commands.internal.parsing.ExecutesTransform;
 import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
 import net.strokkur.commands.internal.util.CommandInformation;
 import net.strokkur.commands.internal.util.MessagerWrapper;
+import net.strokkur.commands.meta.StrokkCommandsDebug;
 import org.jspecify.annotations.NullUnmarked;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -55,11 +54,15 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
-public abstract class StrokkCommandsProcessor<C extends CommandInformation> extends AbstractProcessor {
+public abstract class StrokkCommandsProcessor<A extends Annotation, C extends CommandInformation> extends AbstractProcessor {
+
+  protected abstract Class<A> targetAnnotationClass();
+
+  protected abstract String getCommandName(A annotation);
 
   @Override
   public Set<String> getSupportedAnnotationTypes() {
-    return Set.of(Command.class.getCanonicalName());
+    return Set.of(targetAnnotationClass().getCanonicalName());
   }
 
   @Override
@@ -117,15 +120,19 @@ public abstract class StrokkCommandsProcessor<C extends CommandInformation> exte
       System.clearProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY);
     }
 
-    for (Element element : roundEnv.getElementsAnnotatedWith(Command.class)) {
+    for (Element element : roundEnv.getElementsAnnotatedWith(targetAnnotationClass())) {
       if (!(element instanceof TypeElement typeElement)) {
         // Element is not a top-level class
         continue;
       }
 
       if (typeElement.getNestingKind().isNested()) {
-        messagerWrapper.warnElement("This class is annoated with @Command, but is nested. This is unsupported behavior. If this " +
-            "class is meant as a subcommand, annotate it with @Subcommand instead", typeElement);
+        messagerWrapper.warnElement(
+            "This class is annotated with @%s, but is nested. This is unsupported behavior. If this " +
+                "class is meant as a subcommand, annotate it with @Subcommand instead",
+            typeElement,
+            targetAnnotationClass().getSimpleName()
+        );
         continue;
       }
 
@@ -161,7 +168,7 @@ public abstract class StrokkCommandsProcessor<C extends CommandInformation> exte
     boolean debug = System.getProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY) != null;
 
     final C commandInformation = getCommandInformation(sourceClass);
-    final CommandNode commandTree = parser.createCommandTree(sourceClass.getAnnotationElseThrow(Command.class).value(), sourceClass);
+    final CommandNode commandTree = parser.createCommandTree(getCommandName(sourceClass.getAnnotationElseThrow(targetAnnotationClass())), sourceClass);
     if (commandTree == null) {
       return;
     }

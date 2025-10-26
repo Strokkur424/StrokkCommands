@@ -32,7 +32,7 @@ import java.lang.annotation.Target;
 /// Example usage:
 /// ```java
 /// @Command("mycommand")
-/// classMyCommand {
+/// class MyCommand {
 ///   /* command definition here */
 /// }
 /// ```

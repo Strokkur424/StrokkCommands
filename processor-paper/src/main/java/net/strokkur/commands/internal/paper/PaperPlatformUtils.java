@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Set;
 
 final class PaperPlatformUtils implements PlatformUtils {
+
   @Override
   public int executableFirstIndexToParse(final List<SourceParameter> parameters) {
     return getExecutorType(parameters) == ExecutorType.NONE ? 1 : 2;

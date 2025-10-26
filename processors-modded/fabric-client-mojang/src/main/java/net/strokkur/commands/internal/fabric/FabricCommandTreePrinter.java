@@ -1,11 +1,13 @@
-package net.strokkur.commands.internal.fabric.client.mojang;
+package net.strokkur.commands.internal.fabric;
 
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.abstraction.SourceParameter;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
-import net.strokkur.commands.internal.fabric.client.mojang.util.FabricClasses;
-import net.strokkur.commands.internal.fabric.client.mojang.util.FabricCommandInformation;
+import net.strokkur.commands.internal.fabric.client.FabricClientCommandTreePrinter;
+import net.strokkur.commands.internal.fabric.server.FabricServerCommandTreePrinter;
+import net.strokkur.commands.internal.fabric.util.FabricClasses;
+import net.strokkur.commands.internal.fabric.util.FabricCommandInformation;
 import net.strokkur.commands.internal.intermediate.attributes.Attributable;
 import net.strokkur.commands.internal.intermediate.attributes.Executable;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
@@ -21,7 +23,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-final class FabricCommandTreePrinter extends CommonCommandTreePrinter<FabricCommandInformation> {
+public abstract sealed class FabricCommandTreePrinter extends CommonCommandTreePrinter<FabricCommandInformation>
+    permits FabricServerCommandTreePrinter, FabricClientCommandTreePrinter {
   public FabricCommandTreePrinter(
       final int indent,
       final @Nullable Writer writer,
@@ -33,8 +36,16 @@ final class FabricCommandTreePrinter extends CommonCommandTreePrinter<FabricComm
     super(indent, writer, node, commandInformation, environment, utils);
   }
 
+  protected abstract String getSourceName();
+
+  protected abstract String modInitializerJd();
+
+  protected abstract String registrationCallbackClassName();
+
+  protected abstract String callbackEventLambdaParams();
+
   @Override
-  protected PrintParamsHolder getParamsHolder() {
+  protected final PrintParamsHolder getParamsHolder() {
     return new PrintParamsHolder(
         SourceParameter.combineJavaDocsParameterString(
             List.of("String", "CommandBuildContext"),
@@ -57,7 +68,7 @@ final class FabricCommandTreePrinter extends CommonCommandTreePrinter<FabricComm
             (p) -> !p.getType().getFullyQualifiedName().equals(FabricClasses.COMMAND_BUILD_CONTEXT)
         ),
         SourceParameter.combineMethodParameterNameString(
-            List.of("final CommandDispatcher<FabricClientCommandSource> dispatcher", "final CommandBuildContext registryAccess"),
+            List.of("final CommandDispatcher<%s> dispatcher".formatted(getSourceName()), "final CommandBuildContext registryAccess"),
             getCommandInformation().constructor(),
             (p) -> !p.getType().getFullyQualifiedName().equals(FabricClasses.COMMAND_BUILD_CONTEXT)
         ),
@@ -66,7 +77,7 @@ final class FabricCommandTreePrinter extends CommonCommandTreePrinter<FabricComm
   }
 
   @Override
-  protected void printRegisterMethod(final PrintParamsHolder holder) throws IOException {
+  protected final void printRegisterMethod(final PrintParamsHolder holder) throws IOException {
     final List<String> namesToRegister = new ArrayList<>();
     namesToRegister.add(((LiteralCommandArgument) node.argument()).literal());
     namesToRegister.addAll(List.of(getCommandInformation().aliases()));
@@ -80,12 +91,12 @@ final class FabricCommandTreePrinter extends CommonCommandTreePrinter<FabricComm
              *
              * <h3>Registering the command</h3>
              *
-             * This method should be called in your client main class' {@link ClientModInitializer#onInitializeClient()} method
-             * inside of a {@link ClientCommandRegistrationCallback} event. You can find some information on commands
+             * This method should be called in your client main class' {@link %s} method
+             * inside of a {@link %s} event. You can find some information on commands
              * in the <a href="https://docs.fabricmc.net/develop/commands/basics">Fabric Documentation</a>.
              * <p>
              * <pre>{@code
-             * ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
+             * %s.EVENT.register(%s -> {
              *   %s.register(dispatcher, registryAccess);
              * });
              * }</pre>
@@ -96,6 +107,10 @@ final class FabricCommandTreePrinter extends CommonCommandTreePrinter<FabricComm
                 }
             }""",
         holder.createJdParams(),
+        modInitializerJd(),
+        registrationCallbackClassName(),
+        registrationCallbackClassName(),
+        callbackEventLambdaParams(),
         getBrigadierClassName(),
         Optional.ofNullable(getCommandInformation().constructor())
             .map(SourceMethod::getCombinedTypeAnnotationsString)
@@ -112,10 +127,6 @@ final class FabricCommandTreePrinter extends CommonCommandTreePrinter<FabricComm
         FabricClasses.COMMAND,
         FabricClasses.COMMAND_DISPATCHER,
         FabricClasses.COMMAND_BUILD_CONTEXT,
-        FabricClasses.CLIENT_COMMAND_MANAGER,
-        FabricClasses.CLIENT_COMMAND_REGISTRATION_CALLBACK,
-        FabricClasses.CLIENT_MOD_INITIALIZER,
-        FabricClasses.FABRIC_CLIENT_COMMAND_SOURCE,
         FabricClasses.LITERAL_ARGUMENT_BUILDER,
         FabricClasses.LIST,
         FabricClasses.NULL_MARKED
@@ -123,32 +134,22 @@ final class FabricCommandTreePrinter extends CommonCommandTreePrinter<FabricComm
   }
 
   @Override
-  public String getCommandNameLiteralOverride(final LiteralCommandArgument lit) {
+  public final String getCommandNameLiteralOverride(final LiteralCommandArgument lit) {
     return "commandName";
   }
 
   @Override
-  public void prefixPrintExecutableInner(final CommandNode node, final Executable executable) throws IOException {
+  public final void prefixPrintExecutableInner(final CommandNode node, final Executable executable) throws IOException {
     // noop
   }
 
   @Override
-  public void printFirstArguments(final Executable executable) throws IOException {
+  public final void printFirstArguments(final Executable executable) throws IOException {
     printIndented("ctx.getSource()");
   }
 
   @Override
-  public @Nullable String getExtraRequirements(final Attributable node) {
+  public final @Nullable String getExtraRequirements(final Attributable node) {
     return null;
-  }
-
-  @Override
-  public String getLiteralMethodString() {
-    return "ClientCommandManager.literal";
-  }
-
-  @Override
-  public String getArgumentMethodString() {
-    return "ClientCommandManager.argument";
   }
 }

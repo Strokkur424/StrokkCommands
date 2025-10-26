@@ -1,4 +1,4 @@
-package net.strokkur.commands.internal.fabric.client.mojang;
+package net.strokkur.commands.internal.fabric;
 
 import net.strokkur.commands.internal.intermediate.CommonTreePostProcessor;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;

@@ -17,9 +17,6 @@
  */
 package net.strokkur.commands.internal.paper.util;
 
-import org.jspecify.annotations.NullMarked;
-
-@NullMarked
 public enum ExecutorType {
   NONE,
   ENTITY("source.getExecutor() != null"),

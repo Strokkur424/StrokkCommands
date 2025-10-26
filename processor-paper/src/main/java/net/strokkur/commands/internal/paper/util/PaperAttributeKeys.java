@@ -18,12 +18,10 @@
 package net.strokkur.commands.internal.paper.util;
 
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
-import org.jspecify.annotations.NullMarked;
 
 import java.util.HashSet;
 import java.util.Set;
 
-@NullMarked
 public class PaperAttributeKeys {
   public static final AttributeKey<ExecutorType> EXECUTOR_TYPE = AttributeKey.create("executor_type", ExecutorType.NONE);
   public static final AttributeKey<Boolean> REQUIRES_OP = AttributeKey.create("requires_op", false);

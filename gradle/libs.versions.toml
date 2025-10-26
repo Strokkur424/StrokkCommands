@@ -7,7 +7,7 @@ blossom = "2.1.0"
 paper = "1.21.10-R0.1-SNAPSHOT"
 velocity = "3.4.0-SNAPSHOT"
 minecraft = "1.21.10"
-brigadier = "1.0.18"
+brigadier = "1.4.0"
 
 fabric-loader = "0.17.2"
 fabric-loom = "1.11-SNAPSHOT"
@@ -19,7 +19,7 @@ jetbrains-annotations = "24.0.0"
 [libraries]
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
 velocity-api = { module = "com.velocitypowered:velocity-api", version.ref = "velocity" }
-brigadier = { module = "com.mojang:brigadier", version.ref = "brigadier" }
+brigadier = { module = "net.strokkur:brigadier", version.ref = "brigadier" }
 jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrains-annotations" }
 
