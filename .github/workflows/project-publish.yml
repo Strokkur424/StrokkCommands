@@ -3,10 +3,11 @@ name: 'StrokkCommands: Publish'
 on:
   push:
     tags: [ "*" ]
+  workflow_dispatch:
 
 jobs:
   publish:
-    environment: build
+    environment: publish
     runs-on: ubuntu-latest
     name: Publish to EldoNexus
 
@@ -26,6 +27,5 @@ jobs:
       - name: Publish
         run: ./gradlew publish
         env:
-          PUBLIC_BUILD: true
           NEXUS_USERNAME: "${{ secrets.NEXUS_USERNAME }}"
           NEXUS_PASSWORD: "${{ secrets.NEXUS_PASSWORD }}"
