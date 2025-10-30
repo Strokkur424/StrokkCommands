@@ -17,7 +17,6 @@
  */
 package net.strokkur.commands.internal.parsing;
 
-import net.strokkur.commands.Executes;
 import net.strokkur.commands.Subcommand;
 import net.strokkur.commands.internal.NodeUtils;
 import net.strokkur.commands.internal.abstraction.AnnotationsHolder;
@@ -59,19 +58,10 @@ interface NodeTransform<S extends SourceElement> extends ForwardingMessagerWrapp
     return populateNode(parent, node, element);
   }
 
-  default CommandNode createExecutesNode(CommandNode parent, AnnotationsHolder element) throws MismatchedArgumentTypeException {
-    CommandNode thisPath = createLiteralSequence(parent, element, Executes.class, Executes::value);
-    return populateNode(parent, thisPath, element);
-  }
-
   @Contract("_,!null,_->!null;!null,_,_->!null")
   default CommandNode populateNode(final @Nullable CommandNode parent, final @Nullable CommandNode thisPath, final AnnotationsHolder element) {
     final CommandNode out = thisPath == null ? parent : thisPath;
-    Objects.requireNonNull(out);
-
-    // Add permission and RequiresOP clauses
-    nodeUtils().platformUtils().populateNode(out, element);
-
+    nodeUtils().platformUtils().populateNode(Objects.requireNonNull(out), element);
     return out;
   }
 

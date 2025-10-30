@@ -20,22 +20,27 @@ package net.strokkur.testplugin.flattening;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
 import net.strokkur.commands.Literal;
+import net.strokkur.commands.paper.Permission;
 import org.bukkit.command.CommandSender;
 
 @Command("flat-args")
+//@Permission("some.perm.root")
 class ArgumentFlattening {
 
   @Executes
+  @Permission("some.perm.1")
   void stringThenInt(CommandSender sender, String string, int i) {
 
   }
 
   @Executes
+  @Permission("some.perm.2")
   void stringThenFloat(CommandSender sender, String string, float f) {
 
   }
 
   @Executes
+  @Permission("some.perm.3")
   void stringThenLiteral(CommandSender sender, String string, @Literal String il) {
 
   }

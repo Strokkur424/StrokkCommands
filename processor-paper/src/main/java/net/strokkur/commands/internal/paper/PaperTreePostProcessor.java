@@ -116,27 +116,27 @@ final class PaperTreePostProcessor extends CommonTreePostProcessor {
     }
   }
 
-  private void handlePermissions(final CommandNode root) {
-    if (!root.hasAttribute(PaperAttributeKeys.PERMISSIONS)) {
-      final Set<String> thisPermissions = root.getAttributeNotNull(PaperAttributeKeys.PERMISSIONS);
-      final Collection<CommandNode> children = root.children();
+  private void handlePermissions(final CommandNode node) {
+    if (!node.hasAttribute(PaperAttributeKeys.PERMISSIONS)) {
+      final Set<String> permissions = node.getAttributeNotNull(PaperAttributeKeys.PERMISSIONS);
+      final Collection<CommandNode> children = node.children();
 
-      for (final CommandNode child : root.children()) {
+      for (final CommandNode child : node.children()) {
         if (!child.hasAttribute(PaperAttributeKeys.PERMISSIONS)) {
           // If a child doesn't have permissions, do not set any permissions for the parent
-          thisPermissions.clear();
+          permissions.clear();
           break;
         }
 
-        thisPermissions.addAll(child.getAttributeNotNull(PaperAttributeKeys.PERMISSIONS));
+        permissions.addAll(child.getAttributeNotNull(PaperAttributeKeys.PERMISSIONS));
         if (children.size() == 1) {
           // We only remove the permissions if this path only has one child, meaning no cross-merging happens.
           child.removeAttribute(PaperAttributeKeys.PERMISSIONS);
         }
       }
 
-      if (!thisPermissions.isEmpty()) {
-        root.setAttribute(PaperAttributeKeys.PERMISSIONS, thisPermissions);
+      if (!permissions.isEmpty()) {
+        node.setAttribute(PaperAttributeKeys.PERMISSIONS, permissions);
       }
     }
   }
