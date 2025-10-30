@@ -24,7 +24,7 @@ import net.strokkur.commands.paper.Permission;
 import org.bukkit.command.CommandSender;
 
 @Command("flat-args")
-//@Permission("some.perm.root")
+@Permission("some.perm.root")
 class ArgumentFlattening {
 
   @Executes

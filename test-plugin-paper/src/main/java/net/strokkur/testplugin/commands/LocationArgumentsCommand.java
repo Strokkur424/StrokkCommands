@@ -19,6 +19,7 @@ package net.strokkur.testplugin.commands;
 
 import io.papermc.paper.math.BlockPosition;
 import io.papermc.paper.math.FinePosition;
+import io.papermc.paper.math.Rotation;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
@@ -56,5 +57,10 @@ class LocationArgumentsCommand {
     sender.sendRichMessage("<green>You entered: <white><world>",
         Placeholder.unparsed("world", world.getName())
     );
+  }
+
+  @Executes("rotation")
+  void execute(CommandSender sender, Rotation rotation) {
+    // ...
   }
 }
