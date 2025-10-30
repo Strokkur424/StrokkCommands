@@ -76,9 +76,9 @@ public sealed class ExecutesTransform implements NodeTransform<SourceMethod>, Fo
 
     final List<CommandArgument> args = nodeUtils().parseArguments(arguments);
     final CommandNode out = thisPath.addChildren(args);
-    nodeUtils().platformUtils().populateNode(out, element);
 
-    this.nodeUtils().applyRegistrableProvider(
+    populatePath(out, element, args, parameters);
+    nodeUtils().applyRegistrableProvider(
         out,
         element,
         nodeUtils().requirementRegistry(),
@@ -86,7 +86,8 @@ public sealed class ExecutesTransform implements NodeTransform<SourceMethod>, Fo
         "requirement"
     );
 
-    populatePath(out, element, args, parameters);
+    nodeUtils().platformUtils().populateNode(out, element);
+
     debug("  | {}: Current tree for thisPath: {}", transformName(), thisPath);
   }
 
