@@ -23,6 +23,7 @@ import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceField;
 
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.VariableElement;
 
 public class SourceFieldImpl extends AbstractSourceVariableImpl<VariableElement> implements SourceField {
@@ -40,6 +41,10 @@ public class SourceFieldImpl extends AbstractSourceVariableImpl<VariableElement>
 
   @Override
   public boolean isInitialized() {
+    if (this.getModifiers().contains(Modifier.FINAL)) {
+      return true;
+    }
+
     final Trees trees = Trees.instance(this.environment);
     final VariableTree fieldTree = (VariableTree) trees.getTree(element);
     return fieldTree.getInitializer() != null;
