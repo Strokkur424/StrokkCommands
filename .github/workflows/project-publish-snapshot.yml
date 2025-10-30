@@ -6,10 +6,10 @@ on:
 
 jobs:
   publish:
-    if: contains(github.event.pull_request.labels, 'publish snapshot')
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'publish snapshot') }}
+    name: Publish Snapshot to EldoNexus
     environment: publish-snapshot
     runs-on: ubuntu-latest
-    name: Publish Snapshot to EldoNexus
 
     steps:
       - name: Checkout
