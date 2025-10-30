@@ -181,6 +181,15 @@ final class PaperBrigadierArgumentConverter extends BrigadierArgumentConverter {
     ), "io.papermc.paper.command.brigadier.argument.position.ColumnFinePosition");
 
     putFor((p, name) -> BrigadierArgumentType.of(
+        "ArgumentTypes.rotation()",
+        "ctx.getArgument(\"%s\", RotationResolver.class).resolve(ctx.getSource())".formatted(name),
+        Set.of(
+            "io.papermc.paper.command.brigadier.argument.ArgumentTypes",
+            "io.papermc.paper.command.brigadier.argument.resolvers.RotationResolver"
+        )
+    ), "io.papermc.paper.math.Rotation");
+
+    putFor((p, name) -> BrigadierArgumentType.of(
         "ArgumentTypes.world()",
         "ctx.getArgument(\"%s\", World.class)".formatted(name),
         Set.of(
