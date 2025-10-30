@@ -66,6 +66,10 @@ public interface Attributable {
     return getAttribute(orElse);
   }
 
+  default <U, V extends U> boolean hasEitherAttribute(AttributeKey<U> firstKey, AttributeKey<V> orElse) {
+    return getEitherAttribute(firstKey, orElse) != null;
+  }
+
   default <V> void editAttribute(AttributeKey<V> key, Function<V, V> action, @Nullable Supplier<V> ifNotExists) {
     if (hasAttribute(key)) {
       setAttribute(key, action.apply(getAttributeNotNull(key)));
