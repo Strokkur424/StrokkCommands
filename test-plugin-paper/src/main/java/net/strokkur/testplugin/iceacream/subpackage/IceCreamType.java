@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.testplugin.iceacream;
+package net.strokkur.testplugin.iceacream.subpackage;
 
 public enum IceCreamType {
   VANILLA,

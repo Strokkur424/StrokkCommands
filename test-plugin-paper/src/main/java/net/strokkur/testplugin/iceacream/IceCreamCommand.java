@@ -21,6 +21,8 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
 import net.strokkur.commands.paper.arguments.CustomArg;
+import net.strokkur.testplugin.iceacream.subpackage.IceCreamArgument;
+import net.strokkur.testplugin.iceacream.subpackage.IceCreamType;
 import org.bukkit.command.CommandSender;
 
 @Command("icecream")

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.testplugin.iceacream;
+package net.strokkur.testplugin.iceacream.subpackage;
 
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -27,12 +27,13 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import io.papermc.paper.command.brigadier.MessageComponentSerializer;
 import io.papermc.paper.command.brigadier.argument.CustomArgumentType;
 import net.kyori.adventure.text.Component;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+@NullMarked
 public class IceCreamArgument implements CustomArgumentType.Converted<IceCreamType, String> {
-
   private static final List<IceCreamType> TYPES = List.of(IceCreamType.values());
 
   private static final DynamicCommandExceptionType NOT_ICE_CREAM = new DynamicCommandExceptionType(

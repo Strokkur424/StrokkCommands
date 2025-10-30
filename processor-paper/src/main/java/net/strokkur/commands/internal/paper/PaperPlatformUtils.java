@@ -29,6 +29,7 @@ import net.strokkur.commands.paper.Executor;
 import net.strokkur.commands.paper.Permission;
 import net.strokkur.commands.paper.RequiresOP;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -57,12 +58,16 @@ final class PaperPlatformUtils implements PlatformUtils {
   }
 
   @Override
-  public void populateNode(final CommandNode node, final AnnotationsHolder element) {
-    element.getAnnotationOptional(Permission.class).ifPresent(
-        permission -> node.editAttributeMutable(PaperAttributeKeys.PERMISSIONS, s -> s.add(permission.value()), () -> Set.of(permission.value()))
+  public void populateNode(final CommandNode node, final AnnotationsHolder holder) {
+    holder.getAnnotationOptional(Permission.class).ifPresent(
+        permission -> node.editAttributeMutable(
+            PaperAttributeKeys.PERMISSIONS,
+            s -> s.add(permission.value()),
+            () -> new HashSet<>(Set.of(permission.value()))
+        )
     );
 
-    if (element.hasAnnotation(RequiresOP.class)) {
+    if (holder.hasAnnotation(RequiresOP.class)) {
       node.setAttribute(PaperAttributeKeys.REQUIRES_OP, true);
     }
   }

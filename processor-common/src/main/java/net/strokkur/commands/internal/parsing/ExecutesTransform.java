@@ -47,7 +47,8 @@ public sealed class ExecutesTransform implements NodeTransform<SourceMethod>, Fo
   }
 
   protected CommandNode createThisPath(final CommandNode parent, final SourceMethod element) throws MismatchedArgumentTypeException {
-    return this.createExecutesNode(parent, element);
+    final CommandNode out = createLiteralSequence(parent, element, Executes.class, Executes::value);
+    return out == null ? parent : out;
   }
 
   protected void populatePath(final CommandNode node, final SourceMethod method, final List<CommandArgument> args, final List<SourceParameter> parameters)
@@ -75,6 +76,7 @@ public sealed class ExecutesTransform implements NodeTransform<SourceMethod>, Fo
 
     final List<CommandArgument> args = nodeUtils().parseArguments(arguments);
     final CommandNode out = thisPath.addChildren(args);
+    nodeUtils().platformUtils().populateNode(out, element);
 
     this.nodeUtils().applyRegistrableProvider(
         out,

@@ -37,6 +37,7 @@ import org.jspecify.annotations.Nullable;
 import javax.annotation.processing.ProcessingEnvironment;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -192,26 +193,31 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
 
   @Override
   public @Nullable String getExtraRequirements(final Attributable node) {
-    final boolean operator = node.getAttributeNotNull(PaperAttributeKeys.REQUIRES_OP);
+    final List<String> extraRequirements = new ArrayList<>();
 
-    final ExecutorType executorType;
-    if (node.hasAttribute(PaperAttributeKeys.EXECUTOR_TYPE)) {
-      executorType = node.getAttributeNotNull(PaperAttributeKeys.EXECUTOR_TYPE);
-    } else {
-      executorType = ExecutorType.NONE;
-    }
-
-    if (operator) {
-      if (executorType != ExecutorType.NONE) {
-        return "source.getSender().isOp() && %s".formatted(executorType.getPredicate());
-      }
-      return "source.getSender().isOp()";
-    }
-
+    final ExecutorType executorType = node.getAttributeNotNull(PaperAttributeKeys.EXECUTOR_TYPE);
     if (executorType != ExecutorType.NONE) {
-      return executorType.getPredicate();
+      extraRequirements.add(executorType.getPredicate());
     }
-    return null;
+
+    final boolean operator = node.getAttributeNotNull(PaperAttributeKeys.REQUIRES_OP);
+    if (operator) {
+      extraRequirements.add("source.getSender().isOp()");
+    }
+
+    final List<String> permissions = node.getAttributeNotNull(PaperAttributeKeys.PERMISSIONS).stream()
+        .map("source.getSender().hasPermission(\"%s\")"::formatted)
+        .toList();
+
+    if (!permissions.isEmpty()) {
+      if (permissions.size() == 1) {
+        extraRequirements.add(permissions.getFirst());
+      } else {
+        extraRequirements.add('(' + String.join(" || ", permissions) + ')');
+      }
+    }
+
+    return extraRequirements.isEmpty() ? null : String.join(" && ", extraRequirements);
   }
 
   @Override
