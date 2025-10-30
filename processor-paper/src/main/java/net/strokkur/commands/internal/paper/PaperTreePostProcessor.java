@@ -24,6 +24,7 @@ import net.strokkur.commands.internal.paper.util.PaperAttributeKeys;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 final class PaperTreePostProcessor extends CommonTreePostProcessor {
@@ -117,27 +118,31 @@ final class PaperTreePostProcessor extends CommonTreePostProcessor {
   }
 
   private void handlePermissions(final CommandNode node) {
-    if (!node.hasAttribute(PaperAttributeKeys.PERMISSIONS)) {
-      final Set<String> permissions = node.getAttributeNotNull(PaperAttributeKeys.PERMISSIONS);
-      final Collection<CommandNode> children = node.children();
+    if (node.hasAttribute(PaperAttributeKeys.PERMISSIONS) || node.children().isEmpty()) {
+      return;
+    }
 
-      for (final CommandNode child : node.children()) {
-        if (!child.hasAttribute(PaperAttributeKeys.PERMISSIONS)) {
-          // If a child doesn't have permissions, do not set any permissions for the parent
-          permissions.clear();
-          break;
-        }
-
-        permissions.addAll(child.getAttributeNotNull(PaperAttributeKeys.PERMISSIONS));
-        if (children.size() == 1) {
-          // We only remove the permissions if this path only has one child, meaning no cross-merging happens.
-          child.removeAttribute(PaperAttributeKeys.PERMISSIONS);
-        }
+    final Set<String> permissions = new HashSet<>();
+    for (final CommandNode child : node.children()) {
+      final Set<String> childPerms = child.getAttributeNotNull(PaperAttributeKeys.PERMISSIONS);
+      if (childPerms.isEmpty()) {
+        // If a child doesn't have permissions, do not set any permissions for the parent
+        permissions.clear();
+        break;
       }
 
-      if (!permissions.isEmpty()) {
-        node.setAttribute(PaperAttributeKeys.PERMISSIONS, permissions);
+      permissions.addAll(childPerms);
+    }
+
+    // Do a second pass to clear any child permission nodes if the parent handles
+    // them all exactly the same already
+    for (final CommandNode child : node.children()) {
+      final Set<String> childPerms = child.getAttributeNotNull(PaperAttributeKeys.PERMISSIONS);
+      if (childPerms.equals(permissions)) {
+        child.removeAttribute(PaperAttributeKeys.PERMISSIONS);
       }
     }
+
+    node.setAttribute(PaperAttributeKeys.PERMISSIONS, permissions);
   }
 }

@@ -20,6 +20,7 @@ package net.strokkur.commands.internal.paper;
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.abstraction.AnnotationsHolder;
 import net.strokkur.commands.internal.abstraction.SourceParameter;
+import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.attributes.Executable;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.paper.util.ExecutorType;
@@ -31,6 +32,7 @@ import net.strokkur.commands.paper.RequiresOP;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 final class PaperPlatformUtils implements PlatformUtils {
@@ -59,13 +61,19 @@ final class PaperPlatformUtils implements PlatformUtils {
 
   @Override
   public void populateNode(final CommandNode node, final AnnotationsHolder holder) {
-    holder.getAnnotationOptional(Permission.class).ifPresent(
-        permission -> node.editAttributeMutable(
-            PaperAttributeKeys.PERMISSIONS,
-            s -> s.add(permission.value()),
-            () -> new HashSet<>(Set.of(permission.value()))
-        )
-    );
+    final Optional<Permission> permission = holder.getAnnotationOptional(Permission.class);
+    if (permission.isPresent()) {
+      final String permissionValue = permission.get().value();
+      node.editAttributeMutable(
+          PaperAttributeKeys.PERMISSIONS,
+          s -> s.add(permissionValue),
+          () -> new HashSet<>(Set.of(permissionValue))
+      );
+    } else if (node.hasEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE)) {
+      if (!node.hasAttribute(PaperAttributeKeys.PERMISSIONS)) {
+        node.setAttribute(PaperAttributeKeys.PERMISSIONS, new HashSet<>());
+      }
+    }
 
     if (holder.hasAnnotation(RequiresOP.class)) {
       node.setAttribute(PaperAttributeKeys.REQUIRES_OP, true);

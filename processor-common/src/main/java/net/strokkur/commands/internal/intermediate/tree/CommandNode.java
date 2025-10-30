@@ -60,7 +60,7 @@ public interface CommandNode extends Attributable {
   /// nodes deepest in the tree.
   default void forEachDepthFirst(final Consumer<CommandNode> action) {
     for (final CommandNode child : this.children()) {
-      child.forEach(action);
+      child.forEachDepthFirst(action);
     }
     action.accept(this);
   }
