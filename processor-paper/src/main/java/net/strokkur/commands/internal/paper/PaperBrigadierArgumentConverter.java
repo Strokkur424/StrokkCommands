@@ -29,6 +29,7 @@ import net.strokkur.commands.paper.arguments.FinePosArg;
 import net.strokkur.commands.paper.arguments.TimeArg;
 import org.jspecify.annotations.Nullable;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -88,10 +89,14 @@ final class PaperBrigadierArgumentConverter extends BrigadierArgumentConverter {
     if (customArg != null) {
       final SourceClass value = variable.getAnnotationSourceClassField(CustomArg.class, "value");
       if (value != null) {
+        final Set<String> arguments = new HashSet<>(value.getImports());
+        arguments.addAll(variable.getImports());
+
         return new BrigadierArgumentType(
             "new " + value.getSourceName() + "()",
             "ctx.getArgument(\"" + argumentName + "\", " + variable.getType().getSourceName() + ".class)",
-            value.getImports());
+            arguments
+        );
       } else {
         throw new ConversionException("Invalid value for @CustomArg annotation");
       }

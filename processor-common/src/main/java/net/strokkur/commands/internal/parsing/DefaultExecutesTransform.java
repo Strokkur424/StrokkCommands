@@ -45,7 +45,7 @@ public final class DefaultExecutesTransform extends ExecutesTransform {
   @Override
   protected CommandNode createThisPath(final CommandNode parent, final SourceMethod element) throws MismatchedArgumentTypeException {
     final CommandNode out = createLiteralSequence(parent, element, DefaultExecutes.class, DefaultExecutes::value);
-    return this.populateNode(parent, out, element);
+    return out == null ? parent : out;
   }
 
   @Override

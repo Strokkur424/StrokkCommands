@@ -173,6 +173,11 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
       return;
     }
 
+    if (debug) {
+      // debug log all paths.
+      messagerWrapper.debug("\nCommand Tree (Before PostProcess):\n{}\n ", commandTree.toString());
+    }
+
     // Before we print the paths we do some post-processing to move some stuff around, which
     // is relevant for certain things to print correctly (a.e. executor requirements).
     treePostProcessor.cleanupPath(commandTree);
@@ -180,7 +185,7 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
 
     if (debug) {
       // debug log all paths.
-      messagerWrapper.debug("Command Tree: \n\n{}\n ", commandTree.toString());
+      messagerWrapper.debug("\nCommand Tree:\n{}\n ", commandTree.toString());
     }
 
     try {
