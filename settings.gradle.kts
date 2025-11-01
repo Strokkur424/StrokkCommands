@@ -12,12 +12,10 @@ sequenceOf("common", "paper", "velocity").forEach {
   include("annotations-$it")
 }
 
-rootDir.resolve("processors-modded").listFiles()?.forEach {
-  include("processor-modded-${it.name}")
-  project(":processor-modded-${it.name}").projectDir = it
-}
-
 include("annotations-modded")
+sequenceOf("fabric").forEach {
+  include("processor-$it")
+}
 
 sequenceOf("paper", "velocity").forEach {
   include("test-plugin-$it")
