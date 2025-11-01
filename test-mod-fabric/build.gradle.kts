@@ -17,5 +17,5 @@ dependencies {
   modImplementation(libs.fabric.api)
 
   compileOnly(project(":annotations-modded"))
-  annotationProcessor(project(":processor-modded-fabric-client-mojang"))
+  annotationProcessor(project(":processor-fabric"))
 }
