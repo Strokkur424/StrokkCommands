@@ -5,6 +5,9 @@ from annotation! It is written for the Paper server software and fully supports 
 
 ## Documentation
 
+> [!NOTE]
+> The documentation (`/docs`) has moved to its own repository. You can find it under https://github.com/Strokkur424/strokkur.net.
+
 You can read the documentation at https://commands.strokkur.net!
 
 ## Discord
