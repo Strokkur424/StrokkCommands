@@ -24,7 +24,7 @@ if (System.getenv("SKIP_TESTS") == null) {
     include("test-plugin-$it")
   }
 
-  sequenceOf("fabric").forEach {
+  sequenceOf("fabric", "neoforge").forEach {
     include("test-mod-$it")
   }
 }
