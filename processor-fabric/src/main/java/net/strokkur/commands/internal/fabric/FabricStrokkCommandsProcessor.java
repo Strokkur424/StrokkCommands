@@ -21,6 +21,7 @@ import net.strokkur.commands.internal.StrokkCommandsProcessor;
 import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceConstructor;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
+import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
 import net.strokkur.commands.internal.fabric.client.FabricClientStrokkCommandsProcessor;
 import net.strokkur.commands.internal.fabric.server.FabricServerStrokkCommandsProcessor;
 import net.strokkur.commands.internal.fabric.util.FabricCommandInformation;
@@ -56,5 +57,10 @@ public abstract sealed class FabricStrokkCommandsProcessor<A extends Annotation>
         sourceClass,
         aliases.map(Aliases::value).orElse(new String[0])
     );
+  }
+
+  @Override
+  protected BrigadierArgumentConverter getConverter(MessagerWrapper messager) {
+    return new FabricArgumentConverter(messager);
   }
 }

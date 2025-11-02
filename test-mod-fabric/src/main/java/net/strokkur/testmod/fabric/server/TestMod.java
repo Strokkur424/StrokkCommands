@@ -17,10 +17,12 @@
  */
 package net.strokkur.testmod.fabric.server;
 
+import com.mojang.brigadier.arguments.ArgumentType;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.strokkur.testmod.fabric.server.commands.FoodCommandBrigadier;
 
+/// [ArgumentType]
 public class TestMod implements ModInitializer {
   @Override
   public void onInitialize() {

@@ -15,18 +15,21 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.testmod.fabric.client;
+package net.strokkur.commands.modded.arguments;
 
-import com.mojang.brigadier.arguments.ArgumentType;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
-import net.strokkur.testmod.fabric.client.commands.SimpleCommandBrigadier;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-/// [ArgumentType]
-public class TestModClient implements ClientModInitializer {
-  @Override
-  public void onInitializeClient() {
-    ClientCommandRegistrationCallback.EVENT.register(SimpleCommandBrigadier::register);
-  }
+/// Declares that a `float` parameter should be interpreted as an angle argument.
+///
+/// Example usage:
+/// ```java
+/// @Executes
+/// void executes(S source, @AngleArg float angle);
+/// ```
+@Retention(RetentionPolicy.SOURCE)
+@Target(ElementType.PARAMETER)
+public @interface AngleArg {
 }

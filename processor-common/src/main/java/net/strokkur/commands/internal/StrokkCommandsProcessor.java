@@ -80,7 +80,7 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
 
   protected abstract CommonCommandTreePrinter<C> createPrinter(CommandNode node, C commandInformation);
 
-  protected abstract BrigadierArgumentConverter getConverter();
+  protected abstract BrigadierArgumentConverter getConverter(MessagerWrapper messager);
 
   protected abstract C getCommandInformation(SourceClass sourceClass);
 
@@ -93,7 +93,7 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
     final SuggestionsRegistry suggestionsRegistry = createAndFillRegistry(CustomSuggestion.class, SuggestionsRegistry::new, roundEnv, messagerWrapper);
     final RequirementRegistry requirementRegistry = createAndFillRegistry(CustomRequirement.class, RequirementRegistry::new, roundEnv, messagerWrapper);
 
-    final NodeUtils nodeUtils = new NodeUtils(getPlatformUtils(), messagerWrapper, getConverter(), suggestionsRegistry, requirementRegistry);
+    final NodeUtils nodeUtils = new NodeUtils(getPlatformUtils(), messagerWrapper, getConverter(messagerWrapper), suggestionsRegistry, requirementRegistry);
     final CommandParser parser = new CommandParserImpl(
         messagerWrapper,
         nodeUtils,
