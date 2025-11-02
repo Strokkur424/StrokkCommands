@@ -1,3 +1,4 @@
+/// Shared annotations across all platforms.
 module net.strokkur.commands.common {
   requires static com.mojang.brigadier;
   requires static org.jetbrains.annotations;
