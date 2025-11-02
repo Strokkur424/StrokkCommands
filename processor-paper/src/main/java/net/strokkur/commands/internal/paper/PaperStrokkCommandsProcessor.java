@@ -17,6 +17,7 @@
  */
 package net.strokkur.commands.internal.paper;
 
+import net.strokkur.commands.Aliases;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.StrokkCommandsProcessor;
@@ -29,7 +30,6 @@ import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.paper.util.PaperCommandInformation;
 import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
 import net.strokkur.commands.internal.util.MessagerWrapper;
-import net.strokkur.commands.paper.Aliases;
 import net.strokkur.commands.paper.Description;
 
 import java.util.Optional;

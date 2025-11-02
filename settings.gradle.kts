@@ -7,6 +7,8 @@ pluginManagement {
 
 rootProject.name = "StrokkCommands"
 
+include("annotations-common-permission")
+
 sequenceOf("common", "paper", "velocity").forEach {
   include("processor-$it")
   include("annotations-$it")

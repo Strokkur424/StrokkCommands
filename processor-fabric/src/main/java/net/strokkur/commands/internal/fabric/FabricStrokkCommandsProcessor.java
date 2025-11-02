@@ -17,6 +17,7 @@
  */
 package net.strokkur.commands.internal.fabric;
 
+import net.strokkur.commands.Aliases;
 import net.strokkur.commands.internal.StrokkCommandsProcessor;
 import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceConstructor;
@@ -27,7 +28,6 @@ import net.strokkur.commands.internal.fabric.server.FabricServerStrokkCommandsPr
 import net.strokkur.commands.internal.fabric.util.FabricCommandInformation;
 import net.strokkur.commands.internal.intermediate.CommonTreePostProcessor;
 import net.strokkur.commands.internal.util.MessagerWrapper;
-import net.strokkur.commands.modded.Aliases;
 
 import java.lang.annotation.Annotation;
 import java.util.Optional;

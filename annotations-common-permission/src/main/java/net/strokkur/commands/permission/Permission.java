@@ -15,26 +15,30 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.paper;
+package net.strokkur.commands.permission;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/// Declares aliases of a command. Can only be used on classes annotated with `@Command`.
+/// Declares the permission of a command element.
+///
+/// This annotation can be used on root command classes,
+/// executes-methods, nested subcommand classes, and external
+/// subcommands (both on the field and on the definition itself).
 ///
 /// Example usage:
 /// ```java
-/// @Command("welcomeback")
-/// @Aliases({"wb", "welcomeb", "wback"})
-/// class WelcomeBackCommand {
+/// @Command("mycommand")
+/// @Permission("myplugin.mycommand.use")
+/// class MyCommand {
 ///   /* ... */
 /// }
 /// ```
 @Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.TYPE)
-public @interface Aliases {
-  /// {@return the aliases for this command.}
-  String[] value();
+@Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
+public @interface Permission {
+  /// {@return the permission string that the command sender needs to have in order to be able to execute this node}
+  String value();
 }

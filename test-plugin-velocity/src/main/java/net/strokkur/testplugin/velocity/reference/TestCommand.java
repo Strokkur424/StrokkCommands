@@ -21,10 +21,10 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.strokkur.commands.Aliases;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
-import net.strokkur.commands.velocity.Aliases;
-import net.strokkur.commands.velocity.Permission;
+import net.strokkur.commands.permission.Permission;
 
 import java.util.Optional;
 

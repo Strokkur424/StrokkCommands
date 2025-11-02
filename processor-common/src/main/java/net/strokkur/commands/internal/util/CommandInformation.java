@@ -27,4 +27,6 @@ public interface CommandInformation {
   SourceConstructor constructor();
 
   SourceClass sourceClass();
+
+  String @Nullable [] aliases();
 }
