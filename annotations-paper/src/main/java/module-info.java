@@ -1,3 +1,4 @@
+/// Annotations specific to the Paper platform.
 module net.strokkur.commands.paper {
   requires static transitive net.strokkur.commands.common;
   requires static transitive net.strokkur.commands.permission;
