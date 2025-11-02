@@ -26,7 +26,7 @@ import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.velocity.util.SenderType;
 import net.strokkur.commands.internal.velocity.util.VelocityAttributeKeys;
 import net.strokkur.commands.internal.velocity.util.VelocityClasses;
-import net.strokkur.commands.velocity.Permission;
+import net.strokkur.commands.permission.Permission;
 
 import java.util.List;
 import java.util.Set;

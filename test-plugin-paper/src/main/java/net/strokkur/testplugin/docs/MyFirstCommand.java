@@ -18,13 +18,12 @@
 package net.strokkur.testplugin.docs;
 
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.strokkur.commands.paper.Aliases;
+import net.strokkur.commands.Aliases;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.DefaultExecutes;
 import net.strokkur.commands.paper.Description;
 import net.strokkur.commands.Executes;
 import net.strokkur.commands.paper.Executor;
-import net.strokkur.commands.paper.Permission;
 import net.strokkur.commands.paper.RequiresOP;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -61,7 +60,6 @@ class MyFirstCommand {
   }
 
   @Executes("fling")
-  @Permission("some.permission")
   void onFling(CommandSender sender, @Executor Player player) {
     player.setVelocity(player.getVelocity().add(new Vector(0, 10, 0)));
     player.sendRichMessage("<b><#c4e6ff>WOOSH</b> <#c4fffd>You've been flung!");

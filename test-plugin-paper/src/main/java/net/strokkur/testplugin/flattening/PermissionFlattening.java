@@ -21,7 +21,7 @@ import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
 import net.strokkur.commands.Literal;
 import net.strokkur.commands.Subcommand;
-import net.strokkur.commands.paper.Permission;
+import net.strokkur.commands.permission.Permission;
 import org.bukkit.command.CommandSender;
 
 @Command("permission-flattening")

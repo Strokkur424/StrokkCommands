@@ -21,8 +21,8 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
 import net.strokkur.commands.Subcommand;
-import net.strokkur.commands.paper.Permission;
 import net.strokkur.commands.paper.RequiresOP;
+import net.strokkur.commands.permission.Permission;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
