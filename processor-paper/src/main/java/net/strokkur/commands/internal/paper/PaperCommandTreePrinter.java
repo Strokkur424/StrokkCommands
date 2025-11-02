@@ -229,9 +229,4 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
   public String getArgumentMethodString() {
     return "Commands.argument";
   }
-
-  @Override
-  public String getSuccessInt() {
-    return "Command.SINGLE_SUCCESS";
-  }
 }

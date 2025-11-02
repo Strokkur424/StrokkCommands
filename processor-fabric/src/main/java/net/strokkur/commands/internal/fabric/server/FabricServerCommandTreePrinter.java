@@ -66,6 +66,7 @@ public final class FabricServerCommandTreePrinter extends FabricCommandTreePrint
   public Set<String> standardImports() {
     final Set<String> out = new TreeSet<>(super.standardImports());
     out.addAll(Set.of(
+        FabricClasses.COMMAND,
         FabricClasses.COMMANDS,
         FabricClasses.COMMAND_REGISTRATION_CALLBACK,
         FabricClasses.MOD_INITIALIZER,
