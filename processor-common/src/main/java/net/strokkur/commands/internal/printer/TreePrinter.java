@@ -100,10 +100,6 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
     }, isNested);
   }
 
-  default String getSuccessInt() {
-    return "1";
-  }
-
   void prefixPrintExecutableInner(final CommandNode node, final Executable executable) throws IOException;
 
   private void printExecutableInner(final CommandNode node, final Executable executable) throws IOException {
@@ -130,7 +126,7 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
       printWithInstance(executable);
     }
 
-    println("return %s;", getSuccessInt());
+    println("return Command.SINGLE_SUCCESS;");
     decrementIndent();
     printIndented("})");
   }

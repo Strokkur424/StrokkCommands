@@ -137,6 +137,7 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
   @Override
   public Set<String> standardImports() {
     return Set.of(
+        Classes.COMMAND,
         VelocityClasses.LITERAL_ARGUMENT_BUILDER,
         VelocityClasses.BRIGADIER_COMMAND,
         VelocityClasses.COMMAND_META,
