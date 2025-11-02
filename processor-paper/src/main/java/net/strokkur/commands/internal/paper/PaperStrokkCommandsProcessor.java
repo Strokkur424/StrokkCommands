@@ -52,8 +52,8 @@ public final class PaperStrokkCommandsProcessor extends StrokkCommandsProcessor<
   }
 
   @Override
-  protected BrigadierArgumentConverter getConverter() {
-    return new PaperBrigadierArgumentConverter(MessagerWrapper.wrap(this.processingEnv.getMessager()));
+  protected BrigadierArgumentConverter getConverter(MessagerWrapper messager) {
+    return new PaperBrigadierArgumentConverter(messager);
   }
 
   @Override
