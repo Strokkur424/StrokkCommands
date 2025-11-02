@@ -34,7 +34,7 @@ body:
       label: Describe alternatives you've considered.
       description: List any alternatives you might have tried to get the feature you want.
     validations:
-      required: true
+      required: false
 
   - type: textarea
     attributes:

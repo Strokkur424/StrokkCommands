@@ -1,18 +1,29 @@
 pluginManagement {
   repositories {
     gradlePluginPortal()
-    maven("https://eldonexus.de/repository/maven-public/")
+    maven("https://maven.fabricmc.net/")
   }
 }
 
 rootProject.name = "StrokkCommands"
 
-sequenceOf("commands").forEach {
-  include("$it-processor")
-  include("$it-annotations")
-  project(":$it-processor").projectDir = file("strokk-$it-processor")
-  project(":$it-annotations").projectDir = file("strokk-$it-annotations")
+include("annotations-common-permission")
+
+sequenceOf("common", "paper", "velocity", "modded").forEach {
+  include("processor-$it")
+  include("annotations-$it")
 }
+
+sequenceOf("fabric", "neoforge").forEach {
+  include("processor-$it")
+}
+
 if (System.getenv("SKIP_TESTS") == null) {
-  include(":test-plugin")
+  sequenceOf("paper", "velocity").forEach {
+    include("test-plugin-$it")
+  }
+
+  sequenceOf("fabric", "neoforge").forEach {
+    include("test-mod-$it")
+  }
 }

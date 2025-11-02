@@ -1,0 +1,8 @@
+license="LGPL v2.1"
+
+[[mods]]
+modId = "testmod"
+version = "1.0.0"
+displayName = "StrokkCommands Test Mod"
+
+description = "A test mod for StrokkCommands"
