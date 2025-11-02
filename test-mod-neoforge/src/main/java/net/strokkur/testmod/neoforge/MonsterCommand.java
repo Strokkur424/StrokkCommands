@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.testmod.fabric.client.commands;
+package net.strokkur.testmod.neoforge;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.critereon.MinMaxBounds;
@@ -67,7 +67,7 @@ import java.util.UUID;
 import java.util.function.Predicate;
 
 @Command("monstrous")
-class MonsterCommandClient {
+class MonsterCommand {
   @DefaultExecutes
   void defaultExecutes(CommandSourceStack source, List<String> input) {
     source.sendSuccess(() -> Component.literal("You entered: /" + String.join(" ", input)), false);

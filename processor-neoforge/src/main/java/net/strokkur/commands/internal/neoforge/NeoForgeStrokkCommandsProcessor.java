@@ -15,42 +15,36 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.fabric;
+package net.strokkur.commands.internal.neoforge;
 
-import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
-import net.strokkur.commands.internal.fabric.util.FabricClasses;
+import net.strokkur.commands.Command;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.modded.ModdedStrokkCommandsProcessor;
 import net.strokkur.commands.internal.modded.util.ModdedCommandInformation;
+import net.strokkur.commands.internal.neoforge.util.NeoForgeClasses;
 import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
-import net.strokkur.commands.internal.util.MessagerWrapper;
-import net.strokkur.commands.modded.ClientCommand;
 
-public final class FabricClientStrokkCommandsProcessor extends ModdedStrokkCommandsProcessor<ClientCommand> {
+public class NeoForgeStrokkCommandsProcessor extends ModdedStrokkCommandsProcessor<Command> {
 
   @Override
-  protected String getPlatformType() {
-    return FabricClasses.FABRIC_CLIENT_COMMAND_SOURCE;
+  protected Class<Command> targetAnnotationClass() {
+    return Command.class;
   }
 
   @Override
-  protected Class<ClientCommand> targetAnnotationClass() {
-    return ClientCommand.class;
-  }
-
-  @Override
-  protected String getCommandName(final ClientCommand annotation) {
+  protected String getCommandName(final Command annotation) {
     return annotation.value();
   }
 
   @Override
   protected CommonCommandTreePrinter<ModdedCommandInformation> createPrinter(final CommandNode node, final ModdedCommandInformation commandInformation) {
-    return new FabricClientCommandTreePrinter(0, null, node, commandInformation, this.processingEnv, getPlatformUtils());
-  }
-
-  @Override
-  protected BrigadierArgumentConverter getConverter(final MessagerWrapper messager) {
-    // Fabric's client commands cannot comprehend complex arguments
-    return new BrigadierArgumentConverter(messager);
+    return new NeoForgeCommandTreePrinter(
+        NeoForgeClasses.REGISTER_COMMANDS_EVENT,
+        node,
+        commandInformation,
+        this.processingEnv,
+        getPlatformUtils()
+    );
   }
 }
+

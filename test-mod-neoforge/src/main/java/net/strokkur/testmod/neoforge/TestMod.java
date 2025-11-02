@@ -17,27 +17,27 @@
  */
 package net.strokkur.testmod.neoforge;
 
-import com.mojang.brigadier.Command;
-import net.minecraft.commands.Commands;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Mod("testmod")
+@EventBusSubscriber
 public class TestMod {
   static final Logger LOGGER = LoggerFactory.getLogger("StrokkCommandsTestMod");
 
-  public TestMod(IEventBus modEventBus) {
+  public TestMod(IEventBus eventBus) {
     LOGGER.info("Loaded mod!");
   }
 
   @SubscribeEvent
-  void registerCommands(final RegisterCommandsEvent event) {
-    event.getDispatcher().register(Commands.literal("client-cmd")
-        .executes(ctx -> Command.SINGLE_SUCCESS)
-    );
+  static void registerCommands(final RegisterCommandsEvent event) {
+    LOGGER.info("RegisterCommandsEvent was called");
+    MonsterCommandBrigadier.register(event.getDispatcher(), event.getBuildContext());
   }
 }
