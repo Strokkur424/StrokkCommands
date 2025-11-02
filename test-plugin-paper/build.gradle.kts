@@ -1,4 +1,5 @@
 plugins {
+  id("commands-common")
   alias(libs.plugins.run.paper)
 }
 

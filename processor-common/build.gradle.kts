@@ -1,5 +1,6 @@
 plugins {
   alias(libs.plugins.blossom)
+  id("commands-publish")
 }
 
 dependencies {
