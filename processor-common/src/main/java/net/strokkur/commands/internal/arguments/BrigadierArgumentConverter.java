@@ -37,7 +37,7 @@ import java.util.TreeMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public abstract class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
+public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
   private final MessagerWrapper messagerWrapper;
   protected final Map<String, BiFunction<SourceVariable, String, BrigadierArgumentType>> conversionMap;
 
@@ -47,11 +47,13 @@ public abstract class BrigadierArgumentConverter implements ForwardingMessagerWr
     initializeArguments();
   }
 
-  protected abstract @Nullable BrigadierArgumentType handleCustomArgumentAnnotations(
+  protected @Nullable BrigadierArgumentType handleCustomArgumentAnnotations(
       String argumentName,
       String type,
       SourceVariable parameter
-  ) throws ConversionException;
+  ) throws ConversionException {
+    return null;
+  }
 
   protected void initializeArguments() {
     putFor((unused, name) -> BrigadierArgumentType.of(

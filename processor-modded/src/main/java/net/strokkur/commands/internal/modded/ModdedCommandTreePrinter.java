@@ -54,10 +54,6 @@ public abstract class ModdedCommandTreePrinter extends CommonCommandTreePrinter<
     return "CommandSourceStack";
   }
 
-  protected abstract String modInitializerJd();
-
-  protected abstract String registrationCallbackClassName();
-
   protected abstract void printerRegisterJavaDoc() throws IOException;
 
   @Override
