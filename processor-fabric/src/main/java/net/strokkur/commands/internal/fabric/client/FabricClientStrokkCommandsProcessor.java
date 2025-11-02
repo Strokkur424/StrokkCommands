@@ -18,12 +18,10 @@
 package net.strokkur.commands.internal.fabric.client;
 
 import net.strokkur.commands.internal.PlatformUtils;
-import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
 import net.strokkur.commands.internal.fabric.FabricStrokkCommandsProcessor;
 import net.strokkur.commands.internal.fabric.util.FabricCommandInformation;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
-import net.strokkur.commands.internal.util.MessagerWrapper;
 import net.strokkur.commands.modded.ClientCommand;
 
 public final class FabricClientStrokkCommandsProcessor extends FabricStrokkCommandsProcessor<ClientCommand> {
@@ -48,8 +46,4 @@ public final class FabricClientStrokkCommandsProcessor extends FabricStrokkComma
     return new FabricClientCommandTreePrinter(0, null, node, commandInformation, this.processingEnv, getPlatformUtils());
   }
 
-  @Override
-  protected BrigadierArgumentConverter getConverter() {
-    return new FabricClientArgumentConverter(MessagerWrapper.wrap(this.processingEnv.getMessager()));
-  }
 }

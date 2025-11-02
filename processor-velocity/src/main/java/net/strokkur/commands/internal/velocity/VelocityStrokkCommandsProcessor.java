@@ -51,8 +51,8 @@ public final class VelocityStrokkCommandsProcessor extends StrokkCommandsProcess
   }
 
   @Override
-  protected BrigadierArgumentConverter getConverter() {
-    return new VelocityBrigadierArgumentConverter(MessagerWrapper.wrap(this.processingEnv.getMessager()));
+  protected BrigadierArgumentConverter getConverter(MessagerWrapper messager) {
+    return new VelocityBrigadierArgumentConverter(messager);
   }
 
   @Override
