@@ -17,12 +17,23 @@
  */
 package net.strokkur.testmod.neoforge;
 
+import com.mojang.brigadier.Command;
+import net.minecraft.commands.Commands;
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 
 @Mod(value = "testmod", dist = Dist.CLIENT)
 public class TestModClient {
   public TestModClient() {
     TestMod.LOGGER.info("Loaded client mod!");
+  }
+
+  @SubscribeEvent
+  void registerClientCommands(final RegisterClientCommandsEvent event) {
+    event.getDispatcher().register(Commands.literal("client-cmd")
+        .executes(ctx -> Command.SINGLE_SUCCESS)
+    );
   }
 }

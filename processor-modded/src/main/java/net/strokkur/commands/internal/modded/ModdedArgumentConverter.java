@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.fabric;
+package net.strokkur.commands.internal.modded;
 
 import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
@@ -31,8 +31,8 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Set;
 
-public final class FabricArgumentConverter extends BrigadierArgumentConverter {
-  public FabricArgumentConverter(final MessagerWrapper messagerWrapper) {
+public class ModdedArgumentConverter extends BrigadierArgumentConverter {
+  public ModdedArgumentConverter(final MessagerWrapper messagerWrapper) {
     super(messagerWrapper);
   }
 
@@ -111,6 +111,7 @@ public final class FabricArgumentConverter extends BrigadierArgumentConverter {
     putStandard(subPackage, argType, init, getter, key, false);
 
   }
+
   private void putStandard(final String subPackage, final String argType, final String key, final boolean context) {
     final String argName = argType.substring(0, argType.length() - "Argument".length());
     putStandard(subPackage, argType, argName, key, context);

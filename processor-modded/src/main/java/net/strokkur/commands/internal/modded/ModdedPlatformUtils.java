@@ -15,19 +15,26 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.fabric;
+package net.strokkur.commands.internal.modded;
 
-import net.strokkur.commands.internal.intermediate.CommonTreePostProcessor;
+import net.strokkur.commands.internal.PlatformUtils;
+import net.strokkur.commands.internal.abstraction.AnnotationsHolder;
+import net.strokkur.commands.internal.abstraction.SourceParameter;
+import net.strokkur.commands.internal.exceptions.UnknownSenderException;
+import net.strokkur.commands.internal.intermediate.attributes.Executable;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
-import net.strokkur.commands.internal.util.MessagerWrapper;
 
-final class FabricTreePostProcessor extends CommonTreePostProcessor {
-  public FabricTreePostProcessor(final MessagerWrapper delegateMessager) {
-    super(delegateMessager);
+import java.util.List;
+
+public record ModdedPlatformUtils(String platformType) implements PlatformUtils {
+  @Override
+  public void populateNode(final CommandNode node, final AnnotationsHolder element) {
+    // TODO: Perhaps op-level handling?
   }
 
   @Override
-  public void cleanupPath(final CommandNode root) {
+  public void populateExecutesNode(final Executable executable, final CommandNode node, final List<SourceParameter> parameters)
+      throws UnknownSenderException {
     // noop
   }
 }

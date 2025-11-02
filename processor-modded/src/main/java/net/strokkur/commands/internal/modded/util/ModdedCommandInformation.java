@@ -15,15 +15,16 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.fabric.client;
+package net.strokkur.commands.internal.modded.util;
 
-import net.strokkur.commands.internal.fabric.FabricPlatformUtils;
-import net.strokkur.commands.internal.fabric.util.FabricClasses;
+import net.strokkur.commands.internal.abstraction.SourceClass;
+import net.strokkur.commands.internal.abstraction.SourceConstructor;
+import net.strokkur.commands.internal.util.CommandInformation;
+import org.jspecify.annotations.Nullable;
 
-public final class FabricClientPlatformUtils extends FabricPlatformUtils {
-
-  @Override
-  public String getPlatformType() {
-    return FabricClasses.FABRIC_CLIENT_COMMAND_SOURCE;
-  }
+public record ModdedCommandInformation(
+    @Nullable SourceConstructor constructor,
+    SourceClass sourceClass,
+    String[] aliases
+) implements CommandInformation {
 }

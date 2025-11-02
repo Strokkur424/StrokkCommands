@@ -9,13 +9,12 @@ rootProject.name = "StrokkCommands"
 
 include("annotations-common-permission")
 
-sequenceOf("common", "paper", "velocity").forEach {
+sequenceOf("common", "paper", "velocity", "modded").forEach {
   include("processor-$it")
   include("annotations-$it")
 }
 
-include("annotations-modded")
-sequenceOf("fabric").forEach {
+sequenceOf("fabric", "neoforge").forEach {
   include("processor-$it")
 }
 

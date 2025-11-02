@@ -40,7 +40,7 @@ final class VelocityPlatformUtils implements PlatformUtils {
   }
 
   @Override
-  public String getPlatformType() {
+  public String platformType() {
     return VelocityClasses.COMMAND_SOURCE;
   }
 

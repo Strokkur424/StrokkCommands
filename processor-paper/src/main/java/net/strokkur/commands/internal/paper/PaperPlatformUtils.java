@@ -50,7 +50,7 @@ final class PaperPlatformUtils implements PlatformUtils {
   }
 
   @Override
-  public String getPlatformType() {
+  public String platformType() {
     return PaperClasses.COMMAND_SOURCE_STACK;
   }
 

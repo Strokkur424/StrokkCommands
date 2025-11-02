@@ -126,7 +126,7 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
             .map(SourceMethod::getCombinedTypeAnnotationsString)
             .orElse(""),
         utils.getNodeReturnType(),
-        List.of(utils.getPlatformType().split("\\.")).getLast(),
+        List.of(utils.platformType().split("\\.")).getLast(),
         printParams.createParams()
     );
     incrementIndent();
