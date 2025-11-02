@@ -27,8 +27,8 @@ import net.strokkur.commands.internal.paper.util.ExecutorType;
 import net.strokkur.commands.internal.paper.util.PaperAttributeKeys;
 import net.strokkur.commands.internal.paper.util.PaperClasses;
 import net.strokkur.commands.paper.Executor;
-import net.strokkur.commands.paper.Permission;
 import net.strokkur.commands.paper.RequiresOP;
+import net.strokkur.commands.permission.Permission;
 
 import java.util.HashSet;
 import java.util.List;
