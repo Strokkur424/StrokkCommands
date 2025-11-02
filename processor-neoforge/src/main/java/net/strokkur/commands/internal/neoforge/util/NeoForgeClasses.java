@@ -15,24 +15,12 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.testmod.neoforge;
+package net.strokkur.commands.internal.neoforge.util;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
+import net.strokkur.commands.internal.modded.util.ModdedClasses;
 
-@Mod(value = "testmod", dist = Dist.CLIENT)
-@EventBusSubscriber
-public class TestModClient {
-  public TestModClient(IEventBus eventBus) {
-    TestMod.LOGGER.info("Loaded client mod!");
-  }
-
-  @SubscribeEvent
-  static void registerClientCommands(final RegisterClientCommandsEvent event) {
-    MonsterCommandClientBrigadier.register(event.getDispatcher(), event.getBuildContext());
-  }
+public interface NeoForgeClasses extends ModdedClasses {
+  // NeoForge classes
+  String REGISTER_COMMANDS_EVENT = "net.neoforged.neoforge.event.RegisterCommandsEvent";
+  String REGISTER_CLIENT_COMMANDS_EVENT = "net.neoforged.neoforge.client.event.RegisterClientCommandsEvent";
 }

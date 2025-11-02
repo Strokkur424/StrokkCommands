@@ -3,6 +3,11 @@ plugins {
   alias(libs.plugins.neoforge.moddev)
 }
 
+dependencies {
+  compileOnly(project(":annotations-modded"))
+  annotationProcessor(project(":processor-neoforge"))
+}
+
 neoForge {
   version = libs.versions.neoforge.version.get()
 

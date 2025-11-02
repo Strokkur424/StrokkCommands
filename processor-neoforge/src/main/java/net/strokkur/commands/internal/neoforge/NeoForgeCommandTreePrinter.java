@@ -15,53 +15,63 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.fabric;
+package net.strokkur.commands.internal.neoforge;
 
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.modded.ModdedCommandTreePrinter;
 import net.strokkur.commands.internal.modded.util.ModdedCommandInformation;
-import org.jspecify.annotations.Nullable;
+import net.strokkur.commands.internal.neoforge.util.NeoForgeClasses;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import java.io.IOException;
-import java.io.Writer;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
-public abstract sealed class FabricCommonCommandTreePrinter extends ModdedCommandTreePrinter permits FabricCommandTreePrinter, FabricClientCommandTreePrinter {
-  public FabricCommonCommandTreePrinter(
-      final int indent,
-      final @Nullable Writer writer,
+public final class NeoForgeCommandTreePrinter extends ModdedCommandTreePrinter {
+  private final String registerEvent;
+
+  public NeoForgeCommandTreePrinter(
+      final String registerEvent,
       final CommandNode node,
       final ModdedCommandInformation commandInformation,
       final ProcessingEnvironment environment,
       final PlatformUtils utils
   ) {
-    super(indent, writer, node, commandInformation, environment, utils);
+    super(0, null, node, commandInformation, environment, utils);
+    this.registerEvent = registerEvent;
   }
 
-  protected abstract String modInitializerJd();
+  private String eventClassName() {
+    return List.of(registerEvent.split("\\.")).getLast();
+  }
 
-  protected abstract String callbackEventLambdaParams();
-
-  protected abstract String registrationCallbackClassName();
-
-  protected final void printerRegisterJavaDoc() throws IOException {
+  @Override
+  protected void printerRegisterJavaDoc() throws IOException {
     //noinspection EscapedSpace
     printBlock("""
-            \s* This method should be called in your main class' {@link %s} method
-             * inside of a {@link %s} event. You can find some information on commands
-             * in the <a href="https://docs.fabricmc.net/develop/commands/basics">Fabric Documentation</a>.
+            \s* This method should be called inside a {@link %s}.
              * <p>
              * <pre>{@code
-             * %s.EVENT.register(%s -> {
-             *   %s.register(dispatcher, registryAccess);
-             * });
+             * @SubscribeEvent
+             * void registerCommands(final %s event) {
+             *   %s.register(event.getDispatcher(), event.getBuildContext());
+             * }
              * }</pre>""",
-        modInitializerJd(),
-        registrationCallbackClassName(),
-        registrationCallbackClassName(),
-        callbackEventLambdaParams(),
+        eventClassName(),
+        eventClassName(),
         getBrigadierClassName()
     );
+  }
+
+  @Override
+  public Set<String> standardImports() {
+    final Set<String> out = new TreeSet<>(super.standardImports());
+    out.add(this.registerEvent);
+    out.add(NeoForgeClasses.COMMANDS);
+    out.add(NeoForgeClasses.COMMAND_SOURCE_STACK);
+    return Collections.unmodifiableSet(out);
   }
 }
