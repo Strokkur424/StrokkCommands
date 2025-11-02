@@ -15,16 +15,19 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.fabric.util;
+package net.strokkur.commands.internal.modded;
 
-import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.abstraction.SourceConstructor;
-import net.strokkur.commands.internal.util.CommandInformation;
-import org.jspecify.annotations.Nullable;
+import net.strokkur.commands.internal.intermediate.CommonTreePostProcessor;
+import net.strokkur.commands.internal.intermediate.tree.CommandNode;
+import net.strokkur.commands.internal.util.MessagerWrapper;
 
-public record FabricCommandInformation(
-    @Nullable SourceConstructor constructor,
-    SourceClass sourceClass,
-    String[] aliases
-) implements CommandInformation {
+final class ModdedTreePostProcessor extends CommonTreePostProcessor {
+  public ModdedTreePostProcessor(final MessagerWrapper delegateMessager) {
+    super(delegateMessager);
+  }
+
+  @Override
+  public void cleanupPath(final CommandNode root) {
+    // noop
+  }
 }

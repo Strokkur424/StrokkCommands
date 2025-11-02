@@ -208,7 +208,7 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
       final RoundEnvironment roundEnv,
       final MessagerWrapper messager
   ) {
-    final T registry = ctor.apply(getPlatformUtils().getPlatformType());
+    final T registry = ctor.apply(getPlatformUtils().platformType());
     for (final Element element : roundEnv.getElementsAnnotatedWith(annotationClass)) {
       try {
         if (element.getKind() != ElementKind.ANNOTATION_TYPE || !(element instanceof TypeElement typeElement)) {

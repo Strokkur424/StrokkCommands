@@ -18,19 +18,17 @@
 package net.strokkur.commands.internal.fabric;
 
 import net.strokkur.commands.internal.PlatformUtils;
-import net.strokkur.commands.internal.fabric.util.FabricClasses;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
+import net.strokkur.commands.internal.modded.ModdedCommandTreePrinter;
 import net.strokkur.commands.internal.modded.util.ModdedCommandInformation;
 import org.jspecify.annotations.Nullable;
 
 import javax.annotation.processing.ProcessingEnvironment;
+import java.io.IOException;
 import java.io.Writer;
-import java.util.Collections;
-import java.util.Set;
-import java.util.TreeSet;
 
-public final class FabricCommandTreePrinter extends FabricCommonCommandTreePrinter {
-  public FabricCommandTreePrinter(
+public abstract sealed class FabricCommonCommandTreePrinter extends ModdedCommandTreePrinter permits FabricCommandTreePrinter, FabricClientCommandTreePrinter {
+  public FabricCommonCommandTreePrinter(
       final int indent,
       final @Nullable Writer writer,
       final CommandNode node,
@@ -41,31 +39,25 @@ public final class FabricCommandTreePrinter extends FabricCommonCommandTreePrint
     super(indent, writer, node, commandInformation, environment, utils);
   }
 
-  @Override
-  protected String modInitializerJd() {
-    return "ModInitializer#onInitialize()";
-  }
+  protected abstract String callbackEventLambdaParams();
 
-  @Override
-  protected String registrationCallbackClassName() {
-    return "CommandRegistrationCallback";
-  }
-
-  @Override
-  protected String callbackEventLambdaParams() {
-    return "(dispatcher, registryAccess, env)";
-  }
-
-  @Override
-  public Set<String> standardImports() {
-    final Set<String> out = new TreeSet<>(super.standardImports());
-    out.addAll(Set.of(
-        FabricClasses.COMMAND,
-        FabricClasses.COMMANDS,
-        FabricClasses.COMMAND_REGISTRATION_CALLBACK,
-        FabricClasses.MOD_INITIALIZER,
-        FabricClasses.COMMAND_SOURCE_STACK
-    ));
-    return Collections.unmodifiableSet(out);
+  protected final void printerRegisterJavaDoc() throws IOException {
+    //noinspection EscapedSpace
+    printBlock("""
+            \s* This method should be called in your client main class' {@link %s} method
+             * inside of a {@link %s} event. You can find some information on commands
+             * in the <a href="https://docs.fabricmc.net/develop/commands/basics">Fabric Documentation</a>.
+             * <p>
+             * <pre>{@code
+             * %s.EVENT.register(%s -> {
+             *   %s.register(dispatcher, registryAccess);
+             * });
+             * }</pre>""",
+        modInitializerJd(),
+        registrationCallbackClassName(),
+        registrationCallbackClassName(),
+        callbackEventLambdaParams(),
+        getBrigadierClassName()
+    );
   }
 }

@@ -36,7 +36,7 @@ public interface PlatformUtils {
     return "LiteralArgumentBuilder";
   }
 
-  String getPlatformType();
+  String platformType();
 
   default void populateNode(CommandNode node, AnnotationsHolder element) {
     // noop

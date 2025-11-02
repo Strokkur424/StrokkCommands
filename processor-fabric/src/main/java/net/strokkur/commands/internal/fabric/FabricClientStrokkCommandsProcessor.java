@@ -15,34 +15,34 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.fabric.server;
+package net.strokkur.commands.internal.fabric;
 
-import net.strokkur.commands.Command;
-import net.strokkur.commands.internal.PlatformUtils;
-import net.strokkur.commands.internal.fabric.FabricStrokkCommandsProcessor;
-import net.strokkur.commands.internal.fabric.util.FabricCommandInformation;
+import net.strokkur.commands.internal.fabric.util.FabricClasses;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
+import net.strokkur.commands.internal.modded.ModdedStrokkCommandsProcessor;
+import net.strokkur.commands.internal.modded.util.ModdedCommandInformation;
 import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
+import net.strokkur.commands.modded.ClientCommand;
 
-public final class FabricServerStrokkCommandsProcessor extends FabricStrokkCommandsProcessor<Command> {
+public final class FabricClientStrokkCommandsProcessor extends ModdedStrokkCommandsProcessor<ClientCommand> {
 
   @Override
-  protected Class<Command> targetAnnotationClass() {
-    return Command.class;
+  protected String getPlatformType() {
+    return FabricClasses.FABRIC_CLIENT_COMMAND_SOURCE;
   }
 
   @Override
-  protected String getCommandName(final Command annotation) {
+  protected Class<ClientCommand> targetAnnotationClass() {
+    return ClientCommand.class;
+  }
+
+  @Override
+  protected String getCommandName(final ClientCommand annotation) {
     return annotation.value();
   }
 
   @Override
-  protected PlatformUtils getPlatformUtils() {
-    return new FabricServerPlatformUtils();
-  }
-
-  @Override
-  protected CommonCommandTreePrinter<FabricCommandInformation> createPrinter(final CommandNode node, final FabricCommandInformation commandInformation) {
-    return new FabricServerCommandTreePrinter(0, null, node, commandInformation, this.processingEnv, getPlatformUtils());
+  protected CommonCommandTreePrinter<ModdedCommandInformation> createPrinter(final CommandNode node, final ModdedCommandInformation commandInformation) {
+    return new FabricClientCommandTreePrinter(0, null, node, commandInformation, this.processingEnv, getPlatformUtils());
   }
 }

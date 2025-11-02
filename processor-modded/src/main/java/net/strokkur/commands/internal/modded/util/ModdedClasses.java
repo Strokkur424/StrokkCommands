@@ -15,15 +15,13 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.fabric.server;
+package net.strokkur.commands.internal.modded.util;
 
-import net.strokkur.commands.internal.fabric.FabricPlatformUtils;
-import net.strokkur.commands.internal.fabric.util.FabricClasses;
+import net.strokkur.commands.internal.util.Classes;
 
-public final class FabricServerPlatformUtils extends FabricPlatformUtils {
-
-  @Override
-  public String getPlatformType() {
-    return FabricClasses.COMMAND_SOURCE_STACK;
-  }
+public interface ModdedClasses extends Classes {
+  // Minecraft classes
+  String COMMAND_BUILD_CONTEXT = "net.minecraft.commands.CommandBuildContext";
+  String COMMAND_SOURCE_STACK = "net.minecraft.commands.CommandSourceStack";
+  String COMMANDS = "net.minecraft.commands.Commands";
 }

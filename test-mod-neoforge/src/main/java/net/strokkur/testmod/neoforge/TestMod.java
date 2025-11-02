@@ -17,9 +17,12 @@
  */
 package net.strokkur.testmod.neoforge;
 
+import com.mojang.brigadier.Command;
+import net.minecraft.commands.Commands;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.ModContainer;
+import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,5 +32,12 @@ public class TestMod {
 
   public TestMod(IEventBus modEventBus) {
     LOGGER.info("Loaded mod!");
+  }
+
+  @SubscribeEvent
+  void registerCommands(final RegisterCommandsEvent event) {
+    event.getDispatcher().register(Commands.literal("client-cmd")
+        .executes(ctx -> Command.SINGLE_SUCCESS)
+    );
   }
 }
