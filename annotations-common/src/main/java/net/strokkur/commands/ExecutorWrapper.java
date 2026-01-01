@@ -22,71 +22,88 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/// Declares that a method should be used to wrap all command executors in this command class.
+/// Meta-annotation that marks a custom annotation as an executor wrapper.
 ///
-/// The annotated method will be called for every `.executes()` call in the generated Brigadier
-/// command tree, allowing you to intercept command execution, add logging, handle exceptions,
-/// or read custom annotations from the command method.
+/// Use this to create reusable wrapper annotations that can be applied to command classes,
+/// subcommands, or individual methods. The wrapper method is identified by also being
+/// annotated with your custom wrapper annotation.
 ///
-/// Example usage:
+/// ## Creating a wrapper annotation
 /// ```java
-/// @Command("mycommand")
-/// class MyCommand {
+/// @ExecutorWrapper
+/// @Retention(RetentionPolicy.RUNTIME)
+/// @Target({ElementType.TYPE, ElementType.METHOD})
+/// public @interface TimingWrapper {}
+/// ```
 ///
-///   @ExecutorWrapper
-///   public Command<CommandSourceStack> wrap(Command<CommandSourceStack> executor, Method method) {
+/// ## Defining the wrapper method
+/// The wrapper method must be annotated with your custom wrapper annotation.
+/// It can be static or instance, and can have one of these signatures:
+///
+/// ### Full wrapper (returns `Command<S>`)
+/// ```java
+/// @TimingWrapper
+/// static Command<CommandSourceStack> wrap(Command<CommandSourceStack> executor, Method method) {
 ///     return ctx -> {
-///       // Check for custom annotations on the method
-///       if (method.isAnnotationPresent(MyCustomAnnotation.class)) {
-///         // Do something special before execution
-///       }
-///
-///       long start = System.currentTimeMillis();
-///       try {
-///         // Execute the original command
-///         return executor.run(ctx);
-///       } finally {
-///         long duration = System.currentTimeMillis() - start;
-///         System.out.println("Command " + method.getName() + " took " + duration + "ms");
-///       }
+///         long start = System.nanoTime();
+///         try {
+///             return executor.run(ctx);
+///         } finally {
+///             System.out.println("Took " + (System.nanoTime() - start) + "ns");
+///         }
 ///     };
-///   }
-///
-///   @Executes("test")
-///   void test(CommandSender source) {
-///     source.sendMessage("Hello!");
-///   }
 /// }
 /// ```
 ///
-/// ## Method signature
-/// The wrapper method must have the following signature:
+/// ### Direct executor (returns `int`)
 /// ```java
-/// Command<S> wrap(Command<S> executor, Method method)
+/// @TimingWrapper
+/// static int execute(CommandContext<CommandSourceStack> ctx, Command<CommandSourceStack> executor, Method method) {
+///     long start = System.nanoTime();
+///     try {
+///         return executor.run(ctx);
+///     } finally {
+///         System.out.println("Took " + (System.nanoTime() - start) + "ns");
+///     }
+/// }
 /// ```
 ///
-/// Where `S` is the platform-specific command source type (e.g., `CommandSourceStack` for Paper).
+/// ## Applying the wrapper
+/// Apply your wrapper annotation to classes or methods:
+/// ```java
+/// @Command("mycommand")
+/// @TimingWrapper  // Applies to all methods in this command
+/// class MyCommand {
 ///
-/// - `executor`: A Brigadier [com.mojang.brigadier.Command] that, when called, executes the original command logic
-/// - `method`: The [java.lang.reflect.Method] reference to the original `@Executes` or `@DefaultExecutes` annotated method
+///     @TimingWrapper  // The wrapper method definition
+///     static Command<CommandSourceStack> wrap(Command<CommandSourceStack> executor, Method method) {
+///         // ...
+///     }
 ///
-/// The method returns a [com.mojang.brigadier.Command] which wraps the original executor. This allows you to:
-/// - Add pre/post execution logic
-/// - Handle exceptions
-/// - Access method annotations at execution time
-/// - Implement custom metrics or logging
+///     @Executes("fast")
+///     void fastCommand(CommandSender sender) {
+///         // Uses TimingWrapper
+///     }
 ///
-/// ## Exception handling
-/// The wrapper can catch and handle exceptions from the original executor.
-/// `CommandSyntaxException` should be re-thrown for proper Brigadier error handling.
+///     @Subcommand("admin")
+///     @DifferentWrapper  // Override with a different wrapper for this subcommand
+///     class AdminCommands {
+///         // ...
+///     }
+/// }
+/// ```
 ///
-/// ## Scope
-/// The wrapper applies to all `@Executes` and `@DefaultExecutes` methods within the same
-/// command class and its nested subcommand classes.
+/// ## Wrapper method signatures
+/// - `Command<S> wrap(Command<S> executor, Method method)` - Full wrapper, most flexible
+/// - `int execute(CommandContext<S> ctx, Command<S> executor, Method method)` - Direct execution with result
+///
+/// The wrapper method can be:
+/// - Static or instance (static is recommended for reusability)
+/// - Defined in the command class, a subcommand class, or any other class
 ///
 /// @see Executes
 /// @see DefaultExecutes
 @Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.METHOD)
+@Target(ElementType.ANNOTATION_TYPE)
 public @interface ExecutorWrapper {
 }

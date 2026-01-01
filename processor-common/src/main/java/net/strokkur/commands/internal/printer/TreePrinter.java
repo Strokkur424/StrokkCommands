@@ -17,6 +17,7 @@
  */
 package net.strokkur.commands.internal.printer;
 
+import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.abstraction.SourceParameter;
 import net.strokkur.commands.internal.arguments.CommandArgument;
@@ -30,6 +31,7 @@ import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.attributes.DefaultExecutable;
 import net.strokkur.commands.internal.intermediate.attributes.Executable;
 import net.strokkur.commands.internal.intermediate.attributes.ExecutorWrapperProvider;
+import net.strokkur.commands.internal.intermediate.attributes.ExecutorWrapperProvider.WrapperType;
 import net.strokkur.commands.internal.intermediate.attributes.Parameterizable;
 import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
@@ -107,20 +109,92 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
   void prefixPrintExecutableInner(final CommandNode node, final Executable executable) throws IOException;
 
   private void printExecutableInner(final CommandNode node, final Executable executable) throws IOException {
-    final ExecutorWrapperProvider executorWrapper = node.getAttribute(AttributeKey.EXECUTOR_WRAPPER);
+    final ExecutorWrapperProvider wrapper = node.getAttribute(AttributeKey.EXECUTOR_WRAPPER);
 
-    // print the .executes method
     println();
-    if (executorWrapper != null) {
-      // Wrap with the executor wrapper method
-      println(".executes(instance.%s(ctx -> {", executorWrapper.wrapperMethod().getName());
+
+    if (wrapper == null) {
+      printExecutableInnerNoWrapper(node, executable);
     } else {
-      println(".executes(ctx -> {");
+      switch (wrapper.wrapperType()) {
+        case COMMAND_WRAPPER -> printExecutableInnerCommandWrapper(node, executable, wrapper);
+        case INT_EXECUTOR -> printExecutableInnerIntExecutor(node, executable, wrapper);
+        case VOID_EXECUTOR -> printExecutableInnerVoidExecutor(node, executable, wrapper);
+      }
     }
+  }
+
+  private void printExecutableInnerNoWrapper(final CommandNode node, final Executable executable) throws IOException {
+    println(".executes(ctx -> {");
     incrementIndent();
-
     prefixPrintExecutableInner(node, executable);
+    printExecutableBody(node, executable);
+    println("return Command.SINGLE_SUCCESS;");
+    decrementIndent();
+    printIndented("})");
+  }
 
+  private void printExecutableInnerCommandWrapper(final CommandNode node, final Executable executable, final ExecutorWrapperProvider wrapper) throws IOException {
+    // Command<S> wrap(Command<S> executor, Method method)
+    // Output: .executes(WrapperClass.wrapperMethod(ctx -> { ... }, getMethod_...()))
+    final String wrapperCall = getWrapperMethodCall(wrapper);
+    println(".executes(%s(ctx -> {", wrapperCall);
+    incrementIndent();
+    prefixPrintExecutableInner(node, executable);
+    printExecutableBody(node, executable);
+    println("return Command.SINGLE_SUCCESS;");
+    decrementIndent();
+    printIndented("}, %s()))", getMethodHelperName(executable.executesMethod()));
+  }
+
+  private void printExecutableInnerIntExecutor(final CommandNode node, final Executable executable, final ExecutorWrapperProvider wrapper) throws IOException {
+    // int execute(CommandContext<S> ctx, Command<S> executor, Method method)
+    // Output: .executes(ctx -> WrapperClass.wrapperMethod(ctx, ctx2 -> { ... }, getMethod_...()))
+    final String wrapperCall = getWrapperMethodCall(wrapper);
+    println(".executes(ctx -> %s(ctx, ctx2 -> {", wrapperCall);
+    incrementIndent();
+    prefixPrintExecutableInner(node, executable);
+    printExecutableBody(node, executable);
+    println("return Command.SINGLE_SUCCESS;");
+    decrementIndent();
+    printIndented("}, %s()))", getMethodHelperName(executable.executesMethod()));
+  }
+
+  private void printExecutableInnerVoidExecutor(final CommandNode node, final Executable executable, final ExecutorWrapperProvider wrapper) throws IOException {
+    // void execute(CommandContext<S> ctx, Command<S> executor, Method method)
+    // Output: .executes(ctx -> { WrapperClass.wrapperMethod(ctx, ctx2 -> { ... }, getMethod_...()); return Command.SINGLE_SUCCESS; })
+    final String wrapperCall = getWrapperMethodCall(wrapper);
+    println(".executes(ctx -> {");
+    incrementIndent();
+    println("%s(ctx, ctx2 -> {", wrapperCall);
+    incrementIndent();
+    prefixPrintExecutableInner(node, executable);
+    printExecutableBody(node, executable);
+    println("return Command.SINGLE_SUCCESS;");
+    decrementIndent();
+    println("}, %s());", getMethodHelperName(executable.executesMethod()));
+    println("return Command.SINGLE_SUCCESS;");
+    decrementIndent();
+    printIndented("})");
+  }
+
+  private String getWrapperMethodCall(final ExecutorWrapperProvider wrapper) {
+    final SourceMethod method = wrapper.wrapperMethod();
+    final String methodName = method.getName();
+
+    if (wrapper.isStatic()) {
+      // Static method: WrapperClass.wrapperMethod
+      final SourceClass wrapperClass = wrapper.wrapperClass();
+      return wrapperClass.getFullyQualifiedName() + "." + methodName;
+    } else {
+      // Instance method: get the appropriate instance variable name
+      return getWrapperInstanceName(wrapper) + "." + methodName;
+    }
+  }
+
+  String getWrapperInstanceName(ExecutorWrapperProvider wrapper);
+
+  private void printExecutableBody(final CommandNode node, final Executable executable) throws IOException {
     boolean instancePrint = true;
     CommandNode recordNode = node;
 
@@ -135,16 +209,6 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
 
     if (instancePrint) {
       printWithInstance(executable);
-    }
-
-    println("return Command.SINGLE_SUCCESS;");
-    decrementIndent();
-
-    if (executorWrapper != null) {
-      // Add the Method parameter for the wrapper - use a helper method name
-      printIndented("}, %s()))", getMethodHelperName(executable.executesMethod()));
-    } else {
-      printIndented("})");
     }
   }
 

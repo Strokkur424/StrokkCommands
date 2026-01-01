@@ -17,7 +17,51 @@
  */
 package net.strokkur.commands.internal.intermediate.attributes;
 
+import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
 
-public record ExecutorWrapperProvider(SourceMethod wrapperMethod) {
+/**
+ * Holds information about an executor wrapper.
+ *
+ * @param wrapperMethod        The method that implements the wrapper
+ * @param wrapperAnnotationFqn The fully qualified name of the wrapper annotation (e.g., "com.example.TimingWrapper")
+ * @param isStatic             Whether the wrapper method is static
+ * @param wrapperType          The type of wrapper (Command return vs int return)
+ */
+public record ExecutorWrapperProvider(
+    SourceMethod wrapperMethod,
+    String wrapperAnnotationFqn,
+    boolean isStatic,
+    WrapperType wrapperType
+) {
+
+  /**
+   * The type of wrapper based on the method signature.
+   */
+  public enum WrapperType {
+    /**
+     * Returns Command<S>, takes (Command<S> executor, Method method)
+     * Full wrapper that wraps the executor and returns a new Command.
+     */
+    COMMAND_WRAPPER,
+
+    /**
+     * Returns int, takes (CommandContext<S> ctx, Command<S> executor, Method method)
+     * Direct execution that runs and returns the result.
+     */
+    INT_EXECUTOR,
+
+    /**
+     * Returns void, takes (CommandContext<S> ctx, Command<S> executor, Method method)
+     * The method runs the executor internally and can do pre/post processing.
+     */
+    VOID_EXECUTOR
+  }
+
+  /**
+   * Gets the class that contains the wrapper method.
+   */
+  public SourceClass wrapperClass() {
+    return (SourceClass) wrapperMethod.getEnclosed();
+  }
 }

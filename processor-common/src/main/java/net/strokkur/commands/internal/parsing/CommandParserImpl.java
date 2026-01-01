@@ -17,7 +17,6 @@
  */
 package net.strokkur.commands.internal.parsing;
 
-import net.strokkur.commands.ExecutorWrapper;
 import net.strokkur.commands.internal.NodeUtils;
 import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceElement;
@@ -29,7 +28,6 @@ import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
 import net.strokkur.commands.internal.exceptions.UnknownSenderException;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
-import net.strokkur.commands.internal.intermediate.attributes.ExecutorWrapperProvider;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.commands.internal.util.MessagerWrapper;
@@ -43,9 +41,13 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
   private final RecordTransform recordTransform;
   private final NodeTransform<SourceMethod> methodTransform;
   private final NodeTransform<SourceField> fieldTransform;
+  private final WrapperDetector wrapperDetector;
 
   private final MessagerWrapper messager;
   private final NodeUtils nodeUtils;
+
+  // Stored so we can pass it to WrapperDetector for finding wrapper methods
+  private SourceClass rootSourceClass;
 
   public CommandParserImpl(
       final MessagerWrapper messager,
@@ -56,15 +58,20 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
     this.messager = messager;
     this.nodeUtils = nodeUtils;
 
-    this.classTransform = new ClassTransform(this, nodeUtils);
+    this.wrapperDetector = new WrapperDetector(messager);
+    this.classTransform = new ClassTransform(this, nodeUtils, wrapperDetector);
     this.recordTransform = new RecordTransform(this, nodeUtils);
-    final ExecutorWrapperTransform executorWrapperTransform = new ExecutorWrapperTransform(nodeUtils);
-    this.methodTransform = new MethodTransform(nodeUtils, executesTransform.apply(this), defaultExecutesTransform.apply(this), executorWrapperTransform);
+    this.methodTransform = new MethodTransform(nodeUtils, executesTransform.apply(this), defaultExecutesTransform.apply(this));
     this.fieldTransform = new FieldTransform(this, nodeUtils);
+  }
+
+  SourceClass getRootSourceClass() {
+    return rootSourceClass;
   }
 
   @Override
   public @Nullable CommandNode createCommandTree(final String name, final SourceClass sourceClass) {
+    this.rootSourceClass = sourceClass;
     final List<String> split = List.of(name.split(" "));
     final CommandNode first = CommandNode.createRoot(LiteralCommandArgument.literal(split.getFirst(), sourceClass));
 
@@ -93,11 +100,8 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
   }
 
   private void applyExecutorWrapper(final CommandNode node, final SourceClass element) {
-    element.getNestedMethods()
-        .stream()
-        .filter(method -> method.hasAnnotation(ExecutorWrapper.class))
-        .findFirst()
-        .ifPresent(method -> node.setAttribute(AttributeKey.EXECUTOR_WRAPPER, new ExecutorWrapperProvider(method)));
+    wrapperDetector.detectWrapper(element, rootSourceClass)
+        .ifPresent(wrapper -> node.setAttribute(AttributeKey.EXECUTOR_WRAPPER, wrapper));
   }
 
   @Override

@@ -19,9 +19,11 @@ package net.strokkur.commands.internal.printer;
 
 import net.strokkur.commands.internal.BuildConstants;
 import net.strokkur.commands.internal.PlatformUtils;
+import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.abstraction.SourceParameter;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
+import net.strokkur.commands.internal.intermediate.attributes.ExecutorWrapperProvider;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.CommandInformation;
 import net.strokkur.commands.internal.util.PrintParamsHolder;
@@ -247,5 +249,21 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
   @Override
   public final C getCommandInformation() {
     return this.commandInformation;
+  }
+
+  @Override
+  public String getWrapperInstanceName(final ExecutorWrapperProvider wrapper) {
+    // For instance wrapper methods, we need to determine the instance variable name
+    // This could be "instance" for the main command class, or a nested instance name
+    final SourceClass wrapperClass = wrapper.wrapperClass();
+    final SourceClass mainClass = getCommandInformation().sourceClass();
+
+    if (wrapperClass.getFullyQualifiedName().equals(mainClass.getFullyQualifiedName())) {
+      return "instance";
+    }
+
+    // For nested classes, use the naming convention like "instanceAdminCommands"
+    final String simpleName = wrapperClass.getName();
+    return "instance" + simpleName;
   }
 }

@@ -93,4 +93,33 @@ public interface AnnotationsHolder extends SourceElement {
   default <T extends Annotation> T getAnnotationElseThrow(final Class<T> type) throws NoSuchElementException {
     return getAnnotationOptionalIncludingInherited(type).orElseThrow(() -> new NoSuchElementException("No annotation of type " + type.getSimpleName() + " is present."));
   }
+
+  /// Finds all annotations on this element that are themselves annotated with the given meta-annotation.
+  ///
+  /// For example, if you have:
+  /// ```java
+  /// @ExecutorWrapper
+  /// public @interface TimingWrapper {}
+  /// ```
+  /// And a class annotated with `@TimingWrapper`, calling
+  /// `getAnnotationsWithMetaAnnotation(ExecutorWrapper.class)` will return a list
+  /// containing the `TimingWrapper` annotation class.
+  ///
+  /// @param metaAnnotationType The meta-annotation to look for
+  /// @return List of annotation classes that have the specified meta-annotation
+  default List<SourceClass> getAnnotationsWithMetaAnnotation(final Class<? extends Annotation> metaAnnotationType) {
+    return getAllAnnotations().stream()
+        .filter(annotationClass -> annotationClass.getAnnotation(metaAnnotationType) != null)
+        .toList();
+  }
+
+  /// Gets the first annotation on this element that has the given meta-annotation.
+  ///
+  /// @param metaAnnotationType The meta-annotation to look for
+  /// @return Optional containing the first matching annotation class, or empty if none found
+  default Optional<SourceClass> getFirstAnnotationWithMetaAnnotation(final Class<? extends Annotation> metaAnnotationType) {
+    return getAllAnnotations().stream()
+        .filter(annotationClass -> annotationClass.getAnnotation(metaAnnotationType) != null)
+        .findFirst();
+  }
 }

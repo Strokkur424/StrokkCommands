@@ -29,11 +29,10 @@ public class MethodTransform implements NodeTransform<SourceMethod> {
   private final List<NodeTransform<SourceMethod>> innerTransforms;
   private final NodeUtils nodeUtils;
 
-  public MethodTransform(final NodeUtils nodeUtils, final ExecutesTransform executesTransform, final DefaultExecutesTransform defaultExecutesTransform, final ExecutorWrapperTransform executorWrapperTransform) {
+  public MethodTransform(final NodeUtils nodeUtils, final ExecutesTransform executesTransform, final DefaultExecutesTransform defaultExecutesTransform) {
     this.innerTransforms = List.of(
         executesTransform,
-        defaultExecutesTransform,
-        executorWrapperTransform
+        defaultExecutesTransform
     );
     this.nodeUtils = nodeUtils;
   }

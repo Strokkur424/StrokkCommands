@@ -17,7 +17,6 @@
  */
 package net.strokkur.commands.internal.parsing;
 
-import net.strokkur.commands.ExecutorWrapper;
 import net.strokkur.commands.Subcommand;
 import net.strokkur.commands.internal.NodeUtils;
 import net.strokkur.commands.internal.abstraction.SourceClass;
@@ -27,9 +26,9 @@ import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.access.InstanceAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
-import net.strokkur.commands.internal.intermediate.attributes.ExecutorWrapperProvider;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,10 +36,12 @@ import java.util.List;
 sealed class ClassTransform implements NodeTransform<SourceClass>, ForwardingMessagerWrapper permits RecordTransform {
   protected final CommandParser parser;
   protected final NodeUtils nodeUtils;
+  protected final @Nullable WrapperDetector wrapperDetector;
 
-  public ClassTransform(final CommandParser parser, final NodeUtils nodeUtils) {
+  public ClassTransform(final CommandParser parser, final NodeUtils nodeUtils, final @Nullable WrapperDetector wrapperDetector) {
     this.parser = parser;
     this.nodeUtils = nodeUtils;
+    this.wrapperDetector = wrapperDetector;
   }
 
   protected String transformName() {
@@ -80,11 +81,11 @@ sealed class ClassTransform implements NodeTransform<SourceClass>, ForwardingMes
   }
 
   protected void applyExecutorWrapper(final CommandNode node, final SourceClass element) {
-    element.getNestedMethods()
-        .stream()
-        .filter(method -> method.hasAnnotation(ExecutorWrapper.class))
-        .findFirst()
-        .ifPresent(method -> node.setAttribute(AttributeKey.EXECUTOR_WRAPPER, new ExecutorWrapperProvider(method)));
+    if (wrapperDetector == null || !(parser instanceof CommandParserImpl parserImpl)) {
+      return;
+    }
+    wrapperDetector.detectWrapper(element, parserImpl.getRootSourceClass())
+        .ifPresent(wrapper -> node.setAttribute(AttributeKey.EXECUTOR_WRAPPER, wrapper));
   }
 
   protected void addAccessAttribute(final CommandNode node, final SourceClass element) {
