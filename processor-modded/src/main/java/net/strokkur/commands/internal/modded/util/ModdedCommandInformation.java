@@ -19,12 +19,14 @@ package net.strokkur.commands.internal.modded.util;
 
 import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceConstructor;
+import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.util.CommandInformation;
 import org.jspecify.annotations.Nullable;
 
 public record ModdedCommandInformation(
     @Nullable SourceConstructor constructor,
     SourceClass sourceClass,
-    String[] aliases
+    String[] aliases,
+    @Nullable SourceMethod executorWrapper
 ) implements CommandInformation {
 }

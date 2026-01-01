@@ -17,6 +17,8 @@
  */
 package net.strokkur.commands.internal.printer;
 
+import net.strokkur.commands.internal.abstraction.SourceMethod;
+import net.strokkur.commands.internal.abstraction.SourceParameter;
 import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.MultiLiteralCommandArgument;
@@ -38,6 +40,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 interface TreePrinter<C extends CommandInformation> extends Printable, PrinterInformation<C> {
 
@@ -103,9 +106,16 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
   void prefixPrintExecutableInner(final CommandNode node, final Executable executable) throws IOException;
 
   private void printExecutableInner(final CommandNode node, final Executable executable) throws IOException {
+    final SourceMethod executorWrapper = getCommandInformation().executorWrapper();
+
     // print the .executes method
     println();
-    println(".executes(ctx -> {");
+    if (executorWrapper != null) {
+      // Wrap with the executor wrapper method
+      println(".executes(instance.%s(ctx -> {", executorWrapper.getName());
+    } else {
+      println(".executes(ctx -> {");
+    }
     incrementIndent();
 
     prefixPrintExecutableInner(node, executable);
@@ -128,7 +138,35 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
 
     println("return Command.SINGLE_SUCCESS;");
     decrementIndent();
-    printIndented("})");
+
+    if (executorWrapper != null) {
+      // Add the Method parameter for the wrapper
+      printIndented("}, %s))", getMethodReflectionString(executable.executesMethod()));
+    } else {
+      printIndented("})");
+    }
+  }
+
+  /// Generates a Method reference string for use with executor wrapper.
+  /// Uses a static helper lambda to handle NoSuchMethodException at runtime.
+  /// Example output: ((java.util.function.Supplier<Method>) () -> { try { return MyClass.class.getDeclaredMethod("methodName", ...); } catch (NoSuchMethodException e) { throw new RuntimeException(e); } }).get()
+  private String getMethodReflectionString(final SourceMethod method) {
+    final String className = method.getEnclosed().getName();
+    final String methodName = method.getName();
+
+    final List<SourceParameter> params = method.getParameters();
+    final String paramTypesStr;
+    if (params.isEmpty()) {
+      paramTypesStr = "";
+    } else {
+      paramTypesStr = ", " + params.stream()
+          .map(param -> param.getType().getFullyQualifiedName() + ".class")
+          .collect(Collectors.joining(", "));
+    }
+
+    // Wrap in a supplier to handle the checked exception
+    return "((java.util.function.Supplier<Method>) () -> { try { return %s.class.getDeclaredMethod(\"%s\"%s); } catch (NoSuchMethodException e) { throw new RuntimeException(e); } }).get()"
+        .formatted(className, methodName, paramTypesStr);
   }
 
   private void printWithInstance(final Executable executable) throws IOException {

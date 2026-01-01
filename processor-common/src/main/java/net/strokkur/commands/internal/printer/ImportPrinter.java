@@ -65,9 +65,18 @@ interface ImportPrinter<C extends CommandInformation> extends Printable, Printer
     final Set<String> imports = new HashSet<>(standardImports());
     gatherImports(imports, getNode());
 
+    // Add Method import if executor wrapper is present
+    if (getCommandInformation().executorWrapper() != null) {
+      imports.add("java.lang.reflect.Method");
+    }
+
     final String sourceClassFqn = getCommandInformation().sourceClass().getFullyQualifiedName();
     final int numberOfDots = sourceClassFqn.split("\\.").length;
     imports.removeIf(importString -> {
+      // Don't remove java.lang.reflect imports (like Method)
+      if (importString.startsWith("java.lang.reflect")) {
+        return false;
+      }
       if (importString.startsWith("java.lang")) {
         return true;
       }

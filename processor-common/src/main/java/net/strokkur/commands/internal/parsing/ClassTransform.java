@@ -90,7 +90,7 @@ sealed class ClassTransform implements NodeTransform<SourceClass>, ForwardingMes
 
   @Override
   public boolean requirement(final SourceClass element) {
-    return element.getAnnotationOptional(Subcommand.class).isPresent();
+    return element.hasAnnotation(Subcommand.class);
   }
 
   @Override

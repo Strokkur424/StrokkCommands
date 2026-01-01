@@ -43,7 +43,7 @@ import java.lang.annotation.Target;
 /// }
 /// ```
 @Retention(RetentionPolicy.SOURCE)
-@Target({ElementType.TYPE, ElementType.FIELD})
+@Target({ElementType.TYPE, ElementType.FIELD, ElementType.ANNOTATION_TYPE})
 public @interface Subcommand {
   /// {@return the literal path to prepend to the nested subcommand}
   String value() default "";

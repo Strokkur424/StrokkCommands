@@ -19,6 +19,7 @@ package net.strokkur.commands.internal.util;
 
 import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceConstructor;
+import net.strokkur.commands.internal.abstraction.SourceMethod;
 import org.jspecify.annotations.Nullable;
 
 public interface CommandInformation {
@@ -29,4 +30,11 @@ public interface CommandInformation {
   SourceClass sourceClass();
 
   String @Nullable [] aliases();
+
+  /// Returns the method annotated with @ExecutorWrapper, if present.
+  /// This method wraps all command executors in the generated code.
+  @Nullable
+  default SourceMethod executorWrapper() {
+    return null;
+  }
 }

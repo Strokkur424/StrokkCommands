@@ -26,23 +26,71 @@ import java.util.Optional;
 
 public interface AnnotationsHolder extends SourceElement {
 
+  /// Gets an annotation directly present on this element.
+  /// Does NOT check for inherited annotations via meta-annotations.
+  /// @see #getAnnotationIncludingInherited(Class)
   <T extends Annotation> @Nullable T getAnnotation(Class<T> type);
 
+  /// Returns all annotations directly present on this element as SourceClass instances.
   List<SourceClass> getAllAnnotations();
 
+  /// Checks if an annotation is present, either directly or via inheritance (meta-annotation).
+  ///
+  /// For example, if you have:
+  /// ```java
+  /// @DefaultExecutes
+  /// public @interface DefaultExecutesSpecial {}
+  /// ```
+  /// And a method annotated with `@DefaultExecutesSpecial`, calling
+  /// `hasAnnotation(DefaultExecutes.class)` will return `true`.
   default boolean hasAnnotation(final Class<? extends Annotation> type) {
-    return getAnnotationOptional(type).isPresent();
+    return getAnnotationOptionalIncludingInherited(type).isPresent();
   }
 
   default <T extends Annotation> @Nullable SourceClass getAnnotationSourceClassField(Class<T> type, String fieldName) throws UnsupportedOperationException {
     throw new UnsupportedOperationException("This class (" + getClass().getSimpleName() + ") does not implement #getAnnotationSourceClassField");
   }
 
+  /// Gets an annotation directly present on this element.
+  /// Does NOT check for inherited annotations via meta-annotations.
+  /// @see #getAnnotationOptionalIncludingInherited(Class)
   default <T extends Annotation> Optional<T> getAnnotationOptional(final Class<T> type) {
     return Optional.ofNullable(getAnnotation(type));
   }
 
+  /// Gets an annotation, checking both direct annotations and inherited via meta-annotations.
+  ///
+  /// If the annotation is directly present, returns it.
+  /// If not, checks if any annotation on this element is itself annotated with the target annotation,
+  /// and returns that inherited annotation.
+  ///
+  /// For example, if you have:
+  /// ```java
+  /// @DefaultExecutes("path")
+  /// public @interface DefaultExecutesSpecial {}
+  /// ```
+  /// And a method annotated with `@DefaultExecutesSpecial`, calling
+  /// `getAnnotationOptionalIncludingInherited(DefaultExecutes.class)` will return the
+  /// `@DefaultExecutes("path")` annotation from the `@DefaultExecutesSpecial` annotation type.
+  default <T extends Annotation> Optional<T> getAnnotationOptionalIncludingInherited(final Class<T> type) {
+    // First check for direct annotation
+    final T direct = getAnnotation(type);
+    if (direct != null) {
+      return Optional.of(direct);
+    }
+
+    // Check meta-annotations (inherited annotations)
+    for (final SourceClass annotationClass : getAllAnnotations()) {
+      final T inherited = annotationClass.getAnnotation(type);
+      if (inherited != null) {
+        return Optional.of(inherited);
+      }
+    }
+
+    return Optional.empty();
+  }
+
   default <T extends Annotation> T getAnnotationElseThrow(final Class<T> type) throws NoSuchElementException {
-    return getAnnotationOptional(type).orElseThrow(() -> new NoSuchElementException("No annotation of type " + type.getSimpleName() + " is present."));
+    return getAnnotationOptionalIncludingInherited(type).orElseThrow(() -> new NoSuchElementException("No annotation of type " + type.getSimpleName() + " is present."));
   }
 }

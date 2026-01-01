@@ -93,7 +93,7 @@ public sealed class ExecutesTransform implements NodeTransform<SourceMethod>, Fo
 
   @Override
   public boolean requirement(final SourceMethod element) {
-    return element.getAnnotationOptional(Executes.class).isPresent();
+    return element.hasAnnotation(Executes.class);
   }
 
   @Override

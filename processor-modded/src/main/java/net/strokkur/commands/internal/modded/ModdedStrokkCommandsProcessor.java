@@ -18,6 +18,7 @@
 package net.strokkur.commands.internal.modded;
 
 import net.strokkur.commands.Aliases;
+import net.strokkur.commands.ExecutorWrapper;
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.StrokkCommandsProcessor;
 import net.strokkur.commands.internal.abstraction.SourceClass;
@@ -60,10 +61,16 @@ public abstract class ModdedStrokkCommandsProcessor<A extends Annotation> extend
             .map(SourceConstructor.class::cast)
             .orElse(null);
 
+    final SourceMethod executorWrapper = sourceClass.getNestedMethods(m -> m.hasAnnotation(ExecutorWrapper.class))
+        .stream()
+        .findFirst()
+        .orElse(null);
+
     return new ModdedCommandInformation(
         constructor,
         sourceClass,
-        aliases.map(Aliases::value).orElse(new String[0])
+        aliases.map(Aliases::value).orElse(new String[0]),
+        executorWrapper
     );
   }
 

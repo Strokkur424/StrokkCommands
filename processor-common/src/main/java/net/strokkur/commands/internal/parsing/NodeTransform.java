@@ -71,7 +71,8 @@ interface NodeTransform<S extends SourceElement> extends ForwardingMessagerWrapp
       final AnnotationsHolder element,
       final Class<A> annotation,
       final Function<A, @Nullable String> valueExtract) throws MismatchedArgumentTypeException {
-    final A a = element.getAnnotation(annotation);
+    // Use inherited annotation lookup to support meta-annotations
+    final A a = element.getAnnotationOptionalIncludingInherited(annotation).orElse(null);
     if (a == null) {
       return null;
     }
