@@ -62,6 +62,6 @@ public record ExecutorWrapperProvider(
    * Gets the class that contains the wrapper method.
    */
   public SourceClass wrapperClass() {
-    return (SourceClass) wrapperMethod.getEnclosed();
+    return wrapperMethod.getEnclosed();
   }
 }
