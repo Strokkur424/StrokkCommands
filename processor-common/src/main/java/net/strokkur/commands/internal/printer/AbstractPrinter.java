@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.Writer;
 
 public abstract class AbstractPrinter implements Printable {
-
   private final String indentPreset = "\s\s\s\s";
   private @Nullable Writer writer;
   private String indentString;

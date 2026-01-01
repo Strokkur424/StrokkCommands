@@ -61,12 +61,7 @@ interface InstanceFieldPrinter<C extends CommandInformation> extends Printable, 
 
     int printed = 0;
     if (node.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE) != null) {
-      final List<ExecuteAccess<?>> pathToUse;
-      if (getAccessStack().size() > 1 && getAccessStack().reversed().get(1) instanceof FieldAccess) {
-        pathToUse = getAccessStack().subList(0, getAccessStack().size() - 1);
-      } else {
-        pathToUse = getAccessStack();
-      }
+      final List<ExecuteAccess<?>> pathToUse = getAccessStack();
 
       if (!pathToUse.isEmpty() && printAccessInstance(pathToUse)) {
         printed++;
