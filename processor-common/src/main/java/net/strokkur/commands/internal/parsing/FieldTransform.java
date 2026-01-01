@@ -45,13 +45,18 @@ record FieldTransform(CommandParser parser, NodeUtils nodeUtils) implements Node
         "requirement"
     );
 
-    node.editAttributeMutable(
-        AttributeKey.ACCESS_STACK,
-        list -> list.add(ExecuteAccess.of(element)),
-        () -> new ArrayList<>(List.of(ExecuteAccess.of(element)))
-    );
+    if (false && node != root) {
+      // If this node was different from root.
+      node.editAttributeMutable(
+          AttributeKey.ACCESS_STACK,
+          list -> list.add(ExecuteAccess.of(element)),
+          () -> new ArrayList<>(List.of(ExecuteAccess.of(element)))
+      );
 
-    this.parser.parseClass(node, (SourceClass) element.getType());
+      this.parser.parseClass(node, (SourceClass) element.getType());
+    } else {
+      this.parser.parseClassOverflowAccess(node, (SourceClass) element.getType(), ExecuteAccess.of(element));
+    }
   }
 
   @Override

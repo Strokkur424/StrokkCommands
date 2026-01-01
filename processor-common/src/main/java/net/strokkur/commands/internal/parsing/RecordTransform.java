@@ -23,6 +23,7 @@ import net.strokkur.commands.internal.abstraction.SourceRecord;
 import net.strokkur.commands.internal.abstraction.SourceRecordComponent;
 import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
+import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.attributes.ParameterizableImpl;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
@@ -41,8 +42,8 @@ final class RecordTransform extends ClassTransform {
   }
 
   @Override
-  protected void addAccessAttribute(final CommandNode path, final SourceClass element) {
-    // no impl
+  protected void addAccessAttribute(final CommandNode node, final ExecuteAccess<?> accesses) {
+    // no impl -- records are always instantiated statically
   }
 
   @Override
