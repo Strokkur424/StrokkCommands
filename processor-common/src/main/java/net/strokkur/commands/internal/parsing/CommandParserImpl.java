@@ -27,6 +27,7 @@ import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
 import net.strokkur.commands.internal.exceptions.UnknownSenderException;
+import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
@@ -80,7 +81,7 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
           "requirement"
       );
       transform.populateNode(null, node, sourceClass);
-      transform.addAccessAttribute(node, sourceClass);
+      transform.addAccessAttribute(node, ExecuteAccess.of(sourceClass));
       ClassTransform.parseInnerElements(node, sourceClass, this);
     } catch (MismatchedArgumentTypeException e) {
       errorSource(e.getMessage(), sourceClass);
@@ -110,6 +111,15 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
       this.recordTransform.transform(node, sourceClass);
     } else {
       this.classTransform.transform(node, sourceClass);
+    }
+  }
+
+  @Override
+  public void parseClassOverflowAccess(final CommandNode node, final SourceClass sourceClass, final ExecuteAccess<?> access) throws MismatchedArgumentTypeException {
+    if (sourceClass.isRecord()) {
+      this.recordTransform.transformWithExecuteAccess(node, sourceClass, access);
+    } else {
+      this.classTransform.transformWithExecuteAccess(node, sourceClass, access);
     }
   }
 
