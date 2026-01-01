@@ -17,6 +17,7 @@
  */
 package net.strokkur.commands.internal.parsing;
 
+import net.strokkur.commands.ExecutorWrapper;
 import net.strokkur.commands.Subcommand;
 import net.strokkur.commands.internal.NodeUtils;
 import net.strokkur.commands.internal.abstraction.SourceClass;
@@ -26,6 +27,7 @@ import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.access.InstanceAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.attributes.ExecutorWrapperProvider;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 
@@ -72,7 +74,17 @@ sealed class ClassTransform implements NodeTransform<SourceClass>, ForwardingMes
         "requirement"
     );
 
+    applyExecutorWrapper(node, element);
+
     parseInnerElements(node, element, this.parser);
+  }
+
+  protected void applyExecutorWrapper(final CommandNode node, final SourceClass element) {
+    element.getNestedMethods()
+        .stream()
+        .filter(method -> method.hasAnnotation(ExecutorWrapper.class))
+        .findFirst()
+        .ifPresent(method -> node.setAttribute(AttributeKey.EXECUTOR_WRAPPER, new ExecutorWrapperProvider(method)));
   }
 
   protected void addAccessAttribute(final CommandNode node, final SourceClass element) {

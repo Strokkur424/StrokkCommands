@@ -182,6 +182,7 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
     // is relevant for certain things to print correctly (a.e. executor requirements).
     treePostProcessor.cleanupPath(commandTree);
     treePostProcessor.applyDefaultExecutorPaths(commandTree);
+    treePostProcessor.applyExecutorWrapperPaths(commandTree);
 
     if (debug) {
       // debug log all paths.

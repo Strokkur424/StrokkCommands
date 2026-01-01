@@ -17,42 +17,31 @@
  */
 package net.strokkur.commands.internal.parsing;
 
+import net.strokkur.commands.ExecutorWrapper;
 import net.strokkur.commands.internal.NodeUtils;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
-import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
-import net.strokkur.commands.internal.exceptions.UnknownSenderException;
+import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.attributes.ExecutorWrapperProvider;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
+import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 
-import java.util.List;
-
-public class MethodTransform implements NodeTransform<SourceMethod> {
-  private final List<NodeTransform<SourceMethod>> innerTransforms;
+public final class ExecutorWrapperTransform implements NodeTransform<SourceMethod>, ForwardingMessagerWrapper {
   private final NodeUtils nodeUtils;
 
-  public MethodTransform(final NodeUtils nodeUtils, final ExecutesTransform executesTransform, final DefaultExecutesTransform defaultExecutesTransform, final ExecutorWrapperTransform executorWrapperTransform) {
-    this.innerTransforms = List.of(
-        executesTransform,
-        defaultExecutesTransform,
-        executorWrapperTransform
-    );
+  public ExecutorWrapperTransform(final NodeUtils nodeUtils) {
     this.nodeUtils = nodeUtils;
   }
 
   @Override
-  public void transform(final CommandNode node, final SourceMethod element) throws MismatchedArgumentTypeException, UnknownSenderException {
-    for (final NodeTransform<SourceMethod> innerTransform : innerTransforms) {
-      innerTransform.transformIfRequirement(node, element);
-    }
+  public void transform(final CommandNode node, final SourceMethod element) {
+    debug("> ExecutorWrapperTransform: parsing {} for '{}'", element, node.argument().argumentName());
+    final ExecutorWrapperProvider provider = new ExecutorWrapperProvider(element);
+    node.setAttribute(AttributeKey.EXECUTOR_WRAPPER, provider);
   }
 
   @Override
   public boolean requirement(final SourceMethod element) {
-    for (final NodeTransform<SourceMethod> innerTransform : innerTransforms) {
-      if (innerTransform.requirement(element)) {
-        return true;
-      }
-    }
-    return false;
+    return element.hasAnnotation(ExecutorWrapper.class);
   }
 
   @Override

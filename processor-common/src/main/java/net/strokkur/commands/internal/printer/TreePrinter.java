@@ -29,6 +29,7 @@ import net.strokkur.commands.internal.intermediate.attributes.Attributable;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.attributes.DefaultExecutable;
 import net.strokkur.commands.internal.intermediate.attributes.Executable;
+import net.strokkur.commands.internal.intermediate.attributes.ExecutorWrapperProvider;
 import net.strokkur.commands.internal.intermediate.attributes.Parameterizable;
 import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
@@ -106,13 +107,13 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
   void prefixPrintExecutableInner(final CommandNode node, final Executable executable) throws IOException;
 
   private void printExecutableInner(final CommandNode node, final Executable executable) throws IOException {
-    final SourceMethod executorWrapper = getCommandInformation().executorWrapper();
+    final ExecutorWrapperProvider executorWrapper = node.getAttribute(AttributeKey.EXECUTOR_WRAPPER);
 
     // print the .executes method
     println();
     if (executorWrapper != null) {
       // Wrap with the executor wrapper method
-      println(".executes(instance.%s(ctx -> {", executorWrapper.getName());
+      println(".executes(instance.%s(ctx -> {", executorWrapper.wrapperMethod().getName());
     } else {
       println(".executes(ctx -> {");
     }
@@ -140,33 +141,26 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
     decrementIndent();
 
     if (executorWrapper != null) {
-      // Add the Method parameter for the wrapper
-      printIndented("}, %s))", getMethodReflectionString(executable.executesMethod()));
+      // Add the Method parameter for the wrapper - use a helper method name
+      printIndented("}, %s()))", getMethodHelperName(executable.executesMethod()));
     } else {
       printIndented("})");
     }
   }
 
-  /// Generates a Method reference string for use with executor wrapper.
-  /// Uses a static helper lambda to handle NoSuchMethodException at runtime.
-  /// Example output: ((java.util.function.Supplier<Method>) () -> { try { return MyClass.class.getDeclaredMethod("methodName", ...); } catch (NoSuchMethodException e) { throw new RuntimeException(e); } }).get()
-  private String getMethodReflectionString(final SourceMethod method) {
+  void registerMethodHelper(SourceMethod method);
+
+  default String getMethodHelperName(final SourceMethod method) {
+    registerMethodHelper(method);
     final String className = method.getEnclosed().getName();
     final String methodName = method.getName();
-
     final List<SourceParameter> params = method.getParameters();
-    final String paramTypesStr;
-    if (params.isEmpty()) {
-      paramTypesStr = "";
-    } else {
-      paramTypesStr = ", " + params.stream()
-          .map(param -> param.getType().getFullyQualifiedName() + ".class")
-          .collect(Collectors.joining(", "));
-    }
 
-    // Wrap in a supplier to handle the checked exception
-    return "((java.util.function.Supplier<Method>) () -> { try { return %s.class.getDeclaredMethod(\"%s\"%s); } catch (NoSuchMethodException e) { throw new RuntimeException(e); } }).get()"
-        .formatted(className, methodName, paramTypesStr);
+    final StringBuilder sb = new StringBuilder("getMethod_").append(className).append("_").append(methodName);
+    for (final SourceParameter param : params) {
+      sb.append("_").append(param.getType().getFullyQualifiedName().replace(".", "_"));
+    }
+    return sb.toString();
   }
 
   private void printWithInstance(final Executable executable) throws IOException {

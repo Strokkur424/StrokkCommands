@@ -20,6 +20,7 @@ package net.strokkur.commands.internal.printer;
 import net.strokkur.commands.internal.BuildConstants;
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
+import net.strokkur.commands.internal.abstraction.SourceParameter;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.CommandInformation;
@@ -29,17 +30,20 @@ import org.jspecify.annotations.Nullable;
 import javax.annotation.processing.ProcessingEnvironment;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 public abstract class CommonCommandTreePrinter<C extends CommandInformation> extends AbstractPrinter implements PrinterInformation<C>, ImportPrinter<C>, InstanceFieldPrinter<C>, TreePrinter<C> {
   private final Stack<String> multiLiteralStack = new Stack<>();
   private final Stack<ExecuteAccess<?>> executeAccessStack = new Stack<>();
   protected final CommandNode node;
   private final Set<String> printedInstances = new TreeSet<>();
+  private final Set<SourceMethod> methodHelpers = new LinkedHashSet<>();
   private final ProcessingEnvironment environment;
   protected final PlatformUtils utils;
 
@@ -145,6 +149,8 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
     println("}");
     println();
 
+    printMethodHelpers();
+
     printBlock("""
             /**
              * The constructor is not accessible. There is no need for an instance
@@ -158,6 +164,44 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
         getBrigadierClassName());
     decrementIndent();
     println("}");
+  }
+
+  @Override
+  public final void registerMethodHelper(final SourceMethod method) {
+    methodHelpers.add(method);
+  }
+
+  private void printMethodHelpers() throws IOException {
+    for (final SourceMethod method : methodHelpers) {
+      println();
+      final String helperName = getMethodHelperName(method);
+      final String className = method.getEnclosed().getFullyQualifiedName();
+      final String methodName = method.getName();
+      final List<SourceParameter> params = method.getParameters();
+
+      final String paramTypesStr;
+      if (params.isEmpty()) {
+        paramTypesStr = "";
+      } else {
+        paramTypesStr = ", " + params.stream()
+            .map(param -> param.getType().getFullyQualifiedName() + ".class")
+            .collect(Collectors.joining(", "));
+      }
+
+      println("private static Method %s() {", helperName);
+      incrementIndent();
+      println("try {");
+      incrementIndent();
+      println("return %s.class.getDeclaredMethod(\"%s\"%s);", className, methodName, paramTypesStr);
+      decrementIndent();
+      println("} catch (NoSuchMethodException e) {");
+      incrementIndent();
+      println("throw new RuntimeException(e);");
+      decrementIndent();
+      println("}");
+      decrementIndent();
+      println("}");
+    }
   }
 
   @Override

@@ -15,16 +15,9 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.velocity.util;
+package net.strokkur.commands.internal.intermediate.attributes;
 
-import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.abstraction.SourceConstructor;
-import net.strokkur.commands.internal.util.CommandInformation;
-import org.jspecify.annotations.Nullable;
+import net.strokkur.commands.internal.abstraction.SourceMethod;
 
-public record VelocityCommandInformation(
-    @Nullable SourceConstructor constructor,
-    SourceClass sourceClass,
-    String @Nullable [] aliases
-) implements CommandInformation {
+public record ExecutorWrapperProvider(SourceMethod wrapperMethod) {
 }

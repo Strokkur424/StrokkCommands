@@ -65,8 +65,8 @@ interface ImportPrinter<C extends CommandInformation> extends Printable, Printer
     final Set<String> imports = new HashSet<>(standardImports());
     gatherImports(imports, getNode());
 
-    // Add Method import if executor wrapper is present
-    if (getCommandInformation().executorWrapper() != null) {
+    // Add Method import if executor wrapper is present anywhere in the tree
+    if (hasExecutorWrapper(getNode())) {
       imports.add("java.lang.reflect.Method");
     }
 
@@ -89,6 +89,18 @@ interface ImportPrinter<C extends CommandInformation> extends Printable, Printer
     });
 
     return imports;
+  }
+
+  private boolean hasExecutorWrapper(final CommandNode node) {
+    if (node.hasAttribute(AttributeKey.EXECUTOR_WRAPPER)) {
+      return true;
+    }
+    for (final CommandNode child : node.children()) {
+      if (hasExecutorWrapper(child)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   default void gatherAdditionalArgumentImports(Set<String> imports, RequiredCommandArgument argument) {

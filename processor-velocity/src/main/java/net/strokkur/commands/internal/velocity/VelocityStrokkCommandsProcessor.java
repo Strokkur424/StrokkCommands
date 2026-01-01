@@ -19,7 +19,6 @@ package net.strokkur.commands.internal.velocity;
 
 import net.strokkur.commands.Aliases;
 import net.strokkur.commands.Command;
-import net.strokkur.commands.ExecutorWrapper;
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.StrokkCommandsProcessor;
 import net.strokkur.commands.internal.abstraction.SourceClass;
@@ -78,16 +77,10 @@ public final class VelocityStrokkCommandsProcessor extends StrokkCommandsProcess
             .map(SourceConstructor.class::cast)
             .orElse(null);
 
-    final SourceMethod executorWrapper = sourceClass.getNestedMethods(m -> m.hasAnnotation(ExecutorWrapper.class))
-        .stream()
-        .findFirst()
-        .orElse(null);
-
     return new VelocityCommandInformation(
         constructor,
         sourceClass,
-        aliases.map(Aliases::value).orElse(null),
-        executorWrapper
+        aliases.map(Aliases::value).orElse(null)
     );
   }
 }

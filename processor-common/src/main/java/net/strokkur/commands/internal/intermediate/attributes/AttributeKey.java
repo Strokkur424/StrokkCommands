@@ -30,6 +30,7 @@ public interface AttributeKey<T> {
   AttributeKey<Parameterizable> RECORD_ARGUMENTS = create("record_arguments", null);
   AttributeKey<Executable> EXECUTABLE = create("executable", null);
   AttributeKey<DefaultExecutable> DEFAULT_EXECUTABLE = create("default_executable", null);
+  AttributeKey<ExecutorWrapperProvider> EXECUTOR_WRAPPER = create("executor_wrapper", null);
   AttributeKey<List<ExecuteAccess<?>>> ACCESS_STACK = create("access_stack", null);
 
   AttributeKey<RequirementProvider> REQUIREMENT_PROVIDER = create("requirement_provider", null);

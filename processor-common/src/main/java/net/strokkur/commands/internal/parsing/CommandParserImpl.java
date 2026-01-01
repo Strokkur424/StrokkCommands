@@ -17,6 +17,7 @@
  */
 package net.strokkur.commands.internal.parsing;
 
+import net.strokkur.commands.ExecutorWrapper;
 import net.strokkur.commands.internal.NodeUtils;
 import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceElement;
@@ -28,6 +29,7 @@ import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
 import net.strokkur.commands.internal.exceptions.UnknownSenderException;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.attributes.ExecutorWrapperProvider;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.commands.internal.util.MessagerWrapper;
@@ -56,7 +58,8 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
 
     this.classTransform = new ClassTransform(this, nodeUtils);
     this.recordTransform = new RecordTransform(this, nodeUtils);
-    this.methodTransform = new MethodTransform(nodeUtils, executesTransform.apply(this), defaultExecutesTransform.apply(this));
+    final ExecutorWrapperTransform executorWrapperTransform = new ExecutorWrapperTransform(nodeUtils);
+    this.methodTransform = new MethodTransform(nodeUtils, executesTransform.apply(this), defaultExecutesTransform.apply(this), executorWrapperTransform);
     this.fieldTransform = new FieldTransform(this, nodeUtils);
   }
 
@@ -81,11 +84,20 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
       );
       transform.populateNode(null, node, sourceClass);
       transform.addAccessAttribute(node, sourceClass);
+      applyExecutorWrapper(node, sourceClass);
       ClassTransform.parseInnerElements(node, sourceClass, this);
     } catch (MismatchedArgumentTypeException e) {
       errorSource(e.getMessage(), sourceClass);
     }
     return first;
+  }
+
+  private void applyExecutorWrapper(final CommandNode node, final SourceClass element) {
+    element.getNestedMethods()
+        .stream()
+        .filter(method -> method.hasAnnotation(ExecutorWrapper.class))
+        .findFirst()
+        .ifPresent(method -> node.setAttribute(AttributeKey.EXECUTOR_WRAPPER, new ExecutorWrapperProvider(method)));
   }
 
   @Override
