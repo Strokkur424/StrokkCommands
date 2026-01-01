@@ -15,25 +15,40 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.modded.arguments;
+package net.strokkur.testplugin.externalsubcommands;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import net.strokkur.commands.Command;
+import net.strokkur.commands.Executes;
+import net.strokkur.commands.Subcommand;
+import org.bukkit.command.CommandSender;
 
-/// Declares that an `int` parameter should be interpreted as a time argument.
-///
-/// The optional parameter declares the minimum number of time that needs to be entered.
-///
-/// Example usage:
-/// ```java
-/// @Executes
-/// void executes(S source, @TimeArg int time);
-/// ```
-@Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.PARAMETER)
-public @interface TimeArg {
-  /// {@return the minimum number of time (in ticks) that needs to be entered}
-  int value() default 0;
+@Command("multiple")
+class MultipleSubCommands {
+  @Subcommand
+  FirstSub first;
+
+  @Subcommand
+  SecondSub second;
+
+  @Subcommand("alt")
+  FirstSub altFirst;
+
+  @Subcommand("alt")
+  SecondSub altSecond;
+}
+
+@Subcommand("first")
+class FirstSub {
+  @Executes
+  void executeFirst(CommandSender sender) {
+    sender.sendRichMessage("Hell yeah");
+  }
+}
+
+@Subcommand("second")
+class SecondSub {
+  @Executes
+  void executeSecond(CommandSender sender) {
+    sender.sendRichMessage("Hell yeah x2");
+  }
 }

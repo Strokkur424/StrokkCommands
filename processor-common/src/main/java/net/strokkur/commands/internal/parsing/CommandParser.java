@@ -20,6 +20,7 @@ package net.strokkur.commands.internal.parsing;
 import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceElement;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
+import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import org.jspecify.annotations.Nullable;
 
@@ -31,5 +32,7 @@ public interface CommandParser {
 
   void parseElement(CommandNode root, SourceElement element) throws MismatchedArgumentTypeException;
 
-  void parseClass(CommandNode root, SourceClass sourceClass) throws MismatchedArgumentTypeException;
+  void parseClass(CommandNode node, SourceClass sourceClass) throws MismatchedArgumentTypeException;
+
+  void parseClassOverflowAccess(CommandNode node, SourceClass sourceClass, ExecuteAccess<?> access) throws MismatchedArgumentTypeException;
 }

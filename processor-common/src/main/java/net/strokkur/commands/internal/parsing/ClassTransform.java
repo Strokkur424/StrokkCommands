@@ -24,7 +24,6 @@ import net.strokkur.commands.internal.abstraction.SourceField;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
-import net.strokkur.commands.internal.intermediate.access.InstanceAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
@@ -65,7 +64,7 @@ sealed class ClassTransform implements NodeTransform<SourceClass>, ForwardingMes
     debug("> {}: parsing {}...", transformName(), element);
 
     final CommandNode node = parseRecordComponents(createSubcommandNode(parent, element), element);
-    this.addAccessAttribute(node, element);
+    this.addAccessAttribute(node, ExecuteAccess.of(element));
 
     this.nodeUtils().applyRegistrableProvider(
         node,
@@ -88,11 +87,31 @@ sealed class ClassTransform implements NodeTransform<SourceClass>, ForwardingMes
         .ifPresent(wrapper -> node.setAttribute(AttributeKey.EXECUTOR_WRAPPER, wrapper));
   }
 
-  protected void addAccessAttribute(final CommandNode node, final SourceClass element) {
-    final InstanceAccess access = ExecuteAccess.of(element);
+  public final void transformWithExecuteAccess(
+      final CommandNode parent,
+      final SourceClass element,
+      final ExecuteAccess<?> access
+  ) throws MismatchedArgumentTypeException {
+    debug("> {}: parsing {}...", transformName(), element);
+
+    final CommandNode node = parseRecordComponents(createSubcommandNode(parent, element), element);
+    this.addAccessAttribute(node, access);
+
+    this.nodeUtils().applyRegistrableProvider(
+        node,
+        element,
+        nodeUtils().requirementRegistry(),
+        AttributeKey.REQUIREMENT_PROVIDER,
+        "requirement"
+    );
+
+    parseInnerElements(node, element, this.parser);
+  }
+
+  protected void addAccessAttribute(final CommandNode node, final ExecuteAccess<?> access) {
     node.editAttributeMutable(
         AttributeKey.ACCESS_STACK,
-        accesses -> accesses.add(access),
+        existing -> existing.add(access),
         () -> new ArrayList<>(List.of(access))
     );
   }

@@ -228,13 +228,7 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
   }
 
   private void printWithInstance(final Executable executable) throws IOException {
-    final List<ExecuteAccess<?>> pathToUse;
-    if (getAccessStack().size() > 1 && getAccessStack().reversed().get(1) instanceof FieldAccess) {
-      pathToUse = getAccessStack().subList(0, getAccessStack().size() - 1);
-    } else {
-      pathToUse = getAccessStack();
-    }
-
+    final List<ExecuteAccess<?>> pathToUse = getAccessStack();
     printExecutesMethodCall(executable, Utils.getInstanceName(pathToUse));
   }
 
