@@ -35,7 +35,7 @@ import java.lang.annotation.Target;
 /// }
 /// ```
 @Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.METHOD)
+@Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 public @interface Executes {
   /// A literal path to prepend to the method.
   ///

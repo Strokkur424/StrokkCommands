@@ -44,23 +44,13 @@ record FieldTransform(CommandParser parser, NodeUtils nodeUtils) implements Node
         AttributeKey.REQUIREMENT_PROVIDER,
         "requirement"
     );
+    this.nodeUtils().applyExecutorTransform(node, element);
 
-    if (false && node != root) {
-      // If this node was different from root.
-      node.editAttributeMutable(
-          AttributeKey.ACCESS_STACK,
-          list -> list.add(ExecuteAccess.of(element)),
-          () -> new ArrayList<>(List.of(ExecuteAccess.of(element)))
-      );
-
-      this.parser.parseClass(node, (SourceClass) element.getType());
-    } else {
-      this.parser.parseClassOverflowAccess(node, (SourceClass) element.getType(), ExecuteAccess.of(element));
-    }
+    this.parser.parseClassOverflowAccess(node, (SourceClass) element.getType(), ExecuteAccess.of(element));
   }
 
   @Override
   public boolean requirement(final SourceField element) {
-    return element.getAnnotationOptional(Subcommand.class).isPresent() && element.getType() instanceof SourceClass;
+    return element.hasAnnotationInherited(Subcommand.class) && element.getType() instanceof SourceClass;
   }
 }

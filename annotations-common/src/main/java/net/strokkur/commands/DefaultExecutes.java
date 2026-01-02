@@ -62,7 +62,7 @@ import java.util.List;
 /// If multiple [DefaultExecutes]-annotated methods are present, the **deeper one** in the tree takes precedence.
 /// If multiple [DefaultExecutes]-annotated methods are present on the same path, the first declared one takes precedence.
 @Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.METHOD)
+@Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 public @interface DefaultExecutes {
   /// A literal path to prepend to the method.
   ///

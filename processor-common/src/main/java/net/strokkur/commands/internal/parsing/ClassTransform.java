@@ -70,6 +70,7 @@ sealed class ClassTransform implements NodeTransform<SourceClass>, ForwardingMes
         AttributeKey.REQUIREMENT_PROVIDER,
         "requirement"
     );
+    this.nodeUtils().applyExecutorTransform(node, element);
 
     parseInnerElements(node, element, this.parser);
   }
@@ -109,7 +110,7 @@ sealed class ClassTransform implements NodeTransform<SourceClass>, ForwardingMes
 
   @Override
   public boolean requirement(final SourceClass element) {
-    return element.getAnnotationOptional(Subcommand.class).isPresent();
+    return element.hasAnnotationInherited(Subcommand.class);
   }
 
   @Override

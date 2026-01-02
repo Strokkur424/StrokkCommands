@@ -85,7 +85,7 @@ public sealed class ExecutesTransform implements NodeTransform<SourceMethod>, Fo
         AttributeKey.REQUIREMENT_PROVIDER,
         "requirement"
     );
-
+    nodeUtils().applyExecutorTransform(out, element);
     nodeUtils().platformUtils().populateNode(out, element);
 
     debug("  | {}: Current tree for thisPath: {}", transformName(), thisPath);
@@ -93,7 +93,7 @@ public sealed class ExecutesTransform implements NodeTransform<SourceMethod>, Fo
 
   @Override
   public boolean requirement(final SourceMethod element) {
-    return element.getAnnotationOptional(Executes.class).isPresent();
+    return element.hasAnnotationInherited(Executes.class);
   }
 
   @Override
