@@ -19,6 +19,7 @@ package net.strokkur.testplugin;
 
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import net.strokkur.testplugin.wrapper.ExecutorWrapperCommandBrigadier;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class TestPlugin extends JavaPlugin {
@@ -27,6 +28,8 @@ public final class TestPlugin extends JavaPlugin {
   public void onLoad() {
     this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS.newHandler(event -> {
       Commands commands = event.registrar();
+
+      ExecutorWrapperCommandBrigadier.register(commands);
 
 //      OneBrigadier.register(commands);
 //      MyFirstCommandBrigadier.register(commands);

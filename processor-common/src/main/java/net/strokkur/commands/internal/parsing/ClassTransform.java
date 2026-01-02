@@ -27,7 +27,6 @@ import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
-import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,12 +34,10 @@ import java.util.List;
 sealed class ClassTransform implements NodeTransform<SourceClass>, ForwardingMessagerWrapper permits RecordTransform {
   protected final CommandParser parser;
   protected final NodeUtils nodeUtils;
-  protected final @Nullable WrapperDetector wrapperDetector;
 
-  public ClassTransform(final CommandParser parser, final NodeUtils nodeUtils, final @Nullable WrapperDetector wrapperDetector) {
+  public ClassTransform(final CommandParser parser, final NodeUtils nodeUtils) {
     this.parser = parser;
     this.nodeUtils = nodeUtils;
-    this.wrapperDetector = wrapperDetector;
   }
 
   protected String transformName() {
@@ -73,18 +70,15 @@ sealed class ClassTransform implements NodeTransform<SourceClass>, ForwardingMes
         AttributeKey.REQUIREMENT_PROVIDER,
         "requirement"
     );
-
-    applyExecutorWrapper(node, element);
+    this.nodeUtils().applyRegistrableProvider(
+        node,
+        element,
+        nodeUtils().executorWrapperRegistry(),
+        AttributeKey.EXECUTOR_WRAPPER,
+        "executor wrapper"
+    );
 
     parseInnerElements(node, element, this.parser);
-  }
-
-  protected void applyExecutorWrapper(final CommandNode node, final SourceClass element) {
-    if (wrapperDetector == null || !(parser instanceof CommandParserImpl parserImpl)) {
-      return;
-    }
-    wrapperDetector.detectWrapper(element, parserImpl.getRootSourceClass())
-        .ifPresent(wrapper -> node.setAttribute(AttributeKey.EXECUTOR_WRAPPER, wrapper));
   }
 
   public final void transformWithExecuteAccess(
@@ -122,7 +116,7 @@ sealed class ClassTransform implements NodeTransform<SourceClass>, ForwardingMes
 
   @Override
   public boolean requirement(final SourceClass element) {
-    return element.hasAnnotation(Subcommand.class);
+    return element.hasAnnotationInherited(Subcommand.class);
   }
 
   @Override

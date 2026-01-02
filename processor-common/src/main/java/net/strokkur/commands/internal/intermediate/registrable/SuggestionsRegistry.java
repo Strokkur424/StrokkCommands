@@ -25,7 +25,7 @@ import net.strokkur.commands.internal.util.Classes;
 
 import java.util.List;
 
-public class SuggestionsRegistry extends RegistrableRegistry<SuggestionProvider> {
+public class SuggestionsRegistry extends FunctionalInterfaceRegistry<SuggestionProvider> {
 
   public SuggestionsRegistry(final String platformType) {
     super(platformType);

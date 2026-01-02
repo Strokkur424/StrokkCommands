@@ -42,13 +42,9 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
   private final RecordTransform recordTransform;
   private final NodeTransform<SourceMethod> methodTransform;
   private final NodeTransform<SourceField> fieldTransform;
-  private final WrapperDetector wrapperDetector;
 
   private final MessagerWrapper messager;
   private final NodeUtils nodeUtils;
-
-  // Stored so we can pass it to WrapperDetector for finding wrapper methods
-  private SourceClass rootSourceClass;
 
   public CommandParserImpl(
       final MessagerWrapper messager,
@@ -59,20 +55,14 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
     this.messager = messager;
     this.nodeUtils = nodeUtils;
 
-    this.wrapperDetector = new WrapperDetector(messager);
-    this.classTransform = new ClassTransform(this, nodeUtils, wrapperDetector);
+    this.classTransform = new ClassTransform(this, nodeUtils);
     this.recordTransform = new RecordTransform(this, nodeUtils);
     this.methodTransform = new MethodTransform(nodeUtils, executesTransform.apply(this), defaultExecutesTransform.apply(this));
     this.fieldTransform = new FieldTransform(this, nodeUtils);
   }
 
-  SourceClass getRootSourceClass() {
-    return rootSourceClass;
-  }
-
   @Override
   public @Nullable CommandNode createCommandTree(final String name, final SourceClass sourceClass) {
-    this.rootSourceClass = sourceClass;
     final List<String> split = List.of(name.split(" "));
     final CommandNode first = CommandNode.createRoot(LiteralCommandArgument.literal(split.getFirst(), sourceClass));
 
@@ -90,19 +80,21 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
           AttributeKey.REQUIREMENT_PROVIDER,
           "requirement"
       );
+      nodeUtils.applyRegistrableProvider(
+          node,
+          sourceClass,
+          nodeUtils.executorWrapperRegistry(),
+          AttributeKey.EXECUTOR_WRAPPER,
+          "executor wrapper"
+      );
+
       transform.populateNode(null, node, sourceClass);
       transform.addAccessAttribute(node, ExecuteAccess.of(sourceClass));
-      applyExecutorWrapper(node, sourceClass);
       ClassTransform.parseInnerElements(node, sourceClass, this);
     } catch (MismatchedArgumentTypeException e) {
       errorSource(e.getMessage(), sourceClass);
     }
     return first;
-  }
-
-  private void applyExecutorWrapper(final CommandNode node, final SourceClass element) {
-    wrapperDetector.detectWrapper(element, rootSourceClass)
-        .ifPresent(wrapper -> node.setAttribute(AttributeKey.EXECUTOR_WRAPPER, wrapper));
   }
 
   @Override

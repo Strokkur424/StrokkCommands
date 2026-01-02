@@ -18,6 +18,7 @@
 package net.strokkur.commands.internal.intermediate.attributes;
 
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
+import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperProvider;
 import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
 import org.jetbrains.annotations.Contract;

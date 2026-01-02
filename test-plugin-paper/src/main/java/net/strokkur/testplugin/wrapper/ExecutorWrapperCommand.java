@@ -20,48 +20,29 @@ package net.strokkur.testplugin.wrapper;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
+import net.strokkur.commands.CustomExecutorWrapper;
 import net.strokkur.commands.Executes;
-import net.strokkur.commands.ExecutorWrapper;
-import net.strokkur.commands.Subcommand;
 import org.bukkit.command.CommandSender;
 
-import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 
-/// Test command demonstrating the ExecutorWrapper feature.
-/// This command uses a wrapper to measure execution time and check for custom annotations.
+@CustomExecutorWrapper
+@interface TimingWrapper {}
+
+@Retention(RetentionPolicy.RUNTIME)
+@interface Logged {
+  String value() default "";
+}
+
+@Retention(RetentionPolicy.RUNTIME)
+@interface RequiresConfirmation {}
+
 @net.strokkur.commands.Command("wrappertest")
-@ExecutorWrapperCommand.TimingWrapper // Apply wrapper to all methods in this command
+@TimingWrapper
 class ExecutorWrapperCommand {
 
-  /// Custom wrapper annotation - wraps all command executors with timing logic
-  @ExecutorWrapper
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target({ElementType.TYPE, ElementType.METHOD})
-  public @interface TimingWrapper {}
-
-  /// Custom wrapper annotation for admin commands - different logging
-  @ExecutorWrapper
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target({ElementType.TYPE, ElementType.METHOD})
-  public @interface AdminWrapper {}
-
-  /// Custom annotation to mark methods that should be logged
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target(ElementType.METHOD)
-  public @interface Logged {
-    String value() default "";
-  }
-
-  /// Custom annotation to mark methods that require confirmation
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target(ElementType.METHOD)
-  public @interface RequiresConfirmation {}
-
-  /// The TimingWrapper implementation (static method returning Command)
   @TimingWrapper
   public static Command<CommandSourceStack> timingWrapper(Command<CommandSourceStack> executor, Method method) {
     return ctx -> {
@@ -95,19 +76,6 @@ class ExecutorWrapperCommand {
     };
   }
 
-  /// The AdminWrapper implementation (static method returning int)
-  @AdminWrapper
-  public static int adminWrapper(com.mojang.brigadier.context.CommandContext<CommandSourceStack> ctx, Command<CommandSourceStack> executor, Method method) {
-    final CommandSender sender = ctx.getSource().getSender();
-    sender.sendRichMessage("<gold>[ADMIN] Running admin command: <white>" + method.getName());
-    try {
-      return executor.run(ctx);
-    } catch (CommandSyntaxException e) {
-      sender.sendRichMessage("<red>Command error: " + e.getMessage());
-      return 0;
-    }
-  }
-
   @Executes("simple")
   void simpleCommand(CommandSender sender) {
     sender.sendRichMessage("<green>Simple command executed!");
@@ -135,21 +103,5 @@ class ExecutorWrapperCommand {
   @Executes("witharg")
   void withArgument(CommandSender sender, String message) {
     sender.sendRichMessage("<green>Message received: <white>" + message);
-  }
-
-  /// Admin subcommand with a different wrapper
-  @Subcommand("admin")
-  @AdminWrapper // Uses a different wrapper for admin commands
-  static class AdminCommands {
-
-    @Executes("status")
-    void status(CommandSender sender) {
-      sender.sendRichMessage("<gold>Admin status: All systems operational!");
-    }
-
-    @Executes("reload")
-    void reload(CommandSender sender) {
-      sender.sendRichMessage("<gold>Configuration reloaded!");
-    }
   }
 }

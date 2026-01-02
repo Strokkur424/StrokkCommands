@@ -17,6 +17,7 @@
  */
 package net.strokkur.commands.internal.intermediate.attributes;
 
+import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
@@ -30,7 +31,8 @@ public interface Attributable {
   @Nullable
   <T> T getAttribute(AttributeKey<T> key);
 
-  default <T> T getAttributeOr(AttributeKey<T> key, T defaultValue) {
+  @Contract("_, !null -> !null")
+  default <T> @Nullable T getAttributeOr(AttributeKey<T> key, @Nullable T defaultValue) {
     return Optional.ofNullable(getAttribute(key)).orElse(defaultValue);
   }
 

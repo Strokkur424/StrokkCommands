@@ -24,9 +24,11 @@ import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.access.FieldAccess;
 import net.strokkur.commands.internal.intermediate.access.InstanceAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperProvider;
 import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
+import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.util.CommandInformation;
 
 import java.io.IOException;
@@ -65,15 +67,10 @@ interface ImportPrinter<C extends CommandInformation> extends Printable, Printer
     final Set<String> imports = new HashSet<>(standardImports());
     gatherImports(imports, getNode());
 
-    // Add Method import if executor wrapper is present anywhere in the tree
-    if (hasExecutorWrapper(getNode())) {
-      imports.add("java.lang.reflect.Method");
-    }
-
     final String sourceClassFqn = getCommandInformation().sourceClass().getFullyQualifiedName();
     final int numberOfDots = sourceClassFqn.split("\\.").length;
     imports.removeIf(importString -> {
-      // Don't remove java.lang.reflect imports (like Method)
+      // Don't remove java.lang.reflect imports
       if (importString.startsWith("java.lang.reflect")) {
         return false;
       }
@@ -91,18 +88,6 @@ interface ImportPrinter<C extends CommandInformation> extends Printable, Printer
     return imports;
   }
 
-  private boolean hasExecutorWrapper(final CommandNode node) {
-    if (node.hasAttribute(AttributeKey.EXECUTOR_WRAPPER)) {
-      return true;
-    }
-    for (final CommandNode child : node.children()) {
-      if (hasExecutorWrapper(child)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   default void gatherAdditionalArgumentImports(Set<String> imports, RequiredCommandArgument argument) {
     // noop
   }
@@ -111,9 +96,21 @@ interface ImportPrinter<C extends CommandInformation> extends Printable, Printer
     // noop
   }
 
+  default void gatherAdditionalExecutorWrapperImports(Set<String> imports) {
+    // noop
+  }
+
   private void gatherImports(final Set<String> imports, final CommandNode node) {
     if (node.hasAttribute(AttributeKey.DEFAULT_EXECUTABLE)) {
       imports.addAll(node.getAttributeNotNull(AttributeKey.DEFAULT_EXECUTABLE).defaultExecutableArgumentTypes().getImports());
+    }
+
+    if (node.hasAttribute(AttributeKey.EXECUTOR_WRAPPER)) {
+      final ExecutorWrapperProvider wrapper = node.getAttributeNotNull(AttributeKey.EXECUTOR_WRAPPER);
+      if (wrapper.wrapperType() == ExecutorWrapperProvider.WrapperType.COMMAND_METHOD) {
+        imports.add(Classes.METHOD);
+        gatherAdditionalExecutorWrapperImports(imports);
+      }
     }
 
     if (getCommandInformation().constructor() instanceof SourceConstructor ctor) {

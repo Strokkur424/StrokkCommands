@@ -85,6 +85,13 @@ public sealed class ExecutesTransform implements NodeTransform<SourceMethod>, Fo
         AttributeKey.REQUIREMENT_PROVIDER,
         "requirement"
     );
+    this.nodeUtils().applyRegistrableProvider(
+        out,
+        element,
+        nodeUtils().executorWrapperRegistry(),
+        AttributeKey.EXECUTOR_WRAPPER,
+        "executor wrapper"
+    );
 
     nodeUtils().platformUtils().populateNode(out, element);
 
@@ -93,7 +100,7 @@ public sealed class ExecutesTransform implements NodeTransform<SourceMethod>, Fo
 
   @Override
   public boolean requirement(final SourceMethod element) {
-    return element.hasAnnotation(Executes.class);
+    return element.hasAnnotationInherited(Executes.class);
   }
 
   @Override

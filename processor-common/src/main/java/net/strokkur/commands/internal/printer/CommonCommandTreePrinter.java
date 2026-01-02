@@ -19,11 +19,10 @@ package net.strokkur.commands.internal.printer;
 
 import net.strokkur.commands.internal.BuildConstants;
 import net.strokkur.commands.internal.PlatformUtils;
-import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
-import net.strokkur.commands.internal.abstraction.SourceParameter;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
-import net.strokkur.commands.internal.intermediate.attributes.ExecutorWrapperProvider;
+import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperProvider;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.CommandInformation;
 import net.strokkur.commands.internal.util.PrintParamsHolder;
@@ -32,22 +31,22 @@ import org.jspecify.annotations.Nullable;
 import javax.annotation.processing.ProcessingEnvironment;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 public abstract class CommonCommandTreePrinter<C extends CommandInformation> extends AbstractPrinter implements PrinterInformation<C>, ImportPrinter<C>, InstanceFieldPrinter<C>, TreePrinter<C> {
   private final Stack<String> multiLiteralStack = new Stack<>();
   private final Stack<ExecuteAccess<?>> executeAccessStack = new Stack<>();
   protected final CommandNode node;
   private final Set<String> printedInstances = new TreeSet<>();
-  private final Set<SourceMethod> methodHelpers = new LinkedHashSet<>();
   private final ProcessingEnvironment environment;
   protected final PlatformUtils utils;
+
+  private @Nullable ExecutorWrapperProvider executorWrapper = null;
+  private Stack<ExecuteAccess<?>> executorWrapperAccessStack = new Stack<>();
 
   private int multiLiteralStackPosition = 0;
 
@@ -79,6 +78,23 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
   protected abstract PrintParamsHolder getParamsHolder();
 
   protected abstract void printRegisterMethod(final PrintParamsHolder holder) throws IOException;
+
+  @Override
+  public @Nullable ExecutorWrapperProvider getExecutorWrapper() {
+    return this.executorWrapper;
+  }
+
+  @Override
+  public Stack<ExecuteAccess<?>> getExecutorWrapperAccessStack() {
+    return this.executorWrapperAccessStack;
+  }
+
+  @Override
+  public void updateExecutorWrapper(final ExecutorWrapperProvider provider) {
+    this.executorWrapper = provider;
+    this.executorWrapperAccessStack = new Stack<>();
+    this.executorWrapperAccessStack.addAll(this.getAccessStack());
+  }
 
   protected void printSemicolon() throws IOException {
     print(";");
@@ -151,7 +167,7 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
     println("}");
     println();
 
-    printMethodHelpers();
+    printReflectionHelper(node);
 
     printBlock("""
             /**
@@ -168,42 +184,30 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
     println("}");
   }
 
-  @Override
-  public final void registerMethodHelper(final SourceMethod method) {
-    methodHelpers.add(method);
-  }
-
-  private void printMethodHelpers() throws IOException {
-    for (final SourceMethod method : methodHelpers) {
+  private boolean printReflectionHelper(final CommandNode node) throws IOException {
+    if (Optional.ofNullable(node.getAttribute(AttributeKey.EXECUTOR_WRAPPER))
+        .map(ExecutorWrapperProvider::wrapperType)
+        .map(ExecutorWrapperProvider.WrapperType::withMethod)
+        .orElse(false)) {
+      printBlock("""
+          private static Method getMethodViaReflection(final Class<?> clazz, final String name, final Class<?>... parameters) {
+              try {
+                  return clazz.getDeclaredMethod(name, parameters);
+              } catch (ReflectiveOperationException ex) {
+                  throw new RuntimeException(ex);
+              }
+          }
+          """);
       println();
-      final String helperName = getMethodHelperName(method);
-      final String className = method.getEnclosed().getFullyQualifiedName();
-      final String methodName = method.getName();
-      final List<SourceParameter> params = method.getParameters();
-
-      final String paramTypesStr;
-      if (params.isEmpty()) {
-        paramTypesStr = "";
-      } else {
-        paramTypesStr = ", " + params.stream()
-            .map(param -> param.getType().getFullyQualifiedName() + ".class")
-            .collect(Collectors.joining(", "));
-      }
-
-      println("private static Method %s() {", helperName);
-      incrementIndent();
-      println("try {");
-      incrementIndent();
-      println("return %s.class.getDeclaredMethod(\"%s\"%s);", className, methodName, paramTypesStr);
-      decrementIndent();
-      println("} catch (NoSuchMethodException e) {");
-      incrementIndent();
-      println("throw new RuntimeException(e);");
-      decrementIndent();
-      println("}");
-      decrementIndent();
-      println("}");
+      return true;
     }
+
+    for (final CommandNode child : node.children()) {
+      if (printReflectionHelper(child)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override
@@ -249,21 +253,5 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
   @Override
   public final C getCommandInformation() {
     return this.commandInformation;
-  }
-
-  @Override
-  public String getWrapperInstanceName(final ExecutorWrapperProvider wrapper) {
-    // For instance wrapper methods, we need to determine the instance variable name
-    // This could be "instance" for the main command class, or a nested instance name
-    final SourceClass wrapperClass = wrapper.wrapperClass();
-    final SourceClass mainClass = getCommandInformation().sourceClass();
-
-    if (wrapperClass.getFullyQualifiedName().equals(mainClass.getFullyQualifiedName())) {
-      return "instance";
-    }
-
-    // For nested classes, use the naming convention like "instanceAdminCommands"
-    final String simpleName = wrapperClass.getName();
-    return "instance" + simpleName;
   }
 }

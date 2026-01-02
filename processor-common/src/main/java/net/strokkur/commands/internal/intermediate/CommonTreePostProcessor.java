@@ -19,7 +19,6 @@ package net.strokkur.commands.internal.intermediate;
 
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.attributes.DefaultExecutable;
-import net.strokkur.commands.internal.intermediate.attributes.ExecutorWrapperProvider;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 
@@ -47,26 +46,6 @@ public non-sealed abstract class CommonTreePostProcessor implements TreePostProc
     final DefaultExecutable defaultExecutable = node.getAttributeOrSet(AttributeKey.DEFAULT_EXECUTABLE, def);
     for (final CommandNode child : node.children()) {
       applyDefaultExecutorPathIfUnset(child, defaultExecutable);
-    }
-  }
-
-  public final void applyExecutorWrapperPaths(final CommandNode node) {
-    final ExecutorWrapperProvider executorWrapper = node.getAttribute(AttributeKey.EXECUTOR_WRAPPER);
-
-    if (executorWrapper == null) {
-      node.children().forEach(this::applyExecutorWrapperPaths);
-      return;
-    }
-
-    node.children().forEach(
-        child -> applyExecutorWrapperPathIfUnset(child, executorWrapper)
-    );
-  }
-
-  private void applyExecutorWrapperPathIfUnset(final CommandNode node, final ExecutorWrapperProvider wrapper) {
-    final ExecutorWrapperProvider executorWrapper = node.getAttributeOrSet(AttributeKey.EXECUTOR_WRAPPER, wrapper);
-    for (final CommandNode child : node.children()) {
-      applyExecutorWrapperPathIfUnset(child, executorWrapper);
     }
   }
 

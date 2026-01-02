@@ -67,6 +67,6 @@ public final class DefaultExecutesTransform extends ExecutesTransform {
 
   @Override
   public boolean requirement(final SourceMethod element) {
-    return element.hasAnnotation(DefaultExecutes.class);
+    return element.hasAnnotationInherited(DefaultExecutes.class);
   }
 }

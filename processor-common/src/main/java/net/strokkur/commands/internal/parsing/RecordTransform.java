@@ -33,7 +33,7 @@ import java.util.List;
 final class RecordTransform extends ClassTransform {
 
   public RecordTransform(final CommandParser parser, final NodeUtils nodeUtils) {
-    super(parser, nodeUtils, null);
+    super(parser, nodeUtils);
   }
 
   @Override
