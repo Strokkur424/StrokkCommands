@@ -90,7 +90,7 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
   }
 
   @Override
-  public void updateExecutorWrapper(final ExecutorWrapperProvider provider) {
+  public void updateExecutorWrapper(final @Nullable ExecutorWrapperProvider provider) {
     this.executorWrapper = provider;
     this.executorWrapperAccessStack = new Stack<>();
     this.executorWrapperAccessStack.addAll(this.getAccessStack());

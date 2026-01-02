@@ -18,6 +18,7 @@
 package net.strokkur.commands.internal;
 
 import net.strokkur.commands.Literal;
+import net.strokkur.commands.UnsetExecutorWrapper;
 import net.strokkur.commands.internal.abstraction.AnnotationsHolder;
 import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceElement;
@@ -53,6 +54,21 @@ public record NodeUtils(
     RequirementRegistry requirementRegistry,
     ExecutorWrapperRegistry executorWrapperRegistry
 ) implements ForwardingMessagerWrapper {
+
+  public void applyExecutorTransform(final Attributable node, final AnnotationsHolder element) {
+    if (element.hasAnnotationInherited(UnsetExecutorWrapper.class)) {
+      node.setAttribute(AttributeKey.EXECUTOR_WRAPPER_UNSET, true);
+      return;
+    }
+
+    this.applyRegistrableProvider(
+        node,
+        element,
+        this.executorWrapperRegistry(),
+        AttributeKey.EXECUTOR_WRAPPER,
+        "executor wrapper"
+    );
+  }
 
   public List<CommandArgument> parseArguments(final List<? extends SourceVariable> variables) {
     final List<CommandArgument> arguments = new ArrayList<>(variables.size());

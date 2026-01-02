@@ -80,13 +80,7 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
           AttributeKey.REQUIREMENT_PROVIDER,
           "requirement"
       );
-      nodeUtils.applyRegistrableProvider(
-          node,
-          sourceClass,
-          nodeUtils.executorWrapperRegistry(),
-          AttributeKey.EXECUTOR_WRAPPER,
-          "executor wrapper"
-      );
+      nodeUtils.applyExecutorTransform(node, sourceClass);
 
       transform.populateNode(null, node, sourceClass);
       transform.addAccessAttribute(node, ExecuteAccess.of(sourceClass));

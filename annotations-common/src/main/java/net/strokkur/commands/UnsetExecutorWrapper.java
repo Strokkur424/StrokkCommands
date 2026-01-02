@@ -46,6 +46,6 @@ import java.lang.annotation.Target;
 ///
 /// @see CustomExecutorWrapper
 @Retention(RetentionPolicy.SOURCE)
-@Target({ElementType.METHOD, ElementType.FIELD, ElementType.TYPE})
+@Target({ElementType.METHOD, ElementType.FIELD, ElementType.TYPE, ElementType.ANNOTATION_TYPE})
 public @interface UnsetExecutorWrapper {
 }

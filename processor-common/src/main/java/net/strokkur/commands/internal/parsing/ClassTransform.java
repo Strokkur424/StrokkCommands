@@ -70,13 +70,7 @@ sealed class ClassTransform implements NodeTransform<SourceClass>, ForwardingMes
         AttributeKey.REQUIREMENT_PROVIDER,
         "requirement"
     );
-    this.nodeUtils().applyRegistrableProvider(
-        node,
-        element,
-        nodeUtils().executorWrapperRegistry(),
-        AttributeKey.EXECUTOR_WRAPPER,
-        "executor wrapper"
-    );
+    this.nodeUtils().applyExecutorTransform(node, element);
 
     parseInnerElements(node, element, this.parser);
   }

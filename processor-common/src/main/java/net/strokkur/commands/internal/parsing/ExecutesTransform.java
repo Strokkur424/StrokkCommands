@@ -85,14 +85,7 @@ public sealed class ExecutesTransform implements NodeTransform<SourceMethod>, Fo
         AttributeKey.REQUIREMENT_PROVIDER,
         "requirement"
     );
-    this.nodeUtils().applyRegistrableProvider(
-        out,
-        element,
-        nodeUtils().executorWrapperRegistry(),
-        AttributeKey.EXECUTOR_WRAPPER,
-        "executor wrapper"
-    );
-
+    nodeUtils().applyExecutorTransform(out, element);
     nodeUtils().platformUtils().populateNode(out, element);
 
     debug("  | {}: Current tree for thisPath: {}", transformName(), thisPath);

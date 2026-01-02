@@ -44,6 +44,7 @@ record FieldTransform(CommandParser parser, NodeUtils nodeUtils) implements Node
         AttributeKey.REQUIREMENT_PROVIDER,
         "requirement"
     );
+    this.nodeUtils().applyExecutorTransform(node, element);
 
     this.parser.parseClassOverflowAccess(node, (SourceClass) element.getType(), ExecuteAccess.of(element));
   }

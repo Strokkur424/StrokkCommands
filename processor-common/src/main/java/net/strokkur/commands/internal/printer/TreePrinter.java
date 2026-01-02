@@ -58,7 +58,7 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
 
   Stack<ExecuteAccess<?>> getExecutorWrapperAccessStack();
 
-  void updateExecutorWrapper(final ExecutorWrapperProvider provider);
+  void updateExecutorWrapper(final @Nullable ExecutorWrapperProvider provider);
 
   default void printNode(final CommandNode node) throws IOException {
     printNode(node, false);
@@ -97,11 +97,6 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
       final Executable executable = root.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE);
       if (executable != null) {
         printExecutableInner(root, executable);
-      } else {
-        final ExecutorWrapperProvider executorWrapper = root.getAttribute(AttributeKey.EXECUTOR_WRAPPER);
-        if (executorWrapper != null) {
-          this.updateExecutorWrapper(executorWrapper);
-        }
       }
 
       for (final CommandNode node : root.children()) {
@@ -302,6 +297,18 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
       node.getAttributeNotNull(AttributeKey.ACCESS_STACK).forEach(getAccessStack()::push);
     }
 
+    final ExecutorWrapperProvider current = this.getExecutorWrapper();
+
+    // TODO: this bleeds over if a method has a wrapper declared and a method is present which starts with the same args and merges.
+    // However, this is a cheap fix for a problem barely anyone will run into anyways and which can be solved with just one
+    // UnsetExecutorWrapper annotation. Also it is 2:30 AM, cut me some slack.
+    final ExecutorWrapperProvider executorWrapper = node.getAttribute(AttributeKey.EXECUTOR_WRAPPER);
+    if (node.getAttributeNotNull(AttributeKey.EXECUTOR_WRAPPER_UNSET)) {
+      this.updateExecutorWrapper(null);
+    } else if (executorWrapper != null) {
+      this.updateExecutorWrapper(executorWrapper);
+    }
+
     switch (node.argument()) {
       case LiteralCommandArgument lit -> initializer.accept("%s(%s)".formatted(getLiteralMethodString(), isNested ? '"' + lit.literal() + '"' : getCommandNameLiteralOverride(lit)));
       case RequiredCommandArgument req -> initializer.accept("%s(\"%s\", %s)".formatted(getArgumentMethodString(), req.argumentName(), req.argumentType().initializer()));
@@ -314,8 +321,10 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
       }
       default -> throw new IllegalArgumentException("Unknown argument class: " + node.argument().getClass());
     }
+
     if (node.hasAttribute(AttributeKey.ACCESS_STACK)) {
       node.getAttributeNotNull(AttributeKey.ACCESS_STACK).forEach(access -> getAccessStack().pop());
     }
+    this.updateExecutorWrapper(current);
   }
 }
