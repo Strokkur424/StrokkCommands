@@ -26,7 +26,7 @@ import net.strokkur.commands.internal.util.Classes;
 
 import java.util.List;
 
-public class RequirementRegistry extends RegistrableRegistry<RequirementProvider> {
+public class RequirementRegistry extends FunctionalInterfaceRegistry<RequirementProvider> {
 
   public RequirementRegistry(final String platformType) {
     super(platformType);

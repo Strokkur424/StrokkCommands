@@ -21,6 +21,8 @@ import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.proxy.ProxyServer;
+import net.strokkur.testplugin.velocity.wrapper.VelocityWrapperTestBrigadier;
+import org.slf4j.Logger;
 
 import javax.inject.Inject;
 
@@ -34,14 +36,17 @@ import javax.inject.Inject;
 )
 public class TestPluginVelocity {
   private final ProxyServer proxy;
+  private final Logger logger;
 
   @Inject
-  public TestPluginVelocity(final ProxyServer proxy) {
+  public TestPluginVelocity(final ProxyServer proxy, final Logger logger) {
     this.proxy = proxy;
+    this.logger = logger;
   }
 
   @Subscribe
   void onProxyInitialize(final ProxyInitializeEvent event) {
 //    TestCommandBrigadier.register(this.proxy, this);
+    VelocityWrapperTestBrigadier.register(this.proxy, this, this.logger);
   }
 }

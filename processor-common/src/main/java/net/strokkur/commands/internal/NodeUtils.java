@@ -18,8 +18,10 @@
 package net.strokkur.commands.internal;
 
 import net.strokkur.commands.Literal;
+import net.strokkur.commands.UnsetExecutorWrapper;
 import net.strokkur.commands.internal.abstraction.AnnotationsHolder;
 import net.strokkur.commands.internal.abstraction.SourceClass;
+import net.strokkur.commands.internal.abstraction.SourceElement;
 import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentType;
@@ -31,9 +33,11 @@ import net.strokkur.commands.internal.arguments.RequiredCommandArgumentImpl;
 import net.strokkur.commands.internal.exceptions.ConversionException;
 import net.strokkur.commands.internal.intermediate.attributes.Attributable;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperRegistry;
 import net.strokkur.commands.internal.intermediate.registrable.RegistrableRegistry;
 import net.strokkur.commands.internal.intermediate.registrable.RequirementRegistry;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionsRegistry;
+import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 
@@ -47,8 +51,24 @@ public record NodeUtils(
     MessagerWrapper messager,
     BrigadierArgumentConverter converter,
     SuggestionsRegistry suggestionsRegistry,
-    RequirementRegistry requirementRegistry
+    RequirementRegistry requirementRegistry,
+    ExecutorWrapperRegistry executorWrapperRegistry
 ) implements ForwardingMessagerWrapper {
+
+  public void applyExecutorTransform(final Attributable node, final AnnotationsHolder element) {
+    if (element.hasAnnotationInherited(UnsetExecutorWrapper.class)) {
+      node.setAttribute(AttributeKey.EXECUTOR_WRAPPER_UNSET, true);
+      return;
+    }
+
+    this.applyRegistrableProvider(
+        node,
+        element,
+        this.executorWrapperRegistry(),
+        AttributeKey.EXECUTOR_WRAPPER,
+        "executor wrapper"
+    );
+  }
 
   public List<CommandArgument> parseArguments(final List<? extends SourceVariable> variables) {
     final List<CommandArgument> arguments = new ArrayList<>(variables.size());
@@ -87,20 +107,20 @@ public record NodeUtils(
   }
 
   public <T> void applyRegistrableProvider(
-      final Attributable argument,
-      final AnnotationsHolder parameter,
+      final Attributable attributable,
+      final AnnotationsHolder element,
       final RegistrableRegistry<T> registry,
       final AttributeKey<T> key,
       final String name
   ) {
     boolean found = false;
-    for (final SourceClass annotationType : parameter.getAllAnnotations()) {
+    for (final SourceClass annotationType : element.getAllAnnotations()) {
       final Optional<T> provider = registry.getProvider(annotationType);
       if (provider.isPresent()) {
         if (found) {
-          this.infoSource("Multiple %s providers has been declared", parameter, name);
+          this.infoSource("Multiple %s providers has been declared", element, name);
         } else {
-          argument.setAttribute(key, provider.get());
+          attributable.setAttribute(key, provider.get());
           found = true;
         }
       }

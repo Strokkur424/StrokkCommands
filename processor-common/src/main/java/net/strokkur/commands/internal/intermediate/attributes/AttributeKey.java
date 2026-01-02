@@ -18,6 +18,7 @@
 package net.strokkur.commands.internal.intermediate.attributes;
 
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
+import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperProvider;
 import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
 import org.jetbrains.annotations.Contract;
@@ -31,6 +32,9 @@ public interface AttributeKey<T> {
   AttributeKey<Executable> EXECUTABLE = create("executable", null);
   AttributeKey<DefaultExecutable> DEFAULT_EXECUTABLE = create("default_executable", null);
   AttributeKey<List<ExecuteAccess<?>>> ACCESS_STACK = create("access_stack", null);
+
+  AttributeKey<ExecutorWrapperProvider> EXECUTOR_WRAPPER = create("executor_wrapper", null);
+  AttributeKey<Boolean> EXECUTOR_WRAPPER_UNSET = create("executor_wrapper_unset", false);
 
   AttributeKey<RequirementProvider> REQUIREMENT_PROVIDER = create("requirement_provider", null);
   AttributeKey<SuggestionProvider> SUGGESTION_PROVIDER = create("suggestion_provider", null);

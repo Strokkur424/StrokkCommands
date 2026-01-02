@@ -157,6 +157,11 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
     }
   }
 
+  @Override
+  public void gatherAdditionalExecutorWrapperImports(final Set<String> imports) {
+    imports.add(VelocityClasses.COMMAND_SOURCE);
+  }
+
   private void addExecutorTypeImports(final Set<String> imports, final SenderType type) {
     if (type == SenderType.NORMAL) {
       return;
