@@ -22,29 +22,30 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/// Declares a subcommand of a command definition.
+/// Unsets an inherited executor wrapper. This annotation can be used if an entire class is annotated
+/// with a [CustomExecutorWrapper]-annotated annotation, but certain children should be excluded from this.
 ///
-/// This annotation can be used on all nested command-definition
-/// instances of a root command-definition, including nested
-/// classes and external subcommand fields.
-///
-/// The value of this annotation specifies the literal path to prepend
-/// to the nested subcommand.
-///
-/// Example usage:
+/// ## Example usage
 /// ```java
-/// @Command("mycommand")
-/// class MyCommand {
+/// @TimingsExecutor
+/// @Command("heavy-command")
+/// class HeavyCommand {
 ///
-///   @Subcommand("hi")
-///   static class HiSub {
-///     /* ... /*
+///   @Executes
+///   void someHeavyOperation() {
+///     // This is wrapped by `@TimingsExecutor`
+///   }
+///
+///   @Executes("light")
+///   @UnsetExecutorWrapper
+///   void someLightOperation() {
+///     // This handler is *not* wrapped by `@TimingsExecutor`
 ///   }
 /// }
 /// ```
+///
+/// @see CustomExecutorWrapper
 @Retention(RetentionPolicy.SOURCE)
-@Target({ElementType.TYPE, ElementType.FIELD, ElementType.ANNOTATION_TYPE})
-public @interface Subcommand {
-  /// {@return the literal path to prepend to the nested subcommand}
-  String value() default "";
+@Target({ElementType.METHOD, ElementType.FIELD, ElementType.TYPE, ElementType.ANNOTATION_TYPE})
+public @interface UnsetExecutorWrapper {
 }

@@ -17,6 +17,7 @@
  */
 package net.strokkur.commands.internal;
 
+import net.strokkur.commands.CustomExecutorWrapper;
 import net.strokkur.commands.CustomRequirement;
 import net.strokkur.commands.CustomSuggestion;
 import net.strokkur.commands.internal.abstraction.SourceClass;
@@ -26,6 +27,7 @@ import net.strokkur.commands.internal.abstraction.impl.SourceTypeUtils;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
 import net.strokkur.commands.internal.exceptions.ProviderAlreadyRegisteredException;
 import net.strokkur.commands.internal.intermediate.CommonTreePostProcessor;
+import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperRegistry;
 import net.strokkur.commands.internal.intermediate.registrable.RegistrableRegistry;
 import net.strokkur.commands.internal.intermediate.registrable.RequirementRegistry;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionsRegistry;
@@ -92,8 +94,9 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
     final MessagerWrapper messagerWrapper = MessagerWrapper.wrap(super.processingEnv.getMessager());
     final SuggestionsRegistry suggestionsRegistry = createAndFillRegistry(CustomSuggestion.class, SuggestionsRegistry::new, roundEnv, messagerWrapper);
     final RequirementRegistry requirementRegistry = createAndFillRegistry(CustomRequirement.class, RequirementRegistry::new, roundEnv, messagerWrapper);
+    final ExecutorWrapperRegistry executorWrapperRegistry = createAndFillRegistry(CustomExecutorWrapper.class, ExecutorWrapperRegistry::new, roundEnv, messagerWrapper);
 
-    final NodeUtils nodeUtils = new NodeUtils(getPlatformUtils(), messagerWrapper, getConverter(messagerWrapper), suggestionsRegistry, requirementRegistry);
+    final NodeUtils nodeUtils = new NodeUtils(getPlatformUtils(), messagerWrapper, getConverter(messagerWrapper), suggestionsRegistry, requirementRegistry, executorWrapperRegistry);
     final CommandParser parser = new CommandParserImpl(
         messagerWrapper,
         nodeUtils,
@@ -168,7 +171,7 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
     boolean debug = System.getProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY) != null;
 
     final C commandInformation = getCommandInformation(sourceClass);
-    final CommandNode commandTree = parser.createCommandTree(getCommandName(sourceClass.getAnnotationElseThrow(targetAnnotationClass())), sourceClass);
+    final CommandNode commandTree = parser.createCommandTree(getCommandName(sourceClass.getAnnotationInheritedElseThrow(targetAnnotationClass())), sourceClass);
     if (commandTree == null) {
       return;
     }
@@ -212,15 +215,15 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
     for (final Element element : roundEnv.getElementsAnnotatedWith(annotationClass)) {
       try {
         if (element.getKind() != ElementKind.ANNOTATION_TYPE || !(element instanceof TypeElement typeElement)) {
-          messager.errorElement("non-annotation type annotated with @CustomSuggestion", element);
+          messager.errorElement("non-annotation type annotated with @" + annotationClass.getSimpleName(), element);
           continue;
         }
 
-        for (final Element annotatedElements : roundEnv.getElementsAnnotatedWith(typeElement)) {
+        for (final Element annotatedElement : roundEnv.getElementsAnnotatedWith(typeElement)) {
           if (registry.tryRegisterProvider(
               messager,
               new SourceClassImpl(this.processingEnv, (DeclaredType) typeElement.asType()),
-              SourceTypeUtils.getSourceElement(this.processingEnv, annotatedElements)
+              SourceTypeUtils.getSourceElement(this.processingEnv, annotatedElement)
           )) {
             break;
           }

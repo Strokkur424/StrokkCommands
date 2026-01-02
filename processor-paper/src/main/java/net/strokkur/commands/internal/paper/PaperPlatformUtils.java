@@ -75,7 +75,7 @@ final class PaperPlatformUtils implements PlatformUtils {
       }
     }
 
-    if (holder.hasAnnotation(RequiresOP.class)) {
+    if (holder.hasAnnotationInherited(RequiresOP.class)) {
       node.setAttribute(PaperAttributeKeys.REQUIRES_OP, true);
     }
   }

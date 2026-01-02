@@ -17,17 +17,21 @@
  */
 package net.strokkur.commands.internal.printer;
 
+import net.strokkur.commands.internal.abstraction.SourceClass;
+import net.strokkur.commands.internal.abstraction.SourceMethod;
+import net.strokkur.commands.internal.abstraction.SourceParameter;
+import net.strokkur.commands.internal.abstraction.SourceType;
 import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.MultiLiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
-import net.strokkur.commands.internal.intermediate.access.FieldAccess;
 import net.strokkur.commands.internal.intermediate.attributes.Attributable;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.attributes.DefaultExecutable;
 import net.strokkur.commands.internal.intermediate.attributes.Executable;
 import net.strokkur.commands.internal.intermediate.attributes.Parameterizable;
+import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperProvider;
 import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
@@ -38,6 +42,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Stack;
 
 interface TreePrinter<C extends CommandInformation> extends Printable, PrinterInformation<C> {
 
@@ -48,6 +53,12 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
   void popLiteral();
 
   void popLiteralPosition();
+
+  @Nullable ExecutorWrapperProvider getExecutorWrapper();
+
+  Stack<ExecuteAccess<?>> getExecutorWrapperAccessStack();
+
+  void updateExecutorWrapper(final @Nullable ExecutorWrapperProvider provider);
 
   default void printNode(final CommandNode node) throws IOException {
     printNode(node, false);
@@ -103,13 +114,64 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
   void prefixPrintExecutableInner(final CommandNode node, final Executable executable) throws IOException;
 
   private void printExecutableInner(final CommandNode node, final Executable executable) throws IOException {
-    // print the .executes method
     println();
+
+    final ExecutorWrapperProvider wrapper = node.getAttributeOr(AttributeKey.EXECUTOR_WRAPPER, this.getExecutorWrapper());
+    if (wrapper == null) {
+      printExecutableInnerNoWrapper(node, executable);
+    } else {
+      printExecutableInnerWithWrapper(node, executable, wrapper);
+    }
+  }
+
+  private void printExecutableInnerNoWrapper(final CommandNode node, final Executable executable) throws IOException {
     println(".executes(ctx -> {");
     incrementIndent();
-
     prefixPrintExecutableInner(node, executable);
+    printExecutableBody(node, executable);
+    println("return Command.SINGLE_SUCCESS;");
+    decrementIndent();
+    printIndented("})");
+  }
 
+  private void printExecutableInnerWithWrapper(final CommandNode node, final Executable executable, final ExecutorWrapperProvider wrapper) throws IOException {
+    println(".executes(%s(ctx -> {", getWrapperMethodCall(wrapper));
+    incrementIndent();
+    prefixPrintExecutableInner(node, executable);
+    printExecutableBody(node, executable);
+    println("return Command.SINGLE_SUCCESS;");
+    decrementIndent();
+
+    if (wrapper.wrapperType().withMethod()) {
+      printIndented("}, getMethodViaReflection(%s.class, \"%s\", %s)))",
+          executable.executesMethod().getEnclosed().getSourceName(),
+          executable.executesMethod().getName(),
+          String.join(", ", executable.executesMethod().getParameters().stream()
+              .map(SourceParameter::getType)
+              .map(SourceType::getSourceName)
+              .map((str) -> str.concat(".class"))
+              .toList())
+      );
+    } else {
+      printIndented("}))");
+    }
+  }
+
+  private String getWrapperMethodCall(final ExecutorWrapperProvider wrapper) {
+    final SourceMethod method = wrapper.wrapperMethod();
+    final String methodName = method.getName();
+
+    if (wrapper.wrapperMethod().isStaticallyAccessible()) {
+      // Static method: WrapperClass.wrapperMethod
+      final SourceClass wrapperClass = wrapper.wrapperMethod().getEnclosed();
+      return wrapperClass.getSourceName() + "." + methodName;
+    } else {
+      // Instance method: get the appropriate instance variable name
+      return Utils.getInstanceName(this.getExecutorWrapperAccessStack()) + "." + methodName;
+    }
+  }
+
+  private void printExecutableBody(final CommandNode node, final Executable executable) throws IOException {
     boolean instancePrint = true;
     CommandNode recordNode = node;
 
@@ -125,10 +187,6 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
     if (instancePrint) {
       printWithInstance(executable);
     }
-
-    println("return Command.SINGLE_SUCCESS;");
-    decrementIndent();
-    printIndented("})");
   }
 
   private void printWithInstance(final Executable executable) throws IOException {
@@ -239,6 +297,18 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
       node.getAttributeNotNull(AttributeKey.ACCESS_STACK).forEach(getAccessStack()::push);
     }
 
+    final ExecutorWrapperProvider current = this.getExecutorWrapper();
+
+    // TODO: this bleeds over if a method has a wrapper declared and a method is present which starts with the same args and merges.
+    // However, this is a cheap fix for a problem barely anyone will run into anyways and which can be solved with just one
+    // UnsetExecutorWrapper annotation. Also it is 2:30 AM, cut me some slack.
+    final ExecutorWrapperProvider executorWrapper = node.getAttribute(AttributeKey.EXECUTOR_WRAPPER);
+    if (node.getAttributeNotNull(AttributeKey.EXECUTOR_WRAPPER_UNSET)) {
+      this.updateExecutorWrapper(null);
+    } else if (executorWrapper != null) {
+      this.updateExecutorWrapper(executorWrapper);
+    }
+
     switch (node.argument()) {
       case LiteralCommandArgument lit -> initializer.accept("%s(%s)".formatted(getLiteralMethodString(), isNested ? '"' + lit.literal() + '"' : getCommandNameLiteralOverride(lit)));
       case RequiredCommandArgument req -> initializer.accept("%s(\"%s\", %s)".formatted(getArgumentMethodString(), req.argumentName(), req.argumentType().initializer()));
@@ -251,8 +321,10 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
       }
       default -> throw new IllegalArgumentException("Unknown argument class: " + node.argument().getClass());
     }
+
     if (node.hasAttribute(AttributeKey.ACCESS_STACK)) {
       node.getAttributeNotNull(AttributeKey.ACCESS_STACK).forEach(access -> getAccessStack().pop());
     }
+    this.updateExecutorWrapper(current);
   }
 }

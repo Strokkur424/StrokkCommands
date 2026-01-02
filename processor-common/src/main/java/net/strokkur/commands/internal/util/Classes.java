@@ -25,6 +25,7 @@ public interface Classes {
   String LIST_STRING = LIST + "<java.lang.String>";
   String PREDICATE = "java.util.function.Predicate";
   String COMPLETABLE_FUTURE = "java.util.concurrent.CompletableFuture";
+  String METHOD = "java.lang.reflect.Method";
 
   // Brigadier types
   String COMMAND = "com.mojang.brigadier.Command";

@@ -21,6 +21,8 @@ import net.strokkur.commands.internal.BuildConstants;
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
+import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperProvider;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.CommandInformation;
 import net.strokkur.commands.internal.util.PrintParamsHolder;
@@ -42,6 +44,9 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
   private final Set<String> printedInstances = new TreeSet<>();
   private final ProcessingEnvironment environment;
   protected final PlatformUtils utils;
+
+  private @Nullable ExecutorWrapperProvider executorWrapper = null;
+  private Stack<ExecuteAccess<?>> executorWrapperAccessStack = new Stack<>();
 
   private int multiLiteralStackPosition = 0;
 
@@ -73,6 +78,23 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
   protected abstract PrintParamsHolder getParamsHolder();
 
   protected abstract void printRegisterMethod(final PrintParamsHolder holder) throws IOException;
+
+  @Override
+  public @Nullable ExecutorWrapperProvider getExecutorWrapper() {
+    return this.executorWrapper;
+  }
+
+  @Override
+  public Stack<ExecuteAccess<?>> getExecutorWrapperAccessStack() {
+    return this.executorWrapperAccessStack;
+  }
+
+  @Override
+  public void updateExecutorWrapper(final @Nullable ExecutorWrapperProvider provider) {
+    this.executorWrapper = provider;
+    this.executorWrapperAccessStack = new Stack<>();
+    this.executorWrapperAccessStack.addAll(this.getAccessStack());
+  }
 
   protected void printSemicolon() throws IOException {
     print(";");
@@ -145,6 +167,8 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
     println("}");
     println();
 
+    printReflectionHelper(node);
+
     printBlock("""
             /**
              * The constructor is not accessible. There is no need for an instance
@@ -158,6 +182,32 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
         getBrigadierClassName());
     decrementIndent();
     println("}");
+  }
+
+  private boolean printReflectionHelper(final CommandNode node) throws IOException {
+    if (Optional.ofNullable(node.getAttribute(AttributeKey.EXECUTOR_WRAPPER))
+        .map(ExecutorWrapperProvider::wrapperType)
+        .map(ExecutorWrapperProvider.WrapperType::withMethod)
+        .orElse(false)) {
+      printBlock("""
+          private static Method getMethodViaReflection(final Class<?> clazz, final String name, final Class<?>... parameters) {
+              try {
+                  return clazz.getDeclaredMethod(name, parameters);
+              } catch (ReflectiveOperationException ex) {
+                  throw new RuntimeException(ex);
+              }
+          }
+          """);
+      println();
+      return true;
+    }
+
+    for (final CommandNode child : node.children()) {
+      if (printReflectionHelper(child)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override
