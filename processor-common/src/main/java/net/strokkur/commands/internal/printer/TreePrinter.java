@@ -22,6 +22,7 @@ import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.abstraction.SourceParameter;
 import net.strokkur.commands.internal.abstraction.SourceType;
 import net.strokkur.commands.internal.arguments.CommandArgument;
+import net.strokkur.commands.internal.arguments.ContextCommandArgument;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.MultiLiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
@@ -270,6 +271,7 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
         case RequiredCommandArgument req -> req.argumentType().retriever();
         case MultiLiteralCommandArgument ignored -> '"' + nextLiteral() + '"';
         case LiteralCommandArgument lit -> '"' + lit.literal() + '"';
+        case ContextCommandArgument ignored -> "ctx";
         default -> throw new IllegalArgumentException("Unknown argument class: " + argument.getClass());
       });
 

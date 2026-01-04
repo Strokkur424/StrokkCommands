@@ -17,6 +17,7 @@
  */
 package net.strokkur.commands.internal;
 
+import net.strokkur.commands.Context;
 import net.strokkur.commands.Literal;
 import net.strokkur.commands.UnsetExecutorWrapper;
 import net.strokkur.commands.internal.abstraction.AnnotationsHolder;
@@ -26,6 +27,7 @@ import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentType;
 import net.strokkur.commands.internal.arguments.CommandArgument;
+import net.strokkur.commands.internal.arguments.ContextCommandArgument;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.MultiLiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
@@ -75,6 +77,13 @@ public record NodeUtils(
 
     for (final SourceVariable parameter : variables) {
       debug("| Parsing parameter: " + parameter.getName());
+
+      // Handle @Context annotation - inject CommandContext directly
+      if (parameter.getAnnotation(Context.class) != null) {
+        debug("  | Found @Context annotation, adding ContextCommandArgument");
+        arguments.add(new ContextCommandArgument(parameter));
+        continue;
+      }
 
       final Literal literal = parameter.getAnnotation(Literal.class);
       if (literal != null) {
