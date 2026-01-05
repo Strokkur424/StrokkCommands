@@ -21,12 +21,13 @@ import net.strokkur.commands.DefaultExecutes;
 import net.strokkur.commands.internal.NodeUtils;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.abstraction.SourceParameter;
-import net.strokkur.commands.internal.arguments.CommandArgument;
+import net.strokkur.commands.internal.exceptions.IllegalReturnTypeException;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
 import net.strokkur.commands.internal.exceptions.UnknownSenderException;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
-import net.strokkur.commands.internal.intermediate.attributes.DefaultExecutable;
-import net.strokkur.commands.internal.intermediate.attributes.DefaultExecutableImpl;
+import net.strokkur.commands.internal.intermediate.executable.DefaultExecutable;
+import net.strokkur.commands.internal.intermediate.executable.DefaultExecutableImpl;
+import net.strokkur.commands.internal.intermediate.executable.ParameterType;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 
 import java.util.List;
@@ -49,20 +50,14 @@ public final class DefaultExecutesTransform extends ExecutesTransform {
   }
 
   @Override
-  protected void populatePath(final CommandNode node, final SourceMethod method, final List<CommandArgument> args, final List<SourceParameter> parameters)
-      throws UnknownSenderException {
-    final DefaultExecutable executable = new DefaultExecutableImpl(method, args, DefaultExecutable.Type.getType(parameters.getLast()));
+  protected void populatePath(
+      final CommandNode node,
+      final SourceMethod method,
+      final List<ParameterType> args
+  ) throws UnknownSenderException, IllegalReturnTypeException {
+    final DefaultExecutable executable = new DefaultExecutableImpl(method, args);
     node.setAttribute(AttributeKey.DEFAULT_EXECUTABLE, executable);
-    nodeUtils().platformUtils().populateExecutesNode(executable, node, parameters);
-  }
-
-  @Override
-  protected int parametersToParse(final List<SourceParameter> parameters) {
-    final SourceParameter last = parameters.getLast();
-    if (DefaultExecutable.Type.getType(last) != DefaultExecutable.Type.NONE) {
-      return parameters.size() - 1;
-    }
-    return parameters.size();
+    nodeUtils().platformUtils().populateExecutesNode(executable, node, args);
   }
 
   @Override

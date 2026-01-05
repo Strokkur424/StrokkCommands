@@ -25,7 +25,9 @@ import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
-import net.strokkur.commands.internal.intermediate.attributes.ParameterizableImpl;
+import net.strokkur.commands.internal.intermediate.executable.ParameterType;
+import net.strokkur.commands.internal.intermediate.executable.Parameterizable;
+import net.strokkur.commands.internal.intermediate.executable.ParameterizableImpl;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 
 import java.util.List;
@@ -50,8 +52,13 @@ final class RecordTransform extends ClassTransform {
   protected CommandNode parseRecordComponents(final CommandNode parent, final SourceClass element) throws MismatchedArgumentTypeException {
     final List<SourceRecordComponent> components = ((SourceRecord) element).getRecordComponents();
 
-    final List<CommandArgument> arguments = nodeUtils().parseArguments(components);
-    final CommandNode out = parent.addChildren(arguments);
+    final List<ParameterType> arguments = components.stream()
+        .map(nodeUtils()::parseParameter)
+        .toList();
+    final CommandNode out = parent.addChildren(arguments.stream()
+        .filter(CommandArgument.class::isInstance)
+        .map(CommandArgument.class::cast)
+        .toList());
 
     out.setAttribute(AttributeKey.RECORD_ARGUMENTS, new ParameterizableImpl(arguments));
 

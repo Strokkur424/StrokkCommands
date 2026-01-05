@@ -15,12 +15,19 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.attributes;
+package net.strokkur.commands.internal.intermediate.executable;
 
+import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.arguments.CommandArgument;
+import net.strokkur.commands.internal.exceptions.IllegalReturnTypeException;
 
 import java.util.List;
 
-public interface Parameterizable {
-  List<CommandArgument> parameterArguments();
+public final class DefaultExecutableImpl extends ExecutableImpl implements DefaultExecutable {
+  public DefaultExecutableImpl(
+      final SourceMethod executesMethod,
+      final List<ParameterType> parameters
+  ) throws IllegalReturnTypeException {
+    super(executesMethod, parameters);
+  }
 }

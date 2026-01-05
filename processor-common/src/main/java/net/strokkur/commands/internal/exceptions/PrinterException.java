@@ -15,11 +15,12 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.attributes;
+package net.strokkur.commands.internal.exceptions;
 
-import net.strokkur.commands.internal.arguments.CommandArgument;
+import java.io.IOException;
 
-import java.util.List;
-
-public record ParameterizableImpl(List<CommandArgument> parameterArguments) implements Parameterizable {
+public class PrinterException extends IOException {
+  public PrinterException(String message) {
+    super(message);
+  }
 }

@@ -7,6 +7,8 @@ module net.strokkur.commands.processor.common {
   requires transitive net.strokkur.commands.common;
   requires static transitive org.jetbrains.annotations;
   requires static transitive org.jspecify;
+  requires jdk.sctp;
+  requires java.xml;
 
   exports net.strokkur.commands.internal;
   exports net.strokkur.commands.internal.abstraction;
@@ -20,4 +22,5 @@ module net.strokkur.commands.processor.common {
   exports net.strokkur.commands.internal.parsing;
   exports net.strokkur.commands.internal.printer;
   exports net.strokkur.commands.internal.util;
+  exports net.strokkur.commands.internal.intermediate.executable;
 }

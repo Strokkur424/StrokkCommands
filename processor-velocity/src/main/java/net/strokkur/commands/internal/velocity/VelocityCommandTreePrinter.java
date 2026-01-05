@@ -19,9 +19,12 @@ package net.strokkur.commands.internal.velocity;
 
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.abstraction.SourceParameter;
+import net.strokkur.commands.internal.abstraction.SourceVariable;
+import net.strokkur.commands.internal.exceptions.PrinterException;
 import net.strokkur.commands.internal.intermediate.attributes.Attributable;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
-import net.strokkur.commands.internal.intermediate.attributes.Executable;
+import net.strokkur.commands.internal.intermediate.executable.DefaultExecutable;
+import net.strokkur.commands.internal.intermediate.executable.Executable;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
 import net.strokkur.commands.internal.util.Classes;
@@ -38,6 +41,7 @@ import java.io.Writer;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -195,15 +199,26 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
   }
 
   @Override
-  public void printFirstArguments(final Executable executable) throws IOException {
-    final SenderType type = executable.getAttributeNotNull(VelocityAttributeKeys.SENDER_TYPE);
-
-    printIndent();
-    if (type == SenderType.NORMAL) {
-      print("ctx.getSource()");
-    } else {
-      print("source");
+  public String handleParameter(final SourceVariable parameter) throws IOException {
+    if (parameter.getType().getFullyQualifiedAndTypedName().equalsIgnoreCase(Classes.COMMAND_CONTEXT + "<" + VelocityClasses.COMMAND_SOURCE + ">")) {
+      return "ctx";
     }
+
+    if (parameter.getType().getFullyQualifiedAndTypedName().equalsIgnoreCase(VelocityClasses.COMMAND_SOURCE)) {
+      return "ctx.getSource()";
+    }
+
+    if (parameter.getType().getFullyQualifiedAndTypedName().equalsIgnoreCase(VelocityClasses.PLAYER)
+        || parameter.getType().getFullyQualifiedAndTypedName().equalsIgnoreCase(VelocityClasses.CONSOLE_COMMAND_SOURCE)) {
+      return "source";
+    }
+
+    final DefaultExecutable.Type type = DefaultExecutable.Type.getType(parameter);
+    if (type == DefaultExecutable.Type.LIST || type == DefaultExecutable.Type.ARRAY) {
+      return Objects.requireNonNull(type.getGetter());
+    }
+
+    throw new PrinterException("Unknown parameter type: " + parameter.getName());
   }
 
   @Override

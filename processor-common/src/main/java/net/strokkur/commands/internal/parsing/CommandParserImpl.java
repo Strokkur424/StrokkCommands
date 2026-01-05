@@ -25,6 +25,7 @@ import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.abstraction.SourceRecord;
 import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
+import net.strokkur.commands.internal.exceptions.IllegalReturnTypeException;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
 import net.strokkur.commands.internal.exceptions.UnknownSenderException;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
@@ -102,7 +103,7 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
         default -> {
         }
       }
-    } catch (MismatchedArgumentTypeException | UnknownSenderException ex) {
+    } catch (MismatchedArgumentTypeException | UnknownSenderException | IllegalReturnTypeException ex) {
       errorSource(ex.getMessage(), element);
     }
   }

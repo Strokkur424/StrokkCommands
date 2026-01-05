@@ -47,7 +47,7 @@ class VelocityWrapperTest {
   }
 
   @Executes
-  void run(CommandSource source) {
+  void run() {
     try {
       Thread.sleep(Duration.ofMillis(15));
     } catch (InterruptedException e) {

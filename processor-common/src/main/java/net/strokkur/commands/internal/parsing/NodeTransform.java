@@ -22,6 +22,7 @@ import net.strokkur.commands.internal.NodeUtils;
 import net.strokkur.commands.internal.abstraction.AnnotationsHolder;
 import net.strokkur.commands.internal.abstraction.SourceElement;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
+import net.strokkur.commands.internal.exceptions.IllegalReturnTypeException;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
 import net.strokkur.commands.internal.exceptions.UnknownSenderException;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
@@ -36,7 +37,7 @@ import java.util.function.Function;
 
 interface NodeTransform<S extends SourceElement> extends ForwardingMessagerWrapper {
 
-  void transform(CommandNode parent, S element) throws MismatchedArgumentTypeException, UnknownSenderException;
+  void transform(CommandNode parent, S element) throws MismatchedArgumentTypeException, UnknownSenderException, IllegalReturnTypeException;
 
   boolean requirement(S element);
 
@@ -47,7 +48,10 @@ interface NodeTransform<S extends SourceElement> extends ForwardingMessagerWrapp
     return this.nodeUtils();
   }
 
-  default void transformIfRequirement(CommandNode parent, S element) throws MismatchedArgumentTypeException, UnknownSenderException {
+  default void transformIfRequirement(
+      CommandNode parent,
+      S element
+  ) throws MismatchedArgumentTypeException, UnknownSenderException, IllegalReturnTypeException {
     if (requirement(element)) {
       transform(parent, element);
     }

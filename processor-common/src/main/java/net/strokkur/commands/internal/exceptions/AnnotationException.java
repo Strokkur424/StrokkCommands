@@ -15,25 +15,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.testplugin.iceacream;
+package net.strokkur.commands.internal.exceptions;
 
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.strokkur.commands.Command;
-import net.strokkur.commands.Executes;
-import net.strokkur.commands.paper.arguments.CustomArg;
-import net.strokkur.testplugin.iceacream.subpackage.IceCreamArgument;
-import net.strokkur.testplugin.iceacream.subpackage.IceCreamType;
-import org.bukkit.command.CommandSender;
-
-import java.sql.Wrapper;
-
-@Command("icecream")
-class IceCreamCommand {
-
-  @Executes("lick")
-  void onLick(CommandSender sender, @CustomArg(IceCreamArgument.class) IceCreamType iceCream) {
-    sender.sendRichMessage("<rainbow><b>YUMMY!</rainbow> You just had a scoop of <color:#7925ab><icecream></color>!",
-        Placeholder.unparsed("icecream", iceCream.toString())
-    );
+public class AnnotationException extends RuntimeException {
+  public AnnotationException(String message) {
+    super(message);
   }
 }

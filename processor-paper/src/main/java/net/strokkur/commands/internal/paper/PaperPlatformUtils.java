@@ -20,8 +20,12 @@ package net.strokkur.commands.internal.paper;
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.abstraction.AnnotationsHolder;
 import net.strokkur.commands.internal.abstraction.SourceParameter;
+import net.strokkur.commands.internal.abstraction.SourceVariable;
+import net.strokkur.commands.internal.exceptions.AnnotationException;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
-import net.strokkur.commands.internal.intermediate.attributes.Executable;
+import net.strokkur.commands.internal.intermediate.executable.Executable;
+import net.strokkur.commands.internal.intermediate.executable.ParameterType;
+import net.strokkur.commands.internal.intermediate.executable.SourceParameterType;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.paper.util.ExecutorType;
 import net.strokkur.commands.internal.paper.util.PaperAttributeKeys;
@@ -38,12 +42,12 @@ import java.util.Set;
 final class PaperPlatformUtils implements PlatformUtils {
 
   @Override
-  public int executableFirstIndexToParse(final List<SourceParameter> parameters) {
-    return getExecutorType(parameters) == ExecutorType.NONE ? 1 : 2;
+  public boolean mayParameterBeArgument(final SourceVariable param) {
+    return !param.hasAnnotationInherited(Executor.class);
   }
 
   @Override
-  public void populateExecutesNode(final Executable executable, final CommandNode node, final List<SourceParameter> parameters) {
+  public void populateExecutesNode(final Executable executable, final CommandNode node, final List<ParameterType> parameters) {
     final ExecutorType type = getExecutorType(parameters);
     executable.setAttribute(PaperAttributeKeys.EXECUTOR_TYPE, type);
     node.setAttribute(PaperAttributeKeys.EXECUTOR_TYPE, type);
@@ -80,15 +84,29 @@ final class PaperPlatformUtils implements PlatformUtils {
     }
   }
 
-  private ExecutorType getExecutorType(final List<SourceParameter> parameters) {
-    if (parameters.size() < 2 || parameters.get(1).getAnnotation(Executor.class) == null) {
-      return ExecutorType.NONE;
+  private ExecutorType getExecutorType(final List<ParameterType> parameters) throws AnnotationException {
+    ExecutorType type = ExecutorType.NONE;
+    for (final ParameterType parameter : parameters) {
+      if (!(parameter instanceof SourceParameterType(SourceVariable sourceParam))) {
+        continue;
+      }
+
+      if (!sourceParam.hasAnnotationInherited(Executor.class)) {
+        continue;
+      }
+
+      type = switch (sourceParam.getType().getFullyQualifiedName()) {
+        case PaperClasses.PLAYER -> ExecutorType.PLAYER;
+        case PaperClasses.ENTITY -> ExecutorType.ENTITY;
+        default -> throw new AnnotationException("Illegal class annotated with @Executor: " + sourceParam.getType().getSourceName());
+      };
+
+      if (type == ExecutorType.PLAYER) {
+        // Even if an entity executor is requested, the required player executor works just fine; return the loop
+        break;
+      }
     }
 
-    return switch (parameters.get(1).getType().getFullyQualifiedName()) {
-      case PaperClasses.PLAYER -> ExecutorType.PLAYER;
-      case PaperClasses.ENTITY -> ExecutorType.ENTITY;
-      default -> ExecutorType.NONE;
-    };
+    return type;
   }
 }

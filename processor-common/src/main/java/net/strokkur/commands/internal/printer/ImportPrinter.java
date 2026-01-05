@@ -17,6 +17,7 @@
  */
 package net.strokkur.commands.internal.printer;
 
+import net.strokkur.commands.DefaultExecutes;
 import net.strokkur.commands.internal.abstraction.SourceConstructor;
 import net.strokkur.commands.internal.abstraction.SourceTypeAnnotation;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
@@ -24,6 +25,9 @@ import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.access.FieldAccess;
 import net.strokkur.commands.internal.intermediate.access.InstanceAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.executable.DefaultExecutable;
+import net.strokkur.commands.internal.intermediate.executable.Executable;
+import net.strokkur.commands.internal.intermediate.executable.SourceParameterType;
 import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperProvider;
 import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
@@ -70,8 +74,8 @@ interface ImportPrinter<C extends CommandInformation> extends Printable, Printer
     final String sourceClassFqn = getCommandInformation().sourceClass().getFullyQualifiedName();
     final int numberOfDots = sourceClassFqn.split("\\.").length;
     imports.removeIf(importString -> {
-      // Don't remove java.lang.reflect imports
-      if (importString.startsWith("java.lang.reflect")) {
+      // Don't remove imports from subpackages of java.lang
+      if (importString.startsWith("java.lang") && importString.split("\\.").length > 3) {
         return false;
       }
       if (importString.startsWith("java.lang")) {
@@ -102,7 +106,14 @@ interface ImportPrinter<C extends CommandInformation> extends Printable, Printer
 
   private void gatherImports(final Set<String> imports, final CommandNode node) {
     if (node.hasAttribute(AttributeKey.DEFAULT_EXECUTABLE)) {
-      imports.addAll(node.getAttributeNotNull(AttributeKey.DEFAULT_EXECUTABLE).defaultExecutableArgumentTypes().getImports());
+      final Executable exec = node.getAttributeNotNull(AttributeKey.DEFAULT_EXECUTABLE);
+      exec.parameterArguments().stream()
+          .filter(SourceParameterType.class::isInstance)
+          .map(SourceParameterType.class::cast)
+          .map(SourceParameterType::parameter)
+          .filter(type -> type.getType().getFullyQualifiedAndTypedName().equalsIgnoreCase(Classes.LIST_STRING)
+              || (type.getType().getFullyQualifiedName().equalsIgnoreCase("java.lang.String") && type.getType().isArray()))
+          .forEach(type -> imports.addAll(DefaultExecutable.Type.getType(type).getImports()));
     }
 
     if (node.hasAttribute(AttributeKey.EXECUTOR_WRAPPER)) {

@@ -20,21 +20,27 @@ package net.strokkur.commands.internal.velocity;
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.abstraction.AnnotationsHolder;
 import net.strokkur.commands.internal.abstraction.SourceParameter;
+import net.strokkur.commands.internal.abstraction.SourceVariable;
+import net.strokkur.commands.internal.exceptions.AnnotationException;
 import net.strokkur.commands.internal.exceptions.UnknownSenderException;
-import net.strokkur.commands.internal.intermediate.attributes.Executable;
+import net.strokkur.commands.internal.intermediate.executable.Executable;
+import net.strokkur.commands.internal.intermediate.executable.ParameterType;
+import net.strokkur.commands.internal.intermediate.executable.SourceParameterType;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.velocity.util.SenderType;
 import net.strokkur.commands.internal.velocity.util.VelocityAttributeKeys;
 import net.strokkur.commands.internal.velocity.util.VelocityClasses;
 import net.strokkur.commands.permission.Permission;
 
+import javax.net.ssl.SSLEngine;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 final class VelocityPlatformUtils implements PlatformUtils {
   @Override
-  public void populateExecutesNode(final Executable executable, final CommandNode node, final List<SourceParameter> parameters) throws UnknownSenderException {
-    final SenderType type = getSenderType(parameters);
+  public void populateExecutesNode(final Executable executable, final CommandNode node, final List<ParameterType> parameters) {
+    final SenderType type = this.getSenderType(parameters);
     executable.setAttribute(VelocityAttributeKeys.SENDER_TYPE, type);
     node.setAttribute(VelocityAttributeKeys.SENDER_TYPE, type);
   }
@@ -51,12 +57,25 @@ final class VelocityPlatformUtils implements PlatformUtils {
     );
   }
 
-  private SenderType getSenderType(final List<SourceParameter> parameters) throws UnknownSenderException {
-    return switch (parameters.getFirst().getType().getFullyQualifiedName()) {
-      case VelocityClasses.COMMAND_SOURCE -> SenderType.NORMAL;
-      case VelocityClasses.CONSOLE_COMMAND_SOURCE -> SenderType.CONSOLE;
-      case VelocityClasses.PLAYER -> SenderType.PLAYER;
-      default -> throw new UnknownSenderException(parameters.getFirst().getType().getSourceName() + " is not a valid command source!");
-    };
+  private SenderType getSenderType(final List<ParameterType> parameters) throws AnnotationException {
+    SenderType type = SenderType.NORMAL;
+    for (final ParameterType parameter : parameters) {
+      if (!(parameter instanceof SourceParameterType(SourceVariable sourceParam))) {
+        continue;
+      }
+
+      final SenderType thisType = switch (sourceParam.getType().getFullyQualifiedName()) {
+        case VelocityClasses.PLAYER -> SenderType.PLAYER;
+        case VelocityClasses.CONSOLE_COMMAND_SOURCE -> SenderType.CONSOLE;
+        default -> type;
+      };
+
+      if (type != SenderType.NORMAL && thisType != type) {
+        throw new AnnotationException("Cannot satisfy both a player and a console source.");
+      }
+      type = thisType;
+    }
+
+    return type;
   }
 }
