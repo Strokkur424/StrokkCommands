@@ -21,9 +21,11 @@ import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.abstraction.SourceParameter;
 import net.strokkur.commands.internal.abstraction.SourceVariable;
+import net.strokkur.commands.internal.exceptions.PrinterException;
 import net.strokkur.commands.internal.intermediate.attributes.Attributable;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
-import net.strokkur.commands.internal.intermediate.attributes.Executable;
+import net.strokkur.commands.internal.intermediate.executable.DefaultExecutable;
+import net.strokkur.commands.internal.intermediate.executable.Executable;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.paper.util.ExecutorType;
 import net.strokkur.commands.internal.paper.util.PaperAttributeKeys;
@@ -32,6 +34,7 @@ import net.strokkur.commands.internal.paper.util.PaperCommandInformation;
 import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.util.PrintParamsHolder;
+import net.strokkur.commands.paper.Executor;
 import org.jspecify.annotations.Nullable;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -39,6 +42,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -181,19 +185,29 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
   }
 
   @Override
-  public void printFirstArguments(final Executable executable) throws IOException {
-    final ExecutorType executorType = executable.getAttributeNotNull(PaperAttributeKeys.EXECUTOR_TYPE);
-
-    printIndent();
-    print("ctx.getSource().getSender()");
-    if (executorType == ExecutorType.NONE) {
-      return;
+  public String handleParameter(final SourceVariable parameter) throws IOException {
+    if (parameter.hasAnnotationInherited(Executor.class)) {
+      return "executor";
     }
 
-    print(",");
-    println();
-    printIndent();
-    print("executor");
+    if (parameter.getType().getFullyQualifiedAndTypedName().equalsIgnoreCase(Classes.COMMAND_CONTEXT + "<" + PaperClasses.COMMAND_SOURCE_STACK + ">")) {
+      return "ctx";
+    }
+
+    if (parameter.getType().getFullyQualifiedAndTypedName().equalsIgnoreCase(PaperClasses.COMMAND_SOURCE_STACK)) {
+      return "ctx.getSource()";
+    }
+
+    if (parameter.getType().getFullyQualifiedName().equalsIgnoreCase(PaperClasses.COMMAND_SENDER)) {
+      return "ctx.getSource().getSender()";
+    }
+
+    final DefaultExecutable.Type type = DefaultExecutable.Type.getType(parameter);
+    if (type == DefaultExecutable.Type.LIST || type == DefaultExecutable.Type.ARRAY) {
+      return Objects.requireNonNull(type.getGetter());
+    }
+
+    throw new PrinterException("Unknown parameter type: " + parameter.getName());
   }
 
   @Override

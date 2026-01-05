@@ -21,11 +21,9 @@ import net.strokkur.commands.Literal;
 import net.strokkur.commands.UnsetExecutorWrapper;
 import net.strokkur.commands.internal.abstraction.AnnotationsHolder;
 import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.abstraction.SourceElement;
 import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentType;
-import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.MultiLiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
@@ -33,16 +31,15 @@ import net.strokkur.commands.internal.arguments.RequiredCommandArgumentImpl;
 import net.strokkur.commands.internal.exceptions.ConversionException;
 import net.strokkur.commands.internal.intermediate.attributes.Attributable;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.executable.ParameterType;
+import net.strokkur.commands.internal.intermediate.executable.SourceParameterType;
 import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperRegistry;
 import net.strokkur.commands.internal.intermediate.registrable.RegistrableRegistry;
 import net.strokkur.commands.internal.intermediate.registrable.RequirementRegistry;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionsRegistry;
-import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -70,40 +67,36 @@ public record NodeUtils(
     );
   }
 
-  public List<CommandArgument> parseArguments(final List<? extends SourceVariable> variables) {
-    final List<CommandArgument> arguments = new ArrayList<>(variables.size());
+  public ParameterType parseParameter(final SourceVariable parameter) {
+    debug("| Parsing parameter: " + parameter.getName());
 
-    for (final SourceVariable parameter : variables) {
-      debug("| Parsing parameter: " + parameter.getName());
-
-      final Literal literal = parameter.getAnnotation(Literal.class);
-      if (literal != null) {
-        final String[] declared = literal.value();
-        if (declared.length == 0) {
-          arguments.add(LiteralCommandArgument.literal(parameter.getName(), parameter));
-        } else if (declared.length == 1) {
-          arguments.add(LiteralCommandArgument.literal(declared[0], parameter));
-        } else {
-          arguments.add(MultiLiteralCommandArgument.multiLiteral(Set.of(declared), parameter));
-        }
-        continue;
-      }
-
-      final BrigadierArgumentType argumentType;
-      try {
-        argumentType = converter.getAsArgumentType(parameter);
-      } catch (ConversionException e) {
-        errorSource(e.getMessage(), parameter);
-        continue;
-      }
-
-      debug("  | Successfully found Brigadier type: {}", argumentType);
-      final RequiredCommandArgument commandArgument = new RequiredCommandArgumentImpl(argumentType, parameter.getName(), parameter);
-      applyRegistrableProvider(commandArgument, parameter, this.suggestionsRegistry, AttributeKey.SUGGESTION_PROVIDER, "suggestion");
-      arguments.add(commandArgument);
+    if (!platformUtils().mayParameterBeArgument(parameter)) {
+      return new SourceParameterType(parameter);
     }
 
-    return arguments;
+    final Literal literal = parameter.getAnnotation(Literal.class);
+    if (literal != null) {
+      final String[] declared = literal.value();
+      if (declared.length == 0) {
+        return LiteralCommandArgument.literal(parameter.getName(), parameter);
+      } else if (declared.length == 1) {
+        return LiteralCommandArgument.literal(declared[0], parameter);
+      } else {
+        return MultiLiteralCommandArgument.multiLiteral(Set.of(declared), parameter);
+      }
+    }
+
+    final BrigadierArgumentType argumentType;
+    try {
+      argumentType = converter.getAsArgumentType(parameter);
+    } catch (ConversionException e) {
+      return new SourceParameterType(parameter);
+    }
+
+    debug("  | Successfully found Brigadier type: {}", argumentType);
+    final RequiredCommandArgument commandArgument = new RequiredCommandArgumentImpl(argumentType, parameter.getName(), parameter);
+    applyRegistrableProvider(commandArgument, parameter, this.suggestionsRegistry, AttributeKey.SUGGESTION_PROVIDER, "suggestion");
+    return commandArgument;
   }
 
   public <T> void applyRegistrableProvider(

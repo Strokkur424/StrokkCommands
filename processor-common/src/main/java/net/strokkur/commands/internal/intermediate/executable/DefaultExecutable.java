@@ -15,16 +15,17 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.attributes;
+package net.strokkur.commands.internal.intermediate.executable;
 
 import net.strokkur.commands.internal.abstraction.SourceVariable;
+import net.strokkur.commands.internal.intermediate.attributes.Attributable;
 import net.strokkur.commands.internal.util.Classes;
+import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Set;
 
 public interface DefaultExecutable extends Executable, Attributable {
-  Type defaultExecutableArgumentTypes();
 
   enum Type {
     NONE(null, Set.of()),

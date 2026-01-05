@@ -18,19 +18,22 @@
 package net.strokkur.commands.internal;
 
 import net.strokkur.commands.internal.abstraction.AnnotationsHolder;
-import net.strokkur.commands.internal.abstraction.SourceParameter;
+import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.exceptions.UnknownSenderException;
-import net.strokkur.commands.internal.intermediate.attributes.Executable;
+import net.strokkur.commands.internal.intermediate.executable.Executable;
+import net.strokkur.commands.internal.intermediate.executable.ParameterType;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 
 import java.util.List;
 
 public interface PlatformUtils {
-  default int executableFirstIndexToParse(final List<SourceParameter> parameters) {
-    return 1;
+  default void populateExecutesNode(final Executable executable, final CommandNode node, final List<ParameterType> parameters) throws UnknownSenderException {
+    // noop
   }
 
-  void populateExecutesNode(final Executable executable, final CommandNode node, final List<SourceParameter> parameters) throws UnknownSenderException;
+  default boolean mayParameterBeArgument(final SourceVariable param) {
+    return true;
+  }
 
   default String getNodeReturnType() {
     return "LiteralArgumentBuilder";

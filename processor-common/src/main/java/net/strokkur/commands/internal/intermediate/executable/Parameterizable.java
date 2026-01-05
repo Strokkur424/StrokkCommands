@@ -15,10 +15,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.attributes;
+package net.strokkur.commands.internal.intermediate.executable;
 
-import net.strokkur.commands.internal.abstraction.SourceMethod;
+import java.util.List;
 
-public interface Executable extends Parameterizable, Attributable {
-  SourceMethod executesMethod();
+public interface Parameterizable {
+  List<ParameterType> parameterArguments();
 }

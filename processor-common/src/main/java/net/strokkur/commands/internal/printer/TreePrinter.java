@@ -21,6 +21,7 @@ import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.abstraction.SourceParameter;
 import net.strokkur.commands.internal.abstraction.SourceType;
+import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.MultiLiteralCommandArgument;
@@ -28,9 +29,10 @@ import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.attributes.Attributable;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
-import net.strokkur.commands.internal.intermediate.attributes.DefaultExecutable;
-import net.strokkur.commands.internal.intermediate.attributes.Executable;
-import net.strokkur.commands.internal.intermediate.attributes.Parameterizable;
+import net.strokkur.commands.internal.intermediate.executable.Executable;
+import net.strokkur.commands.internal.intermediate.executable.ParameterType;
+import net.strokkur.commands.internal.intermediate.executable.Parameterizable;
+import net.strokkur.commands.internal.intermediate.executable.SourceParameterType;
 import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperProvider;
 import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
@@ -195,14 +197,10 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
   }
 
   private void printExecutesMethodCall(final Executable executable, final String typeName) throws IOException {
-    println("{}.{}(", typeName, executable.executesMethod().getName());
-    incrementIndent();
-
-    // Arguments
+    printIndented("{}.{}", typeName, executable.executesMethod().getName());
     printExecutesArguments(executable);
-
-    decrementIndent();
-    println(");");
+    print(";");
+    println();
   }
 
   private void printWithRecord(final Parameterizable record, final Executable executable) throws IOException {
@@ -213,65 +211,74 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
     } else {
       println("final {} executorClass = new {}(", typeName, typeName);
       incrementIndent();
-      printArguments(record.parameterArguments());
+      printArguments(record.parameterArguments().stream()
+          .map(CommandArgument.class::cast)
+          .toList());
       decrementIndent();
       println(");");
     }
 
     printExecutesMethodCall(executable, "executorClass");
 
-    for (final CommandArgument arguments : record.parameterArguments()) {
-      if (arguments instanceof MultiLiteralCommandArgument) {
+    for (final ParameterType arg : record.parameterArguments()) {
+      if (arg instanceof MultiLiteralCommandArgument) {
         popLiteralPosition();
       }
     }
   }
 
-  void printFirstArguments(Executable executable) throws IOException;
+  String handleParameter(SourceVariable parameter) throws IOException;
 
   private void printExecutesArguments(final Executable executable) throws IOException {
-    final String argumentsTypeGetter = executable instanceof DefaultExecutable def ? def.defaultExecutableArgumentTypes().getGetter() : null;
-    final List<CommandArgument> arguments = executable.parameterArguments();
-
-    printFirstArguments(executable);
-    if (arguments.isEmpty() && argumentsTypeGetter == null) {
-      println();
+    final List<ParameterType> parameterArguments = executable.parameterArguments();
+    if (parameterArguments.isEmpty()) {
+      print("()");
       return;
     }
 
-    print(",");
+    if (parameterArguments.size() == 1) {
+      print("(");
+      switch (parameterArguments.getFirst()) {
+        case CommandArgument argument -> printArgument(argument);
+        case SourceParameterType(SourceVariable parameter) -> print(handleParameter(parameter));
+      }
+      print(")");
+      return;
+    }
+
+    print("(");
+    incrementIndent();
     println();
+    for (int i = 0, parameterArgumentsSize = parameterArguments.size(); i < parameterArgumentsSize; i++) {
+      final ParameterType parameterArgument = parameterArguments.get(i);
+      printIndent();
 
-    if (arguments.isEmpty() && argumentsTypeGetter != null) {
-      println(argumentsTypeGetter);
-      return;
+      switch (parameterArgument) {
+        case CommandArgument argument -> printArgument(argument);
+        case SourceParameterType(SourceVariable parameter) -> print(handleParameter(parameter));
+      }
+
+      if (i + 1 < parameterArgumentsSize) {
+        print(",");
+        println();
+      }
     }
 
-    printArguments(arguments);
-
-    for (final CommandArgument argument : arguments) {
+    for (final ParameterType argument : parameterArguments) {
       if (argument instanceof MultiLiteralCommandArgument) {
         popLiteralPosition();
       }
     }
 
-    if (argumentsTypeGetter != null) {
-      print(argumentsTypeGetter);
-      println();
-    }
+    decrementIndent();
+    println();
+    printIndented(")");
   }
 
-  private void printArguments(final List<? extends CommandArgument> arguments) throws IOException {
+  private void printArguments(final List<CommandArgument> arguments) throws IOException {
     for (int i = 0, argumentsSize = arguments.size(); i < argumentsSize; i++) {
-      final CommandArgument argument = arguments.get(i);
-
       printIndent();
-      print(switch (argument) {
-        case RequiredCommandArgument req -> req.argumentType().retriever();
-        case MultiLiteralCommandArgument ignored -> '"' + nextLiteral() + '"';
-        case LiteralCommandArgument lit -> '"' + lit.literal() + '"';
-        default -> throw new IllegalArgumentException("Unknown argument class: " + argument.getClass());
-      });
+      printArgument(arguments.get(i));
 
       if (i + 1 < argumentsSize) {
         print(",");
@@ -279,6 +286,15 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
 
       println();
     }
+  }
+
+  private void printArgument(final CommandArgument argument) throws IOException {
+    print(switch (argument) {
+      case RequiredCommandArgument req -> req.argumentType().retriever();
+      case MultiLiteralCommandArgument ignored -> '"' + nextLiteral() + '"';
+      case LiteralCommandArgument lit -> '"' + lit.literal() + '"';
+      default -> throw new IllegalArgumentException("Unknown argument class: " + argument.getClass());
+    });
   }
 
   @Nullable

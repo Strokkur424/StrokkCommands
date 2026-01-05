@@ -22,15 +22,16 @@ import net.strokkur.commands.internal.NodeUtils;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.abstraction.SourceParameter;
 import net.strokkur.commands.internal.arguments.CommandArgument;
+import net.strokkur.commands.internal.exceptions.IllegalReturnTypeException;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
 import net.strokkur.commands.internal.exceptions.UnknownSenderException;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
-import net.strokkur.commands.internal.intermediate.attributes.Executable;
-import net.strokkur.commands.internal.intermediate.attributes.ExecutableImpl;
+import net.strokkur.commands.internal.intermediate.executable.Executable;
+import net.strokkur.commands.internal.intermediate.executable.ExecutableImpl;
+import net.strokkur.commands.internal.intermediate.executable.ParameterType;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public sealed class ExecutesTransform implements NodeTransform<SourceMethod>, ForwardingMessagerWrapper permits DefaultExecutesTransform {
@@ -51,33 +52,35 @@ public sealed class ExecutesTransform implements NodeTransform<SourceMethod>, Fo
     return out == null ? parent : out;
   }
 
-  protected void populatePath(final CommandNode node, final SourceMethod method, final List<CommandArgument> args, final List<SourceParameter> parameters)
-      throws UnknownSenderException {
+  protected void populatePath(
+      final CommandNode node,
+      final SourceMethod method,
+      final List<ParameterType> args
+  ) throws UnknownSenderException, IllegalReturnTypeException {
     final Executable executable = new ExecutableImpl(method, args);
     node.setAttribute(AttributeKey.EXECUTABLE, executable);
-    nodeUtils().platformUtils().populateExecutesNode(executable, node, parameters);
-  }
-
-  protected int parametersToParse(final List<SourceParameter> parameters) {
-    return parameters.size();
+    nodeUtils().platformUtils().populateExecutesNode(executable, node, args);
   }
 
   @Override
-  public final void transform(final CommandNode root, final SourceMethod element) throws MismatchedArgumentTypeException, UnknownSenderException {
+  public final void transform(
+      final CommandNode root,
+      final SourceMethod element
+  ) throws MismatchedArgumentTypeException, UnknownSenderException, IllegalReturnTypeException {
     debug("> {}: parsing {} for '{}'", transformName(), element, root.argument().argumentName());
     final CommandNode thisPath = this.createThisPath(root, element);
 
-    final List<SourceParameter> parameters = element.getParameters();
-    final List<SourceParameter> arguments = new ArrayList<>(parameters.size() - 1);
+    final List<ParameterType> params = element.getParameters().stream()
+        .map(nodeUtils()::parseParameter)
+        .toList();
+    final List<CommandArgument> args = params.stream()
+        .filter(CommandArgument.class::isInstance)
+        .map(CommandArgument.class::cast)
+        .toList();
 
-    for (int i = nodeUtils().platformUtils().executableFirstIndexToParse(parameters), parametersSize = parametersToParse(parameters); i < parametersSize; i++) {
-      arguments.add(parameters.get(i));
-    }
-
-    final List<CommandArgument> args = nodeUtils().parseArguments(arguments);
     final CommandNode out = thisPath.addChildren(args);
 
-    populatePath(out, element, args, parameters);
+    populatePath(out, element, params);
     nodeUtils().applyRegistrableProvider(
         out,
         element,

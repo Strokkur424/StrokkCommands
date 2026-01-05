@@ -15,23 +15,9 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.attributes;
+package net.strokkur.commands.internal.intermediate.executable;
 
-import net.strokkur.commands.internal.abstraction.SourceMethod;
-import net.strokkur.commands.internal.arguments.CommandArgument;
+import net.strokkur.commands.internal.abstraction.SourceVariable;
 
-import java.util.List;
-
-public final class DefaultExecutableImpl extends ExecutableImpl implements DefaultExecutable {
-  private final Type defaultExecutableArgumentTypes;
-
-  public DefaultExecutableImpl(final SourceMethod executesMethod, final List<CommandArgument> parameterArguments, final Type defaultExecutableArgumentTypes) {
-    super(executesMethod, parameterArguments);
-    this.defaultExecutableArgumentTypes = defaultExecutableArgumentTypes;
-  }
-
-  @Override
-  public Type defaultExecutableArgumentTypes() {
-    return this.defaultExecutableArgumentTypes;
-  }
+public record SourceParameterType(SourceVariable parameter) implements ParameterType {
 }

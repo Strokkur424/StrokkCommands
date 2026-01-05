@@ -18,6 +18,9 @@
 package net.strokkur.commands.internal.intermediate.attributes;
 
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
+import net.strokkur.commands.internal.intermediate.executable.DefaultExecutable;
+import net.strokkur.commands.internal.intermediate.executable.Executable;
+import net.strokkur.commands.internal.intermediate.executable.Parameterizable;
 import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperProvider;
 import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;

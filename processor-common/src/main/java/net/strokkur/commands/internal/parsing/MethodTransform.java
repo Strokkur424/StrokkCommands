@@ -19,6 +19,7 @@ package net.strokkur.commands.internal.parsing;
 
 import net.strokkur.commands.internal.NodeUtils;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
+import net.strokkur.commands.internal.exceptions.IllegalReturnTypeException;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
 import net.strokkur.commands.internal.exceptions.UnknownSenderException;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
@@ -38,7 +39,10 @@ public class MethodTransform implements NodeTransform<SourceMethod> {
   }
 
   @Override
-  public void transform(final CommandNode node, final SourceMethod element) throws MismatchedArgumentTypeException, UnknownSenderException {
+  public void transform(
+      final CommandNode node,
+      final SourceMethod element
+  ) throws MismatchedArgumentTypeException, UnknownSenderException, IllegalReturnTypeException {
     for (final NodeTransform<SourceMethod> innerTransform : innerTransforms) {
       innerTransform.transformIfRequirement(node, element);
     }

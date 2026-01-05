@@ -15,10 +15,11 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.attributes;
+package net.strokkur.commands.internal.intermediate.executable;
 
 import net.strokkur.commands.internal.abstraction.SourceMethod;
-import net.strokkur.commands.internal.arguments.CommandArgument;
+import net.strokkur.commands.internal.exceptions.IllegalReturnTypeException;
+import net.strokkur.commands.internal.intermediate.attributes.AttributableHelper;
 
 import java.util.List;
 import java.util.Map;
@@ -26,12 +27,17 @@ import java.util.TreeMap;
 
 public class ExecutableImpl implements Executable, AttributableHelper {
   private final SourceMethod executesMethod;
-  private final List<CommandArgument> parameterArguments;
+  private final List<ParameterType> parameters;
   private final Map<String, Object> attributeMap = new TreeMap<>();
+  private final ReturnType returnType;
 
-  public ExecutableImpl(SourceMethod executesMethod, List<CommandArgument> parameterArguments) {
+  public ExecutableImpl(
+      final SourceMethod executesMethod,
+      final List<ParameterType> parameters
+  ) throws IllegalReturnTypeException {
     this.executesMethod = executesMethod;
-    this.parameterArguments = parameterArguments;
+    this.parameters = parameters;
+    this.returnType = ReturnType.getType(executesMethod.getReturnType());
   }
 
   @Override
@@ -41,16 +47,21 @@ public class ExecutableImpl implements Executable, AttributableHelper {
 
   @Override
   public SourceMethod executesMethod() {
-    return executesMethod;
+    return this.executesMethod;
   }
 
   @Override
-  public List<CommandArgument> parameterArguments() {
-    return parameterArguments;
+  public ReturnType returnType() {
+    return this.returnType;
+  }
+
+  @Override
+  public List<ParameterType> parameterArguments() {
+    return this.parameters;
   }
 
   @Override
   public String toString() {
-    return "ExecutableImpl[" + executesMethod + ']';
+    return this.getClass().getSimpleName() + "[" + this.executesMethod + ']';
   }
 }
