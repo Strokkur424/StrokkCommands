@@ -35,7 +35,6 @@ import java.lang.reflect.Method;
 
 @LogWrapper
 @net.strokkur.commands.Command("log-test")
-@StrokkCommandsDebug(only = TestInstancedWrapper.class)
 class TestInstancedWrapper {
   private static final Logger LOGGER = LoggerFactory.getLogger(TestInstancedWrapper.class);
 
@@ -63,6 +62,11 @@ class TestInstancedWrapper {
 
   @Executes("argument-imports")
   void executeWithArgs(final CommandContext<CommandSourceStack> ctx, final int num, final String[] all) {
+    // ...
+  }
+
+  @Executes("no-args")
+  void noArgs() {
     // ...
   }
 }

@@ -17,7 +17,6 @@
  */
 package net.strokkur.commands.internal.printer;
 
-import net.strokkur.commands.Executes;
 import net.strokkur.commands.internal.abstraction.SourceConstructor;
 import net.strokkur.commands.internal.abstraction.SourceTypeAnnotation;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
@@ -40,7 +39,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 interface ImportPrinter<C extends CommandInformation> extends Printable, PrinterInformation<C>, ExecutorWrapperAccessible {
@@ -101,10 +99,6 @@ interface ImportPrinter<C extends CommandInformation> extends Printable, Printer
     // noop
   }
 
-  default void gatherAdditionalExecutorWrapperImports(Set<String> imports) {
-    // noop
-  }
-
   private void gatherImports(final Set<String> imports, final CommandNode node) {
     if (node.hasAttribute(AttributeKey.DEFAULT_EXECUTABLE)) {
       final Executable exec = node.getAttributeNotNull(AttributeKey.DEFAULT_EXECUTABLE);
@@ -119,14 +113,10 @@ interface ImportPrinter<C extends CommandInformation> extends Printable, Printer
 
     final ExecutorWrapperProvider currentWrapper = getExecutorWrapper();
     if (node.hasAttribute(AttributeKey.EXECUTOR_WRAPPER)) {
-      final Executable executable = node.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE);
-      if (executable != null) {
-        final ExecutorWrapperProvider wrapper = node.getAttributeNotNull(AttributeKey.EXECUTOR_WRAPPER);
-        updateExecutorWrapper(wrapper);
-        if (wrapper.wrapperType() == ExecutorWrapperProvider.WrapperType.COMMAND_METHOD) {
-          imports.add(Classes.METHOD);
-          gatherAdditionalExecutorWrapperImports(imports);
-        }
+      final ExecutorWrapperProvider wrapper = node.getAttributeNotNull(AttributeKey.EXECUTOR_WRAPPER);
+      updateExecutorWrapper(wrapper);
+      if (wrapper.wrapperType().withMethod()) {
+        imports.add(Classes.METHOD);
       }
     }
 

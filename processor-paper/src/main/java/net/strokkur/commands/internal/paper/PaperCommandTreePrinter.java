@@ -145,11 +145,6 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
     }
   }
 
-  @Override
-  public void gatherAdditionalExecutorWrapperImports(final Set<String> imports) {
-    imports.add(PaperClasses.COMMAND_SENDER);
-  }
-
   private void addExecutorTypeImports(final Set<String> imports, final ExecutorType type) {
     if (type == ExecutorType.NONE) {
       return;

@@ -140,14 +140,17 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
     decrementIndent();
 
     if (wrapper.wrapperType().withMethod()) {
-      printIndented("}, getMethodViaReflection(%s.class, \"%s\", %s)))",
+      final List<SourceParameter> params = executable.executesMethod().getParameters();
+      final String parameterTypesString = params.isEmpty() ? "" : ", " + String.join(", ", executable.executesMethod().getParameters().stream()
+          .map(SourceParameter::getType)
+          .map(SourceType::getSourceName)
+          .map((str) -> str + ".class")
+          .toList());
+
+      printIndented("}, getMethodViaReflection(%s.class, \"%s\"%s)))",
           executable.executesMethod().getEnclosed().getSourceName(),
           executable.executesMethod().getName(),
-          String.join(", ", executable.executesMethod().getParameters().stream()
-              .map(SourceParameter::getType)
-              .map(SourceType::getSourceName)
-              .map((str) -> str.concat(".class"))
-              .toList())
+          parameterTypesString
       );
     } else {
       printIndented("}))");
