@@ -17,7 +17,7 @@
  */
 package net.strokkur.commands.internal.printer;
 
-import net.strokkur.commands.DefaultExecutes;
+import net.strokkur.commands.Executes;
 import net.strokkur.commands.internal.abstraction.SourceConstructor;
 import net.strokkur.commands.internal.abstraction.SourceTypeAnnotation;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
@@ -40,9 +40,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
-interface ImportPrinter<C extends CommandInformation> extends Printable, PrinterInformation<C> {
+interface ImportPrinter<C extends CommandInformation> extends Printable, PrinterInformation<C>, ExecutorWrapperAccessible {
 
   Set<String> standardImports();
 
@@ -116,12 +117,22 @@ interface ImportPrinter<C extends CommandInformation> extends Printable, Printer
           .forEach(type -> imports.addAll(DefaultExecutable.Type.getType(type).getImports()));
     }
 
+    final ExecutorWrapperProvider currentWrapper = getExecutorWrapper();
     if (node.hasAttribute(AttributeKey.EXECUTOR_WRAPPER)) {
-      final ExecutorWrapperProvider wrapper = node.getAttributeNotNull(AttributeKey.EXECUTOR_WRAPPER);
-      if (wrapper.wrapperType() == ExecutorWrapperProvider.WrapperType.COMMAND_METHOD) {
-        imports.add(Classes.METHOD);
-        gatherAdditionalExecutorWrapperImports(imports);
+      final Executable executable = node.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE);
+      if (executable != null) {
+        final ExecutorWrapperProvider wrapper = node.getAttributeNotNull(AttributeKey.EXECUTOR_WRAPPER);
+        updateExecutorWrapper(wrapper);
+        if (wrapper.wrapperType() == ExecutorWrapperProvider.WrapperType.COMMAND_METHOD) {
+          imports.add(Classes.METHOD);
+          gatherAdditionalExecutorWrapperImports(imports);
+        }
       }
+    }
+
+    final Executable executable = node.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE);
+    if (executable != null) {
+      executable.executesMethod().getParameters().forEach(param -> imports.addAll(param.getImports()));
     }
 
     if (getCommandInformation().constructor() instanceof SourceConstructor ctor) {
@@ -163,6 +174,10 @@ interface ImportPrinter<C extends CommandInformation> extends Printable, Printer
 
     for (final CommandNode child : node.children()) {
       gatherImports(imports, child);
+    }
+
+    if (node.hasAttribute(AttributeKey.EXECUTOR_WRAPPER)) {
+      updateExecutorWrapper(currentWrapper);
     }
   }
 }

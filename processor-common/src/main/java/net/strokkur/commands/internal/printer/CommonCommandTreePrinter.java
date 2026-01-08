@@ -37,7 +37,8 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
 
-public abstract class CommonCommandTreePrinter<C extends CommandInformation> extends AbstractPrinter implements PrinterInformation<C>, ImportPrinter<C>, InstanceFieldPrinter<C>, TreePrinter<C> {
+public abstract class CommonCommandTreePrinter<C extends CommandInformation> extends AbstractPrinter
+    implements PrinterInformation<C>, ImportPrinter<C>, InstanceFieldPrinter<C>, TreePrinter<C>, ExecutorWrapperAccessible {
   private final Stack<String> multiLiteralStack = new Stack<>();
   private final Stack<ExecuteAccess<?>> executeAccessStack = new Stack<>();
   protected final CommandNode node;

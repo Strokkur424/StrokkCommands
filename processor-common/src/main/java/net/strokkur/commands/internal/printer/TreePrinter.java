@@ -44,9 +44,8 @@ import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Stack;
 
-interface TreePrinter<C extends CommandInformation> extends Printable, PrinterInformation<C> {
+interface TreePrinter<C extends CommandInformation> extends Printable, PrinterInformation<C>, ExecutorWrapperAccessible {
 
   String nextLiteral();
 
@@ -56,11 +55,9 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
 
   void popLiteralPosition();
 
-  @Nullable ExecutorWrapperProvider getExecutorWrapper();
+  void prefixPrintExecutableInner(final CommandNode node, final Executable executable) throws IOException;
 
-  Stack<ExecuteAccess<?>> getExecutorWrapperAccessStack();
-
-  void updateExecutorWrapper(final @Nullable ExecutorWrapperProvider provider);
+  String handleParameter(SourceVariable parameter) throws IOException;
 
   default void printNode(final CommandNode node) throws IOException {
     printNode(node, false);
@@ -112,8 +109,6 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
       }
     }, isNested);
   }
-
-  void prefixPrintExecutableInner(final CommandNode node, final Executable executable) throws IOException;
 
   private void printExecutableInner(final CommandNode node, final Executable executable) throws IOException {
     println();
@@ -226,8 +221,6 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
       }
     }
   }
-
-  String handleParameter(SourceVariable parameter) throws IOException;
 
   private void printExecutesArguments(final Executable executable) throws IOException {
     final List<ParameterType> parameterArguments = executable.parameterArguments();

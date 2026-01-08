@@ -18,10 +18,12 @@
 package net.strokkur.testplugin.wrapper;
 
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.context.CommandContext;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.strokkur.commands.CustomExecutorWrapper;
 import net.strokkur.commands.Executes;
 import net.strokkur.commands.UnsetExecutorWrapper;
+import net.strokkur.commands.meta.StrokkCommandsDebug;
 import org.bukkit.command.CommandSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +35,7 @@ import java.lang.reflect.Method;
 
 @LogWrapper
 @net.strokkur.commands.Command("log-test")
+@StrokkCommandsDebug(only = TestInstancedWrapper.class)
 class TestInstancedWrapper {
   private static final Logger LOGGER = LoggerFactory.getLogger(TestInstancedWrapper.class);
 
@@ -56,5 +59,10 @@ class TestInstancedWrapper {
   @UnsetExecutorWrapper
   void executeUnset(CommandSender sender) {
     sender.sendRichMessage("<greed>Wohoo!");
+  }
+
+  @Executes("argument-imports")
+  void executeWithArgs(final CommandContext<CommandSourceStack> ctx, final int num, final String[] all) {
+    // ...
   }
 }
