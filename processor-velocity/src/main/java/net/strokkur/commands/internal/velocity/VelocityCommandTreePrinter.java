@@ -81,7 +81,7 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
             (p) -> !p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)
         ),
         SourceParameter.combineMethodParameterString(
-            List.of("final ProxyServer server", "final Object plugin"),
+            List.of("final ProxyServer server", "final Object command$plugin"),
             getCommandInformation().constructor(),
             (p) -> !p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)
         ),
@@ -130,8 +130,8 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
       decrementIndent();
     }
 
-    printBlock("""        
-                .plugin(plugin)
+    printBlock("""
+                .plugin(command$plugin)
                 .build();
         
             server.getCommandManager().register(meta, command);
