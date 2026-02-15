@@ -17,16 +17,31 @@
  */
 package net.strokkur.testplugin;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import net.strokkur.testplugin.guice.InjectionCommandBrigadierRef;
+import net.strokkur.testplugin.guice.NestedInjectionCommandBrigadierRef;
+import net.strokkur.testplugin.guice.module.GuiceModule;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class TestPlugin extends JavaPlugin {
+  private final Injector injector;
+
+  public TestPlugin() {
+    this.injector = Guice.createInjector(
+        new GuiceModule(this)
+    );
+  }
 
   @Override
   public void onLoad() {
     this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS.newHandler(event -> {
       Commands commands = event.registrar();
+      injector.getInstance(InjectionCommandBrigadierRef.class).register(commands);
+      injector.getInstance(NestedInjectionCommandBrigadierRef.class).register(commands);
+    }));
 
 //      OneBrigadier.register(commands);
 //      MyFirstCommandBrigadier.register(commands);
@@ -55,9 +70,6 @@ public final class TestPlugin extends JavaPlugin {
 //            AdventureArgumentsCommandBrigadier.register(commands);
 //            LiteralsCommandBrigadier.register(commands);
 //            TellMiniCommandBrigadier.register(commands);
-    }));
-
-    this.getSLF4JLogger().debug("35");
 
     this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS.newHandler(event -> {
 //            MyFirstCommandBrigadier.register(event.registrar());
