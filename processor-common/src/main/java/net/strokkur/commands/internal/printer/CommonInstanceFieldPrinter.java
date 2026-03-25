@@ -27,7 +27,6 @@ import net.strokkur.commands.internal.intermediate.access.FieldAccess;
 import net.strokkur.commands.internal.intermediate.access.InstanceAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
-import net.strokkur.commands.internal.util.CommandInformation;
 import net.strokkur.commands.internal.util.Utils;
 
 import javax.lang.model.element.Modifier;
@@ -35,11 +34,16 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-interface InstanceFieldPrinter<C extends CommandInformation> extends Printable, PrinterInformation<C> {
+public class CommonInstanceFieldPrinter {
+  private final CommonCommandTreePrinter<?> printer;
 
-  default void printInstanceFields() throws IOException {
-    if (printInstanceFields(getNode()) > 0) {
-      println(); // Extra newline for styling reasons
+  public CommonInstanceFieldPrinter(final CommonCommandTreePrinter<?> printer) {
+    this.printer = printer;
+  }
+
+  public void printInstanceFields() throws IOException {
+    if (printInstanceFields(printer.getNode()) > 0) {
+      printer.println(); // Extra newline for styling reasons
     }
   }
 
@@ -49,19 +53,19 @@ interface InstanceFieldPrinter<C extends CommandInformation> extends Printable, 
       for (ExecuteAccess<?> executeAccess : node.getAttributeNotNull(AttributeKey.ACCESS_STACK)) {
         if (executeAccess.isRecord()) {
           for (int i = 0; i < pushed; i++) {
-            getAccessStack().pop();
+            printer.getAccessStack().pop();
           }
           return 0;
         }
 
-        getAccessStack().push(executeAccess);
+        printer.getAccessStack().push(executeAccess);
         pushed++;
       }
     }
 
     int printed = 0;
     if (node.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE) != null) {
-      final List<ExecuteAccess<?>> pathToUse = getAccessStack();
+      final List<ExecuteAccess<?>> pathToUse = printer.getAccessStack();
 
       if (!pathToUse.isEmpty() && printAccessInstance(pathToUse)) {
         printed++;
@@ -73,13 +77,13 @@ interface InstanceFieldPrinter<C extends CommandInformation> extends Printable, 
     }
 
     for (int i = 0; i < pushed; i++) {
-      getAccessStack().pop();
+      printer.getAccessStack().pop();
     }
 
     return printed;
   }
 
-  default String getParameterName(final SourceParameter parameter) {
+  public String getParameterName(final SourceParameter parameter) {
     return parameter.getName();
   }
 
@@ -89,29 +93,29 @@ interface InstanceFieldPrinter<C extends CommandInformation> extends Printable, 
     }
 
     if (accesses.size() == 1) {
-      if (getPrintedInstances().contains("instance")) {
+      if (printer.getPrintedInstances().contains("instance")) {
         return false;
       }
       final String typeName = accesses.getFirst().getSourceName();
-      println("final %s%s instance = new %s%s(%s);",
+      printer.println("final %s%s instance = new %s%s(%s);",
           typeName,
-          getCommandInformation().sourceClass().getTypeAnnotations().isEmpty() ?
+          printer.getCommandInformation().sourceClass().getTypeAnnotations().isEmpty() ?
               "" :
-              '<' + String.join(", ", getCommandInformation().sourceClass().getTypeAnnotations().stream()
+              '<' + String.join(", ", printer.getCommandInformation().sourceClass().getTypeAnnotations().stream()
                   .map(SourceTypeAnnotation::getName)
                   .toList()) + '>',
           typeName,
-          getCommandInformation().sourceClass().getTypeAnnotations().isEmpty() ?
+          printer.getCommandInformation().sourceClass().getTypeAnnotations().isEmpty() ?
               "" :
               "<>",
-          String.join(", ", getCommandInformation().constructor() instanceof SourceConstructor ctor ?
+          String.join(", ", printer.getCommandInformation().constructor() instanceof SourceConstructor ctor ?
               ctor.getParameters().stream()
                   .map(this::getParameterName)
                   .toList() :
               Collections.emptyList()
           )
       );
-      getPrintedInstances().add("instance");
+      printer.getPrintedInstances().add("instance");
       return true;
     }
 
@@ -121,59 +125,59 @@ interface InstanceFieldPrinter<C extends CommandInformation> extends Printable, 
     final String instanceName = Utils.getInstanceName(accesses);
     final String prevInstanceName = Utils.getInstanceName(accesses.subList(0, accesses.size() - 1));
 
-    if (getPrintedInstances().contains(instanceName)) {
+    if (printer.getPrintedInstances().contains(instanceName)) {
       return false;
     }
 
     if (currentAccess instanceof FieldAccess fieldAccess) {
       final SourceField fieldElement = fieldAccess.getElement();
 
-      if (!getPrintedInstances().contains(prevInstanceName)) {
+      if (!printer.getPrintedInstances().contains(prevInstanceName)) {
         printAccessInstance(accesses.subList(0, accesses.size() - 1));
       }
 
       if (fieldElement.isInitialized()) {
-        println("final {} {} = {}.{};",
+        printer.println("final {} {} = {}.{};",
             typeName,
             instanceName,
             prevInstanceName,
             fieldAccess.getElement().getName()
         );
       } else {
-        println("final {} {} = new {}();",
+        printer.println("final {} {} = new {}();",
             typeName,
             instanceName,
             typeName
         );
       }
 
-      getPrintedInstances().add(instanceName);
+      printer.getPrintedInstances().add(instanceName);
       return true;
     }
 
     if (currentAccess instanceof InstanceAccess instanceAccess) {
       final SourceClass classElement = instanceAccess.getElement();
       if (classElement.isTopLevel() || classElement.getModifiers().contains(Modifier.STATIC)) {
-        println("final {} {} = new {}();",
+        printer.println("final {} {} = new {}();",
             typeName,
             instanceName,
             typeName
         );
-        getPrintedInstances().add(instanceName);
+        printer.getPrintedInstances().add(instanceName);
         return true;
       }
 
-      if (!getPrintedInstances().contains(prevInstanceName)) {
+      if (!printer.getPrintedInstances().contains(prevInstanceName)) {
         printAccessInstance(accesses.subList(0, accesses.size() - 1));
       }
 
-      println("final {} {} = {}.new {}();",
+      printer.println("final {} {} = {}.new {}();",
           typeName,
           instanceName,
           prevInstanceName,
           classElement.getName()
       );
-      getPrintedInstances().add(instanceName);
+      printer.getPrintedInstances().add(instanceName);
       return true;
     }
 

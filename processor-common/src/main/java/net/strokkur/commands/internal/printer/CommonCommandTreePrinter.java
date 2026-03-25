@@ -37,19 +37,19 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
 
-public abstract class CommonCommandTreePrinter<C extends CommandInformation> extends AbstractPrinter
-    implements PrinterInformation<C>, ImportPrinter<C>, InstanceFieldPrinter<C>, TreePrinter<C>, ExecutorWrapperAccessible {
-  private final Stack<String> multiLiteralStack = new Stack<>();
+public abstract class CommonCommandTreePrinter<C extends CommandInformation> extends AbstractPrinter implements PrinterInformation<C> {
   private final Stack<ExecuteAccess<?>> executeAccessStack = new Stack<>();
   protected final CommandNode node;
   private final Set<String> printedInstances = new TreeSet<>();
   private final ProcessingEnvironment environment;
   protected final PlatformUtils utils;
 
+  private final CommonImportPrinter importPrinter;
+  private final CommonTreePrinter treePrinter;
+  private final CommonInstanceFieldPrinter instanceFieldPrinter;
+
   private @Nullable ExecutorWrapperProvider executorWrapper = null;
   private Stack<ExecuteAccess<?>> executorWrapperAccessStack = new Stack<>();
-
-  private int multiLiteralStackPosition = 0;
 
   private final C commandInformation;
 
@@ -66,6 +66,18 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
     this.commandInformation = commandInformation;
     this.environment = environment;
     this.utils = utils;
+
+    this.importPrinter = createImportPrinter();
+    this.treePrinter = createTreePrinter();
+    this.instanceFieldPrinter = createInstanceFieldPrinter();
+  }
+
+  protected abstract CommonImportPrinter createImportPrinter();
+
+  protected abstract CommonTreePrinter createTreePrinter();
+
+  protected CommonInstanceFieldPrinter createInstanceFieldPrinter() {
+    return new CommonInstanceFieldPrinter(this);
   }
 
   public final String getPackageName() {
@@ -80,17 +92,14 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
 
   protected abstract void printRegisterMethod(final PrintParamsHolder holder) throws IOException;
 
-  @Override
   public @Nullable ExecutorWrapperProvider getExecutorWrapper() {
     return this.executorWrapper;
   }
 
-  @Override
   public Stack<ExecuteAccess<?>> getExecutorWrapperAccessStack() {
     return this.executorWrapperAccessStack;
   }
 
-  @Override
   public void updateExecutorWrapper(final @Nullable ExecutorWrapperProvider provider) {
     this.executorWrapper = provider;
     this.executorWrapperAccessStack = new Stack<>();
@@ -107,7 +116,7 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
 
     println("package {};", packageName);
     println();
-    printImports(getImports());
+    importPrinter.printImports(importPrinter.getImports());
     println();
 
     printBlock("""
@@ -155,12 +164,12 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
     );
     incrementIndent();
 
-    printInstanceFields();
+    instanceFieldPrinter.printInstanceFields();
 
     printIndent();
     print("return ");
     incrementIndent();
-    printNode(node);
+    treePrinter.printNode(node);
     printSemicolon();
 
     println();
@@ -216,28 +225,8 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
   }
 
   @Override
-  public final String nextLiteral() {
-    return this.multiLiteralStack.elementAt(this.multiLiteralStackPosition++);
-  }
-
-  @Override
-  public final void pushLiteral(final String literal) {
-    this.multiLiteralStack.push(literal);
-  }
-
-  @Override
-  public final void popLiteral() {
-    this.multiLiteralStack.pop();
-  }
-
-  @Override
   public final ProcessingEnvironment environment() {
     return this.environment;
-  }
-
-  @Override
-  public final void popLiteralPosition() {
-    this.multiLiteralStackPosition--;
   }
 
   @Override

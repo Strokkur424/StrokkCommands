@@ -15,18 +15,23 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.printer;
+package net.strokkur.commands.internal.velocity;
 
-import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
-import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperProvider;
-import org.jspecify.annotations.Nullable;
+import net.strokkur.commands.internal.abstraction.SourceParameter;
+import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
+import net.strokkur.commands.internal.printer.CommonInstanceFieldPrinter;
+import net.strokkur.commands.internal.velocity.util.VelocityClasses;
 
-import java.util.Stack;
+final class VelocityInstanceFieldPrinter extends CommonInstanceFieldPrinter {
+  public VelocityInstanceFieldPrinter(final CommonCommandTreePrinter<?> printer) {
+    super(printer);
+  }
 
-interface ExecutorWrapperAccessible {
-  @Nullable ExecutorWrapperProvider getExecutorWrapper();
-
-  Stack<ExecuteAccess<?>> getExecutorWrapperAccessStack();
-
-  void updateExecutorWrapper(final @Nullable ExecutorWrapperProvider provider);
+  @Override
+  public String getParameterName(final SourceParameter parameter) {
+    if (parameter.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)) {
+      return "server";
+    }
+    return super.getParameterName(parameter);
+  }
 }
