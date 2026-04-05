@@ -72,10 +72,15 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
   }
 
   @Override
-  protected void printRegisterMethod(final PrintParamsHolder holder) throws IOException {
+  protected void printExtraClassStart() throws IOException {
     final String description = getCommandInformation().description() == null ? "null" : '"' + getCommandInformation().description() + '"';
     final String aliases = getCommandInformation().aliases() == null ? "" : '"' + String.join("\", \"", List.of(getCommandInformation().aliases())) + '"';
+    println("public static final @Nullable String DESCRIPTION = %s;", description);
+    println("public static final List<String> ALIASES = List.of(%s);", aliases);
+  }
 
+  @Override
+  protected void printRegisterMethod(final PrintParamsHolder holder) throws IOException {
     printBlock("""
             /**
              * Shortcut for registering the command node returned from
@@ -101,7 +106,7 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
              * }</pre>
              */
             public static%s void register(%s) {
-                commands.register(create(%s), %s, List.of(%s));
+                commands.register(create(%s), DESCRIPTION, ALIASES);
             }""",
         holder.createJdParams(),
         getBrigadierClassName(),
@@ -109,9 +114,7 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
             .map(SourceMethod::getCombinedTypeAnnotationsString)
             .orElse(""),
         holder.registerParams(),
-        holder.createParamNames(),
-        description,
-        aliases
+        holder.createParamNames()
     );
   }
 
@@ -130,6 +133,7 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
         PaperClasses.COMMANDS,
         Classes.LIST,
         Classes.NULL_MARKED,
+        Classes.NULLABLE,
         "io.papermc.paper.plugin.bootstrap.PluginBootstrap",
         "io.papermc.paper.plugin.bootstrap.BootstrapContext",
         "org.bukkit.plugin.java.JavaPlugin"

@@ -41,4 +41,5 @@ public interface Classes {
 
   // Other
   String NULL_MARKED = "org.jspecify.annotations.NullMarked";
+  String NULLABLE = "org.jspecify.annotations.Nullable";
 }

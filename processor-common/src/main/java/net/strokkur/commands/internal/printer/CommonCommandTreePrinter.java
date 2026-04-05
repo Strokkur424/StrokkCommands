@@ -130,6 +130,7 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
 
     println("public final class {} {", getBrigadierClassName());
     incrementIndent();
+    printExtraClassStart();
     println();
 
     printRegisterMethod(printParams);
@@ -183,6 +184,9 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
         getBrigadierClassName());
     decrementIndent();
     println("}");
+  }
+
+  protected void printExtraClassStart() throws IOException {
   }
 
   private boolean printReflectionHelper(final CommandNode node) throws IOException {

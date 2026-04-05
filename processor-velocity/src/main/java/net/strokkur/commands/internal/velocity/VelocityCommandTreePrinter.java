@@ -58,6 +58,17 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
   }
 
   @Override
+  protected void printExtraClassStart() throws IOException {
+    final Optional<String[]> aliases = Optional.ofNullable(getCommandInformation().aliases());
+    if (aliases.isPresent()) {
+      final String aliasesVarargs = String.join(", ", Arrays.stream(aliases.get())
+          .map(alias -> '"' + alias + '"')
+          .toList());
+      println("public static final List<String> ALIASES = List.of(%s);", aliasesVarargs);
+    }
+  }
+
+  @Override
   protected PrintParamsHolder getParamsHolder() {
     return new PrintParamsHolder(
         SourceParameter.combineJavaDocsParameterString(
@@ -119,13 +130,11 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
         holder.createParamNames()
     );
 
-    final Optional<String @Nullable []> aliases = Optional.ofNullable(getCommandInformation().aliases());
+    final Optional<?> aliases = Optional.ofNullable(getCommandInformation().aliases());
     if (aliases.isPresent()) {
       incrementIndent();
       incrementIndent();
-      println(".aliases(%s)", String.join(", ", Arrays.stream(aliases.get())
-          .map(alias -> '"' + alias + '"')
-          .toList()));
+      println(".aliases(ALIASES.toArray(String[]::new))");
       decrementIndent();
       decrementIndent();
     }
@@ -148,7 +157,8 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
         VelocityClasses.COMMAND_SOURCE,
         VelocityClasses.PROXY_INITIALIZE_EVENT,
         VelocityClasses.PROXY_SERVER,
-        Classes.NULL_MARKED
+        Classes.NULL_MARKED,
+        Classes.LIST
     );
   }
 
