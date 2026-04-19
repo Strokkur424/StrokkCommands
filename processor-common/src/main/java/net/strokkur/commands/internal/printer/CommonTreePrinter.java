@@ -317,7 +317,7 @@ public abstract class CommonTreePrinter {
   protected abstract String getArgumentMethodString();
 
   public String getCommandNameLiteralOverride(final LiteralCommandArgument lit) {
-    return '"' + lit.literal() + '"';
+    return "NAME";
   }
 
   private void printForArguments(final CommandNode node, final IOExceptionIgnoringConsumer<String> initializer, final boolean isNested) throws IOException {

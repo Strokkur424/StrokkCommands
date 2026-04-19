@@ -26,6 +26,7 @@ import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperPr
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.CommandInformation;
 import net.strokkur.commands.internal.util.PrintParamsHolder;
+import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jspecify.annotations.Nullable;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -213,7 +214,9 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
     println("}");
   }
 
+  @MustBeInvokedByOverriders
   protected void printExtraClassStart() throws IOException {
+    println("public static final String NAME = \"%s\";", node.argument().argumentName());
   }
 
   private boolean printReflectionHelper(final CommandNode node) throws IOException {

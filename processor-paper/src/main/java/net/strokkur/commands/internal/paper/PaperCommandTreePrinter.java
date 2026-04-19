@@ -79,6 +79,7 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
 
   @Override
   protected void printExtraClassStart() throws IOException {
+    super.printExtraClassStart();
     final String description = getCommandInformation().description() == null ? "null" : '"' + getCommandInformation().description() + '"';
     final String aliases = getCommandInformation().aliases() == null ? "" : '"' + String.join("\", \"", List.of(getCommandInformation().aliases())) + '"';
     println("public static final @Nullable String DESCRIPTION = %s;", description);

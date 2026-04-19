@@ -51,6 +51,7 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
 
   @Override
   protected void printExtraClassStart() throws IOException {
+    super.printExtraClassStart();
     final Optional<String[]> aliases = Optional.ofNullable(getCommandInformation().aliases());
     if (aliases.isPresent()) {
       final String aliasesVarargs = String.join(", ", Arrays.stream(aliases.get())
