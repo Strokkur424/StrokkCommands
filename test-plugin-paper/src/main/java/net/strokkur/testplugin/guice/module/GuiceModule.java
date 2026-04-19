@@ -15,18 +15,30 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.printer;
+package net.strokkur.testplugin.guice.module;
 
-import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
-import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperProvider;
-import org.jspecify.annotations.Nullable;
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import net.strokkur.testplugin.guice.MyMagicNumber;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.slf4j.Logger;
 
-import java.util.Stack;
+public class GuiceModule extends AbstractModule {
+  private final JavaPlugin plugin;
 
-interface ExecutorWrapperAccessible {
-  @Nullable ExecutorWrapperProvider getExecutorWrapper();
+  public GuiceModule(final JavaPlugin plugin) {
+    this.plugin = plugin;
+  }
 
-  Stack<ExecuteAccess<?>> getExecutorWrapperAccessStack();
+  @Override
+  protected void configure() {
+    bind(JavaPlugin.class).toInstance(plugin);
+    bind(Logger.class).toInstance(plugin.getSLF4JLogger());
+  }
 
-  void updateExecutorWrapper(final @Nullable ExecutorWrapperProvider provider);
+  @Provides
+  @MyMagicNumber
+  public int provideMagicNumber() {
+    return 7;
+  }
 }

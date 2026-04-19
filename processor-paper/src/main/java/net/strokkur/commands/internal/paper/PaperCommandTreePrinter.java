@@ -21,30 +21,19 @@ import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.abstraction.SourceParameter;
 import net.strokkur.commands.internal.abstraction.SourceVariable;
-import net.strokkur.commands.internal.exceptions.PrinterException;
-import net.strokkur.commands.internal.intermediate.attributes.Attributable;
-import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
-import net.strokkur.commands.internal.intermediate.executable.DefaultExecutable;
-import net.strokkur.commands.internal.intermediate.executable.Executable;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
-import net.strokkur.commands.internal.paper.util.ExecutorType;
-import net.strokkur.commands.internal.paper.util.PaperAttributeKeys;
-import net.strokkur.commands.internal.paper.util.PaperClasses;
 import net.strokkur.commands.internal.paper.util.PaperCommandInformation;
 import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
-import net.strokkur.commands.internal.util.Classes;
+import net.strokkur.commands.internal.printer.CommonImportPrinter;
+import net.strokkur.commands.internal.printer.CommonTreePrinter;
 import net.strokkur.commands.internal.util.PrintParamsHolder;
-import net.strokkur.commands.paper.Executor;
 import org.jspecify.annotations.Nullable;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperCommandInformation> {
 
@@ -60,7 +49,24 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
   }
 
   @Override
+  protected CommonImportPrinter createImportPrinter() {
+    return new PaperImportPrinter(this);
+  }
+
+  @Override
+  protected CommonTreePrinter createTreePrinter() {
+    return new PaperTreePrinter(this);
+  }
+
+  @Override
   protected PrintParamsHolder getParamsHolder() {
+    if (getCommandInformation().useInjection()) {
+      return new PrintParamsHolder(
+          "", "", "",
+          "Commands", "Commands commands",
+          SourceVariable::getName
+      );
+    }
     return new PrintParamsHolder(
         SourceParameter.combineJavaDocsParameterString(List.of(), getCommandInformation().constructor(), (p) -> true),
         SourceParameter.combineMethodParameterString(List.of(), getCommandInformation().constructor(), (p) -> true),
@@ -105,11 +111,12 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
              * }
              * }</pre>
              */
-            public static%s void register(%s) {
+            public%s%s void register(%s) {
                 commands.register(create(%s), DESCRIPTION, ALIASES);
             }""",
         holder.createJdParams(),
         getBrigadierClassName(),
+        getCommandInformation().useInjection() ? "" : " static",
         Optional.ofNullable(getCommandInformation().constructor())
             .map(SourceMethod::getCombinedTypeAnnotationsString)
             .orElse(""),
@@ -122,129 +129,5 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
   protected void printSemicolon() throws IOException {
     println();
     printIndented(".build();");
-  }
-
-  @Override
-  public Set<String> standardImports() {
-    return Set.of(
-        Classes.COMMAND,
-        Classes.LITERAL_COMMAND_NODE,
-        PaperClasses.COMMAND_SOURCE_STACK,
-        PaperClasses.COMMANDS,
-        Classes.LIST,
-        Classes.NULL_MARKED,
-        Classes.NULLABLE,
-        "io.papermc.paper.plugin.bootstrap.PluginBootstrap",
-        "io.papermc.paper.plugin.bootstrap.BootstrapContext",
-        "org.bukkit.plugin.java.JavaPlugin"
-    );
-  }
-
-  @Override
-  public void gatherAdditionalNodeImports(final Set<String> imports, final CommandNode node) {
-    addExecutorTypeImports(imports, node.getAttributeNotNull(PaperAttributeKeys.EXECUTOR_TYPE));
-    final Executable executable = node.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE);
-    if (executable != null) {
-      addExecutorTypeImports(imports, executable.getAttributeNotNull(PaperAttributeKeys.EXECUTOR_TYPE));
-    }
-  }
-
-  private void addExecutorTypeImports(final Set<String> imports, final ExecutorType type) {
-    if (type == ExecutorType.NONE) {
-      return;
-    }
-
-    if (type == ExecutorType.PLAYER) {
-      imports.add(PaperClasses.PLAYER);
-    } else if (type == ExecutorType.ENTITY) {
-      imports.add(PaperClasses.ENTITY);
-    }
-
-    imports.add(Classes.SIMPLE_COMMAND_EXCEPTION_TYPE);
-    imports.add(PaperClasses.MESSAGE_COMPONENT_SERIALIZER);
-    imports.add(PaperClasses.COMPONENT);
-  }
-
-  @Override
-  public void prefixPrintExecutableInner(final CommandNode node, final Executable executable) throws IOException {
-    final ExecutorType executorType = executable.getAttributeNotNull(PaperAttributeKeys.EXECUTOR_TYPE);
-    if (executorType != ExecutorType.NONE) {
-      printBlock("""
-              if (!(ctx.getSource().getExecutor() instanceof {} executor)) {
-                  throw new SimpleCommandExceptionType(MessageComponentSerializer.message().serialize(
-                      Component.text("This command requires {} {} executor!")
-                  )).create();
-              }""",
-          executorType.toString().charAt(0) + executorType.toString().toLowerCase().substring(1),
-          executorType == ExecutorType.ENTITY ? "an" : "a",
-          executorType.toString().toLowerCase()
-      );
-      println();
-    }
-  }
-
-  @Override
-  public String handleParameter(final SourceVariable parameter) throws IOException {
-    if (parameter.hasAnnotationInherited(Executor.class)) {
-      return "executor";
-    }
-
-    if (parameter.getType().getFullyQualifiedAndTypedName().equalsIgnoreCase(Classes.COMMAND_CONTEXT + "<" + PaperClasses.COMMAND_SOURCE_STACK + ">")) {
-      return "ctx";
-    }
-
-    if (parameter.getType().getFullyQualifiedAndTypedName().equalsIgnoreCase(PaperClasses.COMMAND_SOURCE_STACK)) {
-      return "ctx.getSource()";
-    }
-
-    if (parameter.getType().getFullyQualifiedName().equalsIgnoreCase(PaperClasses.COMMAND_SENDER)) {
-      return "ctx.getSource().getSender()";
-    }
-
-    final DefaultExecutable.Type type = DefaultExecutable.Type.getType(parameter);
-    if (type == DefaultExecutable.Type.LIST || type == DefaultExecutable.Type.ARRAY) {
-      return Objects.requireNonNull(type.getGetter());
-    }
-
-    throw new PrinterException("Unknown parameter type: " + parameter.getName());
-  }
-
-  @Override
-  public @Nullable String getExtraRequirements(final Attributable node) {
-    final List<String> extraRequirements = new ArrayList<>();
-
-    final ExecutorType executorType = node.getAttributeNotNull(PaperAttributeKeys.EXECUTOR_TYPE);
-    if (executorType != ExecutorType.NONE) {
-      extraRequirements.add(executorType.getPredicate());
-    }
-
-    final boolean operator = node.getAttributeNotNull(PaperAttributeKeys.REQUIRES_OP);
-    if (operator) {
-      extraRequirements.add("source.getSender().isOp()");
-    }
-
-    final List<String> permissions = node.getAttributeNotNull(PaperAttributeKeys.PERMISSIONS).stream()
-        .map("source.getSender().hasPermission(\"%s\")"::formatted)
-        .toList();
-
-    if (!permissions.isEmpty()) {
-      if (permissions.size() == 1) {
-        extraRequirements.add(permissions.getFirst());
-      } else {
-        extraRequirements.add('(' + String.join(" || ", permissions) + ')');
-      }
-    }
-
-    return extraRequirements.isEmpty() ? null : String.join(" && ", extraRequirements);
-  }
-
-  @Override
-  public String getLiteralMethodString() {
-    return "Commands.literal";
-  }
-
-  @Override
-  public String getArgumentMethodString() {
-    return "Commands.argument";
   }
 }

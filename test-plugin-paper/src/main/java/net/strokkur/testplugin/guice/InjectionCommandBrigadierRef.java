@@ -15,18 +15,28 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.paper.util;
+package net.strokkur.testplugin.guice;
 
-import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.abstraction.SourceConstructor;
-import net.strokkur.commands.internal.util.CommandInformation;
-import org.jspecify.annotations.Nullable;
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.command.brigadier.Commands;
+import jakarta.inject.Inject;
+import org.jspecify.annotations.NullMarked;
 
-public record PaperCommandInformation(
-    @Nullable SourceConstructor constructor,
-    SourceClass sourceClass,
-    @Nullable String description,
-    String @Nullable [] aliases,
-    boolean useInjection
-) implements CommandInformation {
+@NullMarked
+public final class InjectionCommandBrigadierRef {
+  private @Inject InjectionCommand instance;
+
+  public void register(Commands commands) {
+    commands.register(create().build());
+  }
+
+  public LiteralArgumentBuilder<CommandSourceStack> create() {
+    return Commands.literal("injection-test")
+        .executes(ctx -> {
+          this.instance.execute(ctx.getSource().getSender());
+          return Command.SINGLE_SUCCESS;
+        });
+  }
 }

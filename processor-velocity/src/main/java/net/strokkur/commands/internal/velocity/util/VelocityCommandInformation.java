@@ -25,6 +25,7 @@ import org.jspecify.annotations.Nullable;
 public record VelocityCommandInformation(
     @Nullable SourceConstructor constructor,
     SourceClass sourceClass,
-    String @Nullable [] aliases
+    String @Nullable [] aliases,
+    boolean useInjection
 ) implements CommandInformation {
 }

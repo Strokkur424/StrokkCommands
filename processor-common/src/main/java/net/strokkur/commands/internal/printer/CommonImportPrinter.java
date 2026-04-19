@@ -32,7 +32,6 @@ import net.strokkur.commands.internal.intermediate.registrable.RequirementProvid
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.Classes;
-import net.strokkur.commands.internal.util.CommandInformation;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -41,11 +40,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-interface ImportPrinter<C extends CommandInformation> extends Printable, PrinterInformation<C>, ExecutorWrapperAccessible {
+public abstract class CommonImportPrinter {
+  protected final CommonCommandTreePrinter<?> printer;
 
-  Set<String> standardImports();
+  public CommonImportPrinter(final CommonCommandTreePrinter<?> printer) {
+    this.printer = printer;
+  }
 
-  default void printImports(Set<String> imports) throws IOException {
+  protected abstract Set<String> standardImports();
+
+  void printImports(Set<String> imports) throws IOException {
     final Map<Boolean, List<String>> splitImports = imports.stream()
         .sorted()
         .collect(Collectors.partitioningBy(str -> str.startsWith("java")));
@@ -54,23 +58,27 @@ interface ImportPrinter<C extends CommandInformation> extends Printable, Printer
     final List<String> otherImports = splitImports.get(false);
 
     for (String i : otherImports) {
-      println("import {};", i);
+      printer.println("import {};", i);
     }
 
     if (!javaImports.isEmpty()) {
-      println();
+      printer.println();
 
       for (String i : javaImports) {
-        println("import {};", i);
+        printer.println("import {};", i);
       }
     }
   }
 
-  default Set<String> getImports() {
+  public Set<String> getImports() {
     final Set<String> imports = new HashSet<>(standardImports());
-    gatherImports(imports, getNode());
+    gatherImports(imports, printer.getNode());
 
-    final String sourceClassFqn = getCommandInformation().sourceClass().getFullyQualifiedName();
+    if (printer.getCommandInformation().useInjection()) {
+      imports.add(Classes.INJECT);
+    }
+
+    final String sourceClassFqn = printer.getCommandInformation().sourceClass().getFullyQualifiedName();
     final int numberOfDots = sourceClassFqn.split("\\.").length;
     imports.removeIf(importString -> {
       // Don't remove imports from subpackages of java.lang
@@ -91,11 +99,11 @@ interface ImportPrinter<C extends CommandInformation> extends Printable, Printer
     return imports;
   }
 
-  default void gatherAdditionalArgumentImports(Set<String> imports, RequiredCommandArgument argument) {
+  protected void gatherAdditionalArgumentImports(Set<String> imports, RequiredCommandArgument argument) {
     // noop
   }
 
-  default void gatherAdditionalNodeImports(Set<String> imports, CommandNode node) {
+  protected void gatherAdditionalNodeImports(Set<String> imports, CommandNode node) {
     // noop
   }
 
@@ -111,10 +119,10 @@ interface ImportPrinter<C extends CommandInformation> extends Printable, Printer
           .forEach(type -> imports.addAll(DefaultExecutable.Type.getType(type).getImports()));
     }
 
-    final ExecutorWrapperProvider currentWrapper = getExecutorWrapper();
+    final ExecutorWrapperProvider currentWrapper = printer.getExecutorWrapper();
     if (node.hasAttribute(AttributeKey.EXECUTOR_WRAPPER)) {
       final ExecutorWrapperProvider wrapper = node.getAttributeNotNull(AttributeKey.EXECUTOR_WRAPPER);
-      updateExecutorWrapper(wrapper);
+      printer.updateExecutorWrapper(wrapper);
       if (wrapper.wrapperType().withMethod()) {
         imports.add(Classes.METHOD);
       }
@@ -125,10 +133,10 @@ interface ImportPrinter<C extends CommandInformation> extends Printable, Printer
       executable.executesMethod().getParameters().forEach(param -> imports.addAll(param.getImports()));
     }
 
-    if (getCommandInformation().constructor() instanceof SourceConstructor ctor) {
+    if (printer.getCommandInformation().constructor() instanceof SourceConstructor ctor) {
       imports.addAll(ctor.getImports());
     }
-    for (final SourceTypeAnnotation typeParameter : getCommandInformation().sourceClass().getTypeAnnotations()) {
+    for (final SourceTypeAnnotation typeParameter : printer.getCommandInformation().sourceClass().getTypeAnnotations()) {
       imports.addAll(typeParameter.getImports());
     }
 
@@ -167,7 +175,7 @@ interface ImportPrinter<C extends CommandInformation> extends Printable, Printer
     }
 
     if (node.hasAttribute(AttributeKey.EXECUTOR_WRAPPER)) {
-      updateExecutorWrapper(currentWrapper);
+      printer.updateExecutorWrapper(currentWrapper);
     }
   }
 }

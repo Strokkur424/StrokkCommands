@@ -3,11 +3,13 @@ publishdata = "1.4.0"
 spotless = "8.0.0"
 run = "3.0.2"
 blossom = "2.1.0"
+shadow = "9.3.1"
 
 paper = "1.21.10-R0.1-SNAPSHOT"
 velocity = "3.4.0-SNAPSHOT"
 minecraft = "1.21.10"
 brigadier = "1.4.0"
+guice = "7.0.0"
 
 fabric-loader = "0.17.2"
 fabric-loom = "1.11-SNAPSHOT"
@@ -16,6 +18,7 @@ fabric = "0.134.1+1.21.10"
 neoforge-version = "21.10.43-beta"
 neoforge-moddev = "2.0.116"
 
+jakarta-inject = "2.0.1"
 jspecify = "1.0.0"
 jetbrains-annotations = "24.0.0"
 
@@ -25,6 +28,8 @@ velocity-api = { module = "com.velocitypowered:velocity-api", version.ref = "vel
 brigadier = { module = "net.strokkur:brigadier", version.ref = "brigadier" }
 jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrains-annotations" }
+jakarta-inject = { module = "jakarta.inject:jakarta.inject-api", version.ref = "jakarta-inject" }
+guice = { module = "com.google.inject:guice", version.ref = "guice" }
 
 # Modded
 minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
@@ -37,8 +42,9 @@ run-paper = { id = "xyz.jpenilla.run-paper", version.ref = "run" }
 run-velocity = { id = "xyz.jpenilla.run-velocity", version.ref = "run" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 blossom = { id = "net.kyori.blossom", version.ref = "blossom" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 fabric-loom = { id = "fabric-loom", version.ref = "fabric-loom" }
-neoforge-moddev = { id = "net.neoforged.moddev", version.ref = "neoforge-moddev"}
+neoforge-moddev = { id = "net.neoforged.moddev", version.ref = "neoforge-moddev" }
 
 [bundles]
-annotations = ["jspecify", "jetbrains-annotations"]
+annotations = ["jspecify", "jetbrains-annotations", "jakarta-inject"]

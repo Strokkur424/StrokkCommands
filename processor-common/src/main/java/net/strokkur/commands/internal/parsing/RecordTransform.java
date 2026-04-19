@@ -26,7 +26,6 @@ import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.executable.ParameterType;
-import net.strokkur.commands.internal.intermediate.executable.Parameterizable;
 import net.strokkur.commands.internal.intermediate.executable.ParameterizableImpl;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 

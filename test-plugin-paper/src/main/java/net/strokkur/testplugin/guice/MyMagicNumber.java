@@ -15,25 +15,14 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.printer;
+package net.strokkur.testplugin.guice;
 
-import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
-import net.strokkur.commands.internal.intermediate.tree.CommandNode;
-import net.strokkur.commands.internal.util.CommandInformation;
+import com.google.inject.BindingAnnotation;
 
-import javax.annotation.processing.ProcessingEnvironment;
-import java.util.Set;
-import java.util.Stack;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-interface PrinterInformation<C extends CommandInformation> {
-
-  CommandNode getNode();
-
-  C getCommandInformation();
-
-  Set<String> getPrintedInstances();
-
-  Stack<ExecuteAccess<?>> getAccessStack();
-
-  ProcessingEnvironment environment();
+@BindingAnnotation
+@Retention(RetentionPolicy.RUNTIME)
+public @interface MyMagicNumber {
 }

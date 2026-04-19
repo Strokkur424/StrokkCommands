@@ -17,12 +17,14 @@
  */
 package net.strokkur.testplugin.velocity;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.proxy.ProxyServer;
-import net.strokkur.testplugin.velocity.commands.ConstructorPropagationBrigadier;
-import net.strokkur.testplugin.velocity.wrapper.VelocityWrapperTestBrigadier;
+import net.strokkur.testplugin.velocity.reference.TestCommandBrigadier;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
@@ -40,16 +42,24 @@ public class TestPluginVelocity {
   private final Logger logger;
 
   @Inject
-  public TestPluginVelocity(final ProxyServer proxy, final Logger logger) {
+  public TestPluginVelocity(ProxyServer proxy, Logger logger) {
     this.proxy = proxy;
     this.logger = logger;
   }
 
   @Subscribe
-  void onProxyInitialize(final ProxyInitializeEvent event) {
-//    TestCommandBrigadier.register(this.proxy, this);
-    VelocityWrapperTestBrigadier.register(this.proxy, this, this.logger);
-    ConstructorPropagationBrigadier.register(this.proxy, this, this);
+  void onProxyInitialize(ProxyInitializeEvent event) {
+    final Injector injector = Guice.createInjector(new InjectionModule());
+    injector.getInstance(TestCommandBrigadier.class).register(this.proxy, this);
+  }
+
+  private class InjectionModule extends AbstractModule {
+    @Override
+    protected void configure() {
+      bind(ProxyServer.class).toInstance(proxy);
+      bind(Logger.class).toInstance(logger);
+      bind(TestPluginVelocity.class).toInstance(TestPluginVelocity.this);
+    }
   }
 
   public Logger logger() {

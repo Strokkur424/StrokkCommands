@@ -37,19 +37,19 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
 
-public abstract class CommonCommandTreePrinter<C extends CommandInformation> extends AbstractPrinter
-    implements PrinterInformation<C>, ImportPrinter<C>, InstanceFieldPrinter<C>, TreePrinter<C>, ExecutorWrapperAccessible {
-  private final Stack<String> multiLiteralStack = new Stack<>();
+public abstract class CommonCommandTreePrinter<C extends CommandInformation> extends AbstractPrinter {
   private final Stack<ExecuteAccess<?>> executeAccessStack = new Stack<>();
   protected final CommandNode node;
   private final Set<String> printedInstances = new TreeSet<>();
   private final ProcessingEnvironment environment;
   protected final PlatformUtils utils;
 
+  private final CommonImportPrinter importPrinter;
+  private final CommonTreePrinter treePrinter;
+  private final CommonInstanceFieldPrinter instanceFieldPrinter;
+
   private @Nullable ExecutorWrapperProvider executorWrapper = null;
   private Stack<ExecuteAccess<?>> executorWrapperAccessStack = new Stack<>();
-
-  private int multiLiteralStackPosition = 0;
 
   private final C commandInformation;
 
@@ -66,6 +66,18 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
     this.commandInformation = commandInformation;
     this.environment = environment;
     this.utils = utils;
+
+    this.importPrinter = createImportPrinter();
+    this.treePrinter = createTreePrinter();
+    this.instanceFieldPrinter = createInstanceFieldPrinter();
+  }
+
+  protected abstract CommonImportPrinter createImportPrinter();
+
+  protected abstract CommonTreePrinter createTreePrinter();
+
+  protected CommonInstanceFieldPrinter createInstanceFieldPrinter() {
+    return new CommonInstanceFieldPrinter(this);
   }
 
   public final String getPackageName() {
@@ -80,17 +92,14 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
 
   protected abstract void printRegisterMethod(final PrintParamsHolder holder) throws IOException;
 
-  @Override
   public @Nullable ExecutorWrapperProvider getExecutorWrapper() {
     return this.executorWrapper;
   }
 
-  @Override
   public Stack<ExecuteAccess<?>> getExecutorWrapperAccessStack() {
     return this.executorWrapperAccessStack;
   }
 
-  @Override
   public void updateExecutorWrapper(final @Nullable ExecutorWrapperProvider provider) {
     this.executorWrapper = provider;
     this.executorWrapperAccessStack = new Stack<>();
@@ -107,7 +116,7 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
 
     println("package {};", packageName);
     println();
-    printImports(getImports());
+    importPrinter.printImports(importPrinter.getImports());
     println();
 
     printBlock("""
@@ -133,6 +142,10 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
     printExtraClassStart();
     println();
 
+    if (commandInformation.useInjection()) {
+      instanceFieldPrinter.printInjectedFields();
+    }
+
     printRegisterMethod(printParams);
 
     println();
@@ -142,46 +155,60 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
              * A method for creating a Brigadier command node which denotes the declared command
              * in {@link %s}. You can either retrieve the unregistered node with this method
              * or register it directly with {@link #register(%s)}.
-             */
-            public static%s %s<%s> create(%s) {""",
+             */""",
         getCommandInformation().sourceClass().getName(),
-        printParams.registerJdParams(),
-        Optional.ofNullable(getCommandInformation().constructor())
-            .map(SourceMethod::getCombinedTypeAnnotationsString)
-            .orElse(""),
-        utils.getNodeReturnType(),
-        List.of(utils.platformType().split("\\.")).getLast(),
-        printParams.createParams()
+        commandInformation.useInjection() ? "Commands" : printParams.registerJdParams()
     );
+
+    final String typeAnnotations = Optional.ofNullable(getCommandInformation().constructor())
+        .map(SourceMethod::getCombinedTypeAnnotationsString)
+        .orElse("");
+    if (commandInformation.useInjection()) {
+      println("public%s %s<%s> create() {",
+          typeAnnotations,
+          utils.getNodeReturnType(),
+          List.of(utils.platformType().split("\\.")).getLast()
+      );
+    } else {
+      println("public static%s %s<%s> create(%s) {",
+          typeAnnotations,
+          utils.getNodeReturnType(),
+          List.of(utils.platformType().split("\\.")).getLast(),
+          printParams.createParams()
+      );
+    }
+
     incrementIndent();
 
-    printInstanceFields();
+    instanceFieldPrinter.printInstanceFields();
 
     printIndent();
     print("return ");
     incrementIndent();
-    printNode(node);
+    treePrinter.printNode(node);
     printSemicolon();
 
     println();
     decrementIndent();
     decrementIndent();
     println("}");
-    println();
 
     printReflectionHelper(node);
 
-    printBlock("""
-            /**
-             * The constructor is not accessible. There is no need for an instance
-             * to be created, as no state is stored and all methods are static.
-             *
-             * @throws IllegalAccessException always
-             */
-            private %s() throws IllegalAccessException {
-                throw new IllegalAccessException("This class cannot be instantiated.");
-            }""",
-        getBrigadierClassName());
+    if (!commandInformation.useInjection()) {
+      println();
+      printBlock("""
+              /**
+               * The constructor is not accessible. There is no need for an instance
+               * to be created, as no state is stored and all methods are static.
+               *
+               * @throws IllegalAccessException always
+               */
+              private %s() throws IllegalAccessException {
+                  throw new IllegalAccessException("This class cannot be instantiated.");
+              }""",
+          getBrigadierClassName());
+    }
     decrementIndent();
     println("}");
   }
@@ -194,6 +221,7 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
         .map(ExecutorWrapperProvider::wrapperType)
         .map(ExecutorWrapperProvider.WrapperType::withMethod)
         .orElse(false)) {
+      println();
       printBlock("""
           private static Method getMethodViaReflection(final Class<?> clazz, final String name, final Class<?>... parameters) {
               try {
@@ -201,9 +229,7 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
               } catch (ReflectiveOperationException ex) {
                   throw new RuntimeException(ex);
               }
-          }
-          """);
-      println();
+          }""");
       return true;
     }
 
@@ -215,47 +241,22 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
     return false;
   }
 
-  @Override
-  public final String nextLiteral() {
-    return this.multiLiteralStack.elementAt(this.multiLiteralStackPosition++);
-  }
-
-  @Override
-  public final void pushLiteral(final String literal) {
-    this.multiLiteralStack.push(literal);
-  }
-
-  @Override
-  public final void popLiteral() {
-    this.multiLiteralStack.pop();
-  }
-
-  @Override
   public final ProcessingEnvironment environment() {
     return this.environment;
   }
 
-  @Override
-  public final void popLiteralPosition() {
-    this.multiLiteralStackPosition--;
-  }
-
-  @Override
   public final Set<String> getPrintedInstances() {
     return printedInstances;
   }
 
-  @Override
   public final Stack<ExecuteAccess<?>> getAccessStack() {
     return executeAccessStack;
   }
 
-  @Override
   public final CommandNode getNode() {
     return node;
   }
 
-  @Override
   public final C getCommandInformation() {
     return this.commandInformation;
   }

@@ -57,7 +57,7 @@ public abstract class AbstractPrinter implements Printable {
   }
 
   @Override
-  public void print(@PrintFormat String message, Object... format) throws IOException {
+  public void print(String message, Object... format) throws IOException {
     if (writer == null) {
       throw new IOException("No writer set.");
     }

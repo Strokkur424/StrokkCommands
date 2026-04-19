@@ -37,60 +37,76 @@ import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperPr
 import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
-import net.strokkur.commands.internal.util.CommandInformation;
 import net.strokkur.commands.internal.util.IOExceptionIgnoringConsumer;
 import net.strokkur.commands.internal.util.Utils;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Stack;
 
-interface TreePrinter<C extends CommandInformation> extends Printable, PrinterInformation<C>, ExecutorWrapperAccessible {
+public abstract class CommonTreePrinter {
+  protected final CommonCommandTreePrinter<?> printer;
+  private final Stack<String> multiLiteralStack = new Stack<>();
 
-  String nextLiteral();
+  private int multiLiteralStackPosition = 0;
 
-  void pushLiteral(String literal);
+  public CommonTreePrinter(final CommonCommandTreePrinter<?> printer) {
+    this.printer = printer;
+  }
 
-  void popLiteral();
+  public final String nextLiteral() {
+    return this.multiLiteralStack.elementAt(this.multiLiteralStackPosition++);
+  }
 
-  void popLiteralPosition();
+  public final void pushLiteral(final String literal) {
+    this.multiLiteralStack.push(literal);
+  }
 
-  void prefixPrintExecutableInner(final CommandNode node, final Executable executable) throws IOException;
+  public final void popLiteral() {
+    this.multiLiteralStack.pop();
+  }
 
-  String handleParameter(SourceVariable parameter) throws IOException;
+  public final void popLiteralPosition() {
+    this.multiLiteralStackPosition--;
+  }
 
-  default void printNode(final CommandNode node) throws IOException {
+  protected abstract void prefixPrintExecutableInner(final CommandNode node, final Executable executable) throws IOException;
+
+  protected abstract String handleParameter(SourceVariable parameter) throws IOException;
+
+  public void printNode(final CommandNode node) throws IOException {
     printNode(node, false);
   }
 
   private void printNode(final CommandNode root, boolean isNested) throws IOException {
     printForArguments(root, initializer -> {
       if (isNested) {
-        println();
-        printIndented(".then(");
-        incrementIndent();
+        printer.println();
+        printer.printIndented(".then(");
+        printer.incrementIndent();
       }
 
-      print(initializer);
+      printer.print(initializer);
 
       if (root.argument() instanceof RequiredCommandArgument req && req.hasAttribute(AttributeKey.SUGGESTION_PROVIDER)) {
         final SuggestionProvider provider = req.getAttributeNotNull(AttributeKey.SUGGESTION_PROVIDER);
-        println();
-        printIndented(".suggests(" + provider.getSuggestionString() + ")");
+        printer.println();
+        printer.printIndented(".suggests(" + provider.getSuggestionString() + ")");
       }
 
       final RequirementProvider requirementProvider = root.getAttribute(AttributeKey.REQUIREMENT_PROVIDER);
       final String extraRequirement = getExtraRequirements(root);
 
       if (requirementProvider != null && extraRequirement == null) {
-        println();
-        printIndented(".requires(source -> %s)", requirementProvider.getRequirementString());
+        printer.println();
+        printer.printIndented(".requires(source -> %s)", requirementProvider.getRequirementString());
       } else if (requirementProvider == null && extraRequirement != null) {
-        println();
-        printIndented(".requires(source -> %s)", extraRequirement);
+        printer.println();
+        printer.printIndented(".requires(source -> %s)", extraRequirement);
       } else if (requirementProvider != null) {
-        println();
-        printIndented(".requires(source -> %s && %s)", requirementProvider.getRequirementString(), extraRequirement);
+        printer.println();
+        printer.printIndented(".requires(source -> %s && %s)", requirementProvider.getRequirementString(), extraRequirement);
       }
 
       final Executable executable = root.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE);
@@ -103,17 +119,17 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
       }
 
       if (isNested) {
-        decrementIndent();
-        println();
-        printIndented(")");
+        printer.decrementIndent();
+        printer.println();
+        printer.printIndented(")");
       }
     }, isNested);
   }
 
   private void printExecutableInner(final CommandNode node, final Executable executable) throws IOException {
-    println();
+    printer.println();
 
-    final ExecutorWrapperProvider wrapper = node.getAttributeOr(AttributeKey.EXECUTOR_WRAPPER, this.getExecutorWrapper());
+    final ExecutorWrapperProvider wrapper = node.getAttributeOr(AttributeKey.EXECUTOR_WRAPPER, printer.getExecutorWrapper());
     if (wrapper == null) {
       printExecutableInnerNoWrapper(node, executable);
     } else {
@@ -122,22 +138,22 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
   }
 
   private void printExecutableInnerNoWrapper(final CommandNode node, final Executable executable) throws IOException {
-    println(".executes(ctx -> {");
-    incrementIndent();
+    printer.println(".executes(ctx -> {");
+    printer.incrementIndent();
     prefixPrintExecutableInner(node, executable);
     printExecutableBody(node, executable);
-    println("return Command.SINGLE_SUCCESS;");
-    decrementIndent();
-    printIndented("})");
+    printer.println("return Command.SINGLE_SUCCESS;");
+    printer.decrementIndent();
+    printer.printIndented("})");
   }
 
   private void printExecutableInnerWithWrapper(final CommandNode node, final Executable executable, final ExecutorWrapperProvider wrapper) throws IOException {
-    println(".executes(%s(ctx -> {", getWrapperMethodCall(wrapper));
-    incrementIndent();
+    printer.println(".executes(%s(ctx -> {", getWrapperMethodCall(wrapper));
+    printer.incrementIndent();
     prefixPrintExecutableInner(node, executable);
     printExecutableBody(node, executable);
-    println("return Command.SINGLE_SUCCESS;");
-    decrementIndent();
+    printer.println("return Command.SINGLE_SUCCESS;");
+    printer.decrementIndent();
 
     if (wrapper.wrapperType().withMethod()) {
       final List<SourceParameter> params = executable.executesMethod().getParameters();
@@ -147,13 +163,13 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
           .map((str) -> str + ".class")
           .toList());
 
-      printIndented("}, getMethodViaReflection(%s.class, \"%s\"%s)))",
+      printer.printIndented("}, getMethodViaReflection(%s.class, \"%s\"%s)))",
           executable.executesMethod().getEnclosed().getSourceName(),
           executable.executesMethod().getName(),
           parameterTypesString
       );
     } else {
-      printIndented("}))");
+      printer.printIndented("}))");
     }
   }
 
@@ -167,7 +183,7 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
       return wrapperClass.getSourceName() + "." + methodName;
     } else {
       // Instance method: get the appropriate instance variable name
-      return Utils.getInstanceName(this.getExecutorWrapperAccessStack()) + "." + methodName;
+      return Utils.getInstanceName(printer.getExecutorWrapperAccessStack()) + "." + methodName;
     }
   }
 
@@ -190,30 +206,30 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
   }
 
   private void printWithInstance(final Executable executable) throws IOException {
-    final List<ExecuteAccess<?>> pathToUse = getAccessStack();
+    final List<ExecuteAccess<?>> pathToUse = printer.getAccessStack();
     printExecutesMethodCall(executable, Utils.getInstanceName(pathToUse));
   }
 
   private void printExecutesMethodCall(final Executable executable, final String typeName) throws IOException {
-    printIndented("{}.{}", typeName, executable.executesMethod().getName());
+    printer.printIndented("{}.{}", typeName, executable.executesMethod().getName());
     printExecutesArguments(executable);
-    print(";");
-    println();
+    printer.print(";");
+    printer.println();
   }
 
   private void printWithRecord(final Parameterizable record, final Executable executable) throws IOException {
     final String typeName = executable.executesMethod().getEnclosed().getSourceName();
 
     if (record.parameterArguments().isEmpty()) {
-      println("final {} executorClass = new {}();", typeName, typeName);
+      printer.println("final {} executorClass = new {}();", typeName, typeName);
     } else {
-      println("final {} executorClass = new {}(", typeName, typeName);
-      incrementIndent();
+      printer.println("final {} executorClass = new {}(", typeName, typeName);
+      printer.incrementIndent();
       printArguments(record.parameterArguments().stream()
           .map(CommandArgument.class::cast)
           .toList());
-      decrementIndent();
-      println(");");
+      printer.decrementIndent();
+      printer.println(");");
     }
 
     printExecutesMethodCall(executable, "executorClass");
@@ -228,35 +244,35 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
   private void printExecutesArguments(final Executable executable) throws IOException {
     final List<ParameterType> parameterArguments = executable.parameterArguments();
     if (parameterArguments.isEmpty()) {
-      print("()");
+      printer.print("()");
       return;
     }
 
     if (parameterArguments.size() == 1) {
-      print("(");
+      printer.print("(");
       switch (parameterArguments.getFirst()) {
         case CommandArgument argument -> printArgument(argument);
-        case SourceParameterType(SourceVariable parameter) -> print(handleParameter(parameter));
+        case SourceParameterType(SourceVariable parameter) -> printer.print(handleParameter(parameter));
       }
-      print(")");
+      printer.print(")");
       return;
     }
 
-    print("(");
-    incrementIndent();
-    println();
+    printer.print("(");
+    printer.incrementIndent();
+    printer.println();
     for (int i = 0, parameterArgumentsSize = parameterArguments.size(); i < parameterArgumentsSize; i++) {
       final ParameterType parameterArgument = parameterArguments.get(i);
-      printIndent();
+      printer.printIndent();
 
       switch (parameterArgument) {
         case CommandArgument argument -> printArgument(argument);
-        case SourceParameterType(SourceVariable parameter) -> print(handleParameter(parameter));
+        case SourceParameterType(SourceVariable parameter) -> printer.print(handleParameter(parameter));
       }
 
       if (i + 1 < parameterArgumentsSize) {
-        print(",");
-        println();
+        printer.print(",");
+        printer.println();
       }
     }
 
@@ -266,26 +282,26 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
       }
     }
 
-    decrementIndent();
-    println();
-    printIndented(")");
+    printer.decrementIndent();
+    printer.println();
+    printer.printIndented(")");
   }
 
   private void printArguments(final List<CommandArgument> arguments) throws IOException {
     for (int i = 0, argumentsSize = arguments.size(); i < argumentsSize; i++) {
-      printIndent();
+      printer.printIndent();
       printArgument(arguments.get(i));
 
       if (i + 1 < argumentsSize) {
-        print(",");
+        printer.print(",");
       }
 
-      println();
+      printer.println();
     }
   }
 
   private void printArgument(final CommandArgument argument) throws IOException {
-    print(switch (argument) {
+    printer.print(switch (argument) {
       case RequiredCommandArgument req -> req.argumentType().retriever();
       case MultiLiteralCommandArgument ignored -> '"' + nextLiteral() + '"';
       case LiteralCommandArgument lit -> '"' + lit.literal() + '"';
@@ -294,31 +310,31 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
   }
 
   @Nullable
-  String getExtraRequirements(Attributable node);
+  protected abstract String getExtraRequirements(Attributable node);
 
-  String getLiteralMethodString();
+  protected abstract String getLiteralMethodString();
 
-  String getArgumentMethodString();
+  protected abstract String getArgumentMethodString();
 
-  default String getCommandNameLiteralOverride(final LiteralCommandArgument lit) {
+  public String getCommandNameLiteralOverride(final LiteralCommandArgument lit) {
     return '"' + lit.literal() + '"';
   }
 
   private void printForArguments(final CommandNode node, final IOExceptionIgnoringConsumer<String> initializer, final boolean isNested) throws IOException {
     if (node.hasAttribute(AttributeKey.ACCESS_STACK)) {
-      node.getAttributeNotNull(AttributeKey.ACCESS_STACK).forEach(getAccessStack()::push);
+      node.getAttributeNotNull(AttributeKey.ACCESS_STACK).forEach(printer.getAccessStack()::push);
     }
 
-    final ExecutorWrapperProvider current = this.getExecutorWrapper();
+    final ExecutorWrapperProvider current = printer.getExecutorWrapper();
 
     // TODO: this bleeds over if a method has a wrapper declared and a method is present which starts with the same args and merges.
     // However, this is a cheap fix for a problem barely anyone will run into anyways and which can be solved with just one
     // UnsetExecutorWrapper annotation. Also it is 2:30 AM, cut me some slack.
     final ExecutorWrapperProvider executorWrapper = node.getAttribute(AttributeKey.EXECUTOR_WRAPPER);
     if (node.getAttributeNotNull(AttributeKey.EXECUTOR_WRAPPER_UNSET)) {
-      this.updateExecutorWrapper(null);
+      printer.updateExecutorWrapper(null);
     } else if (executorWrapper != null) {
-      this.updateExecutorWrapper(executorWrapper);
+      printer.updateExecutorWrapper(executorWrapper);
     }
 
     switch (node.argument()) {
@@ -335,8 +351,8 @@ interface TreePrinter<C extends CommandInformation> extends Printable, PrinterIn
     }
 
     if (node.hasAttribute(AttributeKey.ACCESS_STACK)) {
-      node.getAttributeNotNull(AttributeKey.ACCESS_STACK).forEach(access -> getAccessStack().pop());
+      node.getAttributeNotNull(AttributeKey.ACCESS_STACK).forEach(access -> printer.getAccessStack().pop());
     }
-    this.updateExecutorWrapper(current);
+    printer.updateExecutorWrapper(current);
   }
 }

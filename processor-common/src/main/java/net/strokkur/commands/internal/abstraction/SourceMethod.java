@@ -49,7 +49,7 @@ public interface SourceMethod extends AnnotationsHolder {
       return "";
     }
 
-    return "<" + String.join(", ", annotations.stream()
+    return " <" + String.join(", ", annotations.stream()
         .map(SourceTypeAnnotation::getDefinitionString)
         .toList()) + ">";
   }

@@ -15,18 +15,31 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.paper.util;
+package net.strokkur.testplugin.subcommands;
 
-import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.abstraction.SourceConstructor;
-import net.strokkur.commands.internal.util.CommandInformation;
-import org.jspecify.annotations.Nullable;
+import net.strokkur.commands.Executes;
+import net.strokkur.commands.Subcommand;
+import org.bukkit.command.CommandSender;
 
-public record PaperCommandInformation(
-    @Nullable SourceConstructor constructor,
-    SourceClass sourceClass,
-    @Nullable String description,
-    String @Nullable [] aliases,
-    boolean useInjection
-) implements CommandInformation {
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+@Subcommand("with")
+public class WithFields {
+  private final MyConfigClass config;
+
+  @Inject
+  public WithFields(MyConfigClass config) {
+    this.config = config;
+  }
+
+  @Executes
+  void execute(CommandSender sender) {
+    sender.sendRichMessage("My Value: " + config.myValue);
+  }
+
+  @Singleton
+  public static final class MyConfigClass {
+    public int myValue = 5;
+  }
 }

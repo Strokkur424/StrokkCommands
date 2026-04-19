@@ -15,18 +15,23 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.paper.util;
+package net.strokkur.commands.internal.velocity;
 
-import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.abstraction.SourceConstructor;
-import net.strokkur.commands.internal.util.CommandInformation;
-import org.jspecify.annotations.Nullable;
+import net.strokkur.commands.internal.abstraction.SourceParameter;
+import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
+import net.strokkur.commands.internal.printer.CommonInstanceFieldPrinter;
+import net.strokkur.commands.internal.velocity.util.VelocityClasses;
 
-public record PaperCommandInformation(
-    @Nullable SourceConstructor constructor,
-    SourceClass sourceClass,
-    @Nullable String description,
-    String @Nullable [] aliases,
-    boolean useInjection
-) implements CommandInformation {
+final class VelocityInstanceFieldPrinter extends CommonInstanceFieldPrinter {
+  public VelocityInstanceFieldPrinter(final CommonCommandTreePrinter<?> printer) {
+    super(printer);
+  }
+
+  @Override
+  public String getParameterName(final SourceParameter parameter) {
+    if (parameter.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)) {
+      return "server";
+    }
+    return super.getParameterName(parameter);
+  }
 }

@@ -1,6 +1,7 @@
 plugins {
   id("commands-common")
   alias(libs.plugins.run.paper)
+  alias(libs.plugins.shadow)
 }
 
 dependencies {
@@ -8,6 +9,8 @@ dependencies {
 
   compileOnly(project(":annotations-paper"))
   annotationProcessor(project(":processor-paper"))
+
+  implementation(libs.guice)
 }
 
 tasks.runServer {

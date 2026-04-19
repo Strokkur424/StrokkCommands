@@ -1,0 +1,76 @@
+/*
+ * StrokkCommands - A super simple annotation based zero-shade Paper command API library.
+ * Copyright (C) 2025 Strokkur24
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <https://www.gnu.org/licenses/>.
+ */
+package net.strokkur.testplugin.guice;
+
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.command.brigadier.Commands;
+import org.jspecify.annotations.NullMarked;
+
+import javax.inject.Inject;
+
+@NullMarked
+public final class NestedInjectionCommandBrigadierRef {
+  private @Inject NestedInjectionCommand instance;
+  private @Inject NestedInjectionCommand.InnerNonStatic instanceInnerNonStatic;
+  private @Inject NestedInjectionCommand.InnerStatic instanceInnerStatic;
+
+  public void register(Commands commands) {
+    commands.register(create().build());
+  }
+
+  public LiteralArgumentBuilder<CommandSourceStack> create() {
+    final NestedInjectionCommand.SomeCommonClass instanceFirstField = this.instance.firstField;
+    final NestedInjectionCommand.SomeCommonClass instanceSecondField = this.instance.secondField;
+
+    return Commands.literal("nested-injection-test")
+        .executes(ctx -> {
+          this.instance.run();
+          return Command.SINGLE_SUCCESS;
+        })
+
+        .then(Commands.literal("first")
+            .executes(ctx -> {
+              instanceFirstField.run(ctx.getSource().getSender());
+              return Command.SINGLE_SUCCESS;
+            })
+        )
+
+        .then(Commands.literal("second")
+            .executes(ctx -> {
+              instanceSecondField.run(ctx.getSource().getSender());
+              return Command.SINGLE_SUCCESS;
+            })
+        )
+
+        .then(Commands.literal("inner-static")
+            .executes(ctx -> {
+              instanceInnerStatic.run();
+              return Command.SINGLE_SUCCESS;
+            })
+        )
+
+        .then(Commands.literal("inner-non-static")
+            .executes(ctx -> {
+              instanceInnerNonStatic.run();
+              return Command.SINGLE_SUCCESS;
+            })
+        );
+  }
+}

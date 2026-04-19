@@ -20,17 +20,12 @@ package net.strokkur.commands.internal.velocity;
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.abstraction.SourceParameter;
 import net.strokkur.commands.internal.abstraction.SourceVariable;
-import net.strokkur.commands.internal.exceptions.PrinterException;
-import net.strokkur.commands.internal.intermediate.attributes.Attributable;
-import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
-import net.strokkur.commands.internal.intermediate.executable.DefaultExecutable;
-import net.strokkur.commands.internal.intermediate.executable.Executable;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
-import net.strokkur.commands.internal.util.Classes;
+import net.strokkur.commands.internal.printer.CommonImportPrinter;
+import net.strokkur.commands.internal.printer.CommonInstanceFieldPrinter;
+import net.strokkur.commands.internal.printer.CommonTreePrinter;
 import net.strokkur.commands.internal.util.PrintParamsHolder;
-import net.strokkur.commands.internal.velocity.util.SenderType;
-import net.strokkur.commands.internal.velocity.util.VelocityAttributeKeys;
 import net.strokkur.commands.internal.velocity.util.VelocityClasses;
 import net.strokkur.commands.internal.velocity.util.VelocityCommandInformation;
 import org.jspecify.annotations.Nullable;
@@ -40,10 +35,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<VelocityCommandInformation> {
   public VelocityCommandTreePrinter(
@@ -69,7 +61,30 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
   }
 
   @Override
+  protected CommonImportPrinter createImportPrinter() {
+    return new VelocityImportPrinter(this);
+  }
+
+  @Override
+  protected CommonTreePrinter createTreePrinter() {
+    return new VelocityTreePrinter(this);
+  }
+
+  @Override
+  protected CommonInstanceFieldPrinter createInstanceFieldPrinter() {
+    return new VelocityInstanceFieldPrinter(this);
+  }
+
+  @Override
   protected PrintParamsHolder getParamsHolder() {
+    if (getCommandInformation().useInjection()) {
+      return new PrintParamsHolder(
+          "", "", "",
+          "ProxyServer, Object", "ProxyServer server, Object command$plugin",
+          SourceVariable::getName
+      );
+    }
+
     return new PrintParamsHolder(
         SourceParameter.combineJavaDocsParameterString(
             List.of("ProxyServer"),
@@ -121,11 +136,12 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
              * }
              * }</pre>
              */
-            public static void register(%s) {
+            public%s void register(%s) {
                 final BrigadierCommand command = new BrigadierCommand(create(%s));
                 final CommandMeta meta = server.getCommandManager().metaBuilder(command)""",
         holder.createJdParams(),
         getBrigadierClassName(),
+        getCommandInformation().useInjection() ? "" : " static",
         holder.registerParams(),
         holder.createParamNames()
     );
@@ -145,135 +161,5 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
         
             server.getCommandManager().register(meta, command);
         }""");
-  }
-
-  @Override
-  public Set<String> standardImports() {
-    return Set.of(
-        Classes.COMMAND,
-        VelocityClasses.LITERAL_ARGUMENT_BUILDER,
-        VelocityClasses.BRIGADIER_COMMAND,
-        VelocityClasses.COMMAND_META,
-        VelocityClasses.COMMAND_SOURCE,
-        VelocityClasses.PROXY_INITIALIZE_EVENT,
-        VelocityClasses.PROXY_SERVER,
-        Classes.NULL_MARKED,
-        Classes.LIST
-    );
-  }
-
-  @Override
-  public void gatherAdditionalNodeImports(final Set<String> imports, final CommandNode node) {
-    addExecutorTypeImports(imports, node.getAttributeNotNull(VelocityAttributeKeys.SENDER_TYPE));
-    final Executable executable = node.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE);
-    if (executable != null) {
-      addExecutorTypeImports(imports, executable.getAttributeNotNull(VelocityAttributeKeys.SENDER_TYPE));
-    }
-  }
-
-  private void addExecutorTypeImports(final Set<String> imports, final SenderType type) {
-    if (type == SenderType.NORMAL) {
-      return;
-    }
-
-    if (type == SenderType.PLAYER) {
-      imports.add(VelocityClasses.PLAYER);
-    } else if (type == SenderType.CONSOLE) {
-      imports.add(VelocityClasses.CONSOLE_COMMAND_SOURCE);
-    }
-
-    imports.add(Classes.SIMPLE_COMMAND_EXCEPTION_TYPE);
-    imports.add(Classes.LITERAL_MESSAGE);
-  }
-
-  @Override
-  public void prefixPrintExecutableInner(final CommandNode node, final Executable executable) throws IOException {
-    final SenderType type = executable.getAttributeNotNull(VelocityAttributeKeys.SENDER_TYPE);
-    if (type != SenderType.NORMAL) {
-      printBlock("""
-              if (!(ctx.getSource() instanceof %s source)) {
-                  throw new SimpleCommandExceptionType(
-                      new LiteralMessage("This command requires a %s sender!")
-                  ).create();
-              }""",
-          List.of(type.getClassName().split("\\.")).getLast(),
-          type.toString().toLowerCase(Locale.ROOT)
-      );
-      println();
-    }
-  }
-
-  @Override
-  public String handleParameter(final SourceVariable parameter) throws IOException {
-    if (parameter.getType().getFullyQualifiedAndTypedName().equalsIgnoreCase(Classes.COMMAND_CONTEXT + "<" + VelocityClasses.COMMAND_SOURCE + ">")) {
-      return "ctx";
-    }
-
-    if (parameter.getType().getFullyQualifiedAndTypedName().equalsIgnoreCase(VelocityClasses.COMMAND_SOURCE)) {
-      return "ctx.getSource()";
-    }
-
-    if (parameter.getType().getFullyQualifiedAndTypedName().equalsIgnoreCase(VelocityClasses.PLAYER)
-        || parameter.getType().getFullyQualifiedAndTypedName().equalsIgnoreCase(VelocityClasses.CONSOLE_COMMAND_SOURCE)) {
-      return "source";
-    }
-
-    final DefaultExecutable.Type type = DefaultExecutable.Type.getType(parameter);
-    if (type == DefaultExecutable.Type.LIST || type == DefaultExecutable.Type.ARRAY) {
-      return Objects.requireNonNull(type.getGetter());
-    }
-
-    throw new PrinterException("Unknown parameter type: " + parameter.getName());
-  }
-
-  @Override
-  public @Nullable String getExtraRequirements(final Attributable node) {
-    final Set<String> permissions = node.getAttributeNotNull(VelocityAttributeKeys.PERMISSIONS);
-    final SenderType type = node.getAttributeNotNull(VelocityAttributeKeys.SENDER_TYPE);
-
-    if (type == SenderType.NORMAL) {
-      if (permissions.isEmpty()) {
-        return null;
-      }
-
-      return String.join(" || ", permissions.stream()
-          .map(perm -> "source.hasPermission(\"" + perm + "\")")
-          .toList());
-    }
-
-    if (permissions.isEmpty()) {
-      return type.getPredicate();
-    }
-    if (permissions.size() == 1) {
-      return "%s && source.hasPermission(\"%s\")".formatted(
-          type.getPredicate(),
-          permissions.stream().findFirst().get()
-      );
-    }
-
-    return "source -> %s && (%s))".formatted(
-        type.getPredicate(),
-        String.join(" || ", permissions.stream()
-            .map(perm -> "source.hasPermission(\"" + perm + "\")")
-            .toList())
-    );
-  }
-
-  @Override
-  public String getParameterName(final SourceParameter parameter) {
-    if (parameter.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)) {
-      return "server";
-    }
-    return super.getParameterName(parameter);
-  }
-
-  @Override
-  public String getLiteralMethodString() {
-    return "BrigadierCommand.literalArgumentBuilder";
-  }
-
-  @Override
-  public String getArgumentMethodString() {
-    return "BrigadierCommand.requiredArgumentBuilder";
   }
 }

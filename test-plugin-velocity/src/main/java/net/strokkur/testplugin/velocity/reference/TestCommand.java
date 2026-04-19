@@ -17,6 +17,7 @@
  */
 package net.strokkur.testplugin.velocity.reference;
 
+import com.google.inject.Inject;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -24,6 +25,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.strokkur.commands.Aliases;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
+import net.strokkur.commands.UseInjection;
 import net.strokkur.commands.permission.Permission;
 
 import java.util.Optional;
@@ -31,12 +33,9 @@ import java.util.Optional;
 @Command("testcommand")
 @Aliases("test")
 @Permission("testcommand.use")
+@UseInjection
 final class TestCommand {
-  private final ProxyServer proxy;
-
-  public TestCommand(final ProxyServer proxy) {
-    this.proxy = proxy;
-  }
+  private @Inject ProxyServer proxy;
 
   @Executes
   void execute(CommandSource source) {
