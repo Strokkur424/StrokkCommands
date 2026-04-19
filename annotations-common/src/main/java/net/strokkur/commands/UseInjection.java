@@ -22,6 +22,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/// Declares that the Brigadier source file should be generated with dependency injection frameworks
+/// in mind. This includes the following changes versus typical generated source files:
+///
+/// - The create and register methods are no longer static, instead generating as instance methods.
+/// - Any class instances, which would've been constructed manually instead get added as uninstantiated fields
+///   which a javax `@Inject` annotation added.
+/// - Constructor parameters are no longer propagated to the create/register methods.
+///
+/// @since 2.1.0
 @Retention(RetentionPolicy.SOURCE)
 @Target({ElementType.TYPE, ElementType.PACKAGE, ElementType.MODULE})
 public @interface UseInjection {
