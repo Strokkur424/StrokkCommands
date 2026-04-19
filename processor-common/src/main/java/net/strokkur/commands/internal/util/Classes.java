@@ -42,5 +42,5 @@ public interface Classes {
   // Other
   String NULL_MARKED = "org.jspecify.annotations.NullMarked";
   String NULLABLE = "org.jspecify.annotations.Nullable";
-  String INJECT = "javax.inject.Inject";
+  String INJECT = "jakarta.inject.Inject";
 }
