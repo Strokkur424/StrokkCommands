@@ -74,6 +74,10 @@ public abstract class CommonImportPrinter {
     final Set<String> imports = new HashSet<>(standardImports());
     gatherImports(imports, printer.getNode());
 
+    if (printer.getCommandInformation().useInjection()) {
+      imports.add(Classes.INJECT);
+    }
+
     final String sourceClassFqn = printer.getCommandInformation().sourceClass().getFullyQualifiedName();
     final int numberOfDots = sourceClassFqn.split("\\.").length;
     imports.removeIf(importString -> {

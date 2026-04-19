@@ -18,6 +18,7 @@
 package net.strokkur.testplugin.guice;
 
 import com.google.inject.Inject;
+import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
 import net.strokkur.commands.Subcommand;
 import net.strokkur.commands.UseInjection;
@@ -25,7 +26,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.slf4j.Logger;
 
-//@Command("nested-injection-test")
+@Command("nested-injection-test")
 @UseInjection
 class NestedInjectionCommand {
   private @Inject JavaPlugin plugin;

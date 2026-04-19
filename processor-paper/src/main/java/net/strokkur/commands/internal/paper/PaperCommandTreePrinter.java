@@ -60,6 +60,13 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
 
   @Override
   protected PrintParamsHolder getParamsHolder() {
+    if (getCommandInformation().useInjection()) {
+      return new PrintParamsHolder(
+          "", "", "",
+          "Commands", "Commands commands",
+          SourceVariable::getName
+      );
+    }
     return new PrintParamsHolder(
         SourceParameter.combineJavaDocsParameterString(List.of(), getCommandInformation().constructor(), (p) -> true),
         SourceParameter.combineMethodParameterString(List.of(), getCommandInformation().constructor(), (p) -> true),
@@ -104,11 +111,12 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
              * }
              * }</pre>
              */
-            public static%s void register(%s) {
+            public%s%s void register(%s) {
                 commands.register(create(%s), DESCRIPTION, ALIASES);
             }""",
         holder.createJdParams(),
         getBrigadierClassName(),
+        getCommandInformation().useInjection() ? "" : " static",
         Optional.ofNullable(getCommandInformation().constructor())
             .map(SourceMethod::getCombinedTypeAnnotationsString)
             .orElse(""),

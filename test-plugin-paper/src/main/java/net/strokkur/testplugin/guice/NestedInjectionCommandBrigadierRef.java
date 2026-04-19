@@ -21,8 +21,9 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import jakarta.inject.Inject;
 import org.jspecify.annotations.NullMarked;
+
+import javax.inject.Inject;
 
 @NullMarked
 public final class NestedInjectionCommandBrigadierRef {

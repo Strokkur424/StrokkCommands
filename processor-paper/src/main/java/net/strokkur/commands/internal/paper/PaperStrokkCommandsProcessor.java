@@ -19,6 +19,7 @@ package net.strokkur.commands.internal.paper;
 
 import net.strokkur.commands.Aliases;
 import net.strokkur.commands.Command;
+import net.strokkur.commands.UseInjection;
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.StrokkCommandsProcessor;
 import net.strokkur.commands.internal.abstraction.SourceClass;
@@ -83,7 +84,8 @@ public final class PaperStrokkCommandsProcessor extends StrokkCommandsProcessor<
         constructor,
         sourceClass,
         description.map(Description::value).orElse(null),
-        aliases.map(Aliases::value).orElse(null)
+        aliases.map(Aliases::value).orElse(null),
+        sourceClass.hasAnnotationInherited(UseInjection.class)
     );
   }
 }

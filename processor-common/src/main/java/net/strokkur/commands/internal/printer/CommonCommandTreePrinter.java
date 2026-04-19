@@ -142,6 +142,10 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
     printExtraClassStart();
     println();
 
+    if (commandInformation.useInjection()) {
+      instanceFieldPrinter.printInjectedFields();
+    }
+
     printRegisterMethod(printParams);
 
     println();
@@ -151,17 +155,29 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
              * A method for creating a Brigadier command node which denotes the declared command
              * in {@link %s}. You can either retrieve the unregistered node with this method
              * or register it directly with {@link #register(%s)}.
-             */
-            public static%s %s<%s> create(%s) {""",
+             */""",
         getCommandInformation().sourceClass().getName(),
-        printParams.registerJdParams(),
-        Optional.ofNullable(getCommandInformation().constructor())
-            .map(SourceMethod::getCombinedTypeAnnotationsString)
-            .orElse(""),
-        utils.getNodeReturnType(),
-        List.of(utils.platformType().split("\\.")).getLast(),
-        printParams.createParams()
+        commandInformation.useInjection() ? "Commands" : printParams.registerJdParams()
     );
+
+    final String typeAnnotations = Optional.ofNullable(getCommandInformation().constructor())
+        .map(SourceMethod::getCombinedTypeAnnotationsString)
+        .orElse("");
+    if (commandInformation.useInjection()) {
+      println("public%s %s<%s> create() {",
+          typeAnnotations,
+          utils.getNodeReturnType(),
+          List.of(utils.platformType().split("\\.")).getLast()
+      );
+    } else {
+      println("public static%s %s<%s> create(%s) {",
+          typeAnnotations,
+          utils.getNodeReturnType(),
+          List.of(utils.platformType().split("\\.")).getLast(),
+          printParams.createParams()
+      );
+    }
+
     incrementIndent();
 
     instanceFieldPrinter.printInstanceFields();
@@ -176,21 +192,23 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
     decrementIndent();
     decrementIndent();
     println("}");
-    println();
 
     printReflectionHelper(node);
 
-    printBlock("""
-            /**
-             * The constructor is not accessible. There is no need for an instance
-             * to be created, as no state is stored and all methods are static.
-             *
-             * @throws IllegalAccessException always
-             */
-            private %s() throws IllegalAccessException {
-                throw new IllegalAccessException("This class cannot be instantiated.");
-            }""",
-        getBrigadierClassName());
+    if (!commandInformation.useInjection()) {
+      println();
+      printBlock("""
+              /**
+               * The constructor is not accessible. There is no need for an instance
+               * to be created, as no state is stored and all methods are static.
+               *
+               * @throws IllegalAccessException always
+               */
+              private %s() throws IllegalAccessException {
+                  throw new IllegalAccessException("This class cannot be instantiated.");
+              }""",
+          getBrigadierClassName());
+    }
     decrementIndent();
     println("}");
   }
@@ -203,6 +221,7 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
         .map(ExecutorWrapperProvider::wrapperType)
         .map(ExecutorWrapperProvider.WrapperType::withMethod)
         .orElse(false)) {
+      println();
       printBlock("""
           private static Method getMethodViaReflection(final Class<?> clazz, final String name, final Class<?>... parameters) {
               try {
@@ -210,9 +229,7 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
               } catch (ReflectiveOperationException ex) {
                   throw new RuntimeException(ex);
               }
-          }
-          """);
-      println();
+          }""");
       return true;
     }
 

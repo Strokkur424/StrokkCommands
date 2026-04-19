@@ -29,4 +29,6 @@ public interface CommandInformation {
   SourceClass sourceClass();
 
   String @Nullable [] aliases();
+
+  boolean useInjection();
 }

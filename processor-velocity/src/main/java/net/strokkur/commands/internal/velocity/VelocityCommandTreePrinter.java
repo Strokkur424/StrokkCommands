@@ -19,6 +19,7 @@ package net.strokkur.commands.internal.velocity;
 
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.abstraction.SourceParameter;
+import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
 import net.strokkur.commands.internal.printer.CommonImportPrinter;
@@ -76,6 +77,14 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
 
   @Override
   protected PrintParamsHolder getParamsHolder() {
+    if (getCommandInformation().useInjection()) {
+      return new PrintParamsHolder(
+          "", "", "",
+          "ProxyServer, Object", "ProxyServer server, Object command$plugin",
+          SourceVariable::getName
+      );
+    }
+
     return new PrintParamsHolder(
         SourceParameter.combineJavaDocsParameterString(
             List.of("ProxyServer"),
@@ -127,11 +136,12 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
              * }
              * }</pre>
              */
-            public static void register(%s) {
+            public%s void register(%s) {
                 final BrigadierCommand command = new BrigadierCommand(create(%s));
                 final CommandMeta meta = server.getCommandManager().metaBuilder(command)""",
         holder.createJdParams(),
         getBrigadierClassName(),
+        getCommandInformation().useInjection() ? "" : " static",
         holder.registerParams(),
         holder.createParamNames()
     );

@@ -31,13 +31,14 @@ import net.strokkur.commands.internal.util.Utils;
 
 import javax.lang.model.element.Modifier;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class CommonInstanceFieldPrinter {
   private final CommonCommandTreePrinter<?> printer;
 
-  public CommonInstanceFieldPrinter(final CommonCommandTreePrinter<?> printer) {
+  public CommonInstanceFieldPrinter(CommonCommandTreePrinter<?> printer) {
     this.printer = printer;
   }
 
@@ -47,7 +48,15 @@ public class CommonInstanceFieldPrinter {
     }
   }
 
-  private int printInstanceFields(final CommandNode node) throws IOException {
+  public void printInjectedFields() throws IOException {
+    if (printInjectedFields(printer.getNode()) > 0) {
+      printer.println();
+    }
+  }
+
+  private List<AccessEntry> collectAccessEntries(CommandNode node) {
+    final List<AccessEntry> out = new ArrayList<>();
+
     int pushed = 0;
     if (node.hasAttribute(AttributeKey.ACCESS_STACK)) {
       for (ExecuteAccess<?> executeAccess : node.getAttributeNotNull(AttributeKey.ACCESS_STACK)) {
@@ -55,7 +64,7 @@ public class CommonInstanceFieldPrinter {
           for (int i = 0; i < pushed; i++) {
             printer.getAccessStack().pop();
           }
-          return 0;
+          return out;
         }
 
         printer.getAccessStack().push(executeAccess);
@@ -63,124 +72,173 @@ public class CommonInstanceFieldPrinter {
       }
     }
 
-    int printed = 0;
     if (node.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE) != null) {
       final List<ExecuteAccess<?>> pathToUse = printer.getAccessStack();
-
-      if (!pathToUse.isEmpty() && printAccessInstance(pathToUse)) {
-        printed++;
+      if (!pathToUse.isEmpty()) {
+        out.add(new AccessEntry(pathToUse));
       }
     }
 
     for (final CommandNode child : node.children()) {
-      printed += printInstanceFields(child);
+      out.addAll(collectAccessEntries(child));
     }
 
     for (int i = 0; i < pushed; i++) {
       printer.getAccessStack().pop();
     }
 
+    return out;
+  }
+
+  private int printInstanceFields(CommandNode node) throws IOException {
+    int printed = 0;
+    for (final AccessEntry collectAccessEntry : collectAccessEntries(node)) {
+      printed += printAccessInstance(collectAccessEntry);
+    }
     return printed;
   }
 
-  public String getParameterName(final SourceParameter parameter) {
+  private int printInjectedFields(CommandNode node) throws IOException {
+    int printed = 0;
+    for (final AccessEntry collectAccessEntry : collectAccessEntries(node)) {
+      printed += printInjectedField(collectAccessEntry);
+    }
+    return printed;
+  }
+
+  public String getParameterName(SourceParameter parameter) {
     return parameter.getName();
   }
 
-  private boolean printAccessInstance(List<ExecuteAccess<?>> accesses) throws IOException {
-    if (accesses.isEmpty()) {
-      throw new IllegalStateException("Accesses stack was empty");
+  private int printAccessInstance(AccessEntry entry) throws IOException {
+    if (printer.getPrintedInstances().contains(entry.getAccessName())) {
+      return 0;
     }
 
-    if (accesses.size() == 1) {
-      if (printer.getPrintedInstances().contains("instance")) {
-        return false;
-      }
-      final String typeName = accesses.getFirst().getSourceName();
+    if (entry.isTopLevel()) {
       printer.println("final %s%s instance = new %s%s(%s);",
-          typeName,
-          printer.getCommandInformation().sourceClass().getTypeAnnotations().isEmpty() ?
-              "" :
-              '<' + String.join(", ", printer.getCommandInformation().sourceClass().getTypeAnnotations().stream()
-                  .map(SourceTypeAnnotation::getName)
-                  .toList()) + '>',
-          typeName,
-          printer.getCommandInformation().sourceClass().getTypeAnnotations().isEmpty() ?
-              "" :
-              "<>",
-          String.join(", ", printer.getCommandInformation().constructor() instanceof SourceConstructor ctor ?
-              ctor.getParameters().stream()
-                  .map(this::getParameterName)
-                  .toList() :
-              Collections.emptyList()
-          )
+          entry.getTypeName(), getCtorTypeParameters(),
+          entry.getTypeName(), hasCtorTypeParameters() ? "<>" : "",
+          getCtorParameters()
       );
       printer.getPrintedInstances().add("instance");
-      return true;
+      return 1;
     }
 
-    final ExecuteAccess<?> currentAccess = accesses.getLast();
+    int printed = 1;
+    if (entry.getCurrentAccess() instanceof FieldAccess fieldAccess) {
+      printed += printAccessInstance(entry.getParent());
 
-    final String typeName = currentAccess.getSourceName();
-    final String instanceName = Utils.getInstanceName(accesses);
-    final String prevInstanceName = Utils.getInstanceName(accesses.subList(0, accesses.size() - 1));
-
-    if (printer.getPrintedInstances().contains(instanceName)) {
-      return false;
-    }
-
-    if (currentAccess instanceof FieldAccess fieldAccess) {
       final SourceField fieldElement = fieldAccess.getElement();
-
-      if (!printer.getPrintedInstances().contains(prevInstanceName)) {
-        printAccessInstance(accesses.subList(0, accesses.size() - 1));
-      }
-
       if (fieldElement.isInitialized()) {
         printer.println("final {} {} = {}.{};",
-            typeName,
-            instanceName,
-            prevInstanceName,
-            fieldAccess.getElement().getName()
+            entry.getTypeName(), entry.getAccessName(),
+            entry.getParent().getAccessName(), fieldAccess.getElement().getName()
         );
       } else {
         printer.println("final {} {} = new {}();",
-            typeName,
-            instanceName,
-            typeName
+            entry.getTypeName(), entry.getAccessName(),
+            entry.getTypeName()
         );
       }
 
-      printer.getPrintedInstances().add(instanceName);
-      return true;
+      printer.getPrintedInstances().add(entry.getAccessName());
+      return printed;
     }
 
-    if (currentAccess instanceof InstanceAccess instanceAccess) {
+    if (entry.getCurrentAccess() instanceof InstanceAccess instanceAccess) {
       final SourceClass classElement = instanceAccess.getElement();
       if (classElement.isTopLevel() || classElement.getModifiers().contains(Modifier.STATIC)) {
         printer.println("final {} {} = new {}();",
-            typeName,
-            instanceName,
-            typeName
+            entry.getTypeName(), entry.getAccessName(),
+            entry.getTypeName()
         );
-        printer.getPrintedInstances().add(instanceName);
-        return true;
+      } else {
+        printed += printAccessInstance(entry.getParent());
+        printer.println("final {} {} = {}.new {}();",
+            entry.getTypeName(), entry.getAccessName(),
+            entry.getParent().getAccessName(), classElement.getName()
+        );
       }
 
-      if (!printer.getPrintedInstances().contains(prevInstanceName)) {
-        printAccessInstance(accesses.subList(0, accesses.size() - 1));
-      }
-
-      printer.println("final {} {} = {}.new {}();",
-          typeName,
-          instanceName,
-          prevInstanceName,
-          classElement.getName()
-      );
-      printer.getPrintedInstances().add(instanceName);
-      return true;
+      printer.getPrintedInstances().add(entry.getAccessName());
+      return printed;
     }
 
-    throw new IllegalStateException("Unknown access: " + currentAccess);
+    throw new IllegalStateException("Unknown access type: " + entry.getCurrentAccess());
+  }
+
+  private int printInjectedField(AccessEntry entry) throws IOException {
+    if (printer.getPrintedInstances().contains(entry.getAccessName())) {
+      return 0;
+    }
+
+    if (entry.needsToBeInitialized()) {
+      printer.println("private @Inject {} {};",
+          entry.getTypeName(), entry.getAccessName()
+      );
+      printer.getPrintedInstances().add(entry.getAccessName());
+      return 1;
+    }
+    return 0;
+  }
+
+  private boolean hasCtorTypeParameters() {
+    return !printer.getCommandInformation().sourceClass().getTypeAnnotations().isEmpty();
+  }
+
+  private String getCtorTypeParameters() {
+    return hasCtorTypeParameters() ?
+        '<' + String.join(", ", printer.getCommandInformation().sourceClass().getTypeAnnotations().stream()
+                                .map(SourceTypeAnnotation::getName)
+                                .toList()) + '>' :
+        "";
+  }
+
+  private String getCtorParameters() {
+    return String.join(", ", printer.getCommandInformation().constructor() instanceof SourceConstructor ctor ?
+        ctor.getParameters().stream()
+        .map(this::getParameterName)
+        .toList() :
+        Collections.emptyList()
+    );
+  }
+
+  protected record AccessEntry(List<ExecuteAccess<?>> access) {
+    protected AccessEntry(List<ExecuteAccess<?>> access) {
+      if (access.isEmpty()) {
+        throw new IllegalStateException("Access stack cannot be empty.");
+      }
+      this.access = List.copyOf(access);
+    }
+
+    public boolean isTopLevel() {
+      return access.size() == 1;
+    }
+
+    public String getAccessName() {
+      if (isTopLevel()) {
+        return "instance";
+      }
+
+      return Utils.getInstanceName(access);
+    }
+
+    public AccessEntry getParent() {
+      return new AccessEntry(access.subList(0, access.size() - 1));
+    }
+
+    private ExecuteAccess<?> getCurrentAccess() {
+      return access.getLast();
+    }
+
+    public String getTypeName() {
+      return getCurrentAccess().getSourceName();
+    }
+
+    public boolean needsToBeInitialized() {
+      final boolean alreadyInitialized = getCurrentAccess() instanceof FieldAccess field && field.getElement().isInitialized();
+      return !alreadyInitialized;
+    }
   }
 }

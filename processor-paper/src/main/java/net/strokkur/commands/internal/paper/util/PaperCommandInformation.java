@@ -26,6 +26,7 @@ public record PaperCommandInformation(
     @Nullable SourceConstructor constructor,
     SourceClass sourceClass,
     @Nullable String description,
-    String @Nullable [] aliases
+    String @Nullable [] aliases,
+    boolean useInjection
 ) implements CommandInformation {
 }
