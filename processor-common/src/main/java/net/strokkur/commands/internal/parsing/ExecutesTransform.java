@@ -20,7 +20,6 @@ package net.strokkur.commands.internal.parsing;
 import net.strokkur.commands.Executes;
 import net.strokkur.commands.internal.NodeUtils;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
-import net.strokkur.commands.internal.abstraction.SourceParameter;
 import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.exceptions.IllegalReturnTypeException;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;

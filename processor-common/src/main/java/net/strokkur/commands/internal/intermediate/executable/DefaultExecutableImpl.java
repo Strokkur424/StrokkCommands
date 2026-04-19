@@ -18,7 +18,6 @@
 package net.strokkur.commands.internal.intermediate.executable;
 
 import net.strokkur.commands.internal.abstraction.SourceMethod;
-import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.exceptions.IllegalReturnTypeException;
 
 import java.util.List;

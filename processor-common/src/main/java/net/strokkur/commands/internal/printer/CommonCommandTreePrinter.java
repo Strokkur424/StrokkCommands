@@ -37,7 +37,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
 
-public abstract class CommonCommandTreePrinter<C extends CommandInformation> extends AbstractPrinter implements PrinterInformation<C> {
+public abstract class CommonCommandTreePrinter<C extends CommandInformation> extends AbstractPrinter {
   private final Stack<ExecuteAccess<?>> executeAccessStack = new Stack<>();
   protected final CommandNode node;
   private final Set<String> printedInstances = new TreeSet<>();
@@ -224,27 +224,22 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
     return false;
   }
 
-  @Override
   public final ProcessingEnvironment environment() {
     return this.environment;
   }
 
-  @Override
   public final Set<String> getPrintedInstances() {
     return printedInstances;
   }
 
-  @Override
   public final Stack<ExecuteAccess<?>> getAccessStack() {
     return executeAccessStack;
   }
 
-  @Override
   public final CommandNode getNode() {
     return node;
   }
 
-  @Override
   public final C getCommandInformation() {
     return this.commandInformation;
   }

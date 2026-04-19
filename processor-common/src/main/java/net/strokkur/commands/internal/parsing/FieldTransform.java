@@ -27,9 +27,6 @@ import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 
-import java.util.ArrayList;
-import java.util.List;
-
 record FieldTransform(CommandParser parser, NodeUtils nodeUtils) implements NodeTransform<SourceField>, ForwardingMessagerWrapper {
 
   @Override

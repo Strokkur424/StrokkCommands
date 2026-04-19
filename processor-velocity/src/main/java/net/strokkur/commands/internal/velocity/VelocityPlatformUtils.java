@@ -19,10 +19,8 @@ package net.strokkur.commands.internal.velocity;
 
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.abstraction.AnnotationsHolder;
-import net.strokkur.commands.internal.abstraction.SourceParameter;
 import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.exceptions.AnnotationException;
-import net.strokkur.commands.internal.exceptions.UnknownSenderException;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
 import net.strokkur.commands.internal.intermediate.executable.ParameterType;
 import net.strokkur.commands.internal.intermediate.executable.SourceParameterType;
@@ -32,10 +30,8 @@ import net.strokkur.commands.internal.velocity.util.VelocityAttributeKeys;
 import net.strokkur.commands.internal.velocity.util.VelocityClasses;
 import net.strokkur.commands.permission.Permission;
 
-import javax.net.ssl.SSLEngine;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Executor;
 
 final class VelocityPlatformUtils implements PlatformUtils {
   @Override
