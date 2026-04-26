@@ -21,6 +21,7 @@ import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.exceptions.IllegalReturnTypeException;
 
 import java.util.List;
+import java.util.Objects;
 
 public final class DefaultExecutableImpl extends ExecutableImpl implements DefaultExecutable {
   public DefaultExecutableImpl(
@@ -28,5 +29,20 @@ public final class DefaultExecutableImpl extends ExecutableImpl implements Defau
       final List<ParameterType> parameters
   ) throws IllegalReturnTypeException {
     super(executesMethod, parameters);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(executesMethod().getEnclosed().getFullyQualifiedName(), executesMethod().getName(), parameterArguments());
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj instanceof DefaultExecutableImpl other) {
+      return Objects.equals(executesMethod().getEnclosed().getFullyQualifiedName(), other.executesMethod().getEnclosed().getFullyQualifiedName())
+          && Objects.equals(executesMethod().getName(), other.executesMethod().getName())
+          && Objects.equals(parameterArguments(), other.parameterArguments());
+    }
+    return false;
   }
 }

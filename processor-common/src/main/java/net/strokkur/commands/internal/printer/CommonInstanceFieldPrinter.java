@@ -26,6 +26,8 @@ import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.access.FieldAccess;
 import net.strokkur.commands.internal.intermediate.access.InstanceAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.executable.DefaultExecutable;
+import net.strokkur.commands.internal.intermediate.executable.Executable;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.Utils;
 
@@ -33,10 +35,13 @@ import javax.lang.model.element.Modifier;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class CommonInstanceFieldPrinter {
   private final CommonCommandTreePrinter<?> printer;
+  private final Set<DefaultExecutable> handledDefaults = new HashSet<>();
 
   public CommonInstanceFieldPrinter(CommonCommandTreePrinter<?> printer) {
     this.printer = printer;
@@ -72,8 +77,18 @@ public class CommonInstanceFieldPrinter {
       }
     }
 
-    if (node.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE) != null) {
+    final Executable exec = node.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE);
+EXEC_NOT_NULL:
+    if (exec != null) {
       final List<ExecuteAccess<?>> pathToUse = printer.getAccessStack();
+
+      if (exec instanceof DefaultExecutable defaultExec) {
+        if (handledDefaults.contains(defaultExec)) {
+          break EXEC_NOT_NULL;
+        }
+        handledDefaults.add(defaultExec);
+      }
+
       if (!pathToUse.isEmpty()) {
         out.add(new AccessEntry(pathToUse));
       }

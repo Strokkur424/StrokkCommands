@@ -26,9 +26,9 @@ import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.MultiLiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
-import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.attributes.Attributable;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.executable.DefaultExecutable;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
 import net.strokkur.commands.internal.intermediate.executable.ParameterType;
 import net.strokkur.commands.internal.intermediate.executable.Parameterizable;
@@ -42,12 +42,16 @@ import net.strokkur.commands.internal.util.Utils;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 public abstract class CommonTreePrinter {
   protected final CommonCommandTreePrinter<?> printer;
   private final Stack<String> multiLiteralStack = new Stack<>();
+
+  private final Map<DefaultExecutable, String> stackAtDefaultExecutes = new HashMap<>();
 
   private int multiLiteralStackPosition = 0;
 
@@ -158,10 +162,10 @@ public abstract class CommonTreePrinter {
     if (wrapper.wrapperType().withMethod()) {
       final List<SourceParameter> params = executable.executesMethod().getParameters();
       final String parameterTypesString = params.isEmpty() ? "" : ", " + String.join(", ", executable.executesMethod().getParameters().stream()
-          .map(SourceParameter::getType)
-          .map(SourceType::getSourceName)
-          .map((str) -> str + ".class")
-          .toList());
+                                                                                           .map(SourceParameter::getType)
+                                                                                           .map(SourceType::getSourceName)
+                                                                                           .map((str) -> str + ".class")
+                                                                                           .toList());
 
       printer.printIndented("}, getMethodViaReflection(%s.class, \"%s\"%s)))",
           executable.executesMethod().getEnclosed().getSourceName(),
@@ -206,8 +210,13 @@ public abstract class CommonTreePrinter {
   }
 
   private void printWithInstance(final Executable executable) throws IOException {
-    final List<ExecuteAccess<?>> pathToUse = printer.getAccessStack();
-    printExecutesMethodCall(executable, Utils.getInstanceName(pathToUse));
+    final String instanceName;
+    if (executable instanceof DefaultExecutable defaultExec) {
+      instanceName = stackAtDefaultExecutes.computeIfAbsent(defaultExec, unused -> Utils.getInstanceName(printer.getAccessStack()));
+    } else {
+      instanceName = Utils.getInstanceName(printer.getAccessStack());
+    }
+    printExecutesMethodCall(executable, instanceName);
   }
 
   private void printExecutesMethodCall(final Executable executable, final String typeName) throws IOException {
