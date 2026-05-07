@@ -41,12 +41,12 @@ import java.util.Set;
 final class PaperPlatformUtils implements PlatformUtils {
 
   @Override
-  public boolean mayParameterBeArgument(final SourceVariable param) {
+  public boolean mayParameterBeArgument(SourceVariable param) {
     return !param.hasAnnotationInherited(Executor.class);
   }
 
   @Override
-  public void populateExecutesNode(final Executable executable, final CommandNode node, final List<ParameterType> parameters) {
+  public void populateExecutesNode(Executable executable, CommandNode node, List<ParameterType> parameters) {
     final ExecutorType type = getExecutorType(parameters);
     executable.setAttribute(PaperAttributeKeys.EXECUTOR_TYPE, type);
     node.setAttribute(PaperAttributeKeys.EXECUTOR_TYPE, type);
@@ -63,7 +63,7 @@ final class PaperPlatformUtils implements PlatformUtils {
   }
 
   @Override
-  public void populateNode(final CommandNode node, final AnnotationsHolder holder) {
+  public void populateNode(CommandNode node, AnnotationsHolder holder) {
     final Optional<Permission> permission = holder.getAnnotationOptional(Permission.class);
     if (permission.isPresent()) {
       final String permissionValue = permission.get().value();
@@ -83,9 +83,9 @@ final class PaperPlatformUtils implements PlatformUtils {
     }
   }
 
-  private ExecutorType getExecutorType(final List<ParameterType> parameters) throws AnnotationException {
+  private ExecutorType getExecutorType(List<ParameterType> parameters) throws AnnotationException {
     ExecutorType type = ExecutorType.NONE;
-    for (final ParameterType parameter : parameters) {
+    for (ParameterType parameter : parameters) {
       if (!(parameter instanceof SourceParameterType(SourceVariable sourceParam))) {
         continue;
       }

@@ -75,16 +75,13 @@ final class PaperBrigadierArgumentConverter extends BrigadierArgumentConverter {
   );
   //</editor-fold>
 
-  public PaperBrigadierArgumentConverter(final MessagerWrapper messagerWrapper) {
+  PaperBrigadierArgumentConverter(MessagerWrapper messagerWrapper) {
     super(messagerWrapper);
   }
 
   @Override
-  protected @Nullable BrigadierArgumentType handleCustomArgumentAnnotations(
-      final String argumentName,
-      final String type,
-      final SourceVariable variable
-  ) throws ConversionException {
+  protected @Nullable BrigadierArgumentType handleCustomArgumentAnnotations(String argumentName, String type, SourceVariable variable)
+      throws ConversionException {
     final CustomArg customArg = variable.getAnnotation(CustomArg.class);
     if (customArg != null) {
       final SourceClass value = variable.getAnnotationSourceClassField(CustomArg.class, "value");

@@ -30,7 +30,7 @@ import net.strokkur.commands.internal.util.Classes;
 import java.util.Set;
 
 final class PaperImportPrinter extends CommonImportPrinter {
-  public PaperImportPrinter(final CommonCommandTreePrinter<?> printer) {
+  PaperImportPrinter(CommonCommandTreePrinter<?> printer) {
     super(printer);
   }
 
@@ -51,7 +51,7 @@ final class PaperImportPrinter extends CommonImportPrinter {
   }
 
   @Override
-  public void gatherAdditionalNodeImports(final Set<String> imports, final CommandNode node) {
+  public void gatherAdditionalNodeImports(Set<String> imports, CommandNode node) {
     addExecutorTypeImports(imports, node.getAttributeNotNull(PaperAttributeKeys.EXECUTOR_TYPE));
     final Executable executable = node.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE);
     if (executable != null) {
@@ -59,7 +59,7 @@ final class PaperImportPrinter extends CommonImportPrinter {
     }
   }
 
-  private void addExecutorTypeImports(final Set<String> imports, final ExecutorType type) {
+  private void addExecutorTypeImports(Set<String> imports, ExecutorType type) {
     if (type == ExecutorType.NONE) {
       return;
     }

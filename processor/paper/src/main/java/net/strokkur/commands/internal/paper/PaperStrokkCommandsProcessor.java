@@ -43,7 +43,7 @@ public final class PaperStrokkCommandsProcessor extends StrokkCommandsProcessor<
   }
 
   @Override
-  protected String getCommandName(final Command annotation) {
+  protected String getCommandName(Command annotation) {
     return annotation.value();
   }
 
@@ -58,17 +58,17 @@ public final class PaperStrokkCommandsProcessor extends StrokkCommandsProcessor<
   }
 
   @Override
-  protected CommonTreePostProcessor createPostProcessor(final MessagerWrapper messager) {
+  protected CommonTreePostProcessor createPostProcessor(MessagerWrapper messager) {
     return new PaperTreePostProcessor(messager);
   }
 
   @Override
-  protected CommonCommandTreePrinter<PaperCommandInformation> createPrinter(final CommandNode node, final PaperCommandInformation commandInformation) {
+  protected CommonCommandTreePrinter<PaperCommandInformation> createPrinter(CommandNode node, PaperCommandInformation commandInformation) {
     return new PaperCommandTreePrinter(0, null, node, commandInformation, processingEnv, getPlatformUtils());
   }
 
   @Override
-  protected PaperCommandInformation getCommandInformation(final SourceClass sourceClass) {
+  protected PaperCommandInformation getCommandInformation(SourceClass sourceClass) {
     final Optional<Description> description = sourceClass.getAnnotationOptional(Description.class);
     final Optional<Aliases> aliases = sourceClass.getAnnotationOptional(Aliases.class);
 
