@@ -137,5 +137,10 @@
 
     <!-- https://checkstyle.org/checks/coding/unnecessaryparentheses.html -->
     <module name="UnnecessaryParentheses"/>
+
+    <!-- https://checkstyle.org/checks/imports/illegalimport.html -->
+    <module name="IllegalImport">
+      <property name="illegalClasses" value="org.jetbrains.annotations.Nullable, org.jetbrains.annotations.NotNull"/>
+    </module>
   </module>
 </module>
