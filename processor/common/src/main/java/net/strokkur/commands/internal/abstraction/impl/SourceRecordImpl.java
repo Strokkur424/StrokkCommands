@@ -19,31 +19,34 @@ package net.strokkur.commands.internal.abstraction.impl;
 
 import net.strokkur.commands.internal.abstraction.SourceRecord;
 import net.strokkur.commands.internal.abstraction.SourceRecordComponent;
+import org.jspecify.annotations.Nullable;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.RecordComponentElement;
 import javax.lang.model.type.DeclaredType;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 public class SourceRecordImpl extends SourceClassImpl implements SourceRecord {
-  private final List<SourceRecordComponent> recordComponents;
+  private @Nullable List<SourceRecordComponent> recordComponents = null;
 
   public SourceRecordImpl(final ProcessingEnvironment environment, final DeclaredType type) {
     super(environment, type);
-    this.recordComponents = new LinkedList<>();
-    for (final Element enclosed : type.asElement().getEnclosedElements()) {
-      if (enclosed.getKind() == ElementKind.RECORD_COMPONENT) {
-        this.recordComponents.add(new SourceRecordComponentImpl(environment, (RecordComponentElement) enclosed));
-      }
-    }
   }
 
   @Override
   public List<SourceRecordComponent> getRecordComponents() {
+    if (recordComponents == null) {
+      this.recordComponents = new ArrayList<>();
+      for (final Element enclosed : type.asElement().getEnclosedElements()) {
+        if (enclosed.getKind() == ElementKind.RECORD_COMPONENT) {
+          this.recordComponents.add(new SourceRecordComponentImpl(environment, (RecordComponentElement) enclosed));
+        }
+      }
+    }
     return Collections.unmodifiableList(this.recordComponents);
   }
 }
