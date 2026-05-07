@@ -1,5 +1,6 @@
 plugins {
   id("java-library")
+  id("checkstyle")
   id("com.diffplug.spotless")
 }
 
@@ -8,6 +9,11 @@ spotless {
     licenseHeaderFile(rootProject.file("HEADER"))
     target("**/*.java")
   }
+}
+
+checkstyle {
+  toolVersion = "13.4.2"
+  configDirectory = rootDir.resolve(".checkstyle")
 }
 
 repositories {
@@ -20,6 +26,12 @@ java {
   toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
-tasks.withType<JavaCompile>().configureEach {
-  options.release = 21
+tasks {
+  withType<JavaCompile>().configureEach {
+    options.release = 21
+  }
+  withType<Checkstyle>().configureEach {
+    minHeapSize = "200M"
+    maxHeapSize = "200M"
+  }
 }
