@@ -100,8 +100,8 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
     final CommandParser parser = new CommandParserImpl(
         messagerWrapper,
         nodeUtils,
-        (p) -> new ExecutesTransform(p, nodeUtils),
-        (p) -> new DefaultExecutesTransform(p, nodeUtils)
+        p -> new ExecutesTransform(p, nodeUtils),
+        p -> new DefaultExecutesTransform(p, nodeUtils)
     );
     final CommonTreePostProcessor treePostProcessor = createPostProcessor(messagerWrapper);
 

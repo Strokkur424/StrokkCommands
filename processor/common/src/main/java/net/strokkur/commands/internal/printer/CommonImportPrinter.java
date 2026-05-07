@@ -115,7 +115,7 @@ public abstract class CommonImportPrinter {
           .map(SourceParameterType.class::cast)
           .map(SourceParameterType::parameter)
           .filter(type -> type.getType().getFullyQualifiedAndTypedName().equalsIgnoreCase(Classes.LIST_STRING)
-              || (type.getType().getFullyQualifiedName().equalsIgnoreCase("java.lang.String") && type.getType().isArray()))
+              || type.getType().getFullyQualifiedName().equalsIgnoreCase("java.lang.String") && type.getType().isArray())
           .forEach(type -> imports.addAll(DefaultExecutable.Type.getType(type).getImports()));
     }
 

@@ -129,10 +129,13 @@
     <!-- https://checkstyle.org/config_imports.html#UnusedImports -->
     <module name="UnusedImports"/>
 
-    <!-- https://checkstyle.org/checks/naming/constantname.html#ConstantName -->
+    <!-- https://checkstyle.org/checks/naming/constantname.html -->
     <module name="ConstantName"/>
 
-    <!-- https://checkstyle.org/checks/blocks/emptyblock.html#EmptyBlock -->
+    <!-- https://checkstyle.org/checks/blocks/emptyblock.html -->
     <module name="EmptyBlock"/>
+
+    <!-- https://checkstyle.org/checks/coding/unnecessaryparentheses.html -->
+    <module name="UnnecessaryParentheses"/>
   </module>
 </module>

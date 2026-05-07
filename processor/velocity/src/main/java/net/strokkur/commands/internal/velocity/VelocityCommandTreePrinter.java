@@ -90,29 +90,29 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
         SourceParameter.combineJavaDocsParameterString(
             List.of("ProxyServer"),
             getCommandInformation().constructor(),
-            (p) -> !p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)
+            p -> !p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)
         ),
         SourceParameter.combineMethodParameterString(
             List.of("final ProxyServer server"),
             getCommandInformation().constructor(),
-            (p) -> !p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)
+            p -> !p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)
         ),
         SourceParameter.combineMethodParameterNameString(
             List.of("server"),
             getCommandInformation().constructor(),
-            (p) -> !p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)
+            p -> !p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)
         ),
         SourceParameter.combineJavaDocsParameterString(
             List.of("ProxyServer", "Object"),
             getCommandInformation().constructor(),
-            (p) -> !p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)
+            p -> !p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)
         ),
         SourceParameter.combineMethodParameterString(
             List.of("final ProxyServer server", "final Object command$plugin"),
             getCommandInformation().constructor(),
-            (p) -> !p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)
+            p -> !p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)
         ),
-        (p) -> p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER) ? "server" : p.getName()
+        p -> p.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER) ? "server" : p.getName()
     );
   }
 

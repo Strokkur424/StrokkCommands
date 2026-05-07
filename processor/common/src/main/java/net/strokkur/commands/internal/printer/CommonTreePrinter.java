@@ -164,7 +164,7 @@ public abstract class CommonTreePrinter {
       final String parameterTypesString = params.isEmpty() ? "" : ", " + String.join(", ", executable.executesMethod().getParameters().stream()
           .map(SourceParameter::getType)
           .map(SourceType::getSourceName)
-          .map((str) -> str + ".class")
+          .map(str -> str + ".class")
           .toList());
 
       printer.printIndented("}, getMethodViaReflection(%s.class, \"%s\"%s)))",

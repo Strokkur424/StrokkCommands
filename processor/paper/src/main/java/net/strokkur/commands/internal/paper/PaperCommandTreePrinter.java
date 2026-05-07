@@ -68,11 +68,11 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
       );
     }
     return new PrintParamsHolder(
-        SourceParameter.combineJavaDocsParameterString(List.of(), getCommandInformation().constructor(), (p) -> true),
-        SourceParameter.combineMethodParameterString(List.of(), getCommandInformation().constructor(), (p) -> true),
-        SourceParameter.combineMethodParameterNameString(List.of(), getCommandInformation().constructor(), (p) -> true),
-        SourceParameter.combineJavaDocsParameterString(List.of("Commands"), getCommandInformation().constructor(), (p) -> true),
-        SourceParameter.combineMethodParameterString(List.of("final Commands commands"), getCommandInformation().constructor(), (p) -> true),
+        SourceParameter.combineJavaDocsParameterString(List.of(), getCommandInformation().constructor(), p -> true),
+        SourceParameter.combineMethodParameterString(List.of(), getCommandInformation().constructor(), p -> true),
+        SourceParameter.combineMethodParameterNameString(List.of(), getCommandInformation().constructor(), p -> true),
+        SourceParameter.combineJavaDocsParameterString(List.of("Commands"), getCommandInformation().constructor(), p -> true),
+        SourceParameter.combineMethodParameterString(List.of("final Commands commands"), getCommandInformation().constructor(), p -> true),
         SourceVariable::getName
     );
   }
