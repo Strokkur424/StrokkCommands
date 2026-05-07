@@ -22,7 +22,7 @@ import net.strokkur.commands.internal.abstraction.SourceElement;
 sealed abstract class ExecuteAccessImpl<E extends SourceElement> implements ExecuteAccess<E> permits FieldAccessImpl, InstanceAccessImpl {
   protected final E element;
 
-  public ExecuteAccessImpl(final E element) {
+  ExecuteAccessImpl(E element) {
     this.element = element;
   }
 

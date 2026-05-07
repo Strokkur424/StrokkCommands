@@ -30,7 +30,7 @@ import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 record FieldTransform(CommandParser parser, NodeUtils nodeUtils) implements NodeTransform<SourceField>, ForwardingMessagerWrapper {
 
   @Override
-  public void transform(final CommandNode root, final SourceField element) throws MismatchedArgumentTypeException {
+  public void transform(CommandNode root, SourceField element) throws MismatchedArgumentTypeException {
     debug("> FieldTransform: {}.{}", element.getEnclosed().getName(), element.getName());
     final CommandNode node = createSubcommandNode(root, element);
 
@@ -47,7 +47,7 @@ record FieldTransform(CommandParser parser, NodeUtils nodeUtils) implements Node
   }
 
   @Override
-  public boolean requirement(final SourceField element) {
+  public boolean requirement(SourceField element) {
     return element.hasAnnotationInherited(Subcommand.class) && element.getType() instanceof SourceClass;
   }
 }

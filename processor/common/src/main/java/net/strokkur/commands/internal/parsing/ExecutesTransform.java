@@ -46,15 +46,15 @@ public sealed class ExecutesTransform implements NodeTransform<SourceMethod>, Fo
     return "ExecutesTransform";
   }
 
-  protected CommandNode createThisPath(final CommandNode parent, final SourceMethod element) throws MismatchedArgumentTypeException {
+  protected CommandNode createThisPath(CommandNode parent, SourceMethod element) throws MismatchedArgumentTypeException {
     final CommandNode out = createLiteralSequence(parent, element, Executes.class, Executes::value);
     return out == null ? parent : out;
   }
 
   protected void populatePath(
-      final CommandNode node,
-      final SourceMethod method,
-      final List<ParameterType> args
+      CommandNode node,
+      SourceMethod method,
+      List<ParameterType> args
   ) throws UnknownSenderException, IllegalReturnTypeException {
     final Executable executable = new ExecutableImpl(method, args);
     node.setAttribute(AttributeKey.EXECUTABLE, executable);
@@ -63,8 +63,8 @@ public sealed class ExecutesTransform implements NodeTransform<SourceMethod>, Fo
 
   @Override
   public final void transform(
-      final CommandNode root,
-      final SourceMethod element
+      CommandNode root,
+      SourceMethod element
   ) throws MismatchedArgumentTypeException, UnknownSenderException, IllegalReturnTypeException {
     debug("> {}: parsing {} for '{}'", transformName(), element, root.argument().argumentName());
     final CommandNode thisPath = this.createThisPath(root, element);
@@ -94,7 +94,7 @@ public sealed class ExecutesTransform implements NodeTransform<SourceMethod>, Fo
   }
 
   @Override
-  public boolean requirement(final SourceMethod element) {
+  public boolean requirement(SourceMethod element) {
     return element.hasAnnotationInherited(Executes.class);
   }
 

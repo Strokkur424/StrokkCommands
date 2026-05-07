@@ -47,12 +47,7 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
   private final MessagerWrapper messager;
   private final NodeUtils nodeUtils;
 
-  public CommandParserImpl(
-      final MessagerWrapper messager,
-      final NodeUtils nodeUtils,
-      final Function<CommandParser, ExecutesTransform> executesTransform,
-      final Function<CommandParser, DefaultExecutesTransform> defaultExecutesTransform
-  ) {
+  public CommandParserImpl(MessagerWrapper messager, NodeUtils nodeUtils, Function<CommandParser, ExecutesTransform> executesTransform, Function<CommandParser, DefaultExecutesTransform> defaultExecutesTransform) {
     this.messager = messager;
     this.nodeUtils = nodeUtils;
 
@@ -63,7 +58,7 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
   }
 
   @Override
-  public @Nullable CommandNode createCommandTree(final String name, final SourceClass sourceClass) {
+  public @Nullable CommandNode createCommandTree(String name, SourceClass sourceClass) {
     final List<String> split = List.of(name.split(" "));
     final CommandNode first = CommandNode.createRoot(LiteralCommandArgument.literal(split.getFirst(), sourceClass));
 
@@ -93,7 +88,7 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
   }
 
   @Override
-  public void parseElement(final CommandNode node, final SourceElement element) {
+  public void parseElement(CommandNode node, SourceElement element) {
     try {
       switch (element) {
         case SourceRecord sourceRecord -> this.recordTransform.transformIfRequirement(node, sourceRecord);
@@ -109,7 +104,7 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
   }
 
   @Override
-  public void parseClass(final CommandNode node, final SourceClass sourceClass) throws MismatchedArgumentTypeException {
+  public void parseClass(CommandNode node, SourceClass sourceClass) throws MismatchedArgumentTypeException {
     if (sourceClass.isRecord()) {
       this.recordTransform.transform(node, sourceClass);
     } else {
@@ -118,7 +113,7 @@ public class CommandParserImpl implements CommandParser, ForwardingMessagerWrapp
   }
 
   @Override
-  public void parseClassOverflowAccess(final CommandNode node, final SourceClass sourceClass, final ExecuteAccess<?> access) throws MismatchedArgumentTypeException {
+  public void parseClassOverflowAccess(CommandNode node, SourceClass sourceClass, ExecuteAccess<?> access) throws MismatchedArgumentTypeException {
     if (sourceClass.isRecord()) {
       this.recordTransform.transformWithExecuteAccess(node, sourceClass, access);
     } else {

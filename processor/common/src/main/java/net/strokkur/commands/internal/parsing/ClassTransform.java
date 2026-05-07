@@ -35,7 +35,7 @@ sealed class ClassTransform implements NodeTransform<SourceClass>, ForwardingMes
   protected final CommandParser parser;
   protected final NodeUtils nodeUtils;
 
-  public ClassTransform(final CommandParser parser, final NodeUtils nodeUtils) {
+  ClassTransform(CommandParser parser, NodeUtils nodeUtils) {
     this.parser = parser;
     this.nodeUtils = nodeUtils;
   }
@@ -44,20 +44,20 @@ sealed class ClassTransform implements NodeTransform<SourceClass>, ForwardingMes
     return "ClassTransform";
   }
 
-  static void parseInnerElements(final CommandNode root, final SourceClass element, final CommandParser parser) throws MismatchedArgumentTypeException {
-    for (final SourceClass nestedClass : element.getNestedClasses()) {
+  static void parseInnerElements(CommandNode root, SourceClass element, CommandParser parser) throws MismatchedArgumentTypeException {
+    for (SourceClass nestedClass : element.getNestedClasses()) {
       parser.parseElement(root, nestedClass);
     }
-    for (final SourceField nestedField : element.getNestedFields()) {
+    for (SourceField nestedField : element.getNestedFields()) {
       parser.parseElement(root, nestedField);
     }
-    for (final SourceMethod nestedMethod : element.getNestedMethods()) {
+    for (SourceMethod nestedMethod : element.getNestedMethods()) {
       parser.parseElement(root, nestedMethod);
     }
   }
 
   @Override
-  public final void transform(final CommandNode parent, final SourceClass element) throws MismatchedArgumentTypeException {
+  public final void transform(CommandNode parent, SourceClass element) throws MismatchedArgumentTypeException {
     debug("> {}: parsing {}...", transformName(), element);
 
     final CommandNode node = parseRecordComponents(createSubcommandNode(parent, element), element);
@@ -75,11 +75,8 @@ sealed class ClassTransform implements NodeTransform<SourceClass>, ForwardingMes
     parseInnerElements(node, element, this.parser);
   }
 
-  public final void transformWithExecuteAccess(
-      final CommandNode parent,
-      final SourceClass element,
-      final ExecuteAccess<?> access
-  ) throws MismatchedArgumentTypeException {
+  public final void transformWithExecuteAccess(CommandNode parent, SourceClass element, ExecuteAccess<?> access)
+      throws MismatchedArgumentTypeException {
     debug("> {}: parsing {}...", transformName(), element);
 
     final CommandNode node = parseRecordComponents(createSubcommandNode(parent, element), element);
@@ -96,7 +93,7 @@ sealed class ClassTransform implements NodeTransform<SourceClass>, ForwardingMes
     parseInnerElements(node, element, this.parser);
   }
 
-  protected void addAccessAttribute(final CommandNode node, final ExecuteAccess<?> access) {
+  protected void addAccessAttribute(CommandNode node, ExecuteAccess<?> access) {
     node.editAttributeMutable(
         AttributeKey.ACCESS_STACK,
         existing -> existing.add(access),
@@ -104,12 +101,12 @@ sealed class ClassTransform implements NodeTransform<SourceClass>, ForwardingMes
     );
   }
 
-  protected CommandNode parseRecordComponents(final CommandNode parent, final SourceClass element) throws MismatchedArgumentTypeException {
+  protected CommandNode parseRecordComponents(CommandNode parent, SourceClass element) throws MismatchedArgumentTypeException {
     return parent;
   }
 
   @Override
-  public boolean requirement(final SourceClass element) {
+  public boolean requirement(SourceClass element) {
     return element.hasAnnotationInherited(Subcommand.class);
   }
 

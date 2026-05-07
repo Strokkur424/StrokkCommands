@@ -39,7 +39,7 @@ import java.util.Optional;
 
 public final class SourceTypeUtils {
 
-  public static SourceElement getSourceElement(final ProcessingEnvironment environment, final Element element) {
+  public static SourceElement getSourceElement(ProcessingEnvironment environment, Element element) {
     if (element.asType() instanceof DeclaredType declared) {
       return getSourceClassType(environment, declared);
     }
@@ -82,14 +82,14 @@ public final class SourceTypeUtils {
     throw new UnsupportedOperationException("Conversion for " + element.getKind() + " to SourceElement is not yet supported.");
   }
 
-  static SourceClass getSourceClassType(final ProcessingEnvironment environment, final DeclaredType declared) {
+  static SourceClass getSourceClassType(ProcessingEnvironment environment, DeclaredType declared) {
     if (declared.asElement().getKind() == ElementKind.RECORD) {
       return new SourceRecordImpl(environment, declared);
     }
     return new SourceClassImpl(environment, declared);
   }
 
-  static SourceType getSourceType(final ProcessingEnvironment environment, final TypeMirror type) {
+  static SourceType getSourceType(ProcessingEnvironment environment, TypeMirror type) {
     return switch (type.getKind()) {
       case BYTE, CHAR, BOOLEAN, INT, LONG, FLOAT, DOUBLE, SHORT -> new SourcePrimitiveImpl((PrimitiveType) type);
       case VOID -> new VoidSourceType();
@@ -101,10 +101,9 @@ public final class SourceTypeUtils {
   }
 
   @Nullable
-  static TypeMirror getAnnotationMirror(final Element element, final Class<? extends Annotation> annotationClass, final String fieldName) {
-    String annotationName = annotationClass.getName();
-
-    Optional<? extends AnnotationMirror> out = element.getAnnotationMirrors().stream()
+  static TypeMirror getAnnotationMirror(Element element, Class<? extends Annotation> annotationClass, String fieldName) {
+    final String annotationName = annotationClass.getName();
+    final Optional<? extends AnnotationMirror> out = element.getAnnotationMirrors().stream()
         .filter(mirror -> ((TypeElement) mirror.getAnnotationType().asElement()).getQualifiedName().contentEquals(annotationName))
         .findFirst();
 

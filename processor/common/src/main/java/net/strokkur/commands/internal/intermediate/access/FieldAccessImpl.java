@@ -21,12 +21,12 @@ import net.strokkur.commands.internal.abstraction.SourceField;
 
 final class FieldAccessImpl extends ExecuteAccessImpl<SourceField> implements FieldAccess {
 
-  public FieldAccessImpl(final SourceField element) {
+  FieldAccessImpl(SourceField element) {
     super(element);
   }
 
   @Override
   public String toString() {
-    return "FieldAccessImpl["+ element + ']';
+    return "FieldAccessImpl[" + element + ']';
   }
 }

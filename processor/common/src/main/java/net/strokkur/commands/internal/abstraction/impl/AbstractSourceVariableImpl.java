@@ -35,7 +35,7 @@ public abstract class AbstractSourceVariableImpl<E extends Element> implements S
   protected final SourceType type;
   protected final E element;
 
-  public AbstractSourceVariableImpl(final ProcessingEnvironment environment, final E element) {
+  public AbstractSourceVariableImpl(ProcessingEnvironment environment, E element) {
     this.environment = environment;
     this.element = element;
     this.type = SourceTypeUtils.getSourceType(this.environment, element.asType());
@@ -62,7 +62,7 @@ public abstract class AbstractSourceVariableImpl<E extends Element> implements S
     return this.element.getModifiers();
   }
 
-  public <T extends Annotation> @Nullable T getAnnotation(final Class<T> type) {
+  public <T extends Annotation> @Nullable T getAnnotation(Class<T> type) {
     return element.getAnnotation(type);
   }
 

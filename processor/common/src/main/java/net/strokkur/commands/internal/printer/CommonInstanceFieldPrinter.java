@@ -78,7 +78,7 @@ public class CommonInstanceFieldPrinter {
     }
 
     final Executable exec = node.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE);
-EXEC_NOT_NULL:
+    EXEC_NOT_NULL:
     if (exec != null) {
       final List<ExecuteAccess<?>> pathToUse = printer.getAccessStack();
 
@@ -94,7 +94,7 @@ EXEC_NOT_NULL:
       }
     }
 
-    for (final CommandNode child : node.children()) {
+    for (CommandNode child : node.children()) {
       out.addAll(collectAccessEntries(child));
     }
 
@@ -107,7 +107,7 @@ EXEC_NOT_NULL:
 
   private int printInstanceFields(CommandNode node) throws IOException {
     int printed = 0;
-    for (final AccessEntry collectAccessEntry : collectAccessEntries(node)) {
+    for (AccessEntry collectAccessEntry : collectAccessEntries(node)) {
       printed += printAccessInstance(collectAccessEntry);
     }
     return printed;
@@ -115,7 +115,7 @@ EXEC_NOT_NULL:
 
   private int printInjectedFields(CommandNode node) throws IOException {
     int printed = 0;
-    for (final AccessEntry collectAccessEntry : collectAccessEntries(node)) {
+    for (AccessEntry collectAccessEntry : collectAccessEntries(node)) {
       printed += printInjectedField(collectAccessEntry);
     }
     return printed;
@@ -205,16 +205,16 @@ EXEC_NOT_NULL:
   private String getCtorTypeParameters() {
     return hasCtorTypeParameters() ?
         '<' + String.join(", ", printer.getCommandInformation().sourceClass().getTypeAnnotations().stream()
-                                .map(SourceTypeAnnotation::getName)
-                                .toList()) + '>' :
+            .map(SourceTypeAnnotation::getName)
+            .toList()) + '>' :
         "";
   }
 
   private String getCtorParameters() {
     return String.join(", ", printer.getCommandInformation().constructor() instanceof SourceConstructor ctor ?
         ctor.getParameters().stream()
-        .map(this::getParameterName)
-        .toList() :
+            .map(this::getParameterName)
+            .toList() :
         Collections.emptyList()
     );
   }

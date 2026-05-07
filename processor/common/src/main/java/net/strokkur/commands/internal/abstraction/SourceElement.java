@@ -21,5 +21,6 @@ import java.util.Set;
 
 public interface SourceElement {
   String getName();
+
   Set<String> getImports();
 }

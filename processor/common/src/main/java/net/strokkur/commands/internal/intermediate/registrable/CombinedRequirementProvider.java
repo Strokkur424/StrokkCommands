@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public record CombinedRequirementProvider(List<RequirementProvider> providers) implements RequirementProvider {
-  public CombinedRequirementProvider(final List<RequirementProvider> providers) {
+  public CombinedRequirementProvider(List<RequirementProvider> providers) {
     this.providers = providers.stream()
         .flatMap(provider -> provider instanceof CombinedRequirementProvider(List<RequirementProvider> otherProviders)
             ? otherProviders.stream()
@@ -47,7 +47,7 @@ public record CombinedRequirementProvider(List<RequirementProvider> providers) i
   @Override
   public List<SourceClass> getSourceClasses() {
     final List<SourceClass> classes = new LinkedList<>();
-    for (final RequirementProvider provider : providers) {
+    for (RequirementProvider provider : providers) {
       classes.addAll(provider.getSourceClasses());
     }
     return Collections.unmodifiableList(classes);

@@ -31,13 +31,13 @@ import java.util.Optional;
 public class SourceParameterImpl extends AbstractSourceVariableImpl<VariableElement> implements SourceParameter {
   private final SourceMethod enclosed;
 
-  public SourceParameterImpl(final ProcessingEnvironment environment, final VariableElement element, final SourceMethod enclosed) {
+  public SourceParameterImpl(ProcessingEnvironment environment, VariableElement element, SourceMethod enclosed) {
     super(environment, element);
     this.enclosed = enclosed;
   }
 
   @Override
-  public @Nullable <T extends Annotation> SourceClass getAnnotationSourceClassField(final Class<T> type, final String fieldName) {
+  public @Nullable <T extends Annotation> SourceClass getAnnotationSourceClassField(Class<T> type, String fieldName) {
     return Optional.ofNullable(SourceTypeUtils.getAnnotationMirror(this.element, type, fieldName))
         .map(mirror -> new SourceClassImpl(this.environment, (DeclaredType) mirror))
         .orElse(null);

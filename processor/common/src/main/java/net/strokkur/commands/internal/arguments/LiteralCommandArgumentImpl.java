@@ -22,13 +22,11 @@ import net.strokkur.commands.internal.abstraction.SourceElement;
 import java.util.Objects;
 
 record LiteralCommandArgumentImpl(String literal, SourceElement element) implements LiteralCommandArgument {
-
   @Override
-  public boolean equals(final Object o) {
-    if (o == null || getClass() != o.getClass()) {
+  public boolean equals(Object o) {
+    if (!(o instanceof LiteralCommandArgumentImpl that)) {
       return false;
     }
-    final LiteralCommandArgumentImpl that = (LiteralCommandArgumentImpl) o;
     return Objects.equals(literal(), that.literal());
   }
 

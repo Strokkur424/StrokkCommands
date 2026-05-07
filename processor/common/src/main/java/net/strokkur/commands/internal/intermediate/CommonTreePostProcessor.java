@@ -29,7 +29,7 @@ public non-sealed abstract class CommonTreePostProcessor implements TreePostProc
     this.delegateMessager = delegateMessager;
   }
 
-  public final void applyDefaultExecutorPaths(final CommandNode node) {
+  public final void applyDefaultExecutorPaths(CommandNode node) {
     final DefaultExecutable defaultExecutable = node.getAttribute(AttributeKey.DEFAULT_EXECUTABLE);
 
     if (defaultExecutable == null) {
@@ -42,9 +42,9 @@ public non-sealed abstract class CommonTreePostProcessor implements TreePostProc
     );
   }
 
-  private void applyDefaultExecutorPathIfUnset(final CommandNode node, final DefaultExecutable def) {
+  private void applyDefaultExecutorPathIfUnset(CommandNode node, DefaultExecutable def) {
     final DefaultExecutable defaultExecutable = node.getAttributeOrSet(AttributeKey.DEFAULT_EXECUTABLE, def);
-    for (final CommandNode child : node.children()) {
+    for (CommandNode child : node.children()) {
       applyDefaultExecutorPathIfUnset(child, defaultExecutable);
     }
   }

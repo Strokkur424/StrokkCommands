@@ -17,6 +17,8 @@
  */
 package net.strokkur.commands.internal.arguments;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Objects;
 import java.util.Set;
 
@@ -35,13 +37,14 @@ public record BrigadierArgumentType(String initializer, String retriever, Set<St
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (o == null || getClass() != o.getClass()) {
+  public boolean equals(@Nullable Object o) {
+    if (!(o instanceof BrigadierArgumentType(String initializer1, String retriever1, Set<String> imports1))) {
       return false;
     }
 
-    BrigadierArgumentType that = (BrigadierArgumentType) o;
-    return Objects.equals(retriever(), that.retriever()) && Objects.equals(initializer(), that.initializer()) && Objects.equals(imports(), that.imports());
+    return Objects.equals(retriever(), retriever1)
+        && Objects.equals(initializer(), initializer1)
+        && Objects.equals(imports(), imports1);
   }
 
   @Override

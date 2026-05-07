@@ -38,16 +38,24 @@
     <!-- https://checkstyle.org/config_coding.html#FinalLocalVariable -->
     <module name="FinalLocalVariable">
       <property name="tokens" value="VARIABLE_DEF"/>
-      <property name="validateEnhancedForLoopVariable" value="true"/>
     </module>
 
     <!-- https://checkstyle.org/checks/coding/parameterassignment.html -->
     <module name="ParameterAssignment"/>
 
+    <!-- https://checkstyle.org/checks/coding/modifiedcontrolvariable.html -->
+    <module name="ModifiedControlVariable"/>
+
     <!-- This rule will flag an error if 'final' is used on a parameter -->
     <module name="MatchXpath">
-      <property name="query" value="//PARAMETER_DEF/MODIFIERS/LITERAL_FINAL"/>
-      <message key="matchxpath.match" value="Do not use 'final' on method parameters."/>
+      <property name="query" value="//PARAMETER_DEF/MODIFIERS[FINAL]"/>
+      <message key="matchxpath.match" value="Method parameters should never be declared final."/>
+    </module>
+
+    <!-- This rule will flag an error if 'final' is used on a for-each clause -->
+    <module name="MatchXpath">
+      <property name="query" value="//FOR_EACH_CLAUSE/VARIABLE_DEF/MODIFIERS[FINAL]"/>
+      <message key="matchxpath.match" value="Enhanced for-loop variables should never be declared final."/>
     </module>
 
     <!-- https://checkstyle.org/config_whitespace.html#GenericWhitespace -->

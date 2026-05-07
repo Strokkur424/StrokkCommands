@@ -30,7 +30,7 @@ public interface AnnotationsHolder extends SourceElement {
 
   List<SourceClass> getAllAnnotations();
 
-  default boolean hasAnnotationInherited(final Class<? extends Annotation> type) {
+  default boolean hasAnnotationInherited(Class<? extends Annotation> type) {
     return this.getAnnotationInheritedOptional(type).isPresent();
   }
 
@@ -38,17 +38,17 @@ public interface AnnotationsHolder extends SourceElement {
     throw new UnsupportedOperationException("This class (" + getClass().getSimpleName() + ") does not implement #getAnnotationSourceClassField");
   }
 
-  default <T extends Annotation> Optional<T> getAnnotationOptional(final Class<T> type) {
+  default <T extends Annotation> Optional<T> getAnnotationOptional(Class<T> type) {
     return Optional.ofNullable(getAnnotation(type));
   }
 
-  default <T extends Annotation> Optional<T> getAnnotationInheritedOptional(final Class<T> type) {
+  default <T extends Annotation> Optional<T> getAnnotationInheritedOptional(Class<T> type) {
     final T direct = this.getAnnotation(type);
     if (direct != null) {
       return Optional.of(direct);
     }
 
-    for (final SourceClass annotationClass : this.getAllAnnotations()) {
+    for (SourceClass annotationClass : this.getAllAnnotations()) {
       final T inherited = annotationClass.getAnnotation(type);
       if (inherited != null) {
         return Optional.of(inherited);
@@ -58,7 +58,7 @@ public interface AnnotationsHolder extends SourceElement {
     return Optional.empty();
   }
 
-  default <T extends Annotation> T getAnnotationInheritedElseThrow(final Class<T> type) throws NoSuchElementException {
+  default <T extends Annotation> T getAnnotationInheritedElseThrow(Class<T> type) throws NoSuchElementException {
     return getAnnotationInheritedOptional(type).orElseThrow(() -> new NoSuchElementException("No annotation of type " + type.getSimpleName() + " is present."));
   }
 }

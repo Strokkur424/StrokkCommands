@@ -23,11 +23,11 @@ import net.strokkur.commands.internal.abstraction.SourceField;
 
 public sealed interface ExecuteAccess<E extends SourceElement> permits ExecuteAccessImpl, FieldAccess, InstanceAccess {
 
-  static FieldAccess of(final SourceField field) {
+  static FieldAccess of(SourceField field) {
     return new FieldAccessImpl(field);
   }
 
-  static InstanceAccess of(final SourceClass type) {
+  static InstanceAccess of(SourceClass type) {
     return new InstanceAccessImpl(type);
   }
 

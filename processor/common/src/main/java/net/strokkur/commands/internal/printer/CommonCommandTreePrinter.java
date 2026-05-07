@@ -55,12 +55,12 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
   private final C commandInformation;
 
   public CommonCommandTreePrinter(
-      final int indent,
-      final @Nullable Writer writer,
-      final CommandNode node,
-      final C commandInformation,
-      final ProcessingEnvironment environment,
-      final PlatformUtils utils
+      int indent,
+      @Nullable Writer writer,
+      CommandNode node,
+      C commandInformation,
+      ProcessingEnvironment environment,
+      PlatformUtils utils
   ) {
     super(indent, writer);
     this.node = node;
@@ -91,7 +91,7 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
 
   protected abstract PrintParamsHolder getParamsHolder();
 
-  protected abstract void printRegisterMethod(final PrintParamsHolder holder) throws IOException;
+  protected abstract void printRegisterMethod(PrintParamsHolder holder) throws IOException;
 
   public @Nullable ExecutorWrapperProvider getExecutorWrapper() {
     return this.executorWrapper;
@@ -101,7 +101,7 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
     return this.executorWrapperAccessStack;
   }
 
-  public void updateExecutorWrapper(final @Nullable ExecutorWrapperProvider provider) {
+  public void updateExecutorWrapper(@Nullable ExecutorWrapperProvider provider) {
     this.executorWrapper = provider;
     this.executorWrapperAccessStack = new Stack<>();
     this.executorWrapperAccessStack.addAll(this.getAccessStack());
@@ -219,7 +219,7 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
     println("public static final String NAME = \"%s\";", node.argument().argumentName());
   }
 
-  private boolean printReflectionHelper(final CommandNode node) throws IOException {
+  private boolean printReflectionHelper(CommandNode node) throws IOException {
     if (Optional.ofNullable(node.getAttribute(AttributeKey.EXECUTOR_WRAPPER))
         .map(ExecutorWrapperProvider::wrapperType)
         .map(ExecutorWrapperProvider.WrapperType::withMethod)
@@ -236,7 +236,7 @@ public abstract class CommonCommandTreePrinter<C extends CommandInformation> ext
       return true;
     }
 
-    for (final CommandNode child : node.children()) {
+    for (CommandNode child : node.children()) {
       if (printReflectionHelper(child)) {
         return true;
       }

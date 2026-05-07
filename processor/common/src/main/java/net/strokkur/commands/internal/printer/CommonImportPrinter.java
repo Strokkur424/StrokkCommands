@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
 public abstract class CommonImportPrinter {
   protected final CommonCommandTreePrinter<?> printer;
 
-  public CommonImportPrinter(final CommonCommandTreePrinter<?> printer) {
+  public CommonImportPrinter(CommonCommandTreePrinter<?> printer) {
     this.printer = printer;
   }
 
@@ -107,7 +107,7 @@ public abstract class CommonImportPrinter {
     // noop
   }
 
-  private void gatherImports(final Set<String> imports, final CommandNode node) {
+  private void gatherImports(Set<String> imports, CommandNode node) {
     if (node.hasAttribute(AttributeKey.DEFAULT_EXECUTABLE)) {
       final Executable exec = node.getAttributeNotNull(AttributeKey.DEFAULT_EXECUTABLE);
       exec.parameterArguments().stream()
@@ -136,12 +136,12 @@ public abstract class CommonImportPrinter {
     if (printer.getCommandInformation().constructor() instanceof SourceConstructor ctor) {
       imports.addAll(ctor.getImports());
     }
-    for (final SourceTypeAnnotation typeParameter : printer.getCommandInformation().sourceClass().getTypeAnnotations()) {
+    for (SourceTypeAnnotation typeParameter : printer.getCommandInformation().sourceClass().getTypeAnnotations()) {
       imports.addAll(typeParameter.getImports());
     }
 
     if (node.hasAttribute(AttributeKey.ACCESS_STACK)) {
-      for (final ExecuteAccess<?> access : node.getAttributeNotNull(AttributeKey.ACCESS_STACK)) {
+      for (ExecuteAccess<?> access : node.getAttributeNotNull(AttributeKey.ACCESS_STACK)) {
         if (access instanceof InstanceAccess instanceAccess) {
           imports.addAll(instanceAccess.getElement().getImports());
         } else if (access instanceof FieldAccess fieldAccess) {
@@ -170,7 +170,7 @@ public abstract class CommonImportPrinter {
 
     gatherAdditionalNodeImports(imports, node);
 
-    for (final CommandNode child : node.children()) {
+    for (CommandNode child : node.children()) {
       gatherImports(imports, child);
     }
 

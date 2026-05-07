@@ -80,10 +80,10 @@ public abstract class AbstractPrinter implements Printable {
       throw new IOException("No writer set.");
     }
 
-    message = message.stripTrailing();
-    if (!message.isBlank()) {
+    final String stripped = message.stripTrailing();
+    if (!stripped.isBlank()) {
       writer.append(indentString);
-      writer.append(message.replace("{}", "%s").formatted(format));
+      writer.append(stripped.replace("{}", "%s").formatted(format));
     }
     writer.append("\n");
   }
@@ -103,7 +103,7 @@ public abstract class AbstractPrinter implements Printable {
       throw new IOException("No writer set.");
     }
 
-    String parsedBlock = block.replace("{}", "%s").formatted(format);
+    final String parsedBlock = block.replace("{}", "%s").formatted(format);
     for (@Language("JAVA") String line : parsedBlock.split("\n")) {
       println(line);
     }

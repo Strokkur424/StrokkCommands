@@ -22,7 +22,7 @@ import net.strokkur.commands.internal.abstraction.SourceMethod;
 /// Holds information about an executor wrapper.
 ///
 /// @param wrapperMethod method implementing the wrapper
-/// @param wrapperType the type of wrapper (Command return vs int return)
+/// @param wrapperType   the type of wrapper (Command return vs int return)
 public record ExecutorWrapperProvider(
     SourceMethod wrapperMethod,
     WrapperType wrapperType

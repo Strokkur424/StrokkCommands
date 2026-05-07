@@ -27,7 +27,7 @@ import net.strokkur.commands.internal.exceptions.ProviderAlreadyRegisteredExcept
 import net.strokkur.commands.internal.util.MessagerWrapper;
 
 public abstract class FunctionalInterfaceRegistry<T> extends RegistrableRegistry<T> {
-  public FunctionalInterfaceRegistry(final String platformType) {
+  public FunctionalInterfaceRegistry(String platformType) {
     super(platformType);
   }
 
@@ -47,7 +47,7 @@ public abstract class FunctionalInterfaceRegistry<T> extends RegistrableRegistry
 
   protected abstract T createInstance(SourceClass source);
 
-  public final boolean tryRegisterProvider(final MessagerWrapper messager, final SourceClass annotationClass, final SourceElement sourceElement)
+  public final boolean tryRegisterProvider(MessagerWrapper messager, SourceClass annotationClass, SourceElement sourceElement)
       throws ProviderAlreadyRegisteredException {
     return switch (sourceElement) {
       case SourceMethod method -> {

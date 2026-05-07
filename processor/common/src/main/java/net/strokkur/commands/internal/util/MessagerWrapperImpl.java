@@ -24,12 +24,12 @@ import javax.tools.Diagnostic;
 record MessagerWrapperImpl(Messager messager) implements MessagerWrapper {
 
   @Override
-  public void print(final Diagnostic.Kind kind, final String format, final Object... arguments) {
+  public void print(Diagnostic.Kind kind, String format, Object... arguments) {
     messager.printMessage(kind, format.replaceAll("\\{}", "%s").formatted(arguments));
   }
 
   @Override
-  public void printElement(final Diagnostic.Kind kind, final String format, final Element element, final Object... arguments) {
+  public void printElement(Diagnostic.Kind kind, String format, Element element, Object... arguments) {
     messager.printMessage(kind, format.replaceAll("\\{}", "%s").formatted(arguments), element);
   }
 }

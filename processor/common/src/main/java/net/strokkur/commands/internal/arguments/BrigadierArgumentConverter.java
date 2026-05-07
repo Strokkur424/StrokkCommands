@@ -17,12 +17,12 @@
  */
 package net.strokkur.commands.internal.arguments;
 
-import net.strokkur.commands.arguments.StringArgType;
 import net.strokkur.commands.arguments.DoubleArg;
 import net.strokkur.commands.arguments.FloatArg;
 import net.strokkur.commands.arguments.IntArg;
 import net.strokkur.commands.arguments.LongArg;
 import net.strokkur.commands.arguments.StringArg;
+import net.strokkur.commands.arguments.StringArgType;
 import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.exceptions.ConversionException;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
@@ -41,7 +41,7 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
   private final MessagerWrapper messagerWrapper;
   protected final Map<String, BiFunction<SourceVariable, String, BrigadierArgumentType>> conversionMap;
 
-  public BrigadierArgumentConverter(final MessagerWrapper messagerWrapper) {
+  public BrigadierArgumentConverter(MessagerWrapper messagerWrapper) {
     this.messagerWrapper = messagerWrapper;
     this.conversionMap = new TreeMap<>();
     initializeArguments();
@@ -95,37 +95,37 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
     ), "java.lang.String");
   }
 
-  protected final void putFor(final BiFunction<SourceVariable, String, BrigadierArgumentType> value, final String... keys) {
+  protected final void putFor(BiFunction<SourceVariable, String, BrigadierArgumentType> value, String... keys) {
     for (String key : keys) {
       conversionMap.put(key, value);
     }
   }
 
   protected final <T extends Annotation> BrigadierArgumentType annotatedOr(
-      final SourceVariable variable,
-      final Class<T> annotation,
-      final Function<T, String> withAnnotation,
-      final String withoutAnnotation,
-      final String retrieval,
-      final String singleImport
+      SourceVariable variable,
+      Class<T> annotation,
+      Function<T, String> withAnnotation,
+      String withoutAnnotation,
+      String retrieval,
+      String singleImport
   ) {
     return annotatedOr(variable, annotation, withAnnotation, withoutAnnotation, retrieval, Set.of(singleImport));
   }
 
   protected final <T extends Annotation> BrigadierArgumentType annotatedOr(
-      final SourceVariable variable,
-      final Class<T> annotation,
-      final Function<T, String> withAnnotation,
-      final String withoutAnnotation,
-      final String retrieval,
-      final Set<String> imports
+      SourceVariable variable,
+      Class<T> annotation,
+      Function<T, String> withAnnotation,
+      String withoutAnnotation,
+      String retrieval,
+      Set<String> imports
   ) {
     return variable.getAnnotationOptional(annotation)
         .map(annotated -> BrigadierArgumentType.of(withAnnotation.apply(annotated), retrieval, imports))
         .orElseGet(() -> BrigadierArgumentType.of(withoutAnnotation, retrieval, imports));
   }
 
-  public final BrigadierArgumentType getAsArgumentType(final SourceVariable parameter) throws ConversionException {
+  public final BrigadierArgumentType getAsArgumentType(SourceVariable parameter) throws ConversionException {
     final String argumentName = parameter.getName();
     final String type = parameter.getType().getFullyQualifiedAndTypedName();
 

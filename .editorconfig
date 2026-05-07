@@ -11,3 +11,4 @@ ij_continuation_indent_size = 4
 ij_java_if_brace_force = always
 ij_java_align_multiline_parameters = false
 ij_java_align_multiline_chained_methods = false
+ij_any_label_indent_absolute = false

@@ -27,12 +27,12 @@ import java.util.List;
 
 public class SuggestionsRegistry extends FunctionalInterfaceRegistry<SuggestionProvider> {
 
-  public SuggestionsRegistry(final String platformType) {
+  public SuggestionsRegistry(String platformType) {
     super(platformType);
   }
 
   @Override
-  protected boolean inlineMethodPredicate(final SourceMethod source) {
+  protected boolean inlineMethodPredicate(SourceMethod source) {
     final List<SourceParameter> params = source.getParameters();
     return source.getReturnType().getFullyQualifiedAndTypedName().equals(Classes.COMPLETABLE_FUTURE + "<" + Classes.SUGGESTIONS + ">")
         && params.size() == 2
@@ -41,38 +41,38 @@ public class SuggestionsRegistry extends FunctionalInterfaceRegistry<SuggestionP
   }
 
   @Override
-  protected boolean providerMethodPredicate(final SourceMethod source) {
+  protected boolean providerMethodPredicate(SourceMethod source) {
     return source.getReturnType().getFullyQualifiedAndTypedName().equals(Classes.SUGGESTION_PROVIDER + "<" + getPlatformType() + ">")
         && source.getParameters().isEmpty();
   }
 
   @Override
-  protected boolean instancePredicate(final SourceClass source) {
+  protected boolean instancePredicate(SourceClass source) {
     return source.implementsInterface(Classes.SUGGESTION_PROVIDER + "<" + getPlatformType() + ">");
   }
 
   @Override
-  protected boolean fieldPredicate(final SourceField source) {
+  protected boolean fieldPredicate(SourceField source) {
     return source.getType().getFullyQualifiedAndTypedName().equals(Classes.SUGGESTION_PROVIDER + "<" + getPlatformType() + ">");
   }
 
   @Override
-  protected SuggestionProvider createInline(final SourceClass enclosed, final SourceMethod method) {
+  protected SuggestionProvider createInline(SourceClass enclosed, SourceMethod method) {
     return new MethodImpl(enclosed, method, true);
   }
 
   @Override
-  protected SuggestionProvider createProvider(final SourceClass enclosed, final SourceMethod method) {
+  protected SuggestionProvider createProvider(SourceClass enclosed, SourceMethod method) {
     return new MethodImpl(enclosed, method, false);
   }
 
   @Override
-  protected SuggestionProvider createField(final SourceClass enclosed, final SourceField field) {
+  protected SuggestionProvider createField(SourceClass enclosed, SourceField field) {
     return new FieldImpl(enclosed, field);
   }
 
   @Override
-  protected SuggestionProvider createInstance(final SourceClass source) {
+  protected SuggestionProvider createInstance(SourceClass source) {
     return new InstanceImpl(source);
   }
 }

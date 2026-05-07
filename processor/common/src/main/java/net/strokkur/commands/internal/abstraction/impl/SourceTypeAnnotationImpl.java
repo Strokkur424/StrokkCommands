@@ -38,7 +38,7 @@ public class SourceTypeAnnotationImpl implements SourceTypeAnnotation {
   private final TypeParameterElement element;
   private @Nullable Set<String> imports = null;
 
-  public SourceTypeAnnotationImpl(final ProcessingEnvironment environment, final TypeParameterElement element) {
+  public SourceTypeAnnotationImpl(ProcessingEnvironment environment, TypeParameterElement element) {
     this.environment = environment;
     this.element = element;
   }
@@ -62,32 +62,32 @@ public class SourceTypeAnnotationImpl implements SourceTypeAnnotation {
     this.imports = new TreeSet<>();
     final TypeVisitor<Void, @Nullable Void> visitor = new TypeKindVisitor14<>() {
       @Override
-      public Void visitDeclared(final DeclaredType t, final Void unused) {
+      public Void visitDeclared(DeclaredType t, @Nullable Void unused) {
         imports.addAll(new SourceClassImpl(environment, t).getImports());
-        for (final TypeMirror typeArg : t.getTypeArguments()) {
+        for (TypeMirror typeArg : t.getTypeArguments()) {
           typeArg.accept(this, unused);
         }
         return super.DEFAULT_VALUE;
       }
 
       @Override
-      public Void visitIntersection(final IntersectionType t, final Void unused) {
-        for (final TypeMirror type : t.getBounds()) {
+      public Void visitIntersection(IntersectionType t, Void unused) {
+        for (TypeMirror type : t.getBounds()) {
           type.accept(this, unused);
         }
         return super.DEFAULT_VALUE;
       }
 
       @Override
-      public Void visitUnion(final UnionType t, final Void unused) {
-        for (final TypeMirror type : t.getAlternatives()) {
+      public Void visitUnion(UnionType t, Void unused) {
+        for (TypeMirror type : t.getAlternatives()) {
           type.accept(this, unused);
         }
         return super.DEFAULT_VALUE;
       }
 
       @Override
-      public Void visitTypeVariable(final TypeVariable t, final Void unused) {
+      public Void visitTypeVariable(TypeVariable t, Void unused) {
         t.getUpperBound().accept(this, unused);
         t.getLowerBound().accept(this, unused);
         return super.DEFAULT_VALUE;

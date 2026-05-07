@@ -30,7 +30,7 @@ import net.strokkur.commands.internal.util.MessagerWrapper;
 import java.util.List;
 
 public class ExecutorWrapperRegistry extends RegistrableRegistry<ExecutorWrapperProvider> {
-  public ExecutorWrapperRegistry(final String platformType) {
+  public ExecutorWrapperRegistry(String platformType) {
     super(platformType);
   }
 
@@ -38,9 +38,9 @@ public class ExecutorWrapperRegistry extends RegistrableRegistry<ExecutorWrapper
   /// - `Command<S> wrapper(Command<S>, Method)`
   @Override
   public boolean tryRegisterProvider(
-      final MessagerWrapper messager,
-      final SourceClass annotationClass,
-      final SourceElement sourceElement
+      MessagerWrapper messager,
+      SourceClass annotationClass,
+      SourceElement sourceElement
   ) throws ProviderAlreadyRegisteredException {
     if (!(sourceElement instanceof SourceMethod sourceMethod)
         || sourceMethod.hasAnnotationInherited(Executes.class)

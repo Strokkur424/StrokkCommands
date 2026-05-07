@@ -30,7 +30,7 @@ public class RequiredCommandArgumentImpl implements RequiredCommandArgument, Att
   private final SourceElement element;
   private final Map<String, Object> attributeMap = new TreeMap<>();
 
-  public RequiredCommandArgumentImpl(final BrigadierArgumentType argumentType, final String name, final SourceElement element) {
+  public RequiredCommandArgumentImpl(BrigadierArgumentType argumentType, String name, SourceElement element) {
     this.argumentType = argumentType;
     this.name = name;
     this.element = element;
@@ -57,11 +57,10 @@ public class RequiredCommandArgumentImpl implements RequiredCommandArgument, Att
   }
 
   @Override
-  public boolean equals(final Object o) {
-    if (o == null || getClass() != o.getClass()) {
+  public boolean equals(Object o) {
+    if (!(o instanceof RequiredCommandArgumentImpl that)) {
       return false;
     }
-    final RequiredCommandArgumentImpl that = (RequiredCommandArgumentImpl) o;
     return Objects.equals(argumentType, that.argumentType) && Objects.equals(name, that.name);
   }
 

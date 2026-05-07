@@ -33,7 +33,7 @@ import java.util.List;
 
 public final class DefaultExecutesTransform extends ExecutesTransform {
 
-  public DefaultExecutesTransform(final CommandParser parser, final NodeUtils nodeUtils) {
+  public DefaultExecutesTransform(CommandParser parser, NodeUtils nodeUtils) {
     super(parser, nodeUtils);
   }
 
@@ -43,24 +43,21 @@ public final class DefaultExecutesTransform extends ExecutesTransform {
   }
 
   @Override
-  protected CommandNode createThisPath(final CommandNode parent, final SourceMethod element) throws MismatchedArgumentTypeException {
+  protected CommandNode createThisPath(CommandNode parent, SourceMethod element) throws MismatchedArgumentTypeException {
     final CommandNode out = createLiteralSequence(parent, element, DefaultExecutes.class, DefaultExecutes::value);
     return out == null ? parent : out;
   }
 
   @Override
-  protected void populatePath(
-      final CommandNode node,
-      final SourceMethod method,
-      final List<ParameterType> args
-  ) throws UnknownSenderException, IllegalReturnTypeException {
+  protected void populatePath(CommandNode node, SourceMethod method, List<ParameterType> args)
+      throws UnknownSenderException, IllegalReturnTypeException {
     final DefaultExecutable executable = new DefaultExecutableImpl(method, args);
     node.setAttribute(AttributeKey.DEFAULT_EXECUTABLE, executable);
     nodeUtils().platformUtils().populateExecutesNode(executable, node, args);
   }
 
   @Override
-  public boolean requirement(final SourceMethod element) {
+  public boolean requirement(SourceMethod element) {
     return element.hasAnnotationInherited(DefaultExecutes.class);
   }
 }

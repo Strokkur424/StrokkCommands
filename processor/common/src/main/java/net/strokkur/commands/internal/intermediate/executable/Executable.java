@@ -33,7 +33,7 @@ public interface Executable extends Parameterizable, Attributable {
     INT,
     VOID;
 
-    public static ReturnType getType(final SourceType type) throws IllegalReturnTypeException {
+    public static ReturnType getType(SourceType type) throws IllegalReturnTypeException {
       return switch (type) {
         case VoidSourceType ignored -> ReturnType.VOID;
         case SourcePrimitive primitive -> {

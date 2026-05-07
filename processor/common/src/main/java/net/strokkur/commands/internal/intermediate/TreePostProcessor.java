@@ -21,5 +21,5 @@ import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 
 public sealed interface TreePostProcessor extends ForwardingMessagerWrapper permits CommonTreePostProcessor {
-  void cleanupPath(final CommandNode root);
+  void cleanupPath(CommandNode root);
 }

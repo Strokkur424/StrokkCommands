@@ -33,7 +33,7 @@ import java.util.function.Consumer;
 /// Represents a single node in a command tree.
 public interface CommandNode extends Attributable {
 
-  static CommandNode createRoot(final LiteralCommandArgument name) {
+  static CommandNode createRoot(LiteralCommandArgument name) {
     return new CommandNodeImpl(null, name);
   }
 
@@ -49,34 +49,34 @@ public interface CommandNode extends Attributable {
   Collection<CommandNode> children();
 
   /// Executes the action for each node in the tree, starting with this node.
-  default void forEach(final Consumer<CommandNode> action) {
+  default void forEach(Consumer<CommandNode> action) {
     action.accept(this);
-    for (final CommandNode child : this.children()) {
+    for (CommandNode child : this.children()) {
       child.forEach(action);
     }
   }
 
   /// Executes the action for each node in the tree, starting with the
   /// nodes deepest in the tree.
-  default void forEachDepthFirst(final Consumer<CommandNode> action) {
-    for (final CommandNode child : this.children()) {
+  default void forEachDepthFirst(Consumer<CommandNode> action) {
+    for (CommandNode child : this.children()) {
       child.forEachDepthFirst(action);
     }
     action.accept(this);
   }
 
   /// Executes the action for each node in the tree, starting with this node.
-  default void forEachIo(final IOExceptionIgnoringConsumer<CommandNode> action) throws IOException {
+  default void forEachIo(IOExceptionIgnoringConsumer<CommandNode> action) throws IOException {
     action.accept(this);
-    for (final CommandNode child : this.children()) {
+    for (CommandNode child : this.children()) {
       child.forEachIo(action);
     }
   }
 
   /// Executes the action for each node in the tree, starting with the
   /// nodes deepest in the tree.
-  default void forEachDepthFirstIo(final IOExceptionIgnoringConsumer<CommandNode> action) throws IOException {
-    for (final CommandNode child : this.children()) {
+  default void forEachDepthFirstIo(IOExceptionIgnoringConsumer<CommandNode> action) throws IOException {
+    for (CommandNode child : this.children()) {
       child.forEachIo(action);
     }
     action.accept(this);
@@ -90,9 +90,9 @@ public interface CommandNode extends Attributable {
   /// Insert multiple arguments linearly after each other.
   ///
   /// @return the last node
-  default CommandNode addChildren(final List<CommandArgument> arguments) throws MismatchedArgumentTypeException {
+  default CommandNode addChildren(List<CommandArgument> arguments) throws MismatchedArgumentTypeException {
     CommandNode node = this;
-    for (final CommandArgument argument : arguments) {
+    for (CommandArgument argument : arguments) {
       node = node.addChild(argument);
     }
     return node;

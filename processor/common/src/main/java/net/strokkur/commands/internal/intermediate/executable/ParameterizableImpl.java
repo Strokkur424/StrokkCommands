@@ -17,8 +17,6 @@
  */
 package net.strokkur.commands.internal.intermediate.executable;
 
-import net.strokkur.commands.internal.arguments.CommandArgument;
-
 import java.util.List;
 
 public record ParameterizableImpl(List<ParameterType> parameterArguments) implements Parameterizable {
