@@ -27,7 +27,7 @@ class ConstructorPropagation {
   private final TestPluginVelocity plugin;
   private final ProxyServer server;
 
-  public ConstructorPropagation(final TestPluginVelocity plugin, final ProxyServer server) {
+  ConstructorPropagation(TestPluginVelocity plugin, ProxyServer server) {
     this.plugin = plugin;
     this.server = server;
   }

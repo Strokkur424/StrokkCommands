@@ -18,6 +18,8 @@
 package net.strokkur.testplugin.externalsubcommands;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.tree.LiteralCommandNode;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
@@ -29,7 +31,7 @@ class FieldsWithRecords {
 
   static {
     // Expectation:
-    var built = Commands.literal("recordfields")
+    final LiteralCommandNode<CommandSourceStack> built = Commands.literal("recordfields")
         .then(Commands.argument("wordArg", StringArgumentType.word())
             .executes(ctx -> {
               final SomeRecord executor = new SomeRecord(

@@ -67,7 +67,7 @@ class NestedInjectionCommand {
   static class SomeCommonClass {
     private final String str;
 
-    public SomeCommonClass(final String str) {
+    SomeCommonClass(String str) {
       this.str = str;
     }
 

@@ -63,6 +63,12 @@
       <message key="matchxpath.match" value="Enhanced for-loop variables should never be declared final."/>
     </module>
 
+    <!-- Disallow the use of `var` in code  -->
+    <module name="IllegalType">
+      <property name="illegalClassNames" value="var"/>
+      <message key="illegal.type" value="Usage of 'var' is disallowed. Use explicit types instead."/>
+    </module>
+
     <!-- https://checkstyle.org/config_whitespace.html#GenericWhitespace -->
     <module name="GenericWhitespace"/>
 

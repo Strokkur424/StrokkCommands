@@ -17,6 +17,8 @@
  */
 package net.strokkur.testplugin.externalsubcommands;
 
+import com.mojang.brigadier.tree.LiteralCommandNode;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
@@ -32,7 +34,7 @@ class NestedFields {
     instance.firstNesting = new FirstNesting();
     instance.firstNesting.secondNesting = new SecondNesting();
 
-    var built = Commands.literal("nestedfields")
+    final LiteralCommandNode<CommandSourceStack> built = Commands.literal("nestedfields")
         .then(Commands.literal("first")
             .then(Commands.literal("second")
                 .executes(ctx -> {

@@ -17,6 +17,8 @@
  */
 package net.strokkur.testplugin.externalsubcommands;
 
+import com.mojang.brigadier.tree.LiteralCommandNode;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
@@ -32,7 +34,7 @@ class InnerCommandNested {
     final Nested instanceNested = instance.new Nested();
     final MyNestedClass instanceNestedMyNestedClass = instanceNested.myNestedClass;
 
-    var built = Commands.literal("innercommandnested")
+    final LiteralCommandNode<CommandSourceStack> built = Commands.literal("innercommandnested")
         .then(Commands.literal("nested")
             .executes(ctx -> {
               instanceNestedMyNestedClass.execute(

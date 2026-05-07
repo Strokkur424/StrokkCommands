@@ -26,7 +26,7 @@ import org.bukkit.command.CommandSender;
 class ExternalWithConstructorInit {
   final @Subcommand MySubcommand mySub;
 
-  ExternalWithConstructorInit(final String value) {
+  ExternalWithConstructorInit(String value) {
     this.mySub = new MySubcommand(value);
   }
 }
@@ -34,12 +34,12 @@ class ExternalWithConstructorInit {
 class MySubcommand {
   private final String value;
 
-  MySubcommand(final String value) {
+  MySubcommand(String value) {
     this.value = value;
   }
 
   @Executes
-  void execute(final CommandSender sender) {
+  void execute(CommandSender sender) {
     sender.sendPlainMessage(value);
   }
 }
