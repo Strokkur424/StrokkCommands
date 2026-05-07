@@ -37,7 +37,8 @@
       <property name="allowMultipleEmptyLinesInsideClassMembers" value="false"/>
       <property name="allowNoEmptyLineBetweenFields" value="true"/>
       <!-- remove PACKAGE_DEF, temporarily remove COMPACT_CTOR_DEF, RECORD_DEF -->
-      <property name="tokens" value="CLASS_DEF, CTOR_DEF, ENUM_DEF, IMPORT, INSTANCE_INIT, INTERFACE_DEF, METHOD_DEF, STATIC_IMPORT, STATIC_INIT, VARIABLE_DEF"/>
+      <property name="tokens"
+                value="CLASS_DEF, CTOR_DEF, ENUM_DEF, IMPORT, INSTANCE_INIT, INTERFACE_DEF, METHOD_DEF, STATIC_IMPORT, STATIC_INIT, VARIABLE_DEF"/>
     </module>
 
     <!-- https://checkstyle.org/config_coding.html#FinalLocalVariable -->
@@ -96,7 +97,8 @@
     <!-- https://checkstyle.org/config_whitespace.html#NoWhitespaceBefore -->
     <module name="NoWhitespaceBefore">
       <property name="allowLineBreaks" value="true"/>
-      <property name="tokens" value="COMMA, DOT, LABELED_STAT, METHOD_REF, POST_DEC, POST_INC, SEMI"/> <!-- remove ELLIPSIS -->
+      <property name="tokens"
+                value="COMMA, DOT, LABELED_STAT, METHOD_REF, POST_DEC, POST_INC, SEMI"/> <!-- remove ELLIPSIS -->
     </module>
 
     <!-- https://checkstyle.org/config_coding.html#OneStatementPerLine -->
@@ -105,9 +107,23 @@
     <!-- https://checkstyle.org/config_imports.html#RedundantImport -->
     <module name="RedundantImport"/>
 
+    <!-- https://checkstyle.org/checks/imports/importorder.html -->
+    <module name="ImportOrder">
+      <property name="groups" value="*,javax,java"/>
+      <property name="ordered" value="true"/>
+      <property name="separated" value="true"/>
+      <property name="option" value="bottom"/>
+      <property name="sortStaticImportsAlphabetically" value="true"/>
+    </module>
+    <module name="SuppressionXpathSingleFilter">
+      <property name="checks" value="ImportOrder"/>
+      <property name="message" value="^'java\..*'.*"/>
+    </module>
+
     <!-- https://checkstyle.org/config_modifier.html#RedundantModifier -->
     <module name="RedundantModifier">
-      <property name="tokens" value="ANNOTATION_FIELD_DEF, CLASS_DEF, CTOR_DEF, ENUM_DEF, INTERFACE_DEF, VARIABLE_DEF"/> <!-- remove METHOD_DEF and RESOURCE -->
+      <property name="tokens"
+                value="ANNOTATION_FIELD_DEF, CLASS_DEF, CTOR_DEF, ENUM_DEF, INTERFACE_DEF, VARIABLE_DEF"/> <!-- remove METHOD_DEF and RESOURCE -->
     </module>
 
     <!-- https://checkstyle.org/config_imports.html#UnusedImports -->
