@@ -11,15 +11,17 @@ plugins {
 
 rootProject.name = "StrokkCommands"
 
-include("annotations-common-permission")
-
-sequenceOf("common", "paper", "velocity").forEach {
-  include("processor-$it")
-  include("annotations-$it")
+fun importProjectsIn(folder: File) {
+  val name = folder.name;
+  rootDir.resolve(name).listFiles { it.isDirectory }?.forEach {
+    include(":${name}-${it.name}")
+    project(":${name}-${it.name}").projectDir = it
+  }
 }
 
+importProjectsIn(rootDir.resolve("annotations"))
+importProjectsIn(rootDir.resolve("processor"))
+
 if (System.getenv("SKIP_TESTS") == null) {
-  sequenceOf("paper", "velocity").forEach {
-    include("test-plugin-$it")
-  }
+  importProjectsIn(rootDir.resolve("test-plugin"))
 }
