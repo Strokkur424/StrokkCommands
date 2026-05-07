@@ -23,12 +23,12 @@ import net.strokkur.commands.internal.printer.CommonInstanceFieldPrinter;
 import net.strokkur.commands.internal.velocity.util.VelocityClasses;
 
 final class VelocityInstanceFieldPrinter extends CommonInstanceFieldPrinter {
-  public VelocityInstanceFieldPrinter(final CommonCommandTreePrinter<?> printer) {
+  VelocityInstanceFieldPrinter(CommonCommandTreePrinter<?> printer) {
     super(printer);
   }
 
   @Override
-  public String getParameterName(final SourceParameter parameter) {
+  public String getParameterName(SourceParameter parameter) {
     if (parameter.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)) {
       return "server";
     }

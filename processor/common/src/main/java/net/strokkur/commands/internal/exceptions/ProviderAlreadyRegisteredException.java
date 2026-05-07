@@ -22,7 +22,7 @@ import net.strokkur.commands.internal.abstraction.SourceClass;
 public class ProviderAlreadyRegisteredException extends Exception {
   private final SourceClass annotationClass;
 
-  public ProviderAlreadyRegisteredException(final SourceClass annotation) {
+  public ProviderAlreadyRegisteredException(SourceClass annotation) {
     super("The annotation @" + annotation.getSourceName() + " already has a registered provider!");
     this.annotationClass = annotation;
   }

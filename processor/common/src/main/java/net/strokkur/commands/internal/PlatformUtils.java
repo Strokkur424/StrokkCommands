@@ -27,11 +27,11 @@ import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import java.util.List;
 
 public interface PlatformUtils {
-  default void populateExecutesNode(final Executable executable, final CommandNode node, final List<ParameterType> parameters) throws UnknownSenderException {
+  default void populateExecutesNode(Executable executable, CommandNode node, List<ParameterType> parameters) throws UnknownSenderException {
     // noop
   }
 
-  default boolean mayParameterBeArgument(final SourceVariable param) {
+  default boolean mayParameterBeArgument(SourceVariable param) {
     return true;
   }
 

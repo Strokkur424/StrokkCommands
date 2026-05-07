@@ -55,7 +55,7 @@ public abstract class CommonTreePrinter {
 
   private int multiLiteralStackPosition = 0;
 
-  public CommonTreePrinter(final CommonCommandTreePrinter<?> printer) {
+  public CommonTreePrinter(CommonCommandTreePrinter<?> printer) {
     this.printer = printer;
   }
 
@@ -63,7 +63,7 @@ public abstract class CommonTreePrinter {
     return this.multiLiteralStack.elementAt(this.multiLiteralStackPosition++);
   }
 
-  public final void pushLiteral(final String literal) {
+  public final void pushLiteral(String literal) {
     this.multiLiteralStack.push(literal);
   }
 
@@ -75,15 +75,15 @@ public abstract class CommonTreePrinter {
     this.multiLiteralStackPosition--;
   }
 
-  protected abstract void prefixPrintExecutableInner(final CommandNode node, final Executable executable) throws IOException;
+  protected abstract void prefixPrintExecutableInner(CommandNode node, Executable executable) throws IOException;
 
   protected abstract String handleParameter(SourceVariable parameter) throws IOException;
 
-  public void printNode(final CommandNode node) throws IOException {
+  public void printNode(CommandNode node) throws IOException {
     printNode(node, false);
   }
 
-  private void printNode(final CommandNode root, boolean isNested) throws IOException {
+  private void printNode(CommandNode root, boolean isNested) throws IOException {
     printForArguments(root, initializer -> {
       if (isNested) {
         printer.println();
@@ -118,7 +118,7 @@ public abstract class CommonTreePrinter {
         printExecutableInner(root, executable);
       }
 
-      for (final CommandNode node : root.children()) {
+      for (CommandNode node : root.children()) {
         printNode(node, true);
       }
 
@@ -130,7 +130,7 @@ public abstract class CommonTreePrinter {
     }, isNested);
   }
 
-  private void printExecutableInner(final CommandNode node, final Executable executable) throws IOException {
+  private void printExecutableInner(CommandNode node, Executable executable) throws IOException {
     printer.println();
 
     final ExecutorWrapperProvider wrapper = node.getAttributeOr(AttributeKey.EXECUTOR_WRAPPER, printer.getExecutorWrapper());
@@ -141,7 +141,7 @@ public abstract class CommonTreePrinter {
     }
   }
 
-  private void printExecutableInnerNoWrapper(final CommandNode node, final Executable executable) throws IOException {
+  private void printExecutableInnerNoWrapper(CommandNode node, Executable executable) throws IOException {
     printer.println(".executes(ctx -> {");
     printer.incrementIndent();
     prefixPrintExecutableInner(node, executable);
@@ -151,7 +151,7 @@ public abstract class CommonTreePrinter {
     printer.printIndented("})");
   }
 
-  private void printExecutableInnerWithWrapper(final CommandNode node, final Executable executable, final ExecutorWrapperProvider wrapper) throws IOException {
+  private void printExecutableInnerWithWrapper(CommandNode node, Executable executable, ExecutorWrapperProvider wrapper) throws IOException {
     printer.println(".executes(%s(ctx -> {", getWrapperMethodCall(wrapper));
     printer.incrementIndent();
     prefixPrintExecutableInner(node, executable);
@@ -162,10 +162,10 @@ public abstract class CommonTreePrinter {
     if (wrapper.wrapperType().withMethod()) {
       final List<SourceParameter> params = executable.executesMethod().getParameters();
       final String parameterTypesString = params.isEmpty() ? "" : ", " + String.join(", ", executable.executesMethod().getParameters().stream()
-                                                                                           .map(SourceParameter::getType)
-                                                                                           .map(SourceType::getSourceName)
-                                                                                           .map((str) -> str + ".class")
-                                                                                           .toList());
+          .map(SourceParameter::getType)
+          .map(SourceType::getSourceName)
+          .map(str -> str + ".class")
+          .toList());
 
       printer.printIndented("}, getMethodViaReflection(%s.class, \"%s\"%s)))",
           executable.executesMethod().getEnclosed().getSourceName(),
@@ -177,7 +177,7 @@ public abstract class CommonTreePrinter {
     }
   }
 
-  private String getWrapperMethodCall(final ExecutorWrapperProvider wrapper) {
+  private String getWrapperMethodCall(ExecutorWrapperProvider wrapper) {
     final SourceMethod method = wrapper.wrapperMethod();
     final String methodName = method.getName();
 
@@ -191,7 +191,7 @@ public abstract class CommonTreePrinter {
     }
   }
 
-  private void printExecutableBody(final CommandNode node, final Executable executable) throws IOException {
+  private void printExecutableBody(CommandNode node, Executable executable) throws IOException {
     boolean instancePrint = true;
     CommandNode recordNode = node;
 
@@ -209,7 +209,7 @@ public abstract class CommonTreePrinter {
     }
   }
 
-  private void printWithInstance(final Executable executable) throws IOException {
+  private void printWithInstance(Executable executable) throws IOException {
     final String instanceName;
     if (executable instanceof DefaultExecutable defaultExec) {
       instanceName = stackAtDefaultExecutes.computeIfAbsent(defaultExec, unused -> Utils.getInstanceName(printer.getAccessStack()));
@@ -219,14 +219,14 @@ public abstract class CommonTreePrinter {
     printExecutesMethodCall(executable, instanceName);
   }
 
-  private void printExecutesMethodCall(final Executable executable, final String typeName) throws IOException {
+  private void printExecutesMethodCall(Executable executable, String typeName) throws IOException {
     printer.printIndented("{}.{}", typeName, executable.executesMethod().getName());
     printExecutesArguments(executable);
     printer.print(";");
     printer.println();
   }
 
-  private void printWithRecord(final Parameterizable record, final Executable executable) throws IOException {
+  private void printWithRecord(Parameterizable record, Executable executable) throws IOException {
     final String typeName = executable.executesMethod().getEnclosed().getSourceName();
 
     if (record.parameterArguments().isEmpty()) {
@@ -243,14 +243,14 @@ public abstract class CommonTreePrinter {
 
     printExecutesMethodCall(executable, "executorClass");
 
-    for (final ParameterType arg : record.parameterArguments()) {
+    for (ParameterType arg : record.parameterArguments()) {
       if (arg instanceof MultiLiteralCommandArgument) {
         popLiteralPosition();
       }
     }
   }
 
-  private void printExecutesArguments(final Executable executable) throws IOException {
+  private void printExecutesArguments(Executable executable) throws IOException {
     final List<ParameterType> parameterArguments = executable.parameterArguments();
     if (parameterArguments.isEmpty()) {
       printer.print("()");
@@ -285,7 +285,7 @@ public abstract class CommonTreePrinter {
       }
     }
 
-    for (final ParameterType argument : parameterArguments) {
+    for (ParameterType argument : parameterArguments) {
       if (argument instanceof MultiLiteralCommandArgument) {
         popLiteralPosition();
       }
@@ -296,7 +296,7 @@ public abstract class CommonTreePrinter {
     printer.printIndented(")");
   }
 
-  private void printArguments(final List<CommandArgument> arguments) throws IOException {
+  private void printArguments(List<CommandArgument> arguments) throws IOException {
     for (int i = 0, argumentsSize = arguments.size(); i < argumentsSize; i++) {
       printer.printIndent();
       printArgument(arguments.get(i));
@@ -309,7 +309,7 @@ public abstract class CommonTreePrinter {
     }
   }
 
-  private void printArgument(final CommandArgument argument) throws IOException {
+  private void printArgument(CommandArgument argument) throws IOException {
     printer.print(switch (argument) {
       case RequiredCommandArgument req -> req.argumentType().retriever();
       case MultiLiteralCommandArgument ignored -> '"' + nextLiteral() + '"';
@@ -325,11 +325,11 @@ public abstract class CommonTreePrinter {
 
   protected abstract String getArgumentMethodString();
 
-  public String getCommandNameLiteralOverride(final LiteralCommandArgument lit) {
+  public String getCommandNameLiteralOverride(LiteralCommandArgument lit) {
     return "NAME";
   }
 
-  private void printForArguments(final CommandNode node, final IOExceptionIgnoringConsumer<String> initializer, final boolean isNested) throws IOException {
+  private void printForArguments(CommandNode node, IOExceptionIgnoringConsumer<String> initializer, boolean isNested) throws IOException {
     if (node.hasAttribute(AttributeKey.ACCESS_STACK)) {
       node.getAttributeNotNull(AttributeKey.ACCESS_STACK).forEach(printer.getAccessStack()::push);
     }
@@ -350,7 +350,7 @@ public abstract class CommonTreePrinter {
       case LiteralCommandArgument lit -> initializer.accept("%s(%s)".formatted(getLiteralMethodString(), isNested ? '"' + lit.literal() + '"' : getCommandNameLiteralOverride(lit)));
       case RequiredCommandArgument req -> initializer.accept("%s(\"%s\", %s)".formatted(getArgumentMethodString(), req.argumentName(), req.argumentType().initializer()));
       case MultiLiteralCommandArgument multi -> {
-        for (final String literal : multi.literals()) {
+        for (String literal : multi.literals()) {
           pushLiteral(literal);
           initializer.accept("%s(\"%s\")".formatted(getLiteralMethodString(), literal));
           popLiteral();

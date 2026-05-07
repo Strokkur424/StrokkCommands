@@ -30,7 +30,7 @@ public class MethodTransform implements NodeTransform<SourceMethod> {
   private final List<NodeTransform<SourceMethod>> innerTransforms;
   private final NodeUtils nodeUtils;
 
-  public MethodTransform(final NodeUtils nodeUtils, final ExecutesTransform executesTransform, final DefaultExecutesTransform defaultExecutesTransform) {
+  public MethodTransform(NodeUtils nodeUtils, ExecutesTransform executesTransform, DefaultExecutesTransform defaultExecutesTransform) {
     this.innerTransforms = List.of(
         executesTransform,
         defaultExecutesTransform
@@ -40,17 +40,17 @@ public class MethodTransform implements NodeTransform<SourceMethod> {
 
   @Override
   public void transform(
-      final CommandNode node,
-      final SourceMethod element
+      CommandNode node,
+      SourceMethod element
   ) throws MismatchedArgumentTypeException, UnknownSenderException, IllegalReturnTypeException {
-    for (final NodeTransform<SourceMethod> innerTransform : innerTransforms) {
+    for (NodeTransform<SourceMethod> innerTransform : innerTransforms) {
       innerTransform.transformIfRequirement(node, element);
     }
   }
 
   @Override
-  public boolean requirement(final SourceMethod element) {
-    for (final NodeTransform<SourceMethod> innerTransform : innerTransforms) {
+  public boolean requirement(SourceMethod element) {
+    for (NodeTransform<SourceMethod> innerTransform : innerTransforms) {
       if (innerTransform.requirement(element)) {
         return true;
       }

@@ -18,7 +18,6 @@
 package net.strokkur.testplugin.suggestions;
 
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
@@ -51,10 +50,7 @@ interface SuggestionsRepository {
   @YourProvider
   class AClassSuggestionProvider<S> implements SuggestionProvider<S> {
     @Override
-    public CompletableFuture<Suggestions> getSuggestions(
-        final CommandContext<S> context,
-        final SuggestionsBuilder builder
-    ) throws CommandSyntaxException {
+    public CompletableFuture<Suggestions> getSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
       return builder.buildFuture();
     }
   }
@@ -62,7 +58,7 @@ interface SuggestionsRepository {
   class SomeClass implements SuggestionProvider<CommandSourceStack> {
     private final List<String> suggestions;
 
-    public SomeClass() {
+    SomeClass() {
       suggestions = new ArrayList<>(64);
       for (int i = 1; i <= 64; i++) {
         suggestions.add(Integer.toString(i));

@@ -29,10 +29,9 @@ import org.jspecify.annotations.NullMarked;
 @SuppressWarnings("ClassCanBeRecord")
 @NullMarked
 public class GameModePreset {
-
   private final GameMode mode;
 
-  public GameModePreset(final GameMode mode) {
+  public GameModePreset(GameMode mode) {
     this.mode = mode;
   }
 

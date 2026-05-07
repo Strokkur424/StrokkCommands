@@ -46,14 +46,14 @@ public interface SourceClass extends SourceType, AnnotationsHolder {
 
   List<SourceClass> getImplementedInterfaces();
 
-  List<SourceMethod> getNestedMethods(final Predicate<SourceMethod> predicate);
+  List<SourceMethod> getNestedMethods(Predicate<SourceMethod> predicate);
 
-  List<SourceField> getNestedFields(final Predicate<SourceField> predicate);
+  List<SourceField> getNestedFields(Predicate<SourceField> predicate);
 
-  List<SourceClass> getNestedClasses(final Predicate<SourceClass> predicate);
+  List<SourceClass> getNestedClasses(Predicate<SourceClass> predicate);
 
-  default boolean implementsInterface(final String interfaceName) {
-    for (final SourceClass implementedInterface : getImplementedInterfaces()) {
+  default boolean implementsInterface(String interfaceName) {
+    for (SourceClass implementedInterface : getImplementedInterfaces()) {
       if (implementedInterface.getFullyQualifiedAndTypedName().equals(interfaceName)) {
         return true;
       }

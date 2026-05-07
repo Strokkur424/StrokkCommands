@@ -29,12 +29,12 @@ import java.util.Set;
 
 final class PaperTreePostProcessor extends CommonTreePostProcessor {
 
-  PaperTreePostProcessor(final MessagerWrapper delegateMessager) {
+  PaperTreePostProcessor(MessagerWrapper delegateMessager) {
     super(delegateMessager);
   }
 
   @Override
-  public void cleanupPath(final CommandNode root) {
+  public void cleanupPath(CommandNode root) {
     // The relevant attributes are the 'permission', 'requires_op', 'executor, and 'requirement'
     // attributes, since these add some sort of `.requires` clause, which works the best the higher
     // up it is in the tree. Certain attribute values also cause the parent value to be written to
@@ -57,9 +57,9 @@ final class PaperTreePostProcessor extends CommonTreePostProcessor {
    *
    * @param root the path to handle
    */
-  private void handleExecutor(final CommandNode root) {
+  private void handleExecutor(CommandNode root) {
     ExecutorType lowestRequirement = root.hasAttribute(PaperAttributeKeys.EXECUTOR_TYPE) ? root.getAttribute(PaperAttributeKeys.EXECUTOR_TYPE) : null;
-    for (final CommandNode child : root.children()) {
+    for (CommandNode child : root.children()) {
       final ExecutorType childExecutorType = child.getAttributeNotNull(PaperAttributeKeys.EXECUTOR_TYPE);
 
       if (lowestRequirement == null) {
@@ -81,7 +81,7 @@ final class PaperTreePostProcessor extends CommonTreePostProcessor {
       root.removeAttribute(PaperAttributeKeys.EXECUTOR_TYPE);
     } else {
       root.setAttribute(PaperAttributeKeys.EXECUTOR_TYPE, lowestRequirement);
-      for (final CommandNode child : root.children()) {
+      for (CommandNode child : root.children()) {
         if (lowestRequirement.isMoreRestrictiveOrEqualThan(child.getAttributeNotNull(PaperAttributeKeys.EXECUTOR_TYPE))) {
           child.removeAttribute(PaperAttributeKeys.EXECUTOR_TYPE);
         }
@@ -89,7 +89,7 @@ final class PaperTreePostProcessor extends CommonTreePostProcessor {
     }
   }
 
-  private void handleOperator(final CommandNode node) {
+  private void handleOperator(CommandNode node) {
     if (!node.hasAttribute(PaperAttributeKeys.REQUIRES_OP)) {
       final Collection<CommandNode> children = node.children();
 
@@ -117,13 +117,13 @@ final class PaperTreePostProcessor extends CommonTreePostProcessor {
     }
   }
 
-  private void handlePermissions(final CommandNode node) {
+  private void handlePermissions(CommandNode node) {
     if (node.hasAttribute(PaperAttributeKeys.PERMISSIONS) || node.children().isEmpty()) {
       return;
     }
 
     final Set<String> permissions = new HashSet<>();
-    for (final CommandNode child : node.children()) {
+    for (CommandNode child : node.children()) {
       final Set<String> childPerms = child.getAttributeNotNull(PaperAttributeKeys.PERMISSIONS);
       if (childPerms.isEmpty()) {
         // If a child doesn't have permissions, do not set any permissions for the parent
@@ -136,7 +136,7 @@ final class PaperTreePostProcessor extends CommonTreePostProcessor {
 
     // Do a second pass to clear any child permission nodes if the parent handles
     // them all exactly the same already
-    for (final CommandNode child : node.children()) {
+    for (CommandNode child : node.children()) {
       final Set<String> childPerms = child.getAttributeNotNull(PaperAttributeKeys.PERMISSIONS);
       if (childPerms.equals(permissions)) {
         child.removeAttribute(PaperAttributeKeys.PERMISSIONS);

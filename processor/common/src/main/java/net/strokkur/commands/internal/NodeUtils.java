@@ -52,7 +52,7 @@ public record NodeUtils(
     ExecutorWrapperRegistry executorWrapperRegistry
 ) implements ForwardingMessagerWrapper {
 
-  public void applyExecutorTransform(final Attributable node, final AnnotationsHolder element) {
+  public void applyExecutorTransform(Attributable node, AnnotationsHolder element) {
     if (element.hasAnnotationInherited(UnsetExecutorWrapper.class)) {
       node.setAttribute(AttributeKey.EXECUTOR_WRAPPER_UNSET, true);
       return;
@@ -67,7 +67,7 @@ public record NodeUtils(
     );
   }
 
-  public ParameterType parseParameter(final SourceVariable parameter) {
+  public ParameterType parseParameter(SourceVariable parameter) {
     debug("| Parsing parameter: " + parameter.getName());
 
     if (!platformUtils().mayParameterBeArgument(parameter)) {
@@ -100,14 +100,14 @@ public record NodeUtils(
   }
 
   public <T> void applyRegistrableProvider(
-      final Attributable attributable,
-      final AnnotationsHolder element,
-      final RegistrableRegistry<T> registry,
-      final AttributeKey<T> key,
-      final String name
+      Attributable attributable,
+      AnnotationsHolder element,
+      RegistrableRegistry<T> registry,
+      AttributeKey<T> key,
+      String name
   ) {
     boolean found = false;
-    for (final SourceClass annotationType : element.getAllAnnotations()) {
+    for (SourceClass annotationType : element.getAllAnnotations()) {
       final Optional<T> provider = registry.getProvider(annotationType);
       if (provider.isPresent()) {
         if (found) {

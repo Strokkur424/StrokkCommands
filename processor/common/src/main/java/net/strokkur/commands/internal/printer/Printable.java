@@ -31,7 +31,7 @@ interface Printable {
 
   void println(String message, Object... format) throws IOException;
 
-  default void printIndented(final String message, Object... format) throws IOException {
+  default void printIndented(String message, Object... format) throws IOException {
     printIndent();
     print(message, format);
   }

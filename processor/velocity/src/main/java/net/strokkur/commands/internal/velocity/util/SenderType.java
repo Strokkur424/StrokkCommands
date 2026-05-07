@@ -24,11 +24,11 @@ public enum SenderType {
   private final String className;
   private final String predicate;
 
-  SenderType(final String className) {
+  SenderType(String className) {
     this(className, "true");
   }
 
-  SenderType(final String className, final String predicate) {
+  SenderType(String className, String predicate) {
     this.className = className;
     this.predicate = predicate;
   }

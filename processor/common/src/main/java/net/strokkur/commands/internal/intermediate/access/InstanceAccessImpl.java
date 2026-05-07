@@ -21,7 +21,7 @@ import net.strokkur.commands.internal.abstraction.SourceClass;
 
 final class InstanceAccessImpl extends ExecuteAccessImpl<SourceClass> implements InstanceAccess {
 
-  public InstanceAccessImpl(final SourceClass element) {
+  InstanceAccessImpl(SourceClass element) {
     super(element);
   }
 

@@ -24,7 +24,7 @@ import javax.lang.model.element.RecordComponentElement;
 
 public class SourceRecordComponentImpl extends AbstractSourceVariableImpl<RecordComponentElement> implements SourceRecordComponent {
 
-  public SourceRecordComponentImpl(final ProcessingEnvironment environment, final RecordComponentElement element) {
+  public SourceRecordComponentImpl(ProcessingEnvironment environment, RecordComponentElement element) {
     super(environment, element);
   }
 }

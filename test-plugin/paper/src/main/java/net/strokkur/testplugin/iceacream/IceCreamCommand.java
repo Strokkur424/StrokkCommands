@@ -25,8 +25,6 @@ import net.strokkur.testplugin.iceacream.subpackage.IceCreamArgument;
 import net.strokkur.testplugin.iceacream.subpackage.IceCreamType;
 import org.bukkit.command.CommandSender;
 
-import java.sql.Wrapper;
-
 @Command("icecream")
 class IceCreamCommand {
 

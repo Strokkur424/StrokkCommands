@@ -34,7 +34,7 @@ public interface DefaultExecutable extends Executable, Attributable {
     private final @Nullable String getter;
     private final Set<String> imports;
 
-    Type(@Nullable final String getter, final Set<String> imports) {
+    Type(@Nullable String getter, Set<String> imports) {
       this.getter = getter;
       this.imports = imports;
     }
@@ -47,7 +47,7 @@ public interface DefaultExecutable extends Executable, Attributable {
       return this.imports;
     }
 
-    public static DefaultExecutable.Type getType(final SourceVariable variable) {
+    public static DefaultExecutable.Type getType(SourceVariable variable) {
       if (variable.getType().getFullyQualifiedAndTypedName().equals(Classes.LIST_STRING)) {
         return LIST;
       }

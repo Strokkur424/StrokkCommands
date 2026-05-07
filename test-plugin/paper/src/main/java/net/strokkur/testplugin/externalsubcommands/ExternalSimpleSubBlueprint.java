@@ -24,11 +24,11 @@ import org.bukkit.command.CommandSender;
 class ExternalSimpleSubBlueprint {
   private final String text;
 
-  public ExternalSimpleSubBlueprint() {
+  ExternalSimpleSubBlueprint() {
     this("default");
   }
 
-  public ExternalSimpleSubBlueprint(final String text) {
+  ExternalSimpleSubBlueprint(String text) {
     this.text = text;
   }
 

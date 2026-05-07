@@ -30,7 +30,7 @@ import java.time.Duration;
 class VelocityWrapperTest {
   private final Logger logger;
 
-  public VelocityWrapperTest(final Logger logger) {
+  VelocityWrapperTest(Logger logger) {
     this.logger = logger;
   }
 

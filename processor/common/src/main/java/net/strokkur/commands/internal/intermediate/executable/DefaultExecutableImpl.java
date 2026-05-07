@@ -24,10 +24,8 @@ import java.util.List;
 import java.util.Objects;
 
 public final class DefaultExecutableImpl extends ExecutableImpl implements DefaultExecutable {
-  public DefaultExecutableImpl(
-      final SourceMethod executesMethod,
-      final List<ParameterType> parameters
-  ) throws IllegalReturnTypeException {
+  public DefaultExecutableImpl(SourceMethod executesMethod, List<ParameterType> parameters)
+      throws IllegalReturnTypeException {
     super(executesMethod, parameters);
   }
 

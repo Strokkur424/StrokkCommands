@@ -31,9 +31,7 @@ public class ExecutableImpl implements Executable, AttributableHelper {
   private final Map<String, Object> attributeMap = new TreeMap<>();
   private final ReturnType returnType;
 
-  public ExecutableImpl(
-      final SourceMethod executesMethod,
-      final List<ParameterType> parameters
+  public ExecutableImpl(SourceMethod executesMethod, List<ParameterType> parameters
   ) throws IllegalReturnTypeException {
     this.executesMethod = executesMethod;
     this.parameters = parameters;

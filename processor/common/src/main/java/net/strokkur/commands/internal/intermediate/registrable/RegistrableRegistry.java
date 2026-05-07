@@ -31,7 +31,7 @@ public abstract class RegistrableRegistry<T> {
   private final Map<String, T> providerMap = new TreeMap<>();
   private final String platformType;
 
-  public RegistrableRegistry(final String platformType) {
+  public RegistrableRegistry(String platformType) {
     this.platformType = platformType;
   }
 
@@ -43,11 +43,11 @@ public abstract class RegistrableRegistry<T> {
     return providerMap.keySet();
   }
 
-  public final Optional<T> getProvider(final SourceClass annotationClass) {
+  public final Optional<T> getProvider(SourceClass annotationClass) {
     return Optional.ofNullable(this.providerMap.get(annotationClass.getFullyQualifiedName()));
   }
 
-  public final void registerProvider(final SourceClass annotationClass, final T provider)
+  public final void registerProvider(SourceClass annotationClass, T provider)
       throws ProviderAlreadyRegisteredException {
     if (this.providerMap.containsKey(annotationClass.getFullyQualifiedName())) {
       throw new ProviderAlreadyRegisteredException(annotationClass);
@@ -56,8 +56,8 @@ public abstract class RegistrableRegistry<T> {
   }
 
   public abstract boolean tryRegisterProvider(
-      final MessagerWrapper messager,
-      final SourceClass annotationClass,
-      final SourceElement sourceElement
+      MessagerWrapper messager,
+      SourceClass annotationClass,
+      SourceElement sourceElement
   ) throws ProviderAlreadyRegisteredException;
 }

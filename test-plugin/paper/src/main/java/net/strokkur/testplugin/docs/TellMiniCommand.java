@@ -22,7 +22,6 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
 import net.strokkur.commands.arguments.StringArg;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -33,8 +32,8 @@ import static net.strokkur.commands.arguments.StringArgType.GREEDY;
 public class TellMiniCommand {
 
   @Executes
-  void tellMini(CommandSender sender, List<Player> players, @StringArg(GREEDY) String message) {
-    Component component = MiniMessage.miniMessage().deserialize(message);
+  void tellMini(List<Player> players, @StringArg(GREEDY) String message) {
+    final Component component = MiniMessage.miniMessage().deserialize(message);
     players.forEach(p -> p.sendMessage(component));
   }
 }

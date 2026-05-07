@@ -24,7 +24,6 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
 import net.strokkur.commands.Literal;
-import net.strokkur.commands.meta.StrokkCommandsDebug;
 import net.strokkur.commands.paper.Executor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -34,7 +33,7 @@ import org.slf4j.Logger;
 class SmartParamsCommand {
   private final Logger logger;
 
-  public SmartParamsCommand(final Logger logger) {
+  SmartParamsCommand(Logger logger) {
     this.logger = logger;
   }
 
@@ -44,14 +43,14 @@ class SmartParamsCommand {
   }
 
   @Executes("source")
-  void wholeSourceStack(final CommandSourceStack source) {
+  void wholeSourceStack(CommandSourceStack source) {
     source.getSender().sendRichMessage("Hey! You are currently at <red>%s <green>%s <blue>%s</red>!".formatted(
         source.getLocation().getBlockX(), source.getLocation().getBlockY(), source.getLocation().getBlockZ()
     ));
   }
 
   @Executes("all-of-them")
-  void allOfEm(final CommandContext<CommandSourceStack> ctx, final CommandSourceStack source, final CommandSender sender) {
+  void allOfEm(CommandContext<CommandSourceStack> ctx, CommandSourceStack source, CommandSender sender) {
     sender.sendRichMessage("<gold>Your entire command input: <u>" + ctx.getInput());
     sender.sendRichMessage("<gold>This command was executed as <executor>",
         Placeholder.component("executor", source.getExecutor() == null
@@ -62,7 +61,7 @@ class SmartParamsCommand {
 
   /// Idk why you would ever do this, but you can!
   @Executes("between-arg")
-  void betweenArg(final String wordArg, final CommandSender sender, final @Executor Player executor, int value, String[] allArgs) {
+  void betweenArg(String wordArg, CommandSender sender, @Executor Player executor, int value, String[] allArgs) {
     sender.sendRichMessage("<executor> ran <gold>/<cmd></gold> with <aqua><word></aqua> and <green><value></green>",
         Placeholder.component("executor", executor.displayName()),
         Placeholder.unparsed("cmd", allArgs[0]),
@@ -72,7 +71,7 @@ class SmartParamsCommand {
   }
 
   @Executes("involving-multi-args")
-  void multipleArgs(final CommandSourceStack source, final @Literal({"first", "second", "third"}) String choice) {
+  void multipleArgs(CommandSourceStack source, @Literal({"first", "second", "third"}) String choice) {
     source.getSender().sendRichMessage("You chose: " + choice);
   }
 }

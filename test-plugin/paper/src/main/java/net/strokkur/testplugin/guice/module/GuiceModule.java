@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 public class GuiceModule extends AbstractModule {
   private final JavaPlugin plugin;
 
-  public GuiceModule(final JavaPlugin plugin) {
+  public GuiceModule(JavaPlugin plugin) {
     this.plugin = plugin;
   }
 

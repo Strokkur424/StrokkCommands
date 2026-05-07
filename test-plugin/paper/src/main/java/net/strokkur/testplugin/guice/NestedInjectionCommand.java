@@ -31,11 +31,9 @@ import org.slf4j.Logger;
 class NestedInjectionCommand {
   private @Inject JavaPlugin plugin;
 
-  @Subcommand("first")
-  final SomeCommonClass firstField = new SomeCommonClass("<gradient:red:blue>first");
+  @Subcommand("first") final SomeCommonClass firstField = new SomeCommonClass("<gradient:red:blue>first");
 
-  @Subcommand("second")
-  final SomeCommonClass secondField = new SomeCommonClass("<gradient:green:yellow>second");
+  @Subcommand("second") final SomeCommonClass secondField = new SomeCommonClass("<gradient:green:yellow>second");
 
   @Executes
   void run() {
@@ -67,7 +65,7 @@ class NestedInjectionCommand {
   static class SomeCommonClass {
     private final String str;
 
-    public SomeCommonClass(final String str) {
+    SomeCommonClass(String str) {
       this.str = str;
     }
 

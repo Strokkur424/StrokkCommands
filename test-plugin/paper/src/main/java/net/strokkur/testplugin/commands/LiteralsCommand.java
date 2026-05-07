@@ -27,9 +27,9 @@ class LiteralsCommand {
 
   @Executes("hey there, how")
   void executes(CommandSender sender,
-                @Literal({"are", "am"}) String first,
-                @Literal({"you", "I"}) String second,
-                @Literal("doing?") String $doing) {
+      @Literal({"are", "am"}) String first,
+      @Literal({"you", "I"}) String second,
+      @Literal("doing?") String $doing) {
 
     if (first.equals("are") && second.equals("you")) {
       sender.sendMessage("I am doing great, thanks for asking :)");

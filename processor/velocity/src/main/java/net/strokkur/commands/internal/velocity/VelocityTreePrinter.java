@@ -38,12 +38,12 @@ import java.util.Objects;
 import java.util.Set;
 
 final class VelocityTreePrinter extends CommonTreePrinter {
-  public VelocityTreePrinter(final CommonCommandTreePrinter<?> printer) {
+  VelocityTreePrinter(CommonCommandTreePrinter<?> printer) {
     super(printer);
   }
 
   @Override
-  public void prefixPrintExecutableInner(final CommandNode node, final Executable executable) throws IOException {
+  public void prefixPrintExecutableInner(CommandNode node, Executable executable) throws IOException {
     final SenderType type = executable.getAttributeNotNull(VelocityAttributeKeys.SENDER_TYPE);
     if (type != SenderType.NORMAL) {
       printer.printBlock("""
@@ -60,7 +60,7 @@ final class VelocityTreePrinter extends CommonTreePrinter {
   }
 
   @Override
-  public String handleParameter(final SourceVariable parameter) throws IOException {
+  public String handleParameter(SourceVariable parameter) throws IOException {
     if (parameter.getType().getFullyQualifiedAndTypedName().equalsIgnoreCase(Classes.COMMAND_CONTEXT + "<" + VelocityClasses.COMMAND_SOURCE + ">")) {
       return "ctx";
     }
@@ -83,7 +83,7 @@ final class VelocityTreePrinter extends CommonTreePrinter {
   }
 
   @Override
-  public @Nullable String getExtraRequirements(final Attributable node) {
+  public @Nullable String getExtraRequirements(Attributable node) {
     final Set<String> permissions = node.getAttributeNotNull(VelocityAttributeKeys.PERMISSIONS);
     final SenderType type = node.getAttributeNotNull(VelocityAttributeKeys.SENDER_TYPE);
 

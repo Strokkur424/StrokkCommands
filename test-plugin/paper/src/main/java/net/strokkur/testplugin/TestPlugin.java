@@ -38,7 +38,7 @@ public final class TestPlugin extends JavaPlugin {
   @Override
   public void onLoad() {
     this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS.newHandler(event -> {
-      Commands commands = event.registrar();
+      final Commands commands = event.registrar();
       injector.getInstance(InjectionCommandBrigadierRef.class).register(commands);
       injector.getInstance(NestedInjectionCommandBrigadierRef.class).register(commands);
     }));

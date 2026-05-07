@@ -27,7 +27,7 @@ class SimpleDICommand {
   private final JavaPlugin plugin;
   private final int magicValue;
 
-  public SimpleDICommand(final JavaPlugin plugin, final int magicValue) {
+  SimpleDICommand(JavaPlugin plugin, int magicValue) {
     this.plugin = plugin;
     this.magicValue = magicValue;
   }

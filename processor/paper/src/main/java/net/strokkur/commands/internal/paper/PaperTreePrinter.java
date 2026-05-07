@@ -38,12 +38,12 @@ import java.util.List;
 import java.util.Objects;
 
 final class PaperTreePrinter extends CommonTreePrinter {
-  public PaperTreePrinter(final CommonCommandTreePrinter<?> printer) {
+  PaperTreePrinter(CommonCommandTreePrinter<?> printer) {
     super(printer);
   }
 
   @Override
-  public void prefixPrintExecutableInner(final CommandNode node, final Executable executable) throws IOException {
+  public void prefixPrintExecutableInner(CommandNode node, Executable executable) throws IOException {
     final ExecutorType executorType = executable.getAttributeNotNull(PaperAttributeKeys.EXECUTOR_TYPE);
     if (executorType != ExecutorType.NONE) {
       printer.printBlock("""
@@ -61,7 +61,7 @@ final class PaperTreePrinter extends CommonTreePrinter {
   }
 
   @Override
-  public String handleParameter(final SourceVariable parameter) throws IOException {
+  public String handleParameter(SourceVariable parameter) throws IOException {
     if (parameter.hasAnnotationInherited(Executor.class)) {
       return "executor";
     }
@@ -87,7 +87,7 @@ final class PaperTreePrinter extends CommonTreePrinter {
   }
 
   @Override
-  public @Nullable String getExtraRequirements(final Attributable node) {
+  public @Nullable String getExtraRequirements(Attributable node) {
     final List<String> extraRequirements = new ArrayList<>();
 
     final ExecutorType executorType = node.getAttributeNotNull(PaperAttributeKeys.EXECUTOR_TYPE);

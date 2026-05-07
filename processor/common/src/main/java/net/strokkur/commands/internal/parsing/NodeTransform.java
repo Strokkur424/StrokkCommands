@@ -63,7 +63,7 @@ interface NodeTransform<S extends SourceElement> extends ForwardingMessagerWrapp
   }
 
   @Contract("_,!null,_->!null;!null,_,_->!null")
-  default CommandNode populateNode(final @Nullable CommandNode parent, final @Nullable CommandNode thisPath, final AnnotationsHolder element) {
+  default CommandNode populateNode(@Nullable CommandNode parent, @Nullable CommandNode thisPath, AnnotationsHolder element) {
     final CommandNode out = thisPath == null ? parent : thisPath;
     nodeUtils().platformUtils().populateNode(Objects.requireNonNull(out), element);
     return out;
@@ -71,10 +71,10 @@ interface NodeTransform<S extends SourceElement> extends ForwardingMessagerWrapp
 
   @Nullable
   default <A extends Annotation> CommandNode createLiteralSequence(
-      final CommandNode parent,
-      final AnnotationsHolder element,
-      final Class<A> annotation,
-      final Function<A, @Nullable String> valueExtract) throws MismatchedArgumentTypeException {
+      CommandNode parent,
+      AnnotationsHolder element,
+      Class<A> annotation,
+      Function<A, @Nullable String> valueExtract) throws MismatchedArgumentTypeException {
     final A a = element.getAnnotationInheritedOptional(annotation).orElse(null);
     if (a == null) {
       return null;
@@ -86,7 +86,7 @@ interface NodeTransform<S extends SourceElement> extends ForwardingMessagerWrapp
     }
 
     CommandNode out = parent;
-    for (final String literal : path.split(" ")) {
+    for (String literal : path.split(" ")) {
       out = out.addChild(LiteralCommandArgument.literal(literal, element));
     }
     return out;

@@ -39,7 +39,7 @@ class CommandNodeImpl implements CommandNode, AttributableHelper {
   private final @Nullable CommandNode parent;
   private final CommandArgument argument;
 
-  public CommandNodeImpl(final @Nullable CommandNode parent, final CommandArgument argument) {
+  CommandNodeImpl(@Nullable CommandNode parent, CommandArgument argument) {
     this.attributes = new TreeMap<>();
     this.children = new HashSet<>();
     this.parent = parent;
@@ -69,15 +69,15 @@ class CommandNodeImpl implements CommandNode, AttributableHelper {
   }
 
   @Override
-  public CommandNode addChild(final CommandArgument argument) throws MismatchedArgumentTypeException {
-    for (final CommandNode child : this.children) {
+  public CommandNode addChild(CommandArgument argument) throws MismatchedArgumentTypeException {
+    for (CommandNode child : this.children) {
       if (child.argument() instanceof MultiLiteralCommandArgument childMulti) {
         if (argument instanceof MultiLiteralCommandArgument argMulti) {
           if (childMulti.literals().equals(argMulti.literals())) {
             // The same multi literals
             return child;
           }
-          for (final String literal : childMulti.literals()) {
+          for (String literal : childMulti.literals()) {
             if (argMulti.literals().contains(literal)) {
               throw new MismatchedArgumentTypeException("The multi literal " + childMulti.literals() + " contains duplicate literals from the existing multiliteral " + argMulti.literals());
             }
@@ -127,9 +127,9 @@ class CommandNodeImpl implements CommandNode, AttributableHelper {
   }
 
   @Override
-  public String toString(final int indent) {
+  public String toString(int indent) {
     final StringBuilder builder = new StringBuilder();
-    builder.append("| ".repeat(indent));
+    builder.repeat("| ", indent);
 
     switch (this.argument) {
       case MultiLiteralCommandArgument multi -> builder.append('[').append(String.join("|", multi.literals())).append(']');
@@ -139,11 +139,11 @@ class CommandNodeImpl implements CommandNode, AttributableHelper {
     }
 
     if (!this.attributes.isEmpty()) {
-      builder.append(" ".repeat(Math.max(2, 80 - builder.length())));
+      builder.repeat(" ", Math.max(2, 80 - builder.length()));
       this.attributes.forEach((k, v) -> builder.append(k).append('=').append(v).append(' '));
     }
 
-    for (final CommandNode child : this.children) {
+    for (CommandNode child : this.children) {
       builder.append('\n').append(child.toString(indent + 1));
     }
 

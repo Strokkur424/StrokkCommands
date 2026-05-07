@@ -29,7 +29,7 @@ import javax.lang.model.element.VariableElement;
 public class SourceFieldImpl extends AbstractSourceVariableImpl<VariableElement> implements SourceField {
   private final SourceClass enclosed;
 
-  public SourceFieldImpl(final ProcessingEnvironment environment, final VariableElement element, final SourceClass enclosed) {
+  public SourceFieldImpl(ProcessingEnvironment environment, VariableElement element, SourceClass enclosed) {
     super(environment, element);
     this.enclosed = enclosed;
   }

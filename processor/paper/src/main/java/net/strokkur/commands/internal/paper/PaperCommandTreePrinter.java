@@ -37,13 +37,13 @@ import java.util.Optional;
 
 final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperCommandInformation> {
 
-  public PaperCommandTreePrinter(
-      final int indent,
-      final @Nullable Writer writer,
-      final CommandNode node,
-      final PaperCommandInformation commandInformation,
-      final ProcessingEnvironment environment,
-      final PlatformUtils platformUtils
+  PaperCommandTreePrinter(
+      int indent,
+      @Nullable Writer writer,
+      CommandNode node,
+      PaperCommandInformation commandInformation,
+      ProcessingEnvironment environment,
+      PlatformUtils platformUtils
   ) {
     super(indent, writer, node, commandInformation, environment, platformUtils);
   }
@@ -68,11 +68,11 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
       );
     }
     return new PrintParamsHolder(
-        SourceParameter.combineJavaDocsParameterString(List.of(), getCommandInformation().constructor(), (p) -> true),
-        SourceParameter.combineMethodParameterString(List.of(), getCommandInformation().constructor(), (p) -> true),
-        SourceParameter.combineMethodParameterNameString(List.of(), getCommandInformation().constructor(), (p) -> true),
-        SourceParameter.combineJavaDocsParameterString(List.of("Commands"), getCommandInformation().constructor(), (p) -> true),
-        SourceParameter.combineMethodParameterString(List.of("final Commands commands"), getCommandInformation().constructor(), (p) -> true),
+        SourceParameter.combineJavaDocsParameterString(List.of(), getCommandInformation().constructor(), p -> true),
+        SourceParameter.combineMethodParameterString(List.of(), getCommandInformation().constructor(), p -> true),
+        SourceParameter.combineMethodParameterNameString(List.of(), getCommandInformation().constructor(), p -> true),
+        SourceParameter.combineJavaDocsParameterString(List.of("Commands"), getCommandInformation().constructor(), p -> true),
+        SourceParameter.combineMethodParameterString(List.of("final Commands commands"), getCommandInformation().constructor(), p -> true),
         SourceVariable::getName
     );
   }
@@ -87,7 +87,7 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
   }
 
   @Override
-  protected void printRegisterMethod(final PrintParamsHolder holder) throws IOException {
+  protected void printRegisterMethod(PrintParamsHolder holder) throws IOException {
     printBlock("""
             /**
              * Shortcut for registering the command node returned from

@@ -33,7 +33,7 @@ import java.util.List;
 public class SourceRecordImpl extends SourceClassImpl implements SourceRecord {
   private @Nullable List<SourceRecordComponent> recordComponents = null;
 
-  public SourceRecordImpl(final ProcessingEnvironment environment, final DeclaredType type) {
+  public SourceRecordImpl(ProcessingEnvironment environment, DeclaredType type) {
     super(environment, type);
   }
 
@@ -41,7 +41,7 @@ public class SourceRecordImpl extends SourceClassImpl implements SourceRecord {
   public List<SourceRecordComponent> getRecordComponents() {
     if (recordComponents == null) {
       this.recordComponents = new ArrayList<>();
-      for (final Element enclosed : type.asElement().getEnclosedElements()) {
+      for (Element enclosed : type.asElement().getEnclosedElements()) {
         if (enclosed.getKind() == ElementKind.RECORD_COMPONENT) {
           this.recordComponents.add(new SourceRecordComponentImpl(environment, (RecordComponentElement) enclosed));
         }

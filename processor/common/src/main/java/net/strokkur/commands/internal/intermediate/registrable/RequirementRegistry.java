@@ -28,12 +28,12 @@ import java.util.List;
 
 public class RequirementRegistry extends FunctionalInterfaceRegistry<RequirementProvider> {
 
-  public RequirementRegistry(final String platformType) {
+  public RequirementRegistry(String platformType) {
     super(platformType);
   }
 
   @Override
-  protected boolean inlineMethodPredicate(final SourceMethod source) {
+  protected boolean inlineMethodPredicate(SourceMethod source) {
     final List<SourceParameter> params = source.getParameters();
     return source.getReturnType() instanceof SourcePrimitive primitive
         && primitive.getName().equals("boolean")
@@ -42,37 +42,37 @@ public class RequirementRegistry extends FunctionalInterfaceRegistry<Requirement
   }
 
   @Override
-  protected boolean providerMethodPredicate(final SourceMethod source) {
+  protected boolean providerMethodPredicate(SourceMethod source) {
     return source.getReturnType().getFullyQualifiedAndTypedName().equals(Classes.PREDICATE + "<" + getPlatformType() + ">");
   }
 
   @Override
-  protected boolean instancePredicate(final SourceClass source) {
+  protected boolean instancePredicate(SourceClass source) {
     return source.implementsInterface(Classes.PREDICATE + "<" + getPlatformType() + ">");
   }
 
   @Override
-  protected boolean fieldPredicate(final SourceField source) {
+  protected boolean fieldPredicate(SourceField source) {
     return source.getType().getFullyQualifiedAndTypedName().equals(Classes.PREDICATE + "<" + getPlatformType() + ">");
   }
 
   @Override
-  protected RequirementProvider createInline(final SourceClass enclosed, final SourceMethod method) {
+  protected RequirementProvider createInline(SourceClass enclosed, SourceMethod method) {
     return new MethodImpl(enclosed, method, true);
   }
 
   @Override
-  protected RequirementProvider createProvider(final SourceClass enclosed, final SourceMethod method) {
+  protected RequirementProvider createProvider(SourceClass enclosed, SourceMethod method) {
     return new MethodImpl(enclosed, method, false);
   }
 
   @Override
-  protected RequirementProvider createField(final SourceClass enclosed, final SourceField field) {
+  protected RequirementProvider createField(SourceClass enclosed, SourceField field) {
     return new FieldImpl(enclosed, field);
   }
 
   @Override
-  protected RequirementProvider createInstance(final SourceClass source) {
+  protected RequirementProvider createInstance(SourceClass source) {
     return new InstanceImpl(source);
   }
 }

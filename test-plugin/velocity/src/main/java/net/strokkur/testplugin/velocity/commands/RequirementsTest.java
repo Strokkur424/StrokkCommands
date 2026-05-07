@@ -33,7 +33,7 @@ class RequirementsTest {
   }
 
   @MyRequirement
-  static boolean require(final CommandSource source) {
+  static boolean require(CommandSource source) {
     return source instanceof Player player && player.getUsername().equals("Strokkur24");
   }
 }

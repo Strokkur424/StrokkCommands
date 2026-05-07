@@ -33,7 +33,7 @@ import java.util.List;
 
 final class RecordTransform extends ClassTransform {
 
-  public RecordTransform(final CommandParser parser, final NodeUtils nodeUtils) {
+  RecordTransform(CommandParser parser, NodeUtils nodeUtils) {
     super(parser, nodeUtils);
   }
 
@@ -43,14 +43,13 @@ final class RecordTransform extends ClassTransform {
   }
 
   @Override
-  protected void addAccessAttribute(final CommandNode node, final ExecuteAccess<?> accesses) {
+  protected void addAccessAttribute(CommandNode node, ExecuteAccess<?> accesses) {
     // no impl -- records are always instantiated statically
   }
 
   @Override
-  protected CommandNode parseRecordComponents(final CommandNode parent, final SourceClass element) throws MismatchedArgumentTypeException {
+  protected CommandNode parseRecordComponents(CommandNode parent, SourceClass element) throws MismatchedArgumentTypeException {
     final List<SourceRecordComponent> components = ((SourceRecord) element).getRecordComponents();
-
     final List<ParameterType> arguments = components.stream()
         .map(nodeUtils()::parseParameter)
         .toList();

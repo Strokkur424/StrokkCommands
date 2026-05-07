@@ -23,7 +23,6 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.strokkur.commands.CustomExecutorWrapper;
 import net.strokkur.commands.Executes;
 import net.strokkur.commands.UnsetExecutorWrapper;
-import net.strokkur.commands.meta.StrokkCommandsDebug;
 import org.bukkit.command.CommandSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +60,7 @@ class TestInstancedWrapper {
   }
 
   @Executes("argument-imports")
-  void executeWithArgs(final CommandContext<CommandSourceStack> ctx, final int num, final String[] all) {
+  void executeWithArgs(CommandContext<CommandSourceStack> ctx, int num, String[] all) {
     // ...
   }
 

@@ -100,8 +100,8 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
     final CommandParser parser = new CommandParserImpl(
         messagerWrapper,
         nodeUtils,
-        (p) -> new ExecutesTransform(p, nodeUtils),
-        (p) -> new DefaultExecutesTransform(p, nodeUtils)
+        p -> new ExecutesTransform(p, nodeUtils),
+        p -> new DefaultExecutesTransform(p, nodeUtils)
     );
     final CommonTreePostProcessor treePostProcessor = createPostProcessor(messagerWrapper);
 
@@ -163,12 +163,12 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
   }
 
   private void processElement(
-      final SourceClass sourceClass,
-      final MessagerWrapper messagerWrapper,
-      final CommandParser parser,
-      final CommonTreePostProcessor treePostProcessor
+      SourceClass sourceClass,
+      MessagerWrapper messagerWrapper,
+      CommandParser parser,
+      CommonTreePostProcessor treePostProcessor
   ) {
-    boolean debug = System.getProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY) != null;
+    final boolean debug = System.getProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY) != null;
 
     final C commandInformation = getCommandInformation(sourceClass);
     final CommandNode commandTree = parser.createCommandTree(getCommandName(sourceClass.getAnnotationInheritedElseThrow(targetAnnotationClass())), sourceClass);
@@ -206,20 +206,20 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
   }
 
   private <T extends RegistrableRegistry<?>> T createAndFillRegistry(
-      final Class<? extends Annotation> annotationClass,
-      final Function<String, T> ctor,
-      final RoundEnvironment roundEnv,
-      final MessagerWrapper messager
+      Class<? extends Annotation> annotationClass,
+      Function<String, T> ctor,
+      RoundEnvironment roundEnv,
+      MessagerWrapper messager
   ) {
     final T registry = ctor.apply(getPlatformUtils().platformType());
-    for (final Element element : roundEnv.getElementsAnnotatedWith(annotationClass)) {
+    for (Element element : roundEnv.getElementsAnnotatedWith(annotationClass)) {
       try {
         if (element.getKind() != ElementKind.ANNOTATION_TYPE || !(element instanceof TypeElement typeElement)) {
           messager.errorElement("non-annotation type annotated with @" + annotationClass.getSimpleName(), element);
           continue;
         }
 
-        for (final Element annotatedElement : roundEnv.getElementsAnnotatedWith(typeElement)) {
+        for (Element annotatedElement : roundEnv.getElementsAnnotatedWith(typeElement)) {
           if (registry.tryRegisterProvider(
               messager,
               new SourceClassImpl(this.processingEnv, (DeclaredType) typeElement.asType()),

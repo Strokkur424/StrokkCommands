@@ -59,7 +59,7 @@ public sealed class SourceMethodImpl implements SourceMethod, ElementGettable<Ex
   @Override
   public List<SourceParameter> getParameters() {
     final List<SourceParameter> out = new LinkedList<>();
-    for (final VariableElement parameter : this.element.getParameters()) {
+    for (VariableElement parameter : this.element.getParameters()) {
       out.add(new SourceParameterImpl(this.environment, parameter, this));
     }
     return out;
@@ -68,7 +68,7 @@ public sealed class SourceMethodImpl implements SourceMethod, ElementGettable<Ex
   @Override
   public List<SourceTypeAnnotation> getTypeAnnotations() {
     final List<SourceTypeAnnotation> out = new ArrayList<>(this.element.getTypeParameters().size());
-    for (final TypeParameterElement typeParameter : this.element.getTypeParameters()) {
+    for (TypeParameterElement typeParameter : this.element.getTypeParameters()) {
       out.add(new SourceTypeAnnotationImpl(this.environment, typeParameter));
     }
     return out;
@@ -90,7 +90,7 @@ public sealed class SourceMethodImpl implements SourceMethod, ElementGettable<Ex
   }
 
   @Override
-  public <T extends Annotation> @Nullable T getAnnotation(final Class<T> type) {
+  public <T extends Annotation> @Nullable T getAnnotation(Class<T> type) {
     return this.element.getAnnotation(type);
   }
 

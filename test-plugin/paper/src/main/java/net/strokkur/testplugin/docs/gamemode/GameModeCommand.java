@@ -19,8 +19,8 @@ package net.strokkur.testplugin.docs.gamemode;
 
 import net.strokkur.commands.Aliases;
 import net.strokkur.commands.Command;
-import net.strokkur.commands.permission.Permission;
 import net.strokkur.commands.Subcommand;
+import net.strokkur.commands.permission.Permission;
 import net.strokkur.testplugin.docs.gamemode.preset.GameModePreset;
 import org.bukkit.GameMode;
 

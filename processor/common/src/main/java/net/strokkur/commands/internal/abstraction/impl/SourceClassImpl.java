@@ -49,7 +49,7 @@ public class SourceClassImpl implements SourceClass, ElementGettable<TypeElement
   protected final DeclaredType type;
   protected final TypeElement element;
 
-  public SourceClassImpl(final ProcessingEnvironment environment, final DeclaredType type) {
+  public SourceClassImpl(ProcessingEnvironment environment, DeclaredType type) {
     this.environment = environment;
     this.type = type;
     this.element = (TypeElement) this.type.asElement();
@@ -77,7 +77,7 @@ public class SourceClassImpl implements SourceClass, ElementGettable<TypeElement
   @Override
   public List<SourceTypeAnnotation> getTypeAnnotations() {
     final List<SourceTypeAnnotation> out = new ArrayList<>(this.element.getTypeParameters().size());
-    for (final TypeParameterElement typeParameter : this.element.getTypeParameters()) {
+    for (TypeParameterElement typeParameter : this.element.getTypeParameters()) {
       out.add(new SourceTypeAnnotationImpl(this.environment, typeParameter));
     }
     return Collections.unmodifiableList(out);
@@ -86,16 +86,16 @@ public class SourceClassImpl implements SourceClass, ElementGettable<TypeElement
   @Override
   public List<SourceClass> getImplementedInterfaces() {
     final List<SourceClass> out = new LinkedList<>();
-    for (final TypeMirror anInterface : this.element.getInterfaces()) {
+    for (TypeMirror anInterface : this.element.getInterfaces()) {
       out.add(new SourceClassImpl(this.environment, (DeclaredType) anInterface));
     }
     return Collections.unmodifiableList(out);
   }
 
   @Override
-  public List<SourceMethod> getNestedMethods(final Predicate<SourceMethod> predicate) {
+  public List<SourceMethod> getNestedMethods(Predicate<SourceMethod> predicate) {
     final List<SourceMethod> out = new LinkedList<>();
-    for (final Element element : this.element.getEnclosedElements()) {
+    for (Element element : this.element.getEnclosedElements()) {
       if (element instanceof ExecutableElement methodElement) {
         final SourceMethod method = methodElement.getKind() == ElementKind.CONSTRUCTOR ?
             new SourceConstructorImpl(this.environment, methodElement, this) :
@@ -109,9 +109,9 @@ public class SourceClassImpl implements SourceClass, ElementGettable<TypeElement
   }
 
   @Override
-  public List<SourceField> getNestedFields(final Predicate<SourceField> predicate) {
+  public List<SourceField> getNestedFields(Predicate<SourceField> predicate) {
     final List<SourceField> out = new LinkedList<>();
-    for (final Element element : this.element.getEnclosedElements()) {
+    for (Element element : this.element.getEnclosedElements()) {
       if (element.getKind() == ElementKind.FIELD && element instanceof VariableElement fieldElement) {
         final SourceField field = new SourceFieldImpl(this.environment, fieldElement, this);
         if (predicate.test(field)) {
@@ -123,9 +123,9 @@ public class SourceClassImpl implements SourceClass, ElementGettable<TypeElement
   }
 
   @Override
-  public List<SourceClass> getNestedClasses(final Predicate<SourceClass> predicate) {
+  public List<SourceClass> getNestedClasses(Predicate<SourceClass> predicate) {
     final List<SourceClass> out = new LinkedList<>();
-    for (final Element element : this.element.getEnclosedElements()) {
+    for (Element element : this.element.getEnclosedElements()) {
       if (element.getKind() == ElementKind.CLASS || element.getKind() == ElementKind.RECORD) {
         final SourceClass nested = SourceTypeUtils.getSourceClassType(this.environment, (DeclaredType) element.asType());
         if (predicate.test(nested)) {
@@ -137,7 +137,7 @@ public class SourceClassImpl implements SourceClass, ElementGettable<TypeElement
   }
 
   @Override
-  public <T extends Annotation> @Nullable T getAnnotation(final Class<T> type) {
+  public <T extends Annotation> @Nullable T getAnnotation(Class<T> type) {
     return this.element.getAnnotation(type);
   }
 
@@ -150,7 +150,7 @@ public class SourceClassImpl implements SourceClass, ElementGettable<TypeElement
   }
 
   @Override
-  public @Nullable <T extends Annotation> SourceClass getAnnotationSourceClassField(final Class<T> type, final String fieldName) {
+  public @Nullable <T extends Annotation> SourceClass getAnnotationSourceClassField(Class<T> type, String fieldName) {
     return Optional.ofNullable(SourceTypeUtils.getAnnotationMirror(this.element, type, fieldName))
         .map(mirror -> new SourceClassImpl(this.environment, (DeclaredType) mirror))
         .orElse(null);

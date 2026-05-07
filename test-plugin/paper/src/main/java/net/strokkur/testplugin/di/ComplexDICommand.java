@@ -28,7 +28,7 @@ import java.util.function.Supplier;
 class ComplexDICommand<T extends JavaPlugin> {
   private final T plugin;
 
-  public <S extends Supplier<T>> ComplexDICommand(final S pluginSupplier) {
+  <S extends Supplier<T>> ComplexDICommand(S pluginSupplier) {
     this.plugin = pluginSupplier.get();
   }
 

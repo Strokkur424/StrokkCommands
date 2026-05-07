@@ -66,10 +66,10 @@ public interface SourceMethod extends AnnotationsHolder {
 
   default Set<String> getImports() {
     final Set<String> out = new TreeSet<>(getReturnType().getImports());
-    for (final SourceParameter parameter : getParameters()) {
+    for (SourceParameter parameter : getParameters()) {
       out.addAll(parameter.getImports());
     }
-    for (final SourceTypeAnnotation typeAnnotation : getTypeAnnotations()) {
+    for (SourceTypeAnnotation typeAnnotation : getTypeAnnotations()) {
       out.addAll(typeAnnotation.getImports());
     }
     return Collections.unmodifiableSet(out);

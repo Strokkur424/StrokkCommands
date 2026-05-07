@@ -4,10 +4,11 @@ end_of_line = lf
 indent_size = 2
 indent_style = space
 insert_final_newline = true
-max_line_length = off
+max_line_length = 120
 ij_continuation_indent_size = 4
 
 [*.java]
 ij_java_if_brace_force = always
 ij_java_align_multiline_parameters = false
 ij_java_align_multiline_chained_methods = false
+ij_any_label_indent_absolute = false
