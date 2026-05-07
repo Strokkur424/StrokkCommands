@@ -25,16 +25,14 @@ import net.strokkur.commands.internal.util.MessagerWrapper;
 import org.jspecify.annotations.Nullable;
 
 final class VelocityBrigadierArgumentConverter extends BrigadierArgumentConverter {
-  public VelocityBrigadierArgumentConverter(final MessagerWrapper messagerWrapper) {
+  VelocityBrigadierArgumentConverter(MessagerWrapper messagerWrapper) {
     super(messagerWrapper);
   }
 
   /// We do not support custom arguments for Velocity... yet!
   @Override
   protected @Nullable BrigadierArgumentType handleCustomArgumentAnnotations(
-      final String argumentName,
-      final String type,
-      final SourceVariable parameter
+      String argumentName, String type, SourceVariable parameter
   ) throws ConversionException {
     return null;
   }

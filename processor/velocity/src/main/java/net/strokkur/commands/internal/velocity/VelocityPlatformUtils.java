@@ -35,7 +35,7 @@ import java.util.Set;
 
 final class VelocityPlatformUtils implements PlatformUtils {
   @Override
-  public void populateExecutesNode(final Executable executable, final CommandNode node, final List<ParameterType> parameters) {
+  public void populateExecutesNode(Executable executable, CommandNode node, List<ParameterType> parameters) {
     final SenderType type = this.getSenderType(parameters);
     executable.setAttribute(VelocityAttributeKeys.SENDER_TYPE, type);
     node.setAttribute(VelocityAttributeKeys.SENDER_TYPE, type);
@@ -47,15 +47,15 @@ final class VelocityPlatformUtils implements PlatformUtils {
   }
 
   @Override
-  public void populateNode(final CommandNode node, final AnnotationsHolder element) {
+  public void populateNode(CommandNode node, AnnotationsHolder element) {
     element.getAnnotationOptional(Permission.class).ifPresent(
         permission -> node.editAttributeMutable(VelocityAttributeKeys.PERMISSIONS, s -> s.add(permission.value()), () -> Set.of(permission.value()))
     );
   }
 
-  private SenderType getSenderType(final List<ParameterType> parameters) throws AnnotationException {
+  private SenderType getSenderType(List<ParameterType> parameters) throws AnnotationException {
     SenderType type = SenderType.NORMAL;
-    for (final ParameterType parameter : parameters) {
+    for (ParameterType parameter : parameters) {
       if (!(parameter instanceof SourceParameterType(SourceVariable sourceParam))) {
         continue;
       }

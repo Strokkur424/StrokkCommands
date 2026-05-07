@@ -27,20 +27,21 @@ import java.util.Collection;
 import java.util.Set;
 
 final class VelocityTreePostProcessor extends CommonTreePostProcessor {
-  public VelocityTreePostProcessor(final MessagerWrapper delegateMessager) {
+  VelocityTreePostProcessor(MessagerWrapper delegateMessager) {
     super(delegateMessager);
   }
 
   @Override
-  public void cleanupPath(final CommandNode root) {
+  public void cleanupPath(CommandNode root) {
     root.forEachDepthFirst(node -> {
       handleSender(node);
       handlePermissions(node);
     });
   }
-  private void handleSender(final CommandNode root) {
+
+  private void handleSender(CommandNode root) {
     SenderType type = null;
-    for (final CommandNode child : root.children()) {
+    for (CommandNode child : root.children()) {
 
       // If a child has no specific sender requirement, this node may not have one either
       final SenderType childType = child.getAttributeNotNull(VelocityAttributeKeys.SENDER_TYPE);
@@ -62,12 +63,12 @@ final class VelocityTreePostProcessor extends CommonTreePostProcessor {
     }
   }
 
-  private void handlePermissions(final CommandNode root) {
+  private void handlePermissions(CommandNode root) {
     if (!root.hasAttribute(VelocityAttributeKeys.PERMISSIONS)) {
       final Set<String> thisPermissions = root.getAttributeNotNull(VelocityAttributeKeys.PERMISSIONS);
       final Collection<CommandNode> children = root.children();
 
-      for (final CommandNode child : root.children()) {
+      for (CommandNode child : root.children()) {
         if (!child.hasAttribute(VelocityAttributeKeys.PERMISSIONS)) {
           // If a child doesn't have permissions, do not set any permissions for the parent
           thisPermissions.clear();

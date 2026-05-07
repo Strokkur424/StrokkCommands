@@ -30,7 +30,7 @@ import net.strokkur.commands.internal.velocity.util.VelocityClasses;
 import java.util.Set;
 
 final class VelocityImportPrinter extends CommonImportPrinter {
-  public VelocityImportPrinter(final CommonCommandTreePrinter<?> printer) {
+  VelocityImportPrinter(CommonCommandTreePrinter<?> printer) {
     super(printer);
   }
 
@@ -50,7 +50,7 @@ final class VelocityImportPrinter extends CommonImportPrinter {
   }
 
   @Override
-  public void gatherAdditionalNodeImports(final Set<String> imports, final CommandNode node) {
+  public void gatherAdditionalNodeImports(Set<String> imports, CommandNode node) {
     addExecutorTypeImports(imports, node.getAttributeNotNull(VelocityAttributeKeys.SENDER_TYPE));
     final Executable executable = node.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE);
     if (executable != null) {
@@ -58,7 +58,7 @@ final class VelocityImportPrinter extends CommonImportPrinter {
     }
   }
 
-  private void addExecutorTypeImports(final Set<String> imports, final SenderType type) {
+  private void addExecutorTypeImports(Set<String> imports, SenderType type) {
     if (type == SenderType.NORMAL) {
       return;
     }

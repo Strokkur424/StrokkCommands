@@ -38,13 +38,13 @@ import java.util.List;
 import java.util.Optional;
 
 final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<VelocityCommandInformation> {
-  public VelocityCommandTreePrinter(
-      final int indent,
-      final @Nullable Writer writer,
-      final CommandNode node,
-      final VelocityCommandInformation commandInformation,
-      final ProcessingEnvironment environment,
-      final PlatformUtils utils
+  VelocityCommandTreePrinter(
+      int indent,
+      @Nullable Writer writer,
+      CommandNode node,
+      VelocityCommandInformation commandInformation,
+      ProcessingEnvironment environment,
+      PlatformUtils utils
   ) {
     super(indent, writer, node, commandInformation, environment, utils);
   }
@@ -117,7 +117,7 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
   }
 
   @Override
-  protected void printRegisterMethod(final PrintParamsHolder holder) throws IOException {
+  protected void printRegisterMethod(PrintParamsHolder holder) throws IOException {
     printBlock("""
             /**
              * Shortcut for registering the command node returned from
