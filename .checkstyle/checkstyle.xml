@@ -8,6 +8,11 @@
     <property name="fileNamePattern" value="module\-info\.java$"/>
   </module>
 
+  <!-- https://checkstyle.org/config_filters.html#SuppressionFilter -->
+  <module name="SuppressionFilter">
+    <property name="file" value="${config_loc}/suppressions.xml"/>
+  </module>
+
   <!-- https://checkstyle.org/config_whitespace.html#FileTabCharacter -->
   <module name="FileTabCharacter">
     <property name="eachLine" value="true"/>
