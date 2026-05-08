@@ -22,6 +22,8 @@ jakarta-inject = "2.0.1"
 jspecify = "1.0.0"
 jetbrains-annotations = "24.0.0"
 
+junit = "6.0.3"
+
 [libraries]
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
 velocity-api = { module = "com.velocitypowered:velocity-api", version.ref = "velocity" }
@@ -35,6 +37,11 @@ guice = { module = "com.google.inject:guice", version.ref = "guice" }
 minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
 fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric-loader" }
 fabric-api = { module = "net.fabricmc.fabric-api:fabric-api", version.ref = "fabric" }
+
+# Junit
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform = { module = "org.junit.platform:junit-platform-launcher" }
 
 [plugins]
 publishdata = { id = "de.chojo.publishdata", version.ref = "publishdata" }

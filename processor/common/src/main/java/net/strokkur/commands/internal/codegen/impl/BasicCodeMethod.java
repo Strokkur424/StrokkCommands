@@ -15,34 +15,20 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.attributes;
+package net.strokkur.commands.internal.codegen.impl;
 
-import org.jspecify.annotations.Nullable;
+import net.strokkur.commands.internal.codegen.CodeClass;
+import net.strokkur.commands.internal.codegen.CodeMethod;
+import net.strokkur.commands.internal.codegen.CodeParameter;
+import net.strokkur.commands.internal.codegen.CodeType;
 
-import java.util.Map;
+import java.util.List;
 
-public interface AttributableHelper extends Attributable {
-
-  Map<String, Object> attributeMap();
-
-  @Override
-  default <T> @Nullable T getAttribute(AttributeKey<T> key) {
-    //noinspection unchecked
-    return (T) attributeMap().getOrDefault(key.key(), key.defaultValue());
-  }
-
-  @Override
-  default <T> void setAttribute(AttributeKey<T> key, T value) {
-    attributeMap().put(key.key(), value);
-  }
-
-  @Override
-  default void removeAttribute(AttributeKey<?> key) {
-    attributeMap().remove(key.key());
-  }
-
-  @Override
-  default boolean hasAttribute(AttributeKey<?> key) {
-    return attributeMap().containsKey(key.key());
-  }
+public record BasicCodeMethod(
+    CodeClass declaredClass,
+    CodeType returnType,
+    String name,
+    List<CodeParameter> parameters,
+    boolean isStatic
+) implements CodeMethod {
 }

@@ -15,34 +15,33 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.attributes;
+package net.strokkur.commands.internal.codegen;
 
-import org.jspecify.annotations.Nullable;
+import java.util.Set;
 
-import java.util.Map;
+public interface CodeType {
+  VoidType VOID = new VoidType();
 
-public interface AttributableHelper extends Attributable {
+  String name();
 
-  Map<String, Object> attributeMap();
+  String fullyQualifiedName();
 
-  @Override
-  default <T> @Nullable T getAttribute(AttributeKey<T> key) {
-    //noinspection unchecked
-    return (T) attributeMap().getOrDefault(key.key(), key.defaultValue());
-  }
+  Set<CodeClass> collectImports();
 
-  @Override
-  default <T> void setAttribute(AttributeKey<T> key, T value) {
-    attributeMap().put(key.key(), value);
-  }
+  class VoidType implements CodeType {
+    @Override
+    public String name() {
+      return "void";
+    }
 
-  @Override
-  default void removeAttribute(AttributeKey<?> key) {
-    attributeMap().remove(key.key());
-  }
+    @Override
+    public String fullyQualifiedName() {
+      return "void";
+    }
 
-  @Override
-  default boolean hasAttribute(AttributeKey<?> key) {
-    return attributeMap().containsKey(key.key());
+    @Override
+    public Set<CodeClass> collectImports() {
+      return Set.of();
+    }
   }
 }

@@ -5,6 +5,17 @@ plugins {
 
 dependencies {
   compileOnlyApi(project(":annotations-common"))
+
+  testImplementation(platform(libs.junit.bom))
+  testImplementation(libs.junit.jupiter)
+  testRuntimeOnly(libs.junit.platform)
+}
+
+tasks.test {
+  useJUnitPlatform()
+  testLogging {
+    events("passed", "skipped", "failed")
+  }
 }
 
 sourceSets.main {

@@ -15,34 +15,33 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.attributes;
+package net.strokkur.commands.internal.codegen.visitor;
 
-import org.jspecify.annotations.Nullable;
+import net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc;
 
-import java.util.Map;
+public interface JavadocVisitor {
 
-public interface AttributableHelper extends Attributable {
+  void visit(CodeJavadoc.PlainText value);
 
-  Map<String, Object> attributeMap();
+  void visit(CodeJavadoc.Meta value);
 
-  @Override
-  default <T> @Nullable T getAttribute(AttributeKey<T> key) {
-    //noinspection unchecked
-    return (T) attributeMap().getOrDefault(key.key(), key.defaultValue());
-  }
+  void visit(CodeJavadoc.MethodReferenceMeta value);
 
-  @Override
-  default <T> void setAttribute(AttributeKey<T> key, T value) {
-    attributeMap().put(key.key(), value);
-  }
+  void visit(CodeJavadoc.ClassReferenceMeta value);
 
-  @Override
-  default void removeAttribute(AttributeKey<?> key) {
-    attributeMap().remove(key.key());
-  }
+  void visit(CodeJavadoc.Header value);
 
-  @Override
-  default boolean hasAttribute(AttributeKey<?> key) {
-    return attributeMap().containsKey(key.key());
-  }
+  void visit(CodeJavadoc.Newline value);
+
+  void visit(CodeJavadoc.Linebreak value);
+
+  void visit(CodeJavadoc.InlineCode value);
+
+  void visit(CodeJavadoc.CodeBlock value);
+
+  void visit(CodeJavadoc.Url value);
+
+  void visit(CodeJavadoc.ClassReference value);
+
+  void visit(CodeJavadoc.MethodReference value);
 }

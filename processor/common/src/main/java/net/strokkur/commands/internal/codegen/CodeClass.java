@@ -15,34 +15,28 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.attributes;
+package net.strokkur.commands.internal.codegen;
 
+import net.strokkur.commands.internal.codegen.impl.BasicCodeClass;
+import net.strokkur.commands.internal.codegen.impl.BasicCodePackage;
 import org.jspecify.annotations.Nullable;
 
-import java.util.Map;
+import java.util.Arrays;
 
-public interface AttributableHelper extends Attributable {
+public interface CodeClass extends CodeType {
 
-  Map<String, Object> attributeMap();
-
-  @Override
-  default <T> @Nullable T getAttribute(AttributeKey<T> key) {
-    //noinspection unchecked
-    return (T) attributeMap().getOrDefault(key.key(), key.defaultValue());
+  static CodeClass simple(String string) {
+    final String[] split = string.split("\\.");
+    return new BasicCodeClass(new BasicCodePackage(Arrays.copyOf(split, split.length - 1)), null, split[split.length - 1]);
   }
 
-  @Override
-  default <T> void setAttribute(AttributeKey<T> key, T value) {
-    attributeMap().put(key.key(), value);
-  }
+  CodePackage codePackage();
 
-  @Override
-  default void removeAttribute(AttributeKey<?> key) {
-    attributeMap().remove(key.key());
-  }
+  @Nullable CodeClass parentClass();
 
-  @Override
-  default boolean hasAttribute(AttributeKey<?> key) {
-    return attributeMap().containsKey(key.key());
+  String className();
+
+  default String fullyQualifiedName() {
+    return codePackage().path() + "." + className();
   }
 }

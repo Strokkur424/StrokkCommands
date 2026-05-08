@@ -15,34 +15,15 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.attributes;
+package net.strokkur.commands.internal.codegen.impl;
 
-import org.jspecify.annotations.Nullable;
+import net.strokkur.commands.internal.codegen.CodePackage;
 
-import java.util.Map;
-
-public interface AttributableHelper extends Attributable {
-
-  Map<String, Object> attributeMap();
-
+public record BasicCodePackage(
+    String[] paths
+) implements CodePackage {
   @Override
-  default <T> @Nullable T getAttribute(AttributeKey<T> key) {
-    //noinspection unchecked
-    return (T) attributeMap().getOrDefault(key.key(), key.defaultValue());
-  }
-
-  @Override
-  default <T> void setAttribute(AttributeKey<T> key, T value) {
-    attributeMap().put(key.key(), value);
-  }
-
-  @Override
-  default void removeAttribute(AttributeKey<?> key) {
-    attributeMap().remove(key.key());
-  }
-
-  @Override
-  default boolean hasAttribute(AttributeKey<?> key) {
-    return attributeMap().containsKey(key.key());
+  public String path() {
+    return String.join(".", paths);
   }
 }
