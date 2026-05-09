@@ -1,0 +1,200 @@
+package net.strokkur.commands.internal.printer.command;
+
+import net.strokkur.commands.internal.codegen.CodeAnnotation;
+import net.strokkur.commands.internal.codegen.CodeClass;
+import net.strokkur.commands.internal.codegen.CodeConstructor;
+import net.strokkur.commands.internal.codegen.CodeExpression;
+import net.strokkur.commands.internal.codegen.CodeField;
+import net.strokkur.commands.internal.codegen.CodeMethod;
+import net.strokkur.commands.internal.codegen.CodePackage;
+import net.strokkur.commands.internal.codegen.CodeParameter;
+import net.strokkur.commands.internal.codegen.CodeStatement;
+import net.strokkur.commands.internal.codegen.CodeType;
+import net.strokkur.commands.internal.codegen.Modifiers;
+import net.strokkur.commands.internal.printer.javadoc.AbstractJavadocPrintingVisitor;
+
+import java.util.List;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+
+public class JavaCommandTreePrintingVisitor extends AbstractCommandTreePrintingVisitor {
+  public JavaCommandTreePrintingVisitor(Supplier<AbstractJavadocPrintingVisitor> javadocPrintingVisitor, String indentString) {
+    super(javadocPrintingVisitor, indentString);
+  }
+
+  @Override
+  public StringBuilder visitClass(CodeClass codeClass) {
+    class ClassPrintUtil {
+      private void printMethods(StringBuilder builder, List<CodeMethod> methods) {
+        methods.forEach(method -> {
+          builder.append("\n");
+          appendNested(builder, method);
+        });
+      }
+    }
+    final ClassPrintUtil util = new ClassPrintUtil();
+
+    return append(builder -> {
+      printJavadocIndented(builder, codeClass.javadoc());
+      printAnnotationsIndented(builder, codeClass.annotations());
+      printModifiersIndented(builder, codeClass.modifiers());
+      builder.append("class ");
+      builder.append(codeClass.name());
+      builder.append(" {\n");
+
+      appendIndented(() -> {
+        codeClass.fields().forEach(field -> appendNested(builder, field));
+
+        final List<CodeMethod> staticMethods = codeClass.methods().stream()
+            .filter(method -> method.modifiers().contains(Modifiers.STATIC))
+            .toList();
+        util.printMethods(builder, staticMethods);
+
+        final List<CodeMethod> constructors = codeClass.methods().stream()
+            .filter(CodeConstructor.class::isInstance)
+            .toList();
+        util.printMethods(builder, constructors);
+
+        final List<CodeMethod> instanceMethods = codeClass.methods().stream()
+            .filter(Predicate.not(method -> method.modifiers().contains(Modifiers.STATIC)))
+            .filter(Predicate.not(CodeConstructor.class::isInstance))
+            .toList();
+        util.printMethods(builder, instanceMethods);
+      });
+
+      appendIndent(builder);
+      builder.append("}\n");
+    });
+  }
+
+  @Override
+  public StringBuilder visitMethod(CodeMethod codeMethod) {
+    return append(builder -> {
+      printJavadocIndented(builder, codeMethod.javadoc());
+      printModifiersIndented(builder, codeMethod.modifiers());
+      builder.append(codeMethod.returnType().accept(this));
+      if (!(codeMethod instanceof CodeConstructor)) {
+        builder.append(" ");
+        builder.append(codeMethod.name());
+      }
+
+      builder.append("(");
+      builder.append(joining(codeMethod.parameters()));
+      builder.append(")");
+
+      if (!codeMethod.throwsExceptions().isEmpty()) {
+        builder.append(" throws ");
+        builder.append(joining(codeMethod.throwsExceptions()));
+      }
+
+      builder.append(" {\n");
+      appendIndented(() -> codeMethod.codeBlock().statements().forEach(
+          stmt -> appendNested(builder, stmt)
+      ));
+      appendIndent(builder);
+      builder.append("}\n");
+    });
+  }
+
+  @Override
+  public StringBuilder visitPackage(CodePackage codePackage) {
+    return new StringBuilder();
+  }
+
+  @Override
+  public StringBuilder visitParameter(CodeParameter codeParameter) {
+    return append(builder -> {
+      appendNested(builder, codeParameter.type());
+      builder.append(" ");
+      builder.append(codeParameter.name());
+    });
+  }
+
+  @Override
+  public StringBuilder visitType(CodeType codeType) {
+    return new StringBuilder(codeType.name());
+  }
+
+  @Override
+  public StringBuilder visitAnnotation(CodeAnnotation codeAnnotation) {
+    return append(builder -> {
+      builder.append("@");
+      appendNested(builder, codeAnnotation.type());
+    });
+  }
+
+  @Override
+  public StringBuilder visitField(CodeField codeField) {
+    return append(builder -> {
+      printModifiersIndented(builder, codeField.modifiers());
+      appendNested(builder, codeField.type());
+      builder.append(" ");
+      builder.append(codeField.name());
+      if (codeField.initialiser() != null) {
+        builder.append(" = ");
+        appendNested(builder, codeField.initialiser());
+      }
+      builder.append(";\n");
+    });
+  }
+
+  @Override
+  public StringBuilder visitExpression(CodeExpression codeExpression) {
+    return append(builder -> {
+      switch (codeExpression) {
+        case CodeExpression.ConstructorInvocation constructorInvocation -> {
+          builder.append("new ");
+          appendNested(builder, constructorInvocation.type());
+          builder.append("(");
+          builder.append(joining(constructorInvocation.parameters()));
+          builder.append(")");
+        }
+        case CodeExpression.MethodInvocation methodInvocation -> {
+          appendMethodInvocation(builder, methodInvocation);
+        }
+        case CodeExpression.Null ignored -> {
+          builder.append("null");
+        }
+        case CodeExpression.StringLiteral stringLiteral -> {
+          builder.append('"').append(stringLiteral.value()).append('"');
+        }
+        case CodeExpression.Variable variable -> {
+          builder.append(variable.name());
+        }
+      }
+    });
+  }
+
+  @Override
+  public StringBuilder visitStatement(CodeStatement codeStatement) {
+    return append(builder -> {
+      appendIndent(builder);
+      switch (codeStatement) {
+        case CodeStatement.MethodInvocation methodInvocation -> {
+          appendMethodInvocation(builder, methodInvocation);
+        }
+        case CodeStatement.ReturnStatement returnStatement -> {
+          builder.append("return");
+          if (returnStatement.returnValue() != null) {
+            builder.append(" ");
+            appendNested(builder, returnStatement.returnValue());
+          }
+        }
+        case CodeStatement.ThrowStatement throwStatement -> {
+          builder.append("throw ");
+          appendNested(builder, throwStatement.throwExpression());
+        }
+        case CodeStatement.VariableDeclaration variableDeclaration -> {
+          appendNested(builder, variableDeclaration.type());
+          builder.append(" ");
+          builder.append(variableDeclaration.name());
+          if (variableDeclaration.assignment() != null) {
+            builder.append(" = ");
+            appendNested(builder, variableDeclaration.assignment());
+          }
+        }
+      }
+      builder.append(";\n");
+    });
+  }
+}

@@ -17,12 +17,26 @@
  */
 package net.strokkur.commands.internal.codegen;
 
-import net.strokkur.commands.internal.codegen.impl.BasicCodePackage;
+import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
+import net.strokkur.commands.internal.codegen.visitor.CodeVisitor;
 
-public interface CodePackage {
-  String path();
+public class CodePackage implements CodeVisitable {
+  private final String[] paths;
 
   static CodePackage of(String packageString) {
-    return new BasicCodePackage(packageString.split("\\."));
+    return new CodePackage(packageString.split("\\."));
+  }
+
+  public CodePackage(String[] paths) {
+    this.paths = paths;
+  }
+
+  public String path() {
+    return String.join(".", paths);
+  }
+
+  @Override
+  public <R> R accept(CodeVisitor<R> visitor) {
+    return visitor.visitPackage(this);
   }
 }

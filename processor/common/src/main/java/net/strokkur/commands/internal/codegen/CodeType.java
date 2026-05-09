@@ -17,31 +17,95 @@
  */
 package net.strokkur.commands.internal.codegen;
 
-import java.util.Set;
+import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
+import net.strokkur.commands.internal.codegen.visitor.CodeVisitor;
 
-public interface CodeType {
+public interface CodeType extends CodeVisitable {
   VoidType VOID = new VoidType();
+  PrimitiveType BYTE = new PrimitiveType("byte");
+  PrimitiveType CHAR = new PrimitiveType("char");
+  PrimitiveType SHORT = new PrimitiveType("short");
+  PrimitiveType INT = new PrimitiveType("int");
+  PrimitiveType LONG = new PrimitiveType("long");
+  PrimitiveType FLOAT = new PrimitiveType("float");
+  PrimitiveType DOUBLE = new PrimitiveType("double");
+
+  static GenericType generic(String name) {
+    return new GenericType(name);
+  }
+
+  static ClassType ofClass(CodeClass codeClass) {
+    return new ClassType(codeClass);
+  }
+
+  static ClassType ofClass(String fqn) {
+    return new ClassType(CodeClass.simple(fqn));
+  }
 
   String name();
 
   String fullyQualifiedName();
 
-  Set<CodeClass> collectImports();
+  @Override
+  default <R> R accept(CodeVisitor<R> visitor) {
+    return visitor.visitType(this);
+  }
 
-  class VoidType implements CodeType {
+  abstract class SimpleType implements CodeType {
+    private final String name;
+
+    private SimpleType(String name) {
+      this.name = name;
+    }
+
     @Override
     public String name() {
-      return "void";
+      return name;
     }
 
     @Override
     public String fullyQualifiedName() {
-      return "void";
+      return name;
+    }
+  }
+
+  class VoidType extends PrimitiveType {
+    private VoidType() {
+      super("void");
+    }
+  }
+
+  class PrimitiveType extends SimpleType {
+    private PrimitiveType(String name) {
+      super(name);
+    }
+  }
+
+  class GenericType extends SimpleType {
+    private GenericType(String name) {
+      super(name);
+    }
+  }
+
+  class ClassType implements CodeType {
+    private final CodeClass codeClass;
+
+    private ClassType(CodeClass codeClass) {
+      this.codeClass = codeClass;
+    }
+
+    public CodeClass codeClass() {
+      return codeClass;
     }
 
     @Override
-    public Set<CodeClass> collectImports() {
-      return Set.of();
+    public String name() {
+      return codeClass.name();
+    }
+
+    @Override
+    public String fullyQualifiedName() {
+      return codeClass.fullyQualifiedName();
     }
   }
 }

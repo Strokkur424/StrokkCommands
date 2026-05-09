@@ -19,6 +19,7 @@ package net.strokkur.commands.internal.codegen.javadoc;
 
 import net.strokkur.commands.internal.codegen.CodeClass;
 import net.strokkur.commands.internal.codegen.CodeMethod;
+import net.strokkur.commands.internal.codegen.CodeType;
 import net.strokkur.commands.internal.codegen.visitor.JavadocVisitor;
 import org.jspecify.annotations.Nullable;
 
@@ -60,7 +61,7 @@ public interface CodeJavadoc {
     return new MethodReferenceMeta("see", method, description, localMethod);
   }
 
-  static CodeJavadoc throwsMeta(CodeClass exception, @Nullable String description) {
+  static CodeJavadoc throwsMeta(CodeType.ClassType exception, @Nullable String description) {
     return new ClassReferenceMeta("throws", exception, description);
   }
 
@@ -142,7 +143,7 @@ public interface CodeJavadoc {
     }
   }
 
-  record ClassReferenceMeta(String descriptor, CodeClass codeClass, @Nullable String text) implements CodeJavadoc {
+  record ClassReferenceMeta(String descriptor, CodeType.ClassType type, @Nullable String text) implements CodeJavadoc {
     @Override
     public void accept(JavadocVisitor visitor) {
       visitor.visit(this);

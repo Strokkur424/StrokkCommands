@@ -17,14 +17,16 @@
  */
 package net.strokkur.commands.internal.codegen;
 
-import net.strokkur.commands.internal.codegen.impl.BasicCodeParameter;
+import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
+import net.strokkur.commands.internal.codegen.visitor.CodeVisitor;
 
-public interface CodeParameter {
-  static CodeParameter of(CodeType type, String name) {
-    return new BasicCodeParameter(type, name);
+public record CodeParameter(CodeType type, String name) implements CodeVisitable {
+  public static CodeParameter of(CodeType type, String name) {
+    return new CodeParameter(type, name);
   }
 
-  CodeType type();
-
-  String name();
+  @Override
+  public <R> R accept(CodeVisitor<R> visitor) {
+    return visitor.visitParameter(this);
+  }
 }

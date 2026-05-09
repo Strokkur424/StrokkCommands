@@ -15,10 +15,12 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.printer.visitor;
+package net.strokkur.commands.internal.printer.javadoc;
 
 import net.strokkur.commands.internal.codegen.CodeClass;
 import net.strokkur.commands.internal.codegen.CodeMethod;
+import net.strokkur.commands.internal.codegen.CodeType;
+import net.strokkur.commands.internal.codegen.builder.Builders;
 import net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc;
 
 import java.util.function.Supplier;
@@ -96,7 +98,7 @@ abstract class CommonJavadocVisitorTests {
         text("The constructor is not accessible. There is no need for an instance"),
         text("to be created, as no state is stored and all methods are static."),
         emptyLine(),
-        throwsMeta(CodeClass.simple("java.lang.IllegalAccessException"), "always")
+        throwsMeta(CodeType.ofClass("java.lang.IllegalAccessException"), "always")
     );
   }
 
@@ -109,35 +111,35 @@ abstract class CommonJavadocVisitorTests {
   }
 
   CodeMethod createMethod() {
-    return CodeMethod.builder(targetClass(), "create")
+    return Builders.method(targetClass(), "create")
         .build();
   }
 
   CodeMethod registerMethod() {
-    return CodeMethod.builder(targetClass(), "register")
-        .parameter(CodeClass.simple("io.papermc.paper.command.brigadier.Commands"), "commands")
+    return Builders.method(targetClass(), "register")
+        .addParameter(CodeType.ofClass(CodeClass.simple("io.papermc.paper.command.brigadier.Commands")), "commands")
         .build();
   }
 
   CodeMethod bootstrapMethod() {
-    return CodeMethod.builder()
-        .declaringClass(CodeClass.simple("io.papermc.paper.plugin.bootstrap.PluginBootstrap"))
-        .name("bootstrap")
-        .parameter(CodeClass.simple("io.papermc.paper.plugin.bootstrap.BootstrapContext"), "context")
+    return Builders.method()
+        .setDeclaringClass(CodeClass.simple("io.papermc.paper.plugin.bootstrap.PluginBootstrap"))
+        .setName("bootstrap")
+        .addParameter(CodeType.ofClass(CodeClass.simple("io.papermc.paper.plugin.bootstrap.BootstrapContext")), "context")
         .build();
   }
 
   CodeMethod onLoadMethod() {
-    return CodeMethod.builder()
-        .declaringClass(CodeClass.simple("org.bukkit.plugin.java.JavaPlugin"))
-        .name("onLoad")
+    return Builders.method()
+        .setDeclaringClass(CodeClass.simple("org.bukkit.plugin.java.JavaPlugin"))
+        .setName("onLoad")
         .build();
   }
 
   CodeMethod onEnableMethod() {
-    return CodeMethod.builder()
-        .declaringClass(CodeClass.simple("org.bukkit.plugin.java.JavaPlugin"))
-        .name("onEnable")
+    return Builders.method()
+        .setDeclaringClass(CodeClass.simple("org.bukkit.plugin.java.JavaPlugin"))
+        .setName("onEnable")
         .build();
   }
 }

@@ -15,26 +15,15 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.codegen.impl;
+package net.strokkur.commands.internal.printer.javadoc;
 
-import net.strokkur.commands.internal.codegen.CodeClass;
-import net.strokkur.commands.internal.codegen.CodePackage;
-import org.jspecify.annotations.Nullable;
+import net.strokkur.commands.internal.codegen.visitor.JavadocVisitor;
 
-import java.util.Set;
+import java.util.SequencedCollection;
 
-public record BasicCodeClass(
-    CodePackage codePackage,
-    @Nullable CodeClass parentClass,
-    String className
-) implements CodeClass {
-  @Override
-  public String name() {
-    return className;
-  }
+/// @apiNote instances of this class cannot be reused
+public abstract class AbstractJavadocPrintingVisitor implements JavadocVisitor {
+  protected final StringBuilder builder = new StringBuilder();
 
-  @Override
-  public Set<CodeClass> collectImports() {
-    return Set.of();
-  }
+  public abstract SequencedCollection<String> getLines();
 }

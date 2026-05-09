@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.printer.visitor;
+package net.strokkur.commands.internal.printer.javadoc;
 
 import net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc;
 

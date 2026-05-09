@@ -17,99 +17,104 @@
  */
 package net.strokkur.commands.internal.codegen;
 
-import net.strokkur.commands.internal.codegen.impl.BasicCodeMethod;
+import net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc;
+import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
+import net.strokkur.commands.internal.codegen.visitor.CodeVisitor;
 import org.jspecify.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-public interface CodeMethod {
+public class CodeMethod implements CodeVisitable {
+  private final CodeClass declaredClass;
+  private final CodeType returnType;
+  private final String name;
+  private final List<CodeParameter> parameters;
+  private final Set<Modifiers> modifiers;
+  private final @Nullable CodeJavadoc javadoc;
+  private final CodeBlock codeBlock;
+  private final Set<CodeType.ClassType> throwsExceptions;
 
-  static CodeMethod.Builder builder() {
-    return new Builder();
+  public CodeMethod(
+      CodeClass declaredClass,
+      CodeType returnType,
+      String name,
+      List<CodeParameter> parameters
+  ) {
+    this.declaredClass = declaredClass;
+    this.returnType = returnType;
+    this.name = name;
+    this.parameters = parameters;
+    this.modifiers = Set.of();
+    this.javadoc = null;
+    this.codeBlock = new CodeBlock(List.of());
+    this.throwsExceptions = Set.of();
   }
 
-  static CodeMethod.Builder builder(CodeClass declaringClass, String name) {
-    return new Builder()
-        .declaringClass(declaringClass)
-        .name(name);
+  public CodeMethod(
+      CodeClass declaredClass,
+      CodeType returnType,
+      String name,
+      List<CodeParameter> parameters,
+      Set<Modifiers> modifiers,
+      @Nullable CodeJavadoc javadoc,
+      CodeBlock codeBlock,
+      Set<CodeType.ClassType> throwsExceptions
+  ) {
+    this.declaredClass = declaredClass;
+    this.returnType = returnType;
+    this.name = name;
+    this.parameters = parameters;
+    this.modifiers = modifiers;
+    this.javadoc = javadoc;
+    this.codeBlock = codeBlock;
+    this.throwsExceptions = throwsExceptions;
+  }
+
+  @Override
+  public <R> R accept(CodeVisitor<R> visitor) {
+    return visitor.visitMethod(this);
   }
 
   /// Example: `methodName`
-  String name();
+  public String name() {
+    return name;
+  }
 
   /// Example: `methodName(String, int)`
-  default String javadocName() {
+  public String javadocName() {
     return name() + "(" + parameters().stream()
         .map(param -> param.type().fullyQualifiedName())
         .collect(Collectors.joining(", "))
         + ")";
   }
 
-  CodeClass declaredClass();
+  public CodeClass declaredClass() {
+    return declaredClass;
+  }
 
-  CodeType returnType();
+  public CodeType returnType() {
+    return returnType;
+  }
 
-  List<CodeParameter> parameters();
+  public List<CodeParameter> parameters() {
+    return parameters;
+  }
 
-  boolean isStatic();
+  public Set<Modifiers> modifiers() {
+    return modifiers;
+  }
 
-  class Builder {
-    private @Nullable CodeClass declaredClass = null;
-    private @Nullable String name = null;
+  public @Nullable CodeJavadoc javadoc() {
+    return javadoc;
+  }
 
-    private CodeType returnType = CodeType.VOID;
-    private boolean isStatic = false;
-    private final List<CodeParameter> parameters = new ArrayList<>();
+  public CodeBlock codeBlock() {
+    return codeBlock;
+  }
 
-    public Builder declaringClass(CodeClass declaringClass) {
-      this.declaredClass = declaringClass;
-      return this;
-    }
-
-    public Builder returnType(CodeType returnType) {
-      this.returnType = returnType;
-      return this;
-    }
-
-    public Builder name(String name) {
-      this.name = name;
-      return this;
-    }
-
-    public Builder parameters(List<CodeParameter> parameters) {
-      this.parameters.clear();
-      this.parameters.addAll(parameters);
-      return this;
-    }
-
-    public Builder parameter(CodeType type, String name) {
-      this.parameters.add(CodeParameter.of(type, name));
-      return this;
-    }
-
-    public Builder setStatic() {
-      this.isStatic = true;
-      return this;
-    }
-
-    public Builder setStatic(boolean value) {
-      this.isStatic = value;
-      return this;
-    }
-
-    public CodeMethod build() {
-      Objects.requireNonNull(this.declaredClass);
-      Objects.requireNonNull(this.name);
-      return new BasicCodeMethod(
-          declaredClass,
-          returnType,
-          name,
-          List.copyOf(parameters),
-          isStatic
-      );
-    }
+  public Set<CodeType.ClassType> throwsExceptions() {
+    return throwsExceptions;
   }
 }
