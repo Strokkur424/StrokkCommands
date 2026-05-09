@@ -23,7 +23,6 @@ import net.strokkur.commands.internal.codegen.CodeConstructor;
 import net.strokkur.commands.internal.codegen.CodeExpression;
 import net.strokkur.commands.internal.codegen.CodeField;
 import net.strokkur.commands.internal.codegen.CodeMethod;
-import net.strokkur.commands.internal.codegen.CodePackage;
 import net.strokkur.commands.internal.codegen.CodeParameter;
 import net.strokkur.commands.internal.codegen.CodeStatement;
 import net.strokkur.commands.internal.codegen.CodeType;
@@ -34,8 +33,8 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-public class JavaCommandTreePrintingVisitor extends AbstractCommandTreePrintingVisitor {
-  public JavaCommandTreePrintingVisitor(Supplier<AbstractJavadocPrintingVisitor> javadocPrintingVisitor, String indentString) {
+public class JavaSourcePrintingVisitor extends AbstractSourcePrintingVisitor {
+  public JavaSourcePrintingVisitor(Supplier<AbstractJavadocPrintingVisitor> javadocPrintingVisitor, String indentString) {
     super(javadocPrintingVisitor, indentString);
   }
 
@@ -114,11 +113,6 @@ public class JavaCommandTreePrintingVisitor extends AbstractCommandTreePrintingV
   }
 
   @Override
-  public StringBuilder visitPackage(CodePackage codePackage) {
-    return new StringBuilder();
-  }
-
-  @Override
   public StringBuilder visitParameter(CodeParameter codeParameter) {
     return append(builder -> {
       appendNested(builder, codeParameter.type());
@@ -178,6 +172,7 @@ public class JavaCommandTreePrintingVisitor extends AbstractCommandTreePrintingV
         case CodeExpression.Variable variable -> {
           builder.append(variable.name());
         }
+        default -> throw new IllegalStateException("Invalid expression: " + codeExpression.getClass().getName());
       }
     });
   }
@@ -210,6 +205,7 @@ public class JavaCommandTreePrintingVisitor extends AbstractCommandTreePrintingV
             appendNested(builder, variableDeclaration.assignment());
           }
         }
+        default -> throw new IllegalStateException("Invalid statement: " + codeStatement.getClass().getName());
       }
       builder.append(";\n");
     });

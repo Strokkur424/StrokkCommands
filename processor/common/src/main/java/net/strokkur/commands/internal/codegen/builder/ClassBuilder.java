@@ -30,6 +30,7 @@ import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 public class ClassBuilder {
@@ -105,5 +106,18 @@ public class ClassBuilder {
         javadoc,
         typeParameters
     );
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (!(o instanceof final ClassBuilder that)) {
+      return false;
+    }
+    return Objects.equals(codePackage, that.codePackage) && Objects.equals(parentClass, that.parentClass) && Objects.equals(name, that.name) && Objects.equals(modifiers, that.modifiers) && Objects.equals(annotations, that.annotations) && Objects.equals(methods, that.methods) && Objects.equals(fields, that.fields) && Objects.equals(javadoc, that.javadoc) && Objects.equals(typeParameters, that.typeParameters);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(codePackage, parentClass, name, modifiers, annotations, methods, fields, javadoc, typeParameters);
   }
 }

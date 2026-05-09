@@ -53,11 +53,11 @@ public interface CodeJavadoc {
     return new Meta("version", version);
   }
 
-  static CodeJavadoc see(CodeMethod method, String description) {
+  static CodeJavadoc see(CodeMethod method, @Nullable String description) {
     return see(method, description, false);
   }
 
-  static CodeJavadoc see(CodeMethod method, String description, boolean localMethod) {
+  static CodeJavadoc see(CodeMethod method, @Nullable String description, boolean localMethod) {
     return new MethodReferenceMeta("see", method, description, localMethod);
   }
 
@@ -70,7 +70,7 @@ public interface CodeJavadoc {
   }
 
   /// Intended to be used inside [#combineLines(CodeJavadoc...)] for a true blank line.
-  static CodeJavadoc emptyLine() {
+  static CodeJavadoc blank() {
     return visitor -> {
       // noop
     };

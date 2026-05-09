@@ -20,10 +20,13 @@ package net.strokkur.commands.internal.codegen;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitor;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 public class CodePackage implements CodeVisitable {
   private final String[] paths;
 
-  static CodePackage of(String packageString) {
+  public static CodePackage of(String packageString) {
     return new CodePackage(packageString.split("\\."));
   }
 
@@ -38,5 +41,18 @@ public class CodePackage implements CodeVisitable {
   @Override
   public <R> R accept(CodeVisitor<R> visitor) {
     return visitor.visitPackage(this);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (!(o instanceof final CodePackage that)) {
+      return false;
+    }
+    return Objects.deepEquals(paths, that.paths);
+  }
+
+  @Override
+  public int hashCode() {
+    return Arrays.hashCode(paths);
   }
 }

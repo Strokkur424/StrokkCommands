@@ -20,7 +20,7 @@ package net.strokkur.commands.internal.codegen;
 import net.strokkur.commands.internal.codegen.builder.Builders;
 import net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc;
 import net.strokkur.commands.internal.printer.command.ImportGatheringVisitor;
-import net.strokkur.commands.internal.printer.command.JavaCommandTreePrintingVisitor;
+import net.strokkur.commands.internal.printer.command.JavaSourcePrintingVisitor;
 import net.strokkur.commands.internal.printer.javadoc.JavaMarkdownJavadocVisitor;
 import net.strokkur.commands.internal.util.Classes;
 import org.junit.jupiter.api.Assertions;
@@ -56,7 +56,7 @@ class FullCommandClassBuilderTests {
   @Test
   void testFullClassExampleJavaPrinter() {
     final CodeClass exampleClass = constructExampleCommandClass();
-    final JavaCommandTreePrintingVisitor visitor = new JavaCommandTreePrintingVisitor(JavaMarkdownJavadocVisitor::new, "  ");
+    final JavaSourcePrintingVisitor visitor = new JavaSourcePrintingVisitor(JavaMarkdownJavadocVisitor::new, "  ");
 
     // language=java
     final String expected = """
@@ -136,11 +136,11 @@ class FullCommandClassBuilderTests {
         )
         .addMethod(Builders.method()
             .setDeclaringClass(current)
-            .setThrowsExceptions(Set.of(CodeType.ofClass("java.lang.IllegalAccessException")))
+            .setThrowsExceptions(List.of(CodeType.ofClass("java.lang.IllegalAccessException")))
             .setModifiers(Set.of(Modifiers.PRIVATE))
             .setJavadoc(CodeJavadoc.combineLines(
                 CodeJavadoc.text("The constructor is inaccessible."),
-                CodeJavadoc.emptyLine(),
+                CodeJavadoc.blank(),
                 CodeJavadoc.throwsMeta(CodeType.ofClass("java.lang.IllegalAccessException"), "always")
             ))
             .setCodeBlock(List.of(

@@ -25,7 +25,6 @@ import net.strokkur.commands.internal.codegen.Modifiers;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -72,7 +71,7 @@ public class FieldBuilder {
     Objects.requireNonNull(name);
     Objects.requireNonNull(type);
     return new CodeField(
-        name, type, initialiser, EnumSet.copyOf(modifiers), List.copyOf(annotations)
+        name, type, initialiser, Set.copyOf(modifiers), List.copyOf(annotations)
     );
   }
 }

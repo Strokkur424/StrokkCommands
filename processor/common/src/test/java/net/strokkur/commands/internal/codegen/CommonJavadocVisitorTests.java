@@ -15,22 +15,20 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.printer.javadoc;
+package net.strokkur.commands.internal.codegen;
 
-import net.strokkur.commands.internal.codegen.CodeClass;
-import net.strokkur.commands.internal.codegen.CodeMethod;
-import net.strokkur.commands.internal.codegen.CodeType;
 import net.strokkur.commands.internal.codegen.builder.Builders;
 import net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc;
+import net.strokkur.commands.internal.printer.javadoc.AbstractJavadocPrintingVisitor;
 
 import java.util.function.Supplier;
 
 import static net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc.author;
+import static net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc.blank;
 import static net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc.classReference;
 import static net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc.codeBlock;
 import static net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc.combine;
 import static net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc.combineLines;
-import static net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc.emptyLine;
 import static net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc.header;
 import static net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc.inlineCode;
 import static net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc.linebreak;
@@ -54,7 +52,7 @@ abstract class CommonJavadocVisitorTests {
     return combineLines(
         text("A class holding the Brigadier source tree generated from"),
         combine(classReference(sourceClass()), text(" using "), url("StrokkCommands", "https://commands.strokkur.net")),
-        emptyLine(),
+        blank(),
         author("Strokkur24 - StrokkCommands"),
         version("2.0.0"),
         see(createMethod(), "creating the LiteralCommandNode", true),
@@ -97,7 +95,7 @@ abstract class CommonJavadocVisitorTests {
     return combineLines(
         text("The constructor is not accessible. There is no need for an instance"),
         text("to be created, as no state is stored and all methods are static."),
-        emptyLine(),
+        blank(),
         throwsMeta(CodeType.ofClass("java.lang.IllegalAccessException"), "always")
     );
   }

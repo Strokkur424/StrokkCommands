@@ -26,6 +26,7 @@ import net.strokkur.commands.internal.codegen.CodePackage;
 import net.strokkur.commands.internal.codegen.CodeParameter;
 import net.strokkur.commands.internal.codegen.CodeStatement;
 import net.strokkur.commands.internal.codegen.CodeType;
+import net.strokkur.commands.internal.codegen.Modifiers;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitor;
 
@@ -70,7 +71,7 @@ public class ImportGatheringVisitor implements CodeVisitor<Set<String>> {
 
   @Override
   public Set<String> visitPackage(CodePackage codePackage) {
-    return Set.of();
+    throw new IllegalStateException("This should not be called.");
   }
 
   @Override
@@ -103,7 +104,7 @@ public class ImportGatheringVisitor implements CodeVisitor<Set<String>> {
   public Set<String> visitExpression(CodeExpression codeExpression) {
     return switch (codeExpression) {
       case CodeExpression.MethodInvocation methodInvocation -> {
-        if (methodInvocation.instanceVariable() == null) {
+        if (methodInvocation.method().modifiers().contains(Modifiers.STATIC)) {
           yield join(
               methodInvocation.method().declaredClass().accept(this),
               collect(methodInvocation.parameters())
@@ -116,6 +117,7 @@ public class ImportGatheringVisitor implements CodeVisitor<Set<String>> {
           ctorInvocation.type().accept(this),
           collect(ctorInvocation.parameters())
       );
+
       default -> Set.of();
     };
   }
@@ -140,7 +142,7 @@ public class ImportGatheringVisitor implements CodeVisitor<Set<String>> {
       case CodeStatement.ThrowStatement throwStatement -> throwStatement.throwExpression().accept(this);
 
       case CodeStatement.MethodInvocation methodInvocation -> {
-        if (methodInvocation.instanceVariable() == null) {
+        if (methodInvocation.method().modifiers().contains(Modifiers.STATIC)) {
           yield join(
               methodInvocation.method().declaredClass().accept(this),
               collect(methodInvocation.parameters())
@@ -148,8 +150,6 @@ public class ImportGatheringVisitor implements CodeVisitor<Set<String>> {
         }
         yield collect(methodInvocation.parameters());
       }
-
-      default -> Set.of();
     };
   }
 }

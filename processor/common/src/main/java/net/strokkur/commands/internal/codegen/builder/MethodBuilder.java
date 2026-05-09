@@ -43,7 +43,7 @@ public class MethodBuilder {
   private Set<Modifiers> modifiers = new HashSet<>();
   private @Nullable CodeJavadoc javadoc = null;
   private CodeBlock codeBlock = new CodeBlock(List.of());
-  private Set<CodeType.ClassType> throwsExceptions = Set.of();
+  private List<CodeType.ClassType> throwsExceptions = List.of();
 
   MethodBuilder() {
     // package-private ctor
@@ -89,7 +89,7 @@ public class MethodBuilder {
     return this;
   }
 
-  public MethodBuilder setThrowsExceptions(Set<CodeType.ClassType> throwsExceptions) {
+  public MethodBuilder setThrowsExceptions(List<CodeType.ClassType> throwsExceptions) {
     this.throwsExceptions = throwsExceptions;
     return this;
   }
@@ -105,7 +105,7 @@ public class MethodBuilder {
         Set.copyOf(modifiers),
         javadoc,
         codeBlock,
-        Set.copyOf(throwsExceptions)
+        List.copyOf(throwsExceptions)
     );
   }
 
@@ -117,7 +117,7 @@ public class MethodBuilder {
         Set.copyOf(modifiers),
         javadoc,
         codeBlock,
-        Set.copyOf(throwsExceptions)
+        List.copyOf(throwsExceptions)
     );
   }
 }

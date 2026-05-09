@@ -15,9 +15,17 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.printer.javadoc;
+package net.strokkur.commands.internal.codegen;
 
+import net.strokkur.commands.internal.codegen.builder.Builders;
+import net.strokkur.commands.internal.printer.javadoc.JavaStarJavadocVisitor;
 import org.junit.jupiter.api.Test;
+
+import static net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc.classReference;
+import static net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc.combine;
+import static net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc.combineLines;
+import static net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc.methodReference;
+import static net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc.text;
 
 class JavadocStarVisitorTests extends CommonJavadocVisitorTests {
   @Test
@@ -89,5 +97,37 @@ class JavadocStarVisitorTests extends CommonJavadocVisitorTests {
          * @throws java.lang.IllegalAccessException always
          */""";
     checkOutput(expected, ctorJd(), JavaStarJavadocVisitor::new);
+  }
+
+  @Test
+  void testNamedClassReference() {
+    // language=java
+    final String expected = """
+        /**
+         * This {@link java.lang.ProcessEnvironment environment} does not help me
+         * at all.
+         */""";
+    checkOutput(expected, combineLines(
+        combine(text("This "), classReference(CodeClass.simple("java.lang.ProcessEnvironment"), "environment"), text(" does not help me")),
+        text("at all.")
+    ), JavaStarJavadocVisitor::new);
+  }
+
+  @Test
+  void testNamedMethodReference() {
+    // language=java
+    final String expected = """
+        /**
+         * Use the {@link #builder() builder} for quick access.
+         */""";
+    checkOutput(
+        expected,
+        combine(
+            text("Use the "),
+            methodReference(Builders.method(CodeClass.simple("none.None"), "builder").build(), "builder", true),
+            text(" for quick access.")
+        ),
+        JavaStarJavadocVisitor::new
+    );
   }
 }

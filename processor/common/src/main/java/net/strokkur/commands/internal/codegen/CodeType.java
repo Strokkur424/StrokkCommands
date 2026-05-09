@@ -94,10 +94,6 @@ public interface CodeType extends CodeVisitable {
       this.codeClass = codeClass;
     }
 
-    public CodeClass codeClass() {
-      return codeClass;
-    }
-
     @Override
     public String name() {
       return codeClass.name();

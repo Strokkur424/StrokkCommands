@@ -1,5 +1,6 @@
 plugins {
   alias(libs.plugins.blossom)
+  id("jacoco")
   id("commands-publish")
 }
 
@@ -11,10 +12,24 @@ dependencies {
   testRuntimeOnly(libs.junit.platform)
 }
 
-tasks.test {
-  useJUnitPlatform()
-  testLogging {
-    events("passed", "skipped", "failed")
+jacoco {
+  toolVersion = "0.8.14"
+}
+
+tasks {
+  test {
+    useJUnitPlatform()
+    testLogging {
+      events("passed", "skipped", "failed")
+    }
+  }
+
+  jacocoTestReport {
+    dependsOn(test)
+    reports {
+      xml.required = true
+      html.required = true
+    }
   }
 }
 

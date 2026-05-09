@@ -30,7 +30,7 @@ public class CodeConstructor extends CodeMethod {
       Set<Modifiers> modifiers,
       @Nullable CodeJavadoc javadoc,
       CodeBlock codeBlock,
-      Set<CodeType.ClassType> throwsExceptions
+      List<CodeType.ClassType> throwsExceptions
   ) {
     super(declaredClass, CodeType.ofClass(declaredClass), declaredClass.name(), parameters, modifiers, javadoc, codeBlock, throwsExceptions);
   }

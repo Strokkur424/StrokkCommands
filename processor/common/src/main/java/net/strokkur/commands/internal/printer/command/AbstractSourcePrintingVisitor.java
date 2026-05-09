@@ -18,6 +18,7 @@
 package net.strokkur.commands.internal.printer.command;
 
 import net.strokkur.commands.internal.codegen.CodeAnnotation;
+import net.strokkur.commands.internal.codegen.CodePackage;
 import net.strokkur.commands.internal.codegen.InvokesMethod;
 import net.strokkur.commands.internal.codegen.Modifiers;
 import net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc;
@@ -34,28 +35,26 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public abstract class AbstractCommandTreePrintingVisitor implements CodeVisitor<StringBuilder> {
+public abstract class AbstractSourcePrintingVisitor implements CodeVisitor<StringBuilder> {
   protected final Supplier<AbstractJavadocPrintingVisitor> javadocPrintingVisitor;
   private final String indentString;
   private int indentation = 0;
 
-  public AbstractCommandTreePrintingVisitor(Supplier<AbstractJavadocPrintingVisitor> javadocPrintingVisitor, String indentString) {
+  public AbstractSourcePrintingVisitor(Supplier<AbstractJavadocPrintingVisitor> javadocPrintingVisitor, String indentString) {
     this.javadocPrintingVisitor = javadocPrintingVisitor;
     this.indentString = indentString;
+  }
+
+  /// Packages are never printed.
+  @Override
+  public final StringBuilder visitPackage(CodePackage codePackage) {
+    throw new IllegalStateException("This should not be called.");
   }
 
   protected final void appendIndented(Runnable run) {
     incrementIndent();
     run.run();
     decrementIndent();
-  }
-
-  protected final StringBuilder appendIndented(Consumer<StringBuilder> run) {
-    final StringBuilder builder = new StringBuilder();
-    incrementIndent();
-    run.accept(builder);
-    decrementIndent();
-    return builder;
   }
 
   protected final StringBuilder append(Consumer<StringBuilder> run) {

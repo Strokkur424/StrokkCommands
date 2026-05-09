@@ -15,9 +15,21 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.printer.javadoc;
+package net.strokkur.commands.internal.codegen;
 
+import net.strokkur.commands.internal.codegen.builder.Builders;
+import net.strokkur.commands.internal.printer.javadoc.JavaMarkdownJavadocVisitor;
+import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.api.Test;
+
+import static net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc.blank;
+import static net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc.classReference;
+import static net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc.combine;
+import static net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc.combineLines;
+import static net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc.methodReference;
+import static net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc.newline;
+import static net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc.see;
+import static net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc.text;
 
 class JavadocMarkdownVisitorTests extends CommonJavadocVisitorTests {
   @Test
@@ -81,5 +93,53 @@ class JavadocMarkdownVisitorTests extends CommonJavadocVisitorTests {
         ///
         /// @throws java.lang.IllegalAccessException always""";
     checkOutput(expected, ctorJd(), JavaMarkdownJavadocVisitor::new);
+  }
+
+  @Test
+  void testNamedClassReference() {
+    @Language("JAVA") final String expected = """
+        /// This [environment][java.lang.ProcessEnvironment] does not help me
+        /// at all.""";
+    checkOutput(expected, combineLines(
+        combine(text("This "), classReference(CodeClass.simple("java.lang.ProcessEnvironment"), "environment"), text(" does not help me")),
+        text("at all.")
+    ), JavaMarkdownJavadocVisitor::new);
+  }
+
+  @Test
+  void testNamedMethodReference() {
+    @Language("JAVA") final String expected = """
+        /// Use the [builder][#builder()] for quick access.""";
+    checkOutput(
+        expected,
+        combine(
+            text("Use the "),
+            methodReference(Builders.method(CodeClass.simple("none.None"), "builder").build(), "builder", true),
+            text(" for quick access.")
+        ),
+        JavaMarkdownJavadocVisitor::new
+    );
+  }
+
+  @Test
+  void testMiscCodeTypes() {
+    // language=java
+    final String expected = """
+        /// This is text with a
+        /// new line.
+        ///
+        /// @see java.lang.String#concat(java.lang.String)""";
+    checkOutput(
+        expected,
+        combineLines(
+            combine(text("This is text with a"), newline(), text("new line.")),
+            blank(),
+            see(Builders.method(CodeClass.STRING, "concat")
+                .addParameter(CodeType.ofClass(CodeClass.STRING), "")
+                .build(), null
+            )
+        ),
+        JavaMarkdownJavadocVisitor::new
+    );
   }
 }

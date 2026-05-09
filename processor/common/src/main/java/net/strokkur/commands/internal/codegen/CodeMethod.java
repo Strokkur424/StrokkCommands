@@ -34,23 +34,7 @@ public class CodeMethod implements CodeVisitable {
   private final Set<Modifiers> modifiers;
   private final @Nullable CodeJavadoc javadoc;
   private final CodeBlock codeBlock;
-  private final Set<CodeType.ClassType> throwsExceptions;
-
-  public CodeMethod(
-      CodeClass declaredClass,
-      CodeType returnType,
-      String name,
-      List<CodeParameter> parameters
-  ) {
-    this.declaredClass = declaredClass;
-    this.returnType = returnType;
-    this.name = name;
-    this.parameters = parameters;
-    this.modifiers = Set.of();
-    this.javadoc = null;
-    this.codeBlock = new CodeBlock(List.of());
-    this.throwsExceptions = Set.of();
-  }
+  private final List<CodeType.ClassType> throwsExceptions;
 
   public CodeMethod(
       CodeClass declaredClass,
@@ -60,7 +44,7 @@ public class CodeMethod implements CodeVisitable {
       Set<Modifiers> modifiers,
       @Nullable CodeJavadoc javadoc,
       CodeBlock codeBlock,
-      Set<CodeType.ClassType> throwsExceptions
+      List<CodeType.ClassType> throwsExceptions
   ) {
     this.declaredClass = declaredClass;
     this.returnType = returnType;
@@ -114,7 +98,7 @@ public class CodeMethod implements CodeVisitable {
     return codeBlock;
   }
 
-  public Set<CodeType.ClassType> throwsExceptions() {
+  public List<CodeType.ClassType> throwsExceptions() {
     return throwsExceptions;
   }
 }
