@@ -22,21 +22,23 @@ import net.strokkur.commands.internal.codegen.CodeClass;
 import net.strokkur.commands.internal.codegen.CodeConstructor;
 import net.strokkur.commands.internal.codegen.CodeMethod;
 import net.strokkur.commands.internal.codegen.CodeParameter;
-import net.strokkur.commands.internal.codegen.CodeStatement;
 import net.strokkur.commands.internal.codegen.CodeType;
 import net.strokkur.commands.internal.codegen.Modifiers;
+import net.strokkur.commands.internal.codegen.as.AsStatement;
 import net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc;
+import net.strokkur.commands.internal.util.ConvertableTo;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
-public class MethodBuilder {
+public class MethodBuilder implements ConvertableTo<CodeMethod> {
   private @Nullable CodeClass declaredClass = null;
-  private @Nullable String name = null;
+  private final String name;
 
   private CodeType returnType = CodeType.VOID;
   private List<CodeParameter> parameters = new ArrayList<>();
@@ -45,17 +47,12 @@ public class MethodBuilder {
   private CodeBlock codeBlock = new CodeBlock(List.of());
   private List<CodeType.ClassType> throwsExceptions = List.of();
 
-  MethodBuilder() {
-    // package-private ctor
+  MethodBuilder(String name) {
+    this.name = name;
   }
 
   public MethodBuilder setDeclaringClass(CodeClass declaringClass) {
     this.declaredClass = declaringClass;
-    return this;
-  }
-
-  public MethodBuilder setName(String name) {
-    this.name = name;
     return this;
   }
 
@@ -84,8 +81,11 @@ public class MethodBuilder {
     return this;
   }
 
-  public MethodBuilder setCodeBlock(List<CodeStatement> statements) {
-    this.codeBlock = new CodeBlock(statements);
+  public MethodBuilder setCodeBlock(List<? extends AsStatement> statements) {
+    this.codeBlock = new CodeBlock(statements.stream()
+        .map(AsStatement::getAsStatement)
+        .toList()
+    );
     return this;
   }
 
@@ -95,10 +95,9 @@ public class MethodBuilder {
   }
 
   public CodeMethod build() {
-    Objects.requireNonNull(this.declaredClass);
     Objects.requireNonNull(this.name);
     return new CodeMethod(
-        declaredClass,
+        Optional.ofNullable(declaredClass).orElse(CodeClass.simple("no.class.provided.in.MethodBuilder")),
         returnType,
         name,
         List.copyOf(parameters),
@@ -119,5 +118,10 @@ public class MethodBuilder {
         codeBlock,
         List.copyOf(throwsExceptions)
     );
+  }
+
+  @Override
+  public CodeMethod convert() {
+    return build();
   }
 }

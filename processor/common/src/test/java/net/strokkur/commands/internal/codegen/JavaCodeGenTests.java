@@ -21,7 +21,6 @@ import net.strokkur.commands.internal.codegen.builder.Builders;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
 import net.strokkur.commands.internal.printer.command.JavaSourcePrintingVisitor;
 import net.strokkur.commands.internal.printer.javadoc.JavaMarkdownJavadocVisitor;
-import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -33,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class JavaCodeGenTests {
   private static final CodeClass EXAMPLE_CLASS = Builders.classBuilder("com.example.ExampleClass").build();
 
-  private void check(@Language("JAVA") String expected, CodeVisitable visitable) {
+  private void check(String expected, CodeVisitable visitable) {
     final JavaSourcePrintingVisitor visitor = new JavaSourcePrintingVisitor(JavaMarkdownJavadocVisitor::new, "  ");
     final String actual = visitable.accept(visitor).toString();
     assertEquals(expected, actual);
@@ -48,13 +47,15 @@ class JavaCodeGenTests {
 
   @Test
   void testClass() {
-    final @Language("JAVA") String expected = """
+    // language=java
+    final String expected = """
         class ExampleClass {
         }
         """;
     check(expected, EXAMPLE_CLASS);
 
-    final @Language("JAVA") String expectedWithFields = """
+    // language=java
+    final String expectedWithFields = """
         class ExampleClass {
           String oneField;
           int anotherField;
@@ -66,7 +67,8 @@ class JavaCodeGenTests {
         .build()
     );
 
-    final @Language("JAVA") String expectedWithMethods = """
+    // language=java
+    final String expectedWithMethods = """
         class ExampleClass {
         
           String oneMethod() {
@@ -86,7 +88,8 @@ class JavaCodeGenTests {
         .build()
     );
 
-    final @Language("JAVA") String expectedCombined = """
+    // language=java
+    final String expectedCombined = """
         class ExampleClass {
           String oneField;
           int anotherField;
@@ -124,8 +127,7 @@ class JavaCodeGenTests {
         .addMethod(Builders.method(EXAMPLE_CLASS, "anotherInstanceMethod")
             .setReturnType(CodeType.INT)
         )
-        .addMethod(Builders.method()
-            .setDeclaringClass(EXAMPLE_CLASS)
+        .addMethod(Builders.method(EXAMPLE_CLASS)
             .buildConstructor()
         )
         .build()
@@ -134,13 +136,15 @@ class JavaCodeGenTests {
 
   @Test
   void testMethod() {
-    final @Language("JAVA") String expected = """
+    // language=java
+    final String expected = """
         void method() {
         }
         """;
     check(expected, Builders.method(EXAMPLE_CLASS, "method").build());
 
-    final @Language("JAVA") String expectedWithModifiers = """
+    // language=java
+    final String expectedWithModifiers = """
         public static void method() {
         }
         """;
@@ -148,23 +152,22 @@ class JavaCodeGenTests {
         .setModifiers(Set.of(Modifiers.PUBLIC, Modifiers.STATIC))
         .build());
 
-    final @Language("JAVA") String expectedWithStatements = """
+    // language=java
+    final String expectedWithStatements = """
         void method() {
           otherMethod(STATIC_VALUE, "Now");
         }
         """;
     check(expectedWithStatements, Builders.method(EXAMPLE_CLASS, "method")
         .setCodeBlock(List.of(
-            CodeStatement.methodInvocation(Builders.method(EXAMPLE_CLASS, "otherMethod").build(),
-                List.of(
-                    CodeExpression.variable("STATIC_VALUE"),
-                    CodeExpression.string("Now")
-                )
-            )
-        ))
-        .build());
+            Builders.methodInvocation(Builders.method(EXAMPLE_CLASS, "otherMethod"))
+                .addParameter(CodeExpression.variable("STATIC_VALUE"))
+                .addParameter(CodeExpression.string("Now"))
+        )).build()
+    );
 
-    final @Language("JAVA") String expectedWithThrows = """
+    // language=java
+    final String expectedWithThrows = """
         void method() throws NullPointerException, SQLException {
           throw new SQLException("No database present :(");
         }
@@ -186,19 +189,22 @@ class JavaCodeGenTests {
 
   @Test
   void testField() {
-    final @Language("JAVA") String expectedNoInit = """
+    // language=java
+    final String expectedNoInit = """
         String someField;
         """;
     check(expectedNoInit, Builders.field("someField", CodeType.ofClass(CodeClass.STRING)).build());
 
-    final @Language("JAVA") String expectedWithInit = """
+    // language=java
+    final String expectedWithInit = """
         String someField = "some value";
         """;
     check(expectedWithInit, Builders.field("someField", CodeType.ofClass(CodeClass.STRING))
         .setInitialiser(CodeExpression.string("some value"))
         .build());
 
-    final @Language("JAVA") String expectedWithModifiers = """
+    // language=java
+    final String expectedWithModifiers = """
         public static final String SOME_FIELD;
         """;
     check(expectedWithModifiers, Builders.field("SOME_FIELD", CodeType.ofClass(CodeClass.STRING))
@@ -237,5 +243,83 @@ class JavaCodeGenTests {
         "value",
         null
     ));
+  }
+
+  @Test
+  void methodInvocationFormat() {
+    final @JavaStatements String multiline = """
+        String
+          .getValue()
+          .stream().toLol()
+          .toList();
+        """;
+    check(multiline, Builders.methodInvocation("getValue")
+        .setStatic()
+        .setType(CodeType.STRING)
+        .setNewline()
+        .chain("stream", true)
+        .chain("toLol", false)
+        .chain("toList", true)
+        .getAsStatement()
+    );
+  }
+
+  @Test
+  void testAdvancedRegisterMethod() {
+    // language=java
+    final String expected = """
+        class BrigadierTest {
+        
+          public void register(ProxyServer server, Object command$plugin) {
+            final BrigadierCommand command = new BrigadierCommand(create());
+            final CommandMeta meta = server.getCommandManager().metaBuilder(command)
+              .aliases(ALIASES.toArray(String[]::new))
+              .plugin(command$plugin)
+              .build();
+        
+            server.getCommandManager().register(meta, command);
+          }
+        }
+        """;
+    check(expected, Builders.classBuilder("pkg.BrigadierTest")
+        .addMethod(Builders.method("register")
+            .setModifiers(Set.of(Modifiers.PUBLIC))
+            .addParameter(CodeType.ofClass("velocity.ProxyServer"), "server")
+            .addParameter(CodeType.ofClass("java.lang.Object"), "command$plugin")
+            .setCodeBlock(List.of(
+                // BrigadierCommand command
+                CodeStatement.variableDeclarationFinal(
+                    CodeType.ofClass("velocity.BrigadierCommand"),
+                    "command",
+                    CodeExpression.constructorCall(CodeType.ofClass("velocity.BrigadierCommand"), List.of(
+                        Builders.methodInvocation("create")
+                    ))
+                ),
+
+                // CommandMeta meta
+                CodeStatement.variableDeclarationFinal(
+                    CodeType.ofClass("velocity.CommandMeta"),
+                    "meta",
+                    Builders.methodInvocation("getCommandManager")
+                        .setInstanceVariable("server")
+                        .chain("metaBuilder", false, CodeExpression.variable("command"))
+                        .chain("aliases", true, Builders.methodInvocation("toArray")
+                            .setInstanceVariable("ALIASES")
+                            .addParameter(CodeExpression.methodReference(CodeType.STRING_ARRAY, "new"))
+                        )
+                        .chain("plugin", true, CodeExpression.variable("command$plugin"))
+                        .chain("build", true)
+                ),
+
+                CodeStatement.blank(),
+
+                // register call
+                Builders.methodInvocation("getCommandManager")
+                    .setInstanceVariable("server")
+                    .chain("register", false, CodeExpression.variable("meta"), CodeExpression.variable("command"))
+            ))
+        )
+        .build()
+    );
   }
 }

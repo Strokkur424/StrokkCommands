@@ -57,40 +57,41 @@ class ImportGatherTests {
   void testGatherExpressionImports() {
     // Test static method invocation
     check("""
-        com.example.Test""", CodeExpression.methodCall(
-        Builders.method(CodeClass.simple("com.example.Test"), "execute")
-            .setModifiers(Set.of(Modifiers.STATIC))
-            .build(),
-        List.of()
-    ));
+        com.example.Test""", Builders.methodInvocation(Builders.method(CodeClass.simple("com.example.Test"), "execute")
+            .setModifiers(Set.of(Modifiers.STATIC)))
+        .getAsExpression()
+    );
 
     // Test static method invocation with parameters
     check("""
         com.example.Test
         io.library.Value
-        """, CodeExpression.methodCall(
-        Builders.method(CodeClass.simple("com.example.Test"), "execute")
-            .setModifiers(Set.of(Modifiers.STATIC))
-            .build(),
-        List.of(CodeExpression.constructorCall(CodeType.ofClass("io.library.Value"), List.of()))
-    ));
+        """, Builders.methodInvocation(Builders.method(CodeClass.simple("com.example.Test"), "execute")
+            .setModifiers(Set.of(Modifiers.STATIC)))
+        .addParameter(CodeExpression.constructorCall(CodeType.ofClass("io.library.Value"), List.of()))
+        .getAsExpression()
+    );
 
     // Test instance method invocation
-    check("", CodeExpression.methodCall(
-        Builders.method(CodeClass.simple("com.example.Test"), "execute")
-            .build(),
-        List.of(),
-        "this"
-    ));
+    check("", Builders.methodInvocation(Builders.method(CodeClass.simple("com.example.Test"), "execute"))
+        .setInstanceVariable("this")
+        .getAsExpression()
+    );
 
     // Test instance method invocation with parameters
     check("""
         io.library.Value
-        """, CodeExpression.methodCall(
-        Builders.method(CodeClass.simple("com.example.Test"), "execute").build(),
-        List.of(CodeExpression.constructorCall(CodeType.ofClass("io.library.Value"), List.of())),
-        "this"
-    ));
+        """, Builders.methodInvocation(Builders.method(CodeClass.simple("com.example.Test"), "execute"))
+        .addParameter(CodeExpression.constructorCall(CodeType.ofClass("io.library.Value"), List.of()))
+        .setInstanceVariable("this")
+        .getAsExpression()
+    );
+
+    // Test method reference
+    check(
+        "io.library.Example",
+        CodeExpression.methodReference(CodeType.ofClass("io.library.Example"), "run")
+    );
   }
 
   @Test
@@ -107,12 +108,11 @@ class ImportGatherTests {
         java.lang.String
         com.example.TestClass
         """, Builders.field("field", CodeType.ofClass(CodeClass.STRING))
-        .setInitialiser(CodeExpression.methodCall(
-            Builders.method(CodeClass.simple("com.example.TestClass"), "get")
+        .setInitialiser(
+            Builders.methodInvocation(Builders.method(CodeClass.simple("com.example.TestClass"), "get")
                 .setModifiers(Set.of(Modifiers.STATIC))
-                .build(),
-            List.of()
-        ))
+            )
+        )
         .build()
     );
   }
@@ -135,11 +135,8 @@ class ImportGatherTests {
         """, CodeStatement.variableDeclaration(
         CodeType.ofClass(CodeClass.STRING),
         "name",
-        CodeExpression.methodCall(
-            Builders.method(CodeClass.simple("com.example.TheClass"), "get")
-                .setModifiers(Set.of(Modifiers.STATIC))
-                .build(),
-            List.of()
+        Builders.methodInvocation(Builders.method(CodeClass.simple("com.example.TheClass"), "get")
+            .setModifiers(Set.of(Modifiers.STATIC))
         )
     ));
 
@@ -159,20 +156,23 @@ class ImportGatherTests {
     ));
 
     // Method invocation (instance)
-    check("", CodeStatement.methodInvocation(
-        Builders.method(CodeClass.simple("io.declared.ThisClass"), "doSomething").build(),
-        List.of(
-            CodeExpression.string("test")
-        )
-    ));
+    check("", Builders.methodInvocation(Builders.method(CodeClass.simple("io.declared.ThisClass"), "doSomething"))
+        .addParameter(CodeExpression.string("test"))
+        .getAsStatement()
+    );
     // Method invocation (static)
-    check("io.declared.ThisClass", CodeStatement.methodInvocation(
-        Builders.method(CodeClass.simple("io.declared.ThisClass"), "doSomething")
-            .setModifiers(Set.of(Modifiers.STATIC))
-            .build(),
-        List.of(
-            CodeExpression.string("test")
-        )
-    ));
+    check("io.declared.ThisClass", Builders.methodInvocation(Builders.method(CodeClass.simple("io.declared.ThisClass"), "doSomething")
+            .setModifiers(Set.of(Modifiers.STATIC)))
+        .addParameter(CodeExpression.string("test"))
+        .getAsStatement()
+    );
+  }
+
+  @Test
+  void testArray() {
+    check("io.library.TestClass", CodeType.ofArray(CodeType.ofClass("io.library.TestClass")));
+    check("java.lang.String", CodeType.STRING_ARRAY);
+    // String[][]
+    check("java.lang.String", CodeType.ofArray(CodeType.STRING_ARRAY));
   }
 }

@@ -95,7 +95,7 @@ class FullCommandClassBuilderTests {
     final CodeClass current = CodeClass.simple("com.example.ExampleCommandBrigadier");
 
     return Builders.classBuilder(current.fullyQualifiedName())
-        .setAnnotations(List.of(CodeAnnotation.of(CodeType.ofClass(CodeClass.simple(Classes.NULL_MARKED)))))
+        .setAnnotations(List.of(CodeAnnotation.of(CodeType.ofClass(Classes.NULL_MARKED))))
         .setModifiers(Set.of(Modifiers.PUBLIC, Modifiers.FINAL))
         .setJavadoc(CodeJavadoc.combineLines(
             CodeJavadoc.text("A very cool class."),
@@ -109,7 +109,7 @@ class FullCommandClassBuilderTests {
         .addField(Builders.field("DESCRIPTION", CodeType.ofClass(CodeClass.STRING))
             .setModifiers(Set.of(Modifiers.PUBLIC, Modifiers.STATIC, Modifiers.FINAL))
             .setInitialiser(CodeExpression.nullExpr())
-            .addAnnotation(CodeAnnotation.of(CodeType.ofClass(CodeClass.simple(Classes.NULLABLE))))
+            .addAnnotation(CodeAnnotation.of(CodeType.ofClass(Classes.NULLABLE)))
         )
         .addField(Builders.field("ALIASES", CodeType.ofClass(CodeClass.STRING))
             .setModifiers(Set.of(Modifiers.PUBLIC, Modifiers.STATIC, Modifiers.FINAL))
@@ -120,22 +120,18 @@ class FullCommandClassBuilderTests {
             .setModifiers(Set.of(Modifiers.PUBLIC, Modifiers.STATIC))
             .addParameter(CodeType.ofClass(commands), "commands")
             .setCodeBlock(List.of(
-                CodeStatement.methodInvocation(
-                    Builders.method(commands, "register").build(),
-                    List.of(
-                        CodeExpression.methodCall(Builders.method(current, "create").build(), List.of()),
-                        CodeExpression.variable("DESCRIPTION"),
-                        CodeExpression.variable("ALIASES")
-                    ),
-                    "commands"
+                Builders.methodInvocation("register")
+                    .addParameter(Builders.methodInvocation("create"))
+                    .addParameter(CodeExpression.variable("DESCRIPTION"))
+                    .addParameter(CodeExpression.variable("ALIASES"))
+                    .setInstanceVariable("commands")
                 )
-            ))
+            )
         )
         .addMethod(Builders.method(current, "create")
             .setModifiers(Set.of(Modifiers.PUBLIC, Modifiers.STATIC))
         )
-        .addMethod(Builders.method()
-            .setDeclaringClass(current)
+        .addMethod(Builders.method(current)
             .setThrowsExceptions(List.of(CodeType.ofClass("java.lang.IllegalAccessException")))
             .setModifiers(Set.of(Modifiers.PRIVATE))
             .setJavadoc(CodeJavadoc.combineLines(

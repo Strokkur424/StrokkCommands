@@ -18,20 +18,27 @@
 package net.strokkur.commands.internal.codegen.builder;
 
 import net.strokkur.commands.internal.codegen.CodeClass;
+import net.strokkur.commands.internal.codegen.CodeMethod;
 import net.strokkur.commands.internal.codegen.CodePackage;
 import net.strokkur.commands.internal.codegen.CodeType;
+import net.strokkur.commands.internal.codegen.Modifiers;
+import net.strokkur.commands.internal.util.ConvertableTo;
 
 import java.util.Arrays;
 
 public class Builders {
-  public static MethodBuilder method() {
-    return new MethodBuilder();
+  public static MethodBuilder method(CodeClass declaringClass) {
+    return new MethodBuilder(declaringClass.name())
+        .setDeclaringClass(declaringClass);
+  }
+
+  public static MethodBuilder method(String name) {
+    return new MethodBuilder(name);
   }
 
   public static MethodBuilder method(CodeClass declaringClass, String name) {
-    return new MethodBuilder()
-        .setDeclaringClass(declaringClass)
-        .setName(name);
+    return new MethodBuilder(name)
+        .setDeclaringClass(declaringClass);
   }
 
   public static FieldBuilder field(String name, CodeType type) {
@@ -47,6 +54,20 @@ public class Builders {
   public static ClassBuilder classBuilder(String fqn) {
     final String[] split = fqn.split("\\.");
     return new ClassBuilder(split[split.length - 1], new CodePackage(Arrays.copyOf(split, split.length - 1)));
+  }
+
+  public static MethodInvocationBuilder methodInvocation(String methodName) {
+    return new MethodInvocationBuilder(methodName);
+  }
+
+  public static MethodInvocationBuilder methodInvocation(ConvertableTo<CodeMethod> methodConvertable) {
+    final CodeMethod method = methodConvertable.convert();
+    final MethodInvocationBuilder builder = new MethodInvocationBuilder(method.name());
+    builder.setType(CodeType.ofClass(method.declaredClass()));
+    if (method.modifiers().contains(Modifiers.STATIC)) {
+      builder.setStatic();
+    }
+    return builder;
   }
 
   private Builders() {

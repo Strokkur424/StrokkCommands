@@ -120,24 +120,21 @@ abstract class CommonJavadocVisitorTests {
   }
 
   CodeMethod bootstrapMethod() {
-    return Builders.method()
+    return Builders.method("bootstrap")
         .setDeclaringClass(CodeClass.simple("io.papermc.paper.plugin.bootstrap.PluginBootstrap"))
-        .setName("bootstrap")
         .addParameter(CodeType.ofClass(CodeClass.simple("io.papermc.paper.plugin.bootstrap.BootstrapContext")), "context")
         .build();
   }
 
   CodeMethod onLoadMethod() {
-    return Builders.method()
+    return Builders.method("onLoad")
         .setDeclaringClass(CodeClass.simple("org.bukkit.plugin.java.JavaPlugin"))
-        .setName("onLoad")
         .build();
   }
 
   CodeMethod onEnableMethod() {
-    return Builders.method()
+    return Builders.method("onEnable")
         .setDeclaringClass(CodeClass.simple("org.bukkit.plugin.java.JavaPlugin"))
-        .setName("onEnable")
         .build();
   }
 }

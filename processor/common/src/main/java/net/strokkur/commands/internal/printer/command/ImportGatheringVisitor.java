@@ -26,7 +26,7 @@ import net.strokkur.commands.internal.codegen.CodePackage;
 import net.strokkur.commands.internal.codegen.CodeParameter;
 import net.strokkur.commands.internal.codegen.CodeStatement;
 import net.strokkur.commands.internal.codegen.CodeType;
-import net.strokkur.commands.internal.codegen.Modifiers;
+import net.strokkur.commands.internal.codegen.InvokesMethod;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitor;
 
@@ -36,6 +36,16 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ImportGatheringVisitor implements CodeVisitor<Set<String>> {
+
+  private Set<String> collectMethodInvokesImports(InvokesMethod invokes) {
+    if (invokes.isStatic() && invokes.type() != null) {
+      return join(
+          invokes.type().accept(this),
+          collect(invokes.parameters())
+      );
+    }
+    return collect(invokes.parameters());
+  }
 
   @SafeVarargs
   private Set<String> join(Set<String>... all) {
@@ -81,6 +91,10 @@ public class ImportGatheringVisitor implements CodeVisitor<Set<String>> {
 
   @Override
   public Set<String> visitType(CodeType codeType) {
+    if (codeType instanceof CodeType.ArrayType array) {
+      return array.inner().accept(this);
+    }
+
     return codeType instanceof CodeType.ClassType codeClass ?
         Set.of(codeClass.fullyQualifiedName()) :
         Set.of();
@@ -103,20 +117,14 @@ public class ImportGatheringVisitor implements CodeVisitor<Set<String>> {
   @Override
   public Set<String> visitExpression(CodeExpression codeExpression) {
     return switch (codeExpression) {
-      case CodeExpression.MethodInvocation methodInvocation -> {
-        if (methodInvocation.method().modifiers().contains(Modifiers.STATIC)) {
-          yield join(
-              methodInvocation.method().declaredClass().accept(this),
-              collect(methodInvocation.parameters())
-          );
-        }
-        yield collect(methodInvocation.parameters());
-      }
+      case CodeExpression.MethodInvocation(InvokesMethod invokes) -> collectMethodInvokesImports(invokes);
 
       case CodeExpression.ConstructorInvocation ctorInvocation -> join(
           ctorInvocation.type().accept(this),
           collect(ctorInvocation.parameters())
       );
+
+      case CodeExpression.MethodReference ref -> ref.type().accept(this);
 
       default -> Set.of();
     };
@@ -141,15 +149,9 @@ public class ImportGatheringVisitor implements CodeVisitor<Set<String>> {
 
       case CodeStatement.ThrowStatement throwStatement -> throwStatement.throwExpression().accept(this);
 
-      case CodeStatement.MethodInvocation methodInvocation -> {
-        if (methodInvocation.method().modifiers().contains(Modifiers.STATIC)) {
-          yield join(
-              methodInvocation.method().declaredClass().accept(this),
-              collect(methodInvocation.parameters())
-          );
-        }
-        yield collect(methodInvocation.parameters());
-      }
+      case CodeStatement.MethodInvocation(InvokesMethod invokes) -> collectMethodInvokesImports(invokes);
+
+      case CodeStatement.Blank blank -> Set.of();
     };
   }
 }

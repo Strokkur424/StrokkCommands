@@ -15,26 +15,15 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.codegen;
+package net.strokkur.commands.internal.util;
 
-import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
-import net.strokkur.commands.internal.codegen.visitor.CodeVisitor;
-import net.strokkur.commands.internal.util.ConvertableTo;
-import org.jspecify.annotations.Nullable;
+public interface ConvertableTo<S> {
+  S convert();
 
-import java.util.List;
-import java.util.Set;
-
-public record CodeField(
-    String name,
-    CodeType type,
-    @Nullable CodeExpression initialiser,
-    Set<Modifiers> modifiers,
-    List<CodeAnnotation> annotations
-) implements CodeVisitable, ConvertableTo.Self<CodeField> {
-
-  @Override
-  public <R> R accept(CodeVisitor<R> visitor) {
-    return visitor.visitField(this);
+  interface Self<S extends Self<S>> extends ConvertableTo<S> {
+    @Override
+    default S convert() {
+      return (S) this;
+    }
   }
 }

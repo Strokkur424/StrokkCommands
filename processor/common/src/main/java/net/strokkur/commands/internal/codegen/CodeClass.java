@@ -20,6 +20,7 @@ package net.strokkur.commands.internal.codegen;
 import net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitor;
+import net.strokkur.commands.internal.util.ConvertableTo;
 import org.jetbrains.annotations.UnmodifiableView;
 import org.jspecify.annotations.Nullable;
 
@@ -32,7 +33,7 @@ import java.util.Set;
 public record CodeClass(CodePackage codePackage, @Nullable CodeClass parentClass, String name, Set<Modifiers> modifiers,
                         List<CodeAnnotation> annotations, List<CodeMethod> methods, List<CodeField> fields,
                         @Nullable CodeJavadoc javadoc,
-                        List<CodeType> typeParameters) implements CodeVisitable {
+                        List<CodeType> typeParameters) implements CodeVisitable, ConvertableTo.Self<CodeClass> {
   public static CodeClass STRING = CodeClass.simple("java.lang.String");
 
   private CodeClass(

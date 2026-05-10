@@ -17,32 +17,37 @@
  */
 package net.strokkur.commands.internal.codegen;
 
+import net.strokkur.commands.internal.codegen.as.AsExpression;
+import net.strokkur.commands.internal.codegen.as.AsStatement;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitor;
 import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.Nullable;
 
-import java.util.List;
-
-public sealed interface CodeStatement extends CodeVisitable {
-  static VariableDeclaration variableDeclaration(CodeType type, String name, @Nullable CodeExpression assignment) {
-    return new VariableDeclaration(type, name, assignment);
+public sealed interface CodeStatement extends CodeVisitable, AsStatement {
+  static VariableDeclaration variableDeclaration(CodeType type, String name, @Nullable AsExpression assignment) {
+    return new VariableDeclaration(type, name, assignment == null ? null : assignment.getAsExpression(), false);
   }
 
-  static ReturnStatement returnStatement(@Nullable CodeExpression returnExpression) {
-    return new ReturnStatement(returnExpression);
+  static VariableDeclaration variableDeclarationFinal(CodeType type, String name, @Nullable AsExpression assignment) {
+    return new VariableDeclaration(type, name, assignment == null ? null : assignment.getAsExpression(), true);
+  }
+
+  static ReturnStatement returnStatement(@Nullable AsExpression returnExpression) {
+    return new ReturnStatement(returnExpression == null ? null : returnExpression.getAsExpression());
   }
 
   static ThrowStatement throwStatement(CodeExpression throwExpression) {
     return new ThrowStatement(throwExpression);
   }
 
-  static MethodInvocation methodInvocation(CodeMethod method, List<CodeExpression> parameters) {
-    return new MethodInvocation(method, parameters, null);
+  static Blank blank() {
+    return Blank.INSTANCE;
   }
 
-  static MethodInvocation methodInvocation(CodeMethod method, List<CodeExpression> parameters, @Nullable String instanceVariable) {
-    return new MethodInvocation(method, parameters, instanceVariable);
+  @Override
+  default CodeStatement getAsStatement() {
+    return this;
   }
 
   @Override
@@ -54,11 +59,13 @@ public sealed interface CodeStatement extends CodeVisitable {
     private final CodeType type;
     private final String name;
     private final @Nullable CodeExpression assignment;
+    private final boolean isFinal;
 
-    private VariableDeclaration(CodeType type, String name, @Nullable CodeExpression assignment) {
+    private VariableDeclaration(CodeType type, String name, @Nullable CodeExpression assignment, boolean isFinal) {
       this.type = type;
       this.name = name;
       this.assignment = assignment;
+      this.isFinal = isFinal;
     }
 
     public CodeType type() {
@@ -72,6 +79,10 @@ public sealed interface CodeStatement extends CodeVisitable {
     @Contract(pure = true)
     public @Nullable CodeExpression assignment() {
       return assignment;
+    }
+
+    public boolean isFinal() {
+      return isFinal;
     }
   }
 
@@ -100,9 +111,13 @@ public sealed interface CodeStatement extends CodeVisitable {
     }
   }
 
-  final class MethodInvocation extends InvokesMethod implements CodeStatement {
-    public MethodInvocation(CodeMethod method, List<CodeExpression> parameters, @Nullable String instanceVariable) {
-      super(method, parameters, instanceVariable);
+  record MethodInvocation(InvokesMethod invokes) implements CodeStatement {
+  }
+
+  final class Blank implements CodeStatement {
+    private static final Blank INSTANCE = new Blank();
+
+    private Blank() {
     }
   }
 }

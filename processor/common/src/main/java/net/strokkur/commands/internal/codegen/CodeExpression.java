@@ -17,13 +17,13 @@
  */
 package net.strokkur.commands.internal.codegen;
 
+import net.strokkur.commands.internal.codegen.as.AsExpression;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitor;
-import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
-public sealed interface CodeExpression extends CodeVisitable {
+public sealed interface CodeExpression extends CodeVisitable, AsExpression {
   static Null nullExpr() {
     return Null.INSTANCE;
   }
@@ -32,25 +32,29 @@ public sealed interface CodeExpression extends CodeVisitable {
     return new StringLiteral(value);
   }
 
-  static MethodInvocation methodCall(CodeMethod method, List<CodeExpression> parameters) {
-    return new MethodInvocation(method, parameters, null);
-  }
-
-  static MethodInvocation methodCall(CodeMethod method, List<CodeExpression> parameters, String instanceVariable) {
-    return new MethodInvocation(method, parameters, instanceVariable);
-  }
-
-  static ConstructorInvocation constructorCall(CodeType.ClassType type, List<CodeExpression> parameters) {
-    return new ConstructorInvocation(type, parameters);
+  static ConstructorInvocation constructorCall(CodeType.ClassType type, List<? extends AsExpression> parameters) {
+    return new ConstructorInvocation(type, parameters.stream()
+        .map(AsExpression::getAsExpression)
+        .toList()
+    );
   }
 
   static Variable variable(String name) {
     return new Variable(name);
   }
 
+  static MethodReference methodReference(CodeType type, String methodName) {
+    return new MethodReference(type, methodName);
+  }
+
   @Override
   default <R> R accept(CodeVisitor<R> visitor) {
     return visitor.visitExpression(this);
+  }
+
+  @Override
+  default CodeExpression getAsExpression() {
+    return this;
   }
 
   final class StringLiteral implements CodeExpression {
@@ -84,10 +88,7 @@ public sealed interface CodeExpression extends CodeVisitable {
     }
   }
 
-  final class MethodInvocation extends InvokesMethod implements CodeExpression {
-    public MethodInvocation(CodeMethod method, List<CodeExpression> parameters, @Nullable String instanceVariable) {
-      super(method, parameters, instanceVariable);
-    }
+  record MethodInvocation(InvokesMethod invokes) implements CodeExpression {
   }
 
   final class ConstructorInvocation implements CodeExpression {
@@ -105,6 +106,24 @@ public sealed interface CodeExpression extends CodeVisitable {
 
     public List<CodeExpression> parameters() {
       return parameters;
+    }
+  }
+
+  final class MethodReference implements CodeExpression {
+    private final CodeType type;
+    private final String methodName;
+
+    private MethodReference(CodeType type, String methodName) {
+      this.type = type;
+      this.methodName = methodName;
+    }
+
+    public CodeType type() {
+      return type;
+    }
+
+    public String methodName() {
+      return methodName;
     }
   }
 }

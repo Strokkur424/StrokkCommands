@@ -20,13 +20,14 @@ package net.strokkur.commands.internal.codegen;
 import net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitor;
+import net.strokkur.commands.internal.util.ConvertableTo;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class CodeMethod implements CodeVisitable {
+public class CodeMethod implements CodeVisitable, ConvertableTo.Self<CodeMethod> {
   private final CodeClass declaredClass;
   private final CodeType returnType;
   private final String name;

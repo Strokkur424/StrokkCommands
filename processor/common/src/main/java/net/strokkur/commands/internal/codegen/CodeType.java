@@ -30,6 +30,9 @@ public interface CodeType extends CodeVisitable {
   PrimitiveType FLOAT = new PrimitiveType("float");
   PrimitiveType DOUBLE = new PrimitiveType("double");
 
+  ClassType STRING = CodeType.ofClass(CodeClass.STRING);
+  ArrayType STRING_ARRAY = CodeType.ofArray(CodeType.STRING);
+
   static GenericType generic(String name) {
     return new GenericType(name);
   }
@@ -40,6 +43,10 @@ public interface CodeType extends CodeVisitable {
 
   static ClassType ofClass(String fqn) {
     return new ClassType(CodeClass.simple(fqn));
+  }
+
+  static ArrayType ofArray(CodeType inner) {
+    return new ArrayType(inner);
   }
 
   String name();
@@ -102,6 +109,28 @@ public interface CodeType extends CodeVisitable {
     @Override
     public String fullyQualifiedName() {
       return codeClass.fullyQualifiedName();
+    }
+  }
+
+  class ArrayType implements CodeType {
+    private final CodeType inner;
+
+    private ArrayType(CodeType inner) {
+      this.inner = inner;
+    }
+
+    @Override
+    public String name() {
+      return inner.name() + "[]";
+    }
+
+    @Override
+    public String fullyQualifiedName() {
+      return inner.name() + "[]";
+    }
+
+    public CodeType inner() {
+      return inner;
     }
   }
 }

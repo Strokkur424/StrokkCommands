@@ -117,12 +117,43 @@ public abstract class AbstractSourcePrintingVisitor implements CodeVisitor<Strin
   }
 
   protected void appendMethodInvocation(StringBuilder builder, InvokesMethod method) {
+    final String source;
     if (method.instanceVariable() != null) {
-      builder.append(method.instanceVariable()).append(".");
+      source = method.instanceVariable();
+    } else if (method.isStatic() && method.type() != null) {
+      source = method.type().name();
+    } else {
+      source = null;
     }
-    builder.append(method.method().name());
+
+    if (source != null) {
+      builder.append(source);
+      incrementIndent();
+      if (method.newline()) {
+        builder.append("\n");
+        appendIndent(builder);
+      }
+      builder.append(".");
+      decrementIndent();
+    }
+
+    builder.append(method.methodName());
     builder.append("(");
     builder.append(joining(method.parameters()));
     builder.append(")");
+
+    incrementIndent();
+    for (InvokesMethod.Chained chained : method.chained()) {
+      if (chained.newline()) {
+        builder.append("\n");
+        appendIndent(builder);
+      }
+      builder.append(".");
+      builder.append(chained.methodName());
+      builder.append("(");
+      builder.append(joining(chained.parameters()));
+      builder.append(")");
+    }
+    decrementIndent();
   }
 }

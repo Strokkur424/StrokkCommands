@@ -25,15 +25,17 @@ import net.strokkur.commands.internal.codegen.CodePackage;
 import net.strokkur.commands.internal.codegen.CodeType;
 import net.strokkur.commands.internal.codegen.Modifiers;
 import net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc;
+import net.strokkur.commands.internal.util.ConvertableTo;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
-public class ClassBuilder {
+public class ClassBuilder implements ConvertableTo<CodeClass> {
   private final CodePackage codePackage;
   private @Nullable CodeClass parentClass = null;
   private final String name;
@@ -49,8 +51,8 @@ public class ClassBuilder {
     this.name = name;
   }
 
-  public ClassBuilder setParentClass(@Nullable CodeClass parentClass) {
-    this.parentClass = parentClass;
+  public ClassBuilder setParentClass(@Nullable ConvertableTo<CodeClass> parentClass) {
+    this.parentClass = Optional.ofNullable(parentClass).map(ConvertableTo::convert).orElse(null);
     return this;
   }
 
@@ -74,23 +76,13 @@ public class ClassBuilder {
     return this;
   }
 
-  public ClassBuilder addMethod(CodeMethod method) {
-    this.methods.add(method);
+  public ClassBuilder addMethod(ConvertableTo<CodeMethod> method) {
+    this.methods.add(method.convert());
     return this;
   }
 
-  public ClassBuilder addMethod(MethodBuilder methodBuilder) {
-    this.methods.add(methodBuilder.build());
-    return this;
-  }
-
-  public ClassBuilder addField(CodeField field) {
-    this.fields.add(field);
-    return this;
-  }
-
-  public ClassBuilder addField(FieldBuilder fieldBuilder) {
-    this.fields.add(fieldBuilder.build());
+  public ClassBuilder addField(ConvertableTo<CodeField> field) {
+    this.fields.add(field.convert());
     return this;
   }
 
@@ -106,6 +98,11 @@ public class ClassBuilder {
         javadoc,
         typeParameters
     );
+  }
+
+  @Override
+  public CodeClass convert() {
+    return build();
   }
 
   @Override

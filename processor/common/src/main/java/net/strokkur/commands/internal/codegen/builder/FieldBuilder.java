@@ -22,6 +22,8 @@ import net.strokkur.commands.internal.codegen.CodeExpression;
 import net.strokkur.commands.internal.codegen.CodeField;
 import net.strokkur.commands.internal.codegen.CodeType;
 import net.strokkur.commands.internal.codegen.Modifiers;
+import net.strokkur.commands.internal.codegen.as.AsExpression;
+import net.strokkur.commands.internal.util.ConvertableTo;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -30,7 +32,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-public class FieldBuilder {
+public class FieldBuilder implements ConvertableTo<CodeField> {
   private @Nullable String name = null;
   private @Nullable CodeType type = null;
   private @Nullable CodeExpression initialiser;
@@ -51,8 +53,8 @@ public class FieldBuilder {
     return this;
   }
 
-  public FieldBuilder setInitialiser(@Nullable CodeExpression initialiser) {
-    this.initialiser = initialiser;
+  public FieldBuilder setInitialiser(AsExpression initialiser) {
+    this.initialiser = initialiser.getAsExpression();
     return this;
   }
 
@@ -73,5 +75,10 @@ public class FieldBuilder {
     return new CodeField(
         name, type, initialiser, Set.copyOf(modifiers), List.copyOf(annotations)
     );
+  }
+
+  @Override
+  public CodeField convert() {
+    return build();
   }
 }

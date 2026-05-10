@@ -26,6 +26,7 @@ import net.strokkur.commands.internal.codegen.CodeMethod;
 import net.strokkur.commands.internal.codegen.CodeParameter;
 import net.strokkur.commands.internal.codegen.CodeStatement;
 import net.strokkur.commands.internal.codegen.CodeType;
+import net.strokkur.commands.internal.codegen.InvokesMethod;
 import net.strokkur.commands.internal.codegen.Modifiers;
 import net.strokkur.commands.internal.printer.javadoc.AbstractJavadocPrintingVisitor;
 
@@ -160,8 +161,8 @@ public class JavaSourcePrintingVisitor extends AbstractSourcePrintingVisitor {
           builder.append(joining(constructorInvocation.parameters()));
           builder.append(")");
         }
-        case CodeExpression.MethodInvocation methodInvocation -> {
-          appendMethodInvocation(builder, methodInvocation);
+        case CodeExpression.MethodInvocation(InvokesMethod invokes) -> {
+          appendMethodInvocation(builder, invokes);
         }
         case CodeExpression.Null ignored -> {
           builder.append("null");
@@ -172,6 +173,9 @@ public class JavaSourcePrintingVisitor extends AbstractSourcePrintingVisitor {
         case CodeExpression.Variable variable -> {
           builder.append(variable.name());
         }
+        case CodeExpression.MethodReference ref -> {
+          builder.append(ref.type().name()).append("::").append(ref.methodName());
+        }
         default -> throw new IllegalStateException("Invalid expression: " + codeExpression.getClass().getName());
       }
     });
@@ -180,10 +184,15 @@ public class JavaSourcePrintingVisitor extends AbstractSourcePrintingVisitor {
   @Override
   public StringBuilder visitStatement(CodeStatement codeStatement) {
     return append(builder -> {
+      if (codeStatement instanceof CodeStatement.Blank) {
+        builder.append("\n");
+        return;
+      }
+
       appendIndent(builder);
       switch (codeStatement) {
-        case CodeStatement.MethodInvocation methodInvocation -> {
-          appendMethodInvocation(builder, methodInvocation);
+        case CodeStatement.MethodInvocation(InvokesMethod invokes) -> {
+          appendMethodInvocation(builder, invokes);
         }
         case CodeStatement.ReturnStatement returnStatement -> {
           builder.append("return");
@@ -197,6 +206,9 @@ public class JavaSourcePrintingVisitor extends AbstractSourcePrintingVisitor {
           appendNested(builder, throwStatement.throwExpression());
         }
         case CodeStatement.VariableDeclaration variableDeclaration -> {
+          if (variableDeclaration.isFinal()) {
+            builder.append("final ");
+          }
           appendNested(builder, variableDeclaration.type());
           builder.append(" ");
           builder.append(variableDeclaration.name());
