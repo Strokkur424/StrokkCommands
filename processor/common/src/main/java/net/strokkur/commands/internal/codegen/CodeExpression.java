@@ -18,9 +18,13 @@
 package net.strokkur.commands.internal.codegen;
 
 import net.strokkur.commands.internal.codegen.as.AsExpression;
+import net.strokkur.commands.internal.codegen.as.AsStatement;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitor;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.Unmodifiable;
 
+import java.util.Arrays;
 import java.util.List;
 
 public sealed interface CodeExpression extends CodeVisitable, AsExpression {
@@ -45,6 +49,19 @@ public sealed interface CodeExpression extends CodeVisitable, AsExpression {
 
   static MethodReference methodReference(CodeType type, String methodName) {
     return new MethodReference(type, methodName);
+  }
+
+  static SingleLineLambda lambda(List<String> parameters, AsExpression expression) {
+    return new SingleLineLambda(parameters, expression.getAsExpression());
+  }
+
+  static MultiLineLambda lambda(List<String> parameters, AsStatement... statements) {
+    return new MultiLineLambda(
+        parameters,
+        Arrays.stream(statements)
+            .map(AsStatement::getAsStatement)
+            .toList()
+    );
   }
 
   @Override
@@ -124,6 +141,45 @@ public sealed interface CodeExpression extends CodeVisitable, AsExpression {
 
     public String methodName() {
       return methodName;
+    }
+  }
+
+  final class SingleLineLambda implements CodeExpression {
+    private final List<String> lambdaParams;
+    private final CodeExpression lambdaExpression;
+
+    private SingleLineLambda(List<String> lambdaParams, CodeExpression lambdaExpression) {
+      this.lambdaParams = lambdaParams;
+      this.lambdaExpression = lambdaExpression;
+    }
+
+    @Contract(pure = true)
+    public @Unmodifiable List<String> lambdaParams() {
+      return List.copyOf(lambdaParams);
+    }
+
+    public CodeExpression lambdaExpression() {
+      return lambdaExpression;
+    }
+  }
+
+  final class MultiLineLambda implements CodeExpression {
+    private final List<String> lambdaParams;
+    private final List<CodeStatement> statements;
+
+    private MultiLineLambda(List<String> lambdaParams, List<CodeStatement> statements) {
+      this.lambdaParams = lambdaParams;
+      this.statements = statements;
+    }
+
+    @Contract(pure = true)
+    public @Unmodifiable List<String> lambdaParams() {
+      return List.copyOf(lambdaParams);
+    }
+
+    @Contract(pure = true)
+    public @Unmodifiable List<CodeStatement> statements() {
+      return List.copyOf(statements);
     }
   }
 }

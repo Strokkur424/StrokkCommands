@@ -175,4 +175,28 @@ class ImportGatherTests {
     // String[][]
     check("java.lang.String", CodeType.ofArray(CodeType.STRING_ARRAY));
   }
+
+  @Test
+  void testLambda() {
+    check("io.library.SomeTest", CodeExpression.lambda(List.of(), Builders.methodInvocation("do")
+        .setStatic()
+        .setType(CodeType.ofClass("io.library.SomeTest"))
+    ));
+    check("""
+        io.library.SomeTest
+        io.library.AnotherTest
+        """, CodeExpression.lambda(List.of(),
+        Builders.methodInvocation("do")
+            .setStatic()
+            .setType(CodeType.ofClass("io.library.SomeTest")),
+        Builders.methodInvocation("anotherOne")
+            .setStatic()
+            .setType(CodeType.ofClass("io.library.AnotherTest"))
+    ));
+  }
+
+  @Test
+  void testBlank() {
+    check("", CodeStatement.blank());
+  }
 }

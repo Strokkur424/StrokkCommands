@@ -176,6 +176,21 @@ public class JavaSourcePrintingVisitor extends AbstractSourcePrintingVisitor {
         case CodeExpression.MethodReference ref -> {
           builder.append(ref.type().name()).append("::").append(ref.methodName());
         }
+        case CodeExpression.SingleLineLambda lambda -> {
+          appendLambdaHead(builder, lambda.lambdaParams());
+          appendNested(builder, lambda.lambdaExpression());
+        }
+        case CodeExpression.MultiLineLambda lambda -> {
+          appendLambdaHead(builder, lambda.lambdaParams());
+          builder.append("{\n");
+          appendIndented(() -> {
+            for (CodeStatement statement : lambda.statements()) {
+              appendNested(builder, statement);
+            }
+          });
+          appendIndent(builder);
+          builder.append("}");
+        }
         default -> throw new IllegalStateException("Invalid expression: " + codeExpression.getClass().getName());
       }
     });
@@ -221,5 +236,16 @@ public class JavaSourcePrintingVisitor extends AbstractSourcePrintingVisitor {
       }
       builder.append(";\n");
     });
+  }
+
+  private void appendLambdaHead(StringBuilder builder, List<String> lambdaParams) {
+    if (lambdaParams.size() != 1) {
+      builder.append("(");
+      builder.append(String.join(", ", lambdaParams));
+      builder.append(")");
+    } else {
+      builder.append(lambdaParams.getFirst());
+    }
+    builder.append(" -> ");
   }
 }

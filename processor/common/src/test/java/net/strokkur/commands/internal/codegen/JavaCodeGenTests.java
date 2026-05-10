@@ -265,6 +265,67 @@ class JavaCodeGenTests {
   }
 
   @Test
+  void testLambda() {
+    final @JavaStatements String simpleLambdaParam = """
+        builder.requires(source -> source.hasPermission("testcommand.use"));
+        """;
+    check(simpleLambdaParam, Builders.methodInvocation("requires")
+        .setInstanceVariable("builder")
+        .addParameter(CodeExpression.lambda(List.of("source"), Builders.methodInvocation("hasPermission")
+            .setInstanceVariable("source")
+            .addParameter(CodeExpression.string("testcommand.use"))
+        ))
+        .getAsStatement()
+    );
+
+    final @JavaStatements String simpleMultilineLambdaParam = """
+        builder.executes(ctx -> {
+          instance.run(ctx.getSource());
+          return;
+        });
+        """;
+    check(simpleMultilineLambdaParam, Builders.methodInvocation("executes")
+        .setInstanceVariable("builder")
+        .addParameter(CodeExpression.lambda(List.of("ctx"),
+            Builders.methodInvocation("run")
+                .setInstanceVariable("instance")
+                .addParameter(Builders.methodInvocation("getSource").setInstanceVariable("ctx")),
+            CodeStatement.returnStatement(null)
+        ))
+        .getAsStatement()
+    );
+
+    final @JavaStatements String singleStatementMultilineLambdaParam = """
+        launchTask(() -> {
+          run("Second");
+        }, "First");
+        """;
+    check(singleStatementMultilineLambdaParam, Builders.methodInvocation("launchTask")
+        .addParameter(CodeExpression.lambda(List.of(),
+            Builders.methodInvocation("run")
+                .addParameter(CodeExpression.string("Second"))
+                .getAsStatement()
+        ))
+        .addParameter(CodeExpression.string("First"))
+        .getAsStatement()
+    );
+
+    final @JavaStatements String testMultiParam = """
+        sortBy((a, b) -> Integer.compare(a, b));
+        """;
+    check(testMultiParam, Builders.methodInvocation("sortBy")
+        .addParameter(CodeExpression.lambda(List.of("a", "b"),
+            Builders.methodInvocation("compare")
+                .setStatic()
+                .setType(CodeType.ofClass("java.lang.Integer"))
+                .addParameter(CodeExpression.variable("a"))
+                .addParameter(CodeExpression.variable("b"))
+        ))
+        .getAsStatement()
+    );
+  }
+
+  @Test
   void testAdvancedRegisterMethod() {
     // language=java
     final String expected = """

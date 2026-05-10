@@ -126,6 +126,10 @@ public class ImportGatheringVisitor implements CodeVisitor<Set<String>> {
 
       case CodeExpression.MethodReference ref -> ref.type().accept(this);
 
+      case CodeExpression.SingleLineLambda lambda -> lambda.lambdaExpression().accept(this);
+
+      case CodeExpression.MultiLineLambda lambda -> collect(lambda.statements());
+
       default -> Set.of();
     };
   }
