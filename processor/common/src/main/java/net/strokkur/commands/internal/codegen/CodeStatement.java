@@ -41,8 +41,8 @@ public sealed interface CodeStatement extends CodeVisitable, AsStatement {
     return new ReturnStatement(returnExpression == null ? null : returnExpression.getAsExpression());
   }
 
-  static ThrowStatement throwStatement(CodeExpression throwExpression) {
-    return new ThrowStatement(throwExpression);
+  static ThrowStatement throwStatement(AsExpression throwExpression) {
+    return new ThrowStatement(throwExpression.getAsExpression());
   }
 
   static Blank blank() {

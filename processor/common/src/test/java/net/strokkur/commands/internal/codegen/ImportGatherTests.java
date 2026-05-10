@@ -68,7 +68,7 @@ class ImportGatherTests {
         io.library.Value
         """, Builders.methodInvocation(Builders.method(CodeClass.simple("com.example.Test"), "execute")
             .setModifiers(Set.of(Modifiers.STATIC)))
-        .addParameter(CodeExpression.constructorCall(CodeType.ofClass("io.library.Value")))
+        .addParameter(Builders.ctorInvocation(CodeType.ofClass("io.library.Value")))
         .getAsExpression()
     );
 
@@ -82,7 +82,7 @@ class ImportGatherTests {
     check("""
         io.library.Value
         """, Builders.methodInvocation(Builders.method(CodeClass.simple("com.example.Test"), "execute"))
-        .addParameter(CodeExpression.constructorCall(CodeType.ofClass("io.library.Value")))
+        .addParameter(Builders.ctorInvocation(CodeType.ofClass("io.library.Value")))
         .setInstanceVariable("this")
         .getAsExpression()
     );
@@ -149,10 +149,8 @@ class ImportGatherTests {
 
     // Throw statement
     check("java.lang.NullPointerException", CodeStatement.throwStatement(
-        CodeExpression.constructorCall(
-            CodeType.ofClass("java.lang.NullPointerException"),
-            CodeExpression.string("It was null :(")
-        )
+        Builders.ctorInvocation(CodeType.ofClass("java.lang.NullPointerException"))
+            .addParameter(CodeExpression.string("It was null :("))
     ));
 
     // Method invocation (instance)
@@ -221,11 +219,10 @@ class ImportGatherTests {
             CodeType.ofClass("org.bukkit.entity.Player"),
             null
         ).invert(),
-        CodeStatement.throwStatement(CodeExpression.constructorCall(
-            CodeType.ofClass("java.lang.IllegalStateException"),
-            CodeExpression.string("Don't do that.")
+        CodeStatement.throwStatement(Builders.ctorInvocation(CodeType.ofClass("java.lang.IllegalStateException"))
+            .addParameter(CodeExpression.string("Don't do that."))
         ))
-    ));
+    );
   }
 
   @Test

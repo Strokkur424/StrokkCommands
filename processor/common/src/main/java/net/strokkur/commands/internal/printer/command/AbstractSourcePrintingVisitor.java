@@ -18,6 +18,7 @@
 package net.strokkur.commands.internal.printer.command;
 
 import net.strokkur.commands.internal.codegen.CodeAnnotation;
+import net.strokkur.commands.internal.codegen.CodeExpression;
 import net.strokkur.commands.internal.codegen.CodePackage;
 import net.strokkur.commands.internal.codegen.InvokesMethod;
 import net.strokkur.commands.internal.codegen.Modifiers;
@@ -116,30 +117,54 @@ public abstract class AbstractSourcePrintingVisitor implements CodeVisitor<Strin
         .forEach(mod -> builder.append(mod).append(' '));
   }
 
-  protected void appendMethodInvocation(StringBuilder builder, InvokesMethod method) {
-    final String source;
-    if (method.instanceVariable() != null) {
-      source = method.instanceVariable();
-    } else if (method.isStatic() && method.type() != null) {
-      source = method.type().name();
-    } else {
-      source = null;
-    }
-
-    if (source != null) {
-      builder.append(source);
-      incrementIndent();
-      if (method.newline()) {
-        builder.append("\n");
+  protected void appendMethodParametersMultiline(StringBuilder builder, List<CodeExpression> parameters) {
+    appendIndented(() -> {
+      builder.append("\n");
+      for (int i = 0, parametersSize = parameters.size(); i < parametersSize; i++) {
+        final CodeExpression parameter = parameters.get(i);
         appendIndent(builder);
+        appendNested(builder, parameter);
+        if (i + 1 < parametersSize) {
+          builder.append(",");
+        }
+        builder.append("\n");
       }
-      builder.append(".");
-      decrementIndent();
+    });
+    appendIndent(builder);
+  }
+
+  protected void appendMethodInvocation(StringBuilder builder, InvokesMethod method) {
+    if (method.isCtor()) {
+      builder.append("new ");
+    } else {
+      final String source;
+      if (method.instanceVariable() != null) {
+        source = method.instanceVariable();
+      } else if (method.isStatic() && method.type() != null) {
+        source = method.type().name();
+      } else {
+        source = null;
+      }
+
+      if (source != null) {
+        builder.append(source);
+        incrementIndent();
+        if (method.newline()) {
+          builder.append("\n");
+          appendIndent(builder);
+        }
+        builder.append(".");
+        decrementIndent();
+      }
     }
 
     builder.append(method.methodName());
     builder.append("(");
-    builder.append(joining(method.parameters()));
+    if (method.multilineParameters()) {
+      appendMethodParametersMultiline(builder, method.parameters());
+    } else {
+      builder.append(joining(method.parameters()));
+    }
     builder.append(")");
 
     incrementIndent();
@@ -151,7 +176,11 @@ public abstract class AbstractSourcePrintingVisitor implements CodeVisitor<Strin
       builder.append(".");
       builder.append(chained.methodName());
       builder.append("(");
-      builder.append(joining(chained.parameters()));
+      if (chained.multilineParameters()) {
+        appendMethodParametersMultiline(builder, chained.parameters());
+      } else {
+        builder.append(joining(chained.parameters()));
+      }
       builder.append(")");
     }
     decrementIndent();

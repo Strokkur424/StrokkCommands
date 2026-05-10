@@ -66,11 +66,6 @@ public class MethodBuilder implements ConvertableTo<CodeMethod> {
     return this;
   }
 
-  public MethodBuilder setParameters(List<CodeParameter> parameters) {
-    this.parameters = parameters;
-    return this;
-  }
-
   public MethodBuilder setModifiers(Set<Modifiers> modifiers) {
     this.modifiers = modifiers;
     return this;

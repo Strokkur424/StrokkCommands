@@ -29,12 +29,15 @@ public record InvokesMethod(
     @Nullable String instanceVariable,
     boolean newline,
     boolean isStatic,
+    boolean isCtor,
+    boolean multilineParameters,
     List<Chained> chained
 ) implements ConvertableTo.Self<InvokesMethod> {
 
   public record Chained(
       String methodName,
       List<CodeExpression> parameters,
+      boolean multilineParameters,
       boolean newline
   ) {
   }

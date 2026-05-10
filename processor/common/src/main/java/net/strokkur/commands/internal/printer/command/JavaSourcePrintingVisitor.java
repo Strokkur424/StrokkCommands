@@ -154,13 +154,6 @@ public class JavaSourcePrintingVisitor extends AbstractSourcePrintingVisitor {
   public StringBuilder visitExpression(CodeExpression codeExpression) {
     return append(builder -> {
       switch (codeExpression) {
-        case CodeExpression.ConstructorInvocation constructorInvocation -> {
-          builder.append("new ");
-          appendNested(builder, constructorInvocation.type());
-          builder.append("(");
-          builder.append(joining(constructorInvocation.parameters()));
-          builder.append(")");
-        }
         case CodeExpression.MethodInvocation(InvokesMethod invokes) -> {
           appendMethodInvocation(builder, invokes);
         }

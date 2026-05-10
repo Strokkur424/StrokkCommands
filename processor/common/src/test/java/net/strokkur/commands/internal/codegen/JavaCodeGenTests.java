@@ -178,10 +178,9 @@ class JavaCodeGenTests {
             CodeType.ofClass("java.sql.SQLException")
         ))
         .setCodeBlock(List.of(
-            CodeStatement.throwStatement(CodeExpression.constructorCall(
-                CodeType.ofClass("java.sql.SQLException"),
-                CodeExpression.string("No database present :(")
-            ))
+            CodeStatement.throwStatement(Builders.ctorInvocation(CodeType.ofClass("java.sql.SQLException"))
+                .addParameter(CodeExpression.string("No database present :("))
+            )
         ))
         .build());
   }
@@ -353,10 +352,31 @@ class JavaCodeGenTests {
             CodeType.ofClass("org.bukkit.entity.Player"),
             null
         ).invert(),
-        CodeStatement.throwStatement(CodeExpression.constructorCall(
-            CodeType.ofClass("java.lang.IllegalStateException"),
-            CodeExpression.string("Don't do that.")
-        ))
+        CodeStatement.throwStatement(Builders.ctorInvocation(CodeType.ofClass("java.lang.IllegalStateException"))
+            .addParameter(CodeExpression.string("Don't do that."))
+        )
+    ));
+
+    final @JavaStatements String expectedWithNestedCtor = """
+        if (!(ctx.getSource() instanceof Player)) {
+          throw new SimpleCommandExceptionType(
+            new LiteralMessage("This command requires a player sender!")
+          ).create();
+        }
+        """;
+    check(expectedWithNestedCtor, CodeStatement.ifStmt(
+        CodeExpression.instanceofExpr(
+            Builders.methodInvocation("getSource").setInstanceVariable("ctx"),
+            CodeType.ofClass("org.bukkit.entity.Player"),
+            null
+        ).invert(),
+        CodeStatement.throwStatement(Builders.ctorInvocation(CodeType.ofClass("brigadier.SimpleCommandExceptionType"))
+            .setMultilineParameters()
+            .addParameter(Builders.ctorInvocation(CodeType.ofClass("brigadier.LiteralMessage"))
+                .addParameter(CodeExpression.string("This command requires a player sender!"))
+            )
+            .chain("create")
+        )
     ));
   }
 
@@ -387,10 +407,8 @@ class JavaCodeGenTests {
                 CodeStatement.variableDeclarationFinal(
                     CodeType.ofClass("velocity.BrigadierCommand"),
                     "command",
-                    CodeExpression.constructorCall(
-                        CodeType.ofClass("velocity.BrigadierCommand"),
-                        Builders.methodInvocation("create")
-                    )
+                    Builders.ctorInvocation(CodeType.ofClass("velocity.BrigadierCommand"))
+                        .addParameter(Builders.methodInvocation("create"))
                 ),
 
                 // CommandMeta meta
@@ -399,7 +417,7 @@ class JavaCodeGenTests {
                     "meta",
                     Builders.methodInvocation("getCommandManager")
                         .setInstanceVariable("server")
-                        .chain("metaBuilder", false, CodeExpression.variable("command"))
+                        .chain("metaBuilder", CodeExpression.variable("command"))
                         .chain("aliases", true, Builders.methodInvocation("toArray")
                             .setInstanceVariable("ALIASES")
                             .addParameter(CodeExpression.methodReference(CodeType.STRING_ARRAY, "new"))
@@ -413,7 +431,7 @@ class JavaCodeGenTests {
                 // register call
                 Builders.methodInvocation("getCommandManager")
                     .setInstanceVariable("server")
-                    .chain("register", false, CodeExpression.variable("meta"), CodeExpression.variable("command"))
+                    .chain("register", CodeExpression.variable("meta"), CodeExpression.variable("command"))
             ))
         )
         .build()

@@ -70,6 +70,12 @@ public class Builders {
     return builder;
   }
 
+  public static MethodInvocationBuilder ctorInvocation(CodeType.ClassType type) {
+    return new MethodInvocationBuilder(type.name())
+        .setCtor()
+        .setType(type);
+  }
+
   private Builders() {
   }
 }

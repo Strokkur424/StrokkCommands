@@ -140,10 +140,9 @@ class FullCommandClassBuilderTests {
                 CodeJavadoc.throwsMeta(CodeType.ofClass("java.lang.IllegalAccessException"), "always")
             ))
             .setCodeBlock(List.of(
-                CodeStatement.throwStatement(CodeExpression.constructorCall(
-                    CodeType.ofClass("java.lang.IllegalAccessException"),
-                    CodeExpression.string("This class cannot be instantiated.")
-                ))
+                CodeStatement.throwStatement(Builders.ctorInvocation(CodeType.ofClass("java.lang.IllegalAccessException"))
+                    .addParameter(CodeExpression.string("This class cannot be instantiated."))
+                )
             ))
             .buildConstructor()
         )

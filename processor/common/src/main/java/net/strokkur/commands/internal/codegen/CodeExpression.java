@@ -38,13 +38,6 @@ public sealed interface CodeExpression extends CodeVisitable, AsExpression {
     return new StringLiteral(value);
   }
 
-  static ConstructorInvocation constructorCall(CodeType.ClassType type, AsExpression... parameters) {
-    return new ConstructorInvocation(type, Arrays.stream(parameters)
-        .map(AsExpression::getAsExpression)
-        .toList()
-    );
-  }
-
   static Variable variable(String name) {
     return new Variable(name);
   }
@@ -133,24 +126,6 @@ public sealed interface CodeExpression extends CodeVisitable, AsExpression {
   }
 
   record MethodInvocation(InvokesMethod invokes) implements CodeExpression {
-  }
-
-  final class ConstructorInvocation implements CodeExpression {
-    private final CodeType.ClassType type;
-    private final List<CodeExpression> parameters;
-
-    private ConstructorInvocation(CodeType.ClassType type, List<CodeExpression> parameters) {
-      this.type = type;
-      this.parameters = parameters;
-    }
-
-    public CodeType.ClassType type() {
-      return type;
-    }
-
-    public List<CodeExpression> parameters() {
-      return parameters;
-    }
   }
 
   final class MethodReference implements CodeExpression {

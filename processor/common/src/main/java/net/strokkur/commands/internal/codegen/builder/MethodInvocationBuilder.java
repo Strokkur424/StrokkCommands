@@ -23,20 +23,21 @@ import net.strokkur.commands.internal.codegen.CodeType;
 import net.strokkur.commands.internal.codegen.InvokesMethod;
 import net.strokkur.commands.internal.codegen.as.AsExpression;
 import net.strokkur.commands.internal.codegen.as.AsStatement;
-import net.strokkur.commands.internal.util.ConvertableTo;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class MethodInvocationBuilder implements ConvertableTo<InvokesMethod>, AsExpression, AsStatement {
+public class MethodInvocationBuilder implements AsExpression, AsStatement {
   private final String methodName;
   private CodeType.@Nullable ClassType type = null;
   private final List<CodeExpression> parameters = new ArrayList<>();
   private @Nullable String instanceVariable = null;
   private boolean newline = false;
   private boolean isStatic = false;
+  private boolean isCtor = false;
+  private boolean multilineParameters = false;
   private final List<InvokesMethod.Chained> chained = new ArrayList<>();
 
   MethodInvocationBuilder(String methodName) {
@@ -68,24 +69,38 @@ public class MethodInvocationBuilder implements ConvertableTo<InvokesMethod>, As
     return this;
   }
 
+  public MethodInvocationBuilder setCtor() {
+    this.isCtor = true;
+    return this;
+  }
+
+  public MethodInvocationBuilder setMultilineParameters() {
+    this.multilineParameters = true;
+    return this;
+  }
+
+  public MethodInvocationBuilder chain(String methodName, AsExpression... parameters) {
+    return chain(methodName, false, false, parameters);
+  }
+
   public MethodInvocationBuilder chain(String methodName, boolean newline, AsExpression... parameters) {
+    return chain(methodName, newline, false, parameters);
+  }
+
+  public MethodInvocationBuilder chain(String methodName, boolean newline, boolean multilineParameters, AsExpression... parameters) {
     this.chained.add(new InvokesMethod.Chained(
         methodName,
         Arrays.stream(parameters)
             .map(AsExpression::getAsExpression)
             .toList(),
+        multilineParameters,
         newline
     ));
     return this;
   }
 
   public InvokesMethod build() {
-    return new InvokesMethod(methodName, type, List.copyOf(parameters), instanceVariable, newline, isStatic, List.copyOf(chained));
-  }
-
-  @Override
-  public InvokesMethod convert() {
-    return build();
+    return new InvokesMethod(methodName, type, List.copyOf(parameters), instanceVariable, newline, isStatic, isCtor, multilineParameters, List.copyOf(chained));
   }
 
   @Override

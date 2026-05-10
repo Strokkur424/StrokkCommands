@@ -31,6 +31,7 @@ import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitor;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -38,6 +39,10 @@ import java.util.stream.Stream;
 public class ImportGatheringVisitor implements CodeVisitor<Set<String>> {
 
   private Set<String> collectMethodInvokesImports(InvokesMethod invokes) {
+    if (invokes.isCtor()) {
+      return Objects.requireNonNull(invokes.type()).accept(this);
+    }
+
     if (invokes.isStatic() && invokes.type() != null) {
       return join(
           invokes.type().accept(this),
@@ -118,11 +123,6 @@ public class ImportGatheringVisitor implements CodeVisitor<Set<String>> {
   public Set<String> visitExpression(CodeExpression codeExpression) {
     return switch (codeExpression) {
       case CodeExpression.MethodInvocation(InvokesMethod invokes) -> collectMethodInvokesImports(invokes);
-
-      case CodeExpression.ConstructorInvocation ctorInvocation -> join(
-          ctorInvocation.type().accept(this),
-          collect(ctorInvocation.parameters())
-      );
 
       case CodeExpression.MethodReference ref -> ref.type().accept(this);
 
