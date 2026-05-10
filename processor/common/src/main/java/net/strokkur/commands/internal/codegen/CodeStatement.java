@@ -17,12 +17,16 @@
  */
 package net.strokkur.commands.internal.codegen;
 
+import net.strokkur.commands.internal.codegen.as.AsBooleanExpression;
 import net.strokkur.commands.internal.codegen.as.AsExpression;
 import net.strokkur.commands.internal.codegen.as.AsStatement;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitor;
 import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.Nullable;
+
+import java.util.Arrays;
+import java.util.List;
 
 public sealed interface CodeStatement extends CodeVisitable, AsStatement {
   static VariableDeclaration variableDeclaration(CodeType type, String name, @Nullable AsExpression assignment) {
@@ -43,6 +47,15 @@ public sealed interface CodeStatement extends CodeVisitable, AsStatement {
 
   static Blank blank() {
     return Blank.INSTANCE;
+  }
+
+  static If ifStmt(AsBooleanExpression booleanExpr, AsStatement... ifTrue) {
+    return new If(
+        booleanExpr.getAsBooleanExpression(),
+        Arrays.stream(ifTrue)
+            .map(AsStatement::getAsStatement)
+            .toList()
+    );
   }
 
   @Override
@@ -112,6 +125,24 @@ public sealed interface CodeStatement extends CodeVisitable, AsStatement {
   }
 
   record MethodInvocation(InvokesMethod invokes) implements CodeStatement {
+  }
+
+  final class If implements CodeStatement {
+    private final CodeExpression.BooleanExpression<?> booleanExpr;
+    private final List<CodeStatement> ifTrue;
+
+    private If(CodeExpression.BooleanExpression<?> booleanExpr, List<CodeStatement> ifTrue) {
+      this.booleanExpr = booleanExpr;
+      this.ifTrue = ifTrue;
+    }
+
+    public CodeExpression.BooleanExpression<?> booleanExpr() {
+      return booleanExpr;
+    }
+
+    public List<CodeStatement> ifTrue() {
+      return ifTrue;
+    }
   }
 
   final class Blank implements CodeStatement {

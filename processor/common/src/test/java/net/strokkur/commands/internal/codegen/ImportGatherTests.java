@@ -68,7 +68,7 @@ class ImportGatherTests {
         io.library.Value
         """, Builders.methodInvocation(Builders.method(CodeClass.simple("com.example.Test"), "execute")
             .setModifiers(Set.of(Modifiers.STATIC)))
-        .addParameter(CodeExpression.constructorCall(CodeType.ofClass("io.library.Value"), List.of()))
+        .addParameter(CodeExpression.constructorCall(CodeType.ofClass("io.library.Value")))
         .getAsExpression()
     );
 
@@ -82,7 +82,7 @@ class ImportGatherTests {
     check("""
         io.library.Value
         """, Builders.methodInvocation(Builders.method(CodeClass.simple("com.example.Test"), "execute"))
-        .addParameter(CodeExpression.constructorCall(CodeType.ofClass("io.library.Value"), List.of()))
+        .addParameter(CodeExpression.constructorCall(CodeType.ofClass("io.library.Value")))
         .setInstanceVariable("this")
         .getAsExpression()
     );
@@ -151,7 +151,7 @@ class ImportGatherTests {
     check("java.lang.NullPointerException", CodeStatement.throwStatement(
         CodeExpression.constructorCall(
             CodeType.ofClass("java.lang.NullPointerException"),
-            List.of(CodeExpression.string("It was null :("))
+            CodeExpression.string("It was null :(")
         )
     ));
 
@@ -192,6 +192,39 @@ class ImportGatherTests {
         Builders.methodInvocation("anotherOne")
             .setStatic()
             .setType(CodeType.ofClass("io.library.AnotherTest"))
+    ));
+  }
+
+  @Test
+  void testIfStatement() {
+    // With instanceof
+    check("org.bukkit.entity.Player", CodeStatement.ifStmt(
+        CodeExpression.instanceofExpr(
+            Builders.methodInvocation("getSource").setInstanceVariable("ctx"),
+            CodeType.ofClass("org.bukkit.entity.Player"),
+            "source"
+        ),
+        Builders.methodInvocation("sendPlainMessage")
+            .setInstanceVariable("source")
+            .addParameter(CodeExpression.string("Hello!"))
+    ));
+
+    check("""
+        java.lang.IllegalStateException
+        io.library.StaticLibrary
+        org.bukkit.entity.Player
+        """, CodeStatement.ifStmt(
+        CodeExpression.instanceofExpr(
+            Builders.methodInvocation("getSource")
+                .setStatic()
+                .setType(CodeType.ofClass("io.library.StaticLibrary")),
+            CodeType.ofClass("org.bukkit.entity.Player"),
+            null
+        ).invert(),
+        CodeStatement.throwStatement(CodeExpression.constructorCall(
+            CodeType.ofClass("java.lang.IllegalStateException"),
+            CodeExpression.string("Don't do that.")
+        ))
     ));
   }
 

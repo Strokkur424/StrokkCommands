@@ -142,7 +142,7 @@ class FullCommandClassBuilderTests {
             .setCodeBlock(List.of(
                 CodeStatement.throwStatement(CodeExpression.constructorCall(
                     CodeType.ofClass("java.lang.IllegalAccessException"),
-                    List.of(CodeExpression.string("This class cannot be instantiated."))
+                    CodeExpression.string("This class cannot be instantiated.")
                 ))
             ))
             .buildConstructor()

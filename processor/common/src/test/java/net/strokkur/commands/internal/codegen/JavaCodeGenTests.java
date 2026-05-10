@@ -179,9 +179,8 @@ class JavaCodeGenTests {
         ))
         .setCodeBlock(List.of(
             CodeStatement.throwStatement(CodeExpression.constructorCall(
-                CodeType.ofClass("java.sql.SQLException"), List.of(
-                    CodeExpression.string("No database present :(")
-                )
+                CodeType.ofClass("java.sql.SQLException"),
+                CodeExpression.string("No database present :(")
             ))
         ))
         .build());
@@ -326,6 +325,42 @@ class JavaCodeGenTests {
   }
 
   @Test
+  void testIfStatement() {
+    final @JavaStatements String expected = """
+        if (ctx.getSource() instanceof Player source) {
+          source.sendPlainMessage("Hello!");
+        }
+        """;
+    check(expected, CodeStatement.ifStmt(
+        CodeExpression.instanceofExpr(
+            Builders.methodInvocation("getSource").setInstanceVariable("ctx"),
+            CodeType.ofClass("org.bukkit.entity.Player"),
+            "source"
+        ),
+        Builders.methodInvocation("sendPlainMessage")
+            .setInstanceVariable("source")
+            .addParameter(CodeExpression.string("Hello!"))
+    ));
+
+    final @JavaStatements String expectedInverted = """
+        if (!(ctx.getSource() instanceof Player)) {
+          throw new IllegalStateException("Don't do that.");
+        }
+        """;
+    check(expectedInverted, CodeStatement.ifStmt(
+        CodeExpression.instanceofExpr(
+            Builders.methodInvocation("getSource").setInstanceVariable("ctx"),
+            CodeType.ofClass("org.bukkit.entity.Player"),
+            null
+        ).invert(),
+        CodeStatement.throwStatement(CodeExpression.constructorCall(
+            CodeType.ofClass("java.lang.IllegalStateException"),
+            CodeExpression.string("Don't do that.")
+        ))
+    ));
+  }
+
+  @Test
   void testAdvancedRegisterMethod() {
     // language=java
     final String expected = """
@@ -352,9 +387,10 @@ class JavaCodeGenTests {
                 CodeStatement.variableDeclarationFinal(
                     CodeType.ofClass("velocity.BrigadierCommand"),
                     "command",
-                    CodeExpression.constructorCall(CodeType.ofClass("velocity.BrigadierCommand"), List.of(
+                    CodeExpression.constructorCall(
+                        CodeType.ofClass("velocity.BrigadierCommand"),
                         Builders.methodInvocation("create")
-                    ))
+                    )
                 ),
 
                 // CommandMeta meta

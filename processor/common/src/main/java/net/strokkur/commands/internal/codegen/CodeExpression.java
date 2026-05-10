@@ -17,12 +17,14 @@
  */
 package net.strokkur.commands.internal.codegen;
 
+import net.strokkur.commands.internal.codegen.as.AsBooleanExpression;
 import net.strokkur.commands.internal.codegen.as.AsExpression;
 import net.strokkur.commands.internal.codegen.as.AsStatement;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitor;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Unmodifiable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.List;
@@ -36,8 +38,8 @@ public sealed interface CodeExpression extends CodeVisitable, AsExpression {
     return new StringLiteral(value);
   }
 
-  static ConstructorInvocation constructorCall(CodeType.ClassType type, List<? extends AsExpression> parameters) {
-    return new ConstructorInvocation(type, parameters.stream()
+  static ConstructorInvocation constructorCall(CodeType.ClassType type, AsExpression... parameters) {
+    return new ConstructorInvocation(type, Arrays.stream(parameters)
         .map(AsExpression::getAsExpression)
         .toList()
     );
@@ -64,6 +66,10 @@ public sealed interface CodeExpression extends CodeVisitable, AsExpression {
     );
   }
 
+  static Instanceof instanceofExpr(AsExpression left, CodeType.ClassType type, @Nullable String name) {
+    return new Instanceof(left.getAsExpression(), type, name, false);
+  }
+
   @Override
   default <R> R accept(CodeVisitor<R> visitor) {
     return visitor.visitExpression(this);
@@ -72,6 +78,27 @@ public sealed interface CodeExpression extends CodeVisitable, AsExpression {
   @Override
   default CodeExpression getAsExpression() {
     return this;
+  }
+
+  sealed abstract class BooleanExpression<S extends BooleanExpression<S>>
+      implements CodeExpression, AsBooleanExpression
+      permits Instanceof {
+    private final boolean inverted;
+
+    public BooleanExpression(boolean inverted) {
+      this.inverted = inverted;
+    }
+
+    public boolean isInverted() {
+      return inverted;
+    }
+
+    @Override
+    public BooleanExpression<?> getAsBooleanExpression() {
+      return this;
+    }
+
+    public abstract S invert();
   }
 
   final class StringLiteral implements CodeExpression {
@@ -180,6 +207,41 @@ public sealed interface CodeExpression extends CodeVisitable, AsExpression {
     @Contract(pure = true)
     public @Unmodifiable List<CodeStatement> statements() {
       return List.copyOf(statements);
+    }
+  }
+
+  final class Instanceof extends BooleanExpression<Instanceof> {
+    private final CodeExpression left;
+    private final CodeType.ClassType type;
+    private final @Nullable String name;
+
+    private Instanceof(CodeExpression left, CodeType.ClassType type, @Nullable String name, boolean inverted) {
+      super(inverted);
+      this.left = left;
+      this.type = type;
+      this.name = name;
+    }
+
+    public CodeExpression left() {
+      return left;
+    }
+
+    public CodeType.ClassType type() {
+      return type;
+    }
+
+    public @Nullable String name() {
+      return name;
+    }
+
+    @Override
+    public Instanceof invert() {
+      return new Instanceof(
+          left,
+          type,
+          name,
+          !isInverted()
+      );
     }
   }
 }

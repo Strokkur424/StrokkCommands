@@ -191,6 +191,20 @@ public class JavaSourcePrintingVisitor extends AbstractSourcePrintingVisitor {
           appendIndent(builder);
           builder.append("}");
         }
+        case CodeExpression.Instanceof instExpr -> {
+          if (instExpr.isInverted()) {
+            builder.append("!(");
+          }
+          appendNested(builder, instExpr.left());
+          builder.append(" instanceof ");
+          builder.append(instExpr.type().name());
+          if (instExpr.name() != null) {
+            builder.append(" ").append(instExpr.name());
+          }
+          if (instExpr.isInverted()) {
+            builder.append(")");
+          }
+        }
         default -> throw new IllegalStateException("Invalid expression: " + codeExpression.getClass().getName());
       }
     });
@@ -205,6 +219,18 @@ public class JavaSourcePrintingVisitor extends AbstractSourcePrintingVisitor {
       }
 
       appendIndent(builder);
+
+      if (codeStatement instanceof CodeStatement.If ifStmt) {
+        builder.append("if (");
+        appendNested(builder, ifStmt.booleanExpr());
+        builder.append(") {\n");
+        appendIndented(() -> {
+          ifStmt.ifTrue().forEach(stmt -> appendNested(builder, stmt));
+        });
+        builder.append("}\n");
+        return;
+      }
+
       switch (codeStatement) {
         case CodeStatement.MethodInvocation(InvokesMethod invokes) -> {
           appendMethodInvocation(builder, invokes);

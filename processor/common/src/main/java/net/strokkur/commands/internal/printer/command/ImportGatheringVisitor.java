@@ -130,6 +130,11 @@ public class ImportGatheringVisitor implements CodeVisitor<Set<String>> {
 
       case CodeExpression.MultiLineLambda lambda -> collect(lambda.statements());
 
+      case CodeExpression.Instanceof instStmt -> join(
+          instStmt.left().accept(this),
+          instStmt.type().accept(this)
+      );
+
       default -> Set.of();
     };
   }
@@ -154,6 +159,11 @@ public class ImportGatheringVisitor implements CodeVisitor<Set<String>> {
       case CodeStatement.ThrowStatement throwStatement -> throwStatement.throwExpression().accept(this);
 
       case CodeStatement.MethodInvocation(InvokesMethod invokes) -> collectMethodInvokesImports(invokes);
+
+      case CodeStatement.If ifStmt -> join(
+          ifStmt.booleanExpr().accept(this),
+          collect(ifStmt.ifTrue())
+      );
 
       case CodeStatement.Blank blank -> Set.of();
     };
