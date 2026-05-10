@@ -174,7 +174,8 @@ class FullVelocityIntegrationTest {
 
     // Check generated class file
     final AbstractSourcePrintingVisitor sourceVisitor = new JavaSourcePrintingVisitor(
-        () -> new JavaStarJavadocVisitor(builtClass.codePackage(), imports), "  ", "    ");
+        () -> new JavaStarJavadocVisitor(builtClass.codePackage(), imports), "  ", "    "
+    );
 
     final StringBuilder result = builtClass.accept(sourceVisitor);
     assertEquals(EXPECTED_CODE, result.toString());
