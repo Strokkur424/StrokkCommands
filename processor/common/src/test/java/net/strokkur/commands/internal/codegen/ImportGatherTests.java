@@ -226,6 +226,40 @@ class ImportGatherTests {
   }
 
   @Test
+  void testFieldAccess() {
+    // None of these have any imports
+    check("", Builders.fieldAccess("value").build());
+    check("", Builders.fieldAccess("value").setSource(CodeExpression.variable("inst")).build());
+    check("", Builders.fieldAccess("value")
+        .setSource(CodeExpression.variable("inst"))
+        .setType(CodeType.ofClass("some.ClassType"))
+        .build());
+    check("", Builders.fieldAccess("value")
+        .setType(CodeType.ofClass("some.ClassType"))
+        .build());
+
+    // These should fetch the same imports as the source expr (including static types)
+    check("some.ClassType", Builders.fieldAccess("value")
+        .setStatic(CodeType.ofClass("some.ClassType"))
+        .build()
+    );
+    check("another.ClassType", Builders.fieldAccess("value")
+        .setSource(Builders.methodInvocation("fetch")
+            .setStatic()
+            .setType(CodeType.ofClass("another.ClassType")))
+        .build()
+    );
+
+    // They can be nested!
+    check("yet.Yet", Builders.fieldAccess("value")
+        .setSource(Builders.fieldAccess("another")
+            .setStatic(CodeType.ofClass("yet.Yet"))
+        )
+        .build()
+    );
+  }
+
+  @Test
   void testBlank() {
     check("", CodeStatement.blank());
   }

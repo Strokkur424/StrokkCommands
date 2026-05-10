@@ -22,6 +22,7 @@ import net.strokkur.commands.internal.codegen.as.AsExpression;
 import net.strokkur.commands.internal.codegen.as.AsStatement;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitor;
+import net.strokkur.commands.internal.util.ConvertableTo;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Unmodifiable;
 import org.jspecify.annotations.Nullable;
@@ -218,5 +219,13 @@ public sealed interface CodeExpression extends CodeVisitable, AsExpression {
           !isInverted()
       );
     }
+  }
+
+  record FieldAccess(
+      CodeType.@Nullable ClassType type,
+      @Nullable CodeExpression source,
+      String fieldName,
+      boolean isStatic
+  ) implements CodeExpression, ConvertableTo.Self<FieldAccess> {
   }
 }

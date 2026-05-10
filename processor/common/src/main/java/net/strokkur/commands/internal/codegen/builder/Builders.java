@@ -76,6 +76,10 @@ public class Builders {
         .setType(type);
   }
 
+  public static FieldAccessBuilder fieldAccess(String name) {
+    return new FieldAccessBuilder(name);
+  }
+
   private Builders() {
   }
 }

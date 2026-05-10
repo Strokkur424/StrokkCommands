@@ -9,6 +9,7 @@ module net.strokkur.commands.processor.common {
   requires static transitive org.jspecify;
   requires jdk.sctp;
   requires java.xml;
+  requires java.desktop;
 
   exports net.strokkur.commands.internal;
   exports net.strokkur.commands.internal.abstraction;

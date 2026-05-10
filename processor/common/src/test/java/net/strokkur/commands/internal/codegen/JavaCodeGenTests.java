@@ -381,6 +381,81 @@ class JavaCodeGenTests {
   }
 
   @Test
+  void testFieldAccess() {
+    check("value", Builders.fieldAccess("value").build());
+    check("inst.value", Builders.fieldAccess("value").setSource(CodeExpression.variable("inst")).build());
+    check("inst.value", Builders.fieldAccess("value")
+        .setSource(CodeExpression.variable("inst"))
+        .setType(CodeType.ofClass("some.ClassType"))
+        .build());
+    check("value", Builders.fieldAccess("value")
+        .setType(CodeType.ofClass("some.ClassType"))
+        .build());
+
+    check("ClassType.value", Builders.fieldAccess("value")
+        .setStatic(CodeType.ofClass("some.ClassType"))
+        .build()
+    );
+    check("ClassType.fetch().value", Builders.fieldAccess("value")
+        .setSource(Builders.methodInvocation("fetch")
+            .setStatic()
+            .setType(CodeType.ofClass("another.ClassType")))
+        .build()
+    );
+
+    check("Yet.another.value", Builders.fieldAccess("value")
+        .setSource(Builders.fieldAccess("another")
+            .setStatic(CodeType.ofClass("yet.Yet"))
+        )
+        .build()
+    );
+  }
+
+  @Test
+  void testFullExecutesMethod() {
+    final @JavaStatements String expected = """
+        builder.executes(ctx -> {
+          if (!(ctx.getSource() instanceof Player source)) {
+            throw new SimpleCommandExceptionType(
+              new LiteralMessage("This command requires a player sender!")
+            ).create();
+          }
+        
+          instance.run(source);
+          return Command.SINGLE_SUCCESS;
+        });
+        """;
+    check(expected, Builders.methodInvocation("executes")
+        .setInstanceVariable("builder")
+        .addParameter(CodeExpression.lambda(
+            List.of("ctx"),
+            CodeStatement.ifStmt(
+                CodeExpression.instanceofExpr(
+                    Builders.methodInvocation("getSource").setInstanceVariable("ctx"),
+                    CodeType.ofClass("bukkit.Player"),
+                    "source"
+                ).invert(),
+                CodeStatement.throwStatement(
+                    Builders.ctorInvocation(CodeType.ofClass("brigadier.SimpleCommandExceptionType"))
+                        .setMultilineParameters()
+                        .addParameter(Builders.ctorInvocation(CodeType.ofClass("brigadier.LiteralMessage"))
+                            .addParameter(CodeExpression.string("This command requires a player sender!")))
+                        .chain("create")
+                )
+            ),
+            CodeStatement.blank(),
+            Builders.methodInvocation("run")
+                .setInstanceVariable("instance")
+                .addParameter(CodeExpression.variable("source")),
+            CodeStatement.returnStatement(Builders.fieldAccess("SINGLE_SUCCESS")
+                .setStatic(CodeType.ofClass("brigadier.Command"))
+            )
+        ))
+        .getAsStatement()
+    );
+  }
+
+  @Test
   void testAdvancedRegisterMethod() {
     // language=java
     final String expected = """

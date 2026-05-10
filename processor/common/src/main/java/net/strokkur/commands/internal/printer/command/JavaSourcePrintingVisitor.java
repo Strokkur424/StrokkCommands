@@ -198,6 +198,19 @@ public class JavaSourcePrintingVisitor extends AbstractSourcePrintingVisitor {
             builder.append(")");
           }
         }
+        case CodeExpression.FieldAccess(
+            CodeType.ClassType type, CodeExpression source, String fieldName, boolean isStatic
+        ) -> {
+          if (source != null) {
+            appendNested(builder, source);
+            builder.append(".");
+          } else if (type != null && isStatic) {
+            builder.append(type.name());
+            builder.append(".");
+          }
+
+          builder.append(fieldName);
+        }
         default -> throw new IllegalStateException("Invalid expression: " + codeExpression.getClass().getName());
       }
     });
@@ -220,6 +233,7 @@ public class JavaSourcePrintingVisitor extends AbstractSourcePrintingVisitor {
         appendIndented(() -> {
           ifStmt.ifTrue().forEach(stmt -> appendNested(builder, stmt));
         });
+        appendIndent(builder);
         builder.append("}\n");
         return;
       }

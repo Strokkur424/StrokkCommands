@@ -29,6 +29,7 @@ import net.strokkur.commands.internal.codegen.CodeType;
 import net.strokkur.commands.internal.codegen.InvokesMethod;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitor;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -57,6 +58,14 @@ public class ImportGatheringVisitor implements CodeVisitor<Set<String>> {
     return Stream.of(all)
         .flatMap(Collection::stream)
         .collect(Collectors.toSet());
+  }
+
+  private Set<String> maybeAccess(@Nullable CodeVisitable visitable) {
+    if (visitable != null) {
+      return visitable.accept(this);
+    } else {
+      return Set.of();
+    }
   }
 
   private <S extends CodeVisitable> Set<String> collect(Collection<S> collection) {
@@ -133,6 +142,11 @@ public class ImportGatheringVisitor implements CodeVisitor<Set<String>> {
       case CodeExpression.Instanceof instStmt -> join(
           instStmt.left().accept(this),
           instStmt.type().accept(this)
+      );
+
+      case CodeExpression.FieldAccess field -> join(
+          maybeAccess(field.source()),
+          field.isStatic() ? maybeAccess(field.type()) : Set.of()
       );
 
       default -> Set.of();
