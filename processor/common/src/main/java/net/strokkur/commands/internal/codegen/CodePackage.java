@@ -19,11 +19,14 @@ package net.strokkur.commands.internal.codegen;
 
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitor;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Objects;
 
-public class CodePackage implements CodeVisitable {
+public class CodePackage implements CodeVisitable, Comparable<CodePackage> {
+  private static final CodePackage JAVA_LANG = new CodePackage(new String[]{"java", "lang"});
+
   private final String[] paths;
 
   public static CodePackage of(String packageString) {
@@ -43,16 +46,25 @@ public class CodePackage implements CodeVisitable {
     return visitor.visitPackage(this);
   }
 
+  public static boolean isRedundantImport(@Nullable CodePackage maybeRoot, CodePackage other) {
+    return other.equals(JAVA_LANG) || Objects.equals(maybeRoot, other);
+  }
+
   @Override
   public boolean equals(Object o) {
     if (!(o instanceof final CodePackage that)) {
       return false;
     }
-    return Objects.deepEquals(paths, that.paths);
+    return Arrays.deepEquals(paths, that.paths);
   }
 
   @Override
   public int hashCode() {
     return Arrays.hashCode(paths);
+  }
+
+  @Override
+  public int compareTo(CodePackage o) {
+    return this.path().compareTo(o.path());
   }
 }

@@ -19,8 +19,13 @@ package net.strokkur.commands.internal.codegen;
 
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitor;
+import org.jetbrains.annotations.Contract;
+import org.jspecify.annotations.Nullable;
 
-public interface CodeType extends CodeVisitable {
+import java.util.List;
+import java.util.Objects;
+
+public interface CodeType extends CodeVisitable, Comparable<CodeType> {
   VoidType VOID = new VoidType();
   PrimitiveType BYTE = new PrimitiveType("byte");
   PrimitiveType CHAR = new PrimitiveType("char");
@@ -30,19 +35,31 @@ public interface CodeType extends CodeVisitable {
   PrimitiveType FLOAT = new PrimitiveType("float");
   PrimitiveType DOUBLE = new PrimitiveType("double");
 
+  ClassType OBJECT = CodeType.ofClass(CodeClass.OBJECT);
   ClassType STRING = CodeType.ofClass(CodeClass.STRING);
   ArrayType STRING_ARRAY = CodeType.ofArray(CodeType.STRING);
+
+  ClassType LIST = CodeType.ofClass(CodeClass.LIST);
+  ClassType LIST_STRING = CodeType.ofClassTyped(CodeClass.LIST, STRING);
 
   static GenericType generic(String name) {
     return new GenericType(name);
   }
 
   static ClassType ofClass(CodeClass codeClass) {
-    return new ClassType(codeClass);
+    return new ClassType(codeClass, null);
   }
 
   static ClassType ofClass(String fqn) {
-    return new ClassType(CodeClass.simple(fqn));
+    return new ClassType(CodeClass.simple(fqn), null);
+  }
+
+  static ClassType ofClassTyped(CodeClass codeClass, CodeType... typed) {
+    return new ClassType(codeClass, List.of(typed));
+  }
+
+  static ClassType ofClassTyped(String fqn, CodeType... typed) {
+    return new ClassType(CodeClass.simple(fqn), List.of(typed));
   }
 
   static ArrayType ofArray(CodeType inner) {
@@ -56,6 +73,11 @@ public interface CodeType extends CodeVisitable {
   @Override
   default <R> R accept(CodeVisitor<R> visitor) {
     return visitor.visitType(this);
+  }
+
+  @Override
+  default int compareTo(CodeType o) {
+    return this.fullyQualifiedName().compareTo(o.fullyQualifiedName());
   }
 
   abstract class SimpleType implements CodeType {
@@ -96,9 +118,16 @@ public interface CodeType extends CodeVisitable {
 
   class ClassType implements CodeType {
     private final CodeClass codeClass;
+    private final @Nullable List<CodeType> types;
 
-    private ClassType(CodeClass codeClass) {
+    private ClassType(CodeClass codeClass, @Nullable List<CodeType> types) {
       this.codeClass = codeClass;
+      this.types = types;
+    }
+
+    @Contract(pure = true)
+    public @Nullable List<CodeType> types() {
+      return types == null ? null : List.copyOf(types);
     }
 
     @Override
@@ -109,6 +138,27 @@ public interface CodeType extends CodeVisitable {
     @Override
     public String fullyQualifiedName() {
       return codeClass.fullyQualifiedName();
+    }
+
+    public CodePackage codePackage() {
+      return codeClass.codePackage();
+    }
+
+    public CodeClass codeClass() {
+      return codeClass;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (!(o instanceof final ClassType type)) {
+        return false;
+      }
+      return Objects.equals(codeClass.fullyQualifiedName(), type.codeClass.fullyQualifiedName());
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(codeClass.fullyQualifiedName());
     }
   }
 

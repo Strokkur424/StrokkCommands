@@ -58,6 +58,10 @@ public class FieldBuilder implements ConvertableTo<CodeField> {
     return this;
   }
 
+  public FieldBuilder setModifiers(Modifiers... modifiers) {
+    return setModifiers(Set.of(modifiers));
+  }
+
   public FieldBuilder setModifiers(Set<Modifiers> modifiers) {
     this.modifiers.clear();
     this.modifiers.addAll(modifiers);

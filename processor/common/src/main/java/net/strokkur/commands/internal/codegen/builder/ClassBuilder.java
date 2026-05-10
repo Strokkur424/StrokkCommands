@@ -44,7 +44,7 @@ public class ClassBuilder implements ConvertableTo<CodeClass> {
   private final List<CodeMethod> methods = new ArrayList<>();
   private final List<CodeField> fields = new ArrayList<>();
   private @Nullable CodeJavadoc javadoc = null;
-  private List<CodeType> typeParameters = new ArrayList<>();
+  private List<CodeType.GenericType> typeParameters = new ArrayList<>();
 
   ClassBuilder(String name, CodePackage codePackage) {
     this.codePackage = codePackage;
@@ -56,13 +56,22 @@ public class ClassBuilder implements ConvertableTo<CodeClass> {
     return this;
   }
 
+  public ClassBuilder setModifiers(Modifiers... modifiers) {
+    return setModifiers(Set.of(modifiers));
+  }
+
   public ClassBuilder setModifiers(Set<Modifiers> modifiers) {
     this.modifiers = modifiers;
     return this;
   }
 
   public ClassBuilder setAnnotations(List<CodeAnnotation> annotations) {
-    this.annotations = annotations;
+    this.annotations = new ArrayList<>(annotations);
+    return this;
+  }
+
+  public ClassBuilder addAnnotations(CodeAnnotation... annotations) {
+    this.annotations.addAll(List.of(annotations));
     return this;
   }
 
@@ -71,7 +80,7 @@ public class ClassBuilder implements ConvertableTo<CodeClass> {
     return this;
   }
 
-  public ClassBuilder setTypeParameters(List<CodeType> typeParameters) {
+  public ClassBuilder setTypeParameters(List<CodeType.GenericType> typeParameters) {
     this.typeParameters = typeParameters;
     return this;
   }

@@ -94,7 +94,7 @@ class JavadocStarVisitorTests extends CommonJavadocVisitorTests {
          * The constructor is not accessible. There is no need for an instance
          * to be created, as no state is stored and all methods are static.
          *
-         * @throws java.lang.IllegalAccessException always
+         * @throws IllegalAccessException always
          */""";
     checkOutput(expected, ctorJd(), JavaStarJavadocVisitor::new);
   }
@@ -104,7 +104,7 @@ class JavadocStarVisitorTests extends CommonJavadocVisitorTests {
     // language=java
     final String expected = """
         /**
-         * This {@link java.lang.ProcessEnvironment environment} does not help me
+         * This {@link ProcessEnvironment environment} does not help me
          * at all.
          */""";
     checkOutput(expected, combineLines(

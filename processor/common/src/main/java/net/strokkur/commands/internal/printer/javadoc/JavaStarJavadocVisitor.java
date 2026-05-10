@@ -17,15 +17,29 @@
  */
 package net.strokkur.commands.internal.printer.javadoc;
 
+import net.strokkur.commands.internal.codegen.CodeClass;
 import net.strokkur.commands.internal.codegen.CodeMethod;
+import net.strokkur.commands.internal.codegen.CodePackage;
+import net.strokkur.commands.internal.codegen.CodeType;
 import net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.SequencedCollection;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class JavaStarJavadocVisitor extends AbstractJavadocPrintingVisitor {
+  public JavaStarJavadocVisitor() {
+    super(null, null);
+  }
+
+  public JavaStarJavadocVisitor(CodePackage currentPath, Set<CodeType.ClassType> imports) {
+    super(currentPath, imports);
+  }
+
   @Override
   public SequencedCollection<String> getLines() {
     final List<String> out = new ArrayList<>();
@@ -70,7 +84,7 @@ public class JavaStarJavadocVisitor extends AbstractJavadocPrintingVisitor {
         .append('@')
         .append(value.descriptor())
         .append(' ')
-        .append(value.type().fullyQualifiedName());
+        .append(getQualifiedTypeName(value.type()));
 
     if (value.text() != null) {
       builder.append(' ').append(value.text());
@@ -117,7 +131,7 @@ public class JavaStarJavadocVisitor extends AbstractJavadocPrintingVisitor {
 
   @Override
   public void visit(CodeJavadoc.ClassReference value) {
-    builder.append("{@link ").append(value.codeClass().fullyQualifiedName());
+    builder.append("{@link ").append(getQualifiedTypeName(value.codeClass()));
     if (value.name() != null) {
       builder.append(" ").append(value.name());
     }
@@ -133,9 +147,37 @@ public class JavaStarJavadocVisitor extends AbstractJavadocPrintingVisitor {
     builder.append("}");
   }
 
+  protected String getQualifiedTypeName(CodeClass type) {
+    if (type.codePackage().path().equals("java.lang") || Objects.equals(currentPath, type.codePackage())) {
+      return type.name();
+    }
+    return type.fullyQualifiedName();
+  }
+
+  protected String getQualifiedTypeName(CodeType.ClassType type) {
+    if (CodePackage.isRedundantImport(currentPath, type.codePackage())
+        || existingImports != null && existingImports.contains(type)
+    ) {
+      return type.name();
+    }
+    return type.fullyQualifiedName();
+  }
+
+  public String javadocName(CodeMethod method) {
+    return method.name() + "(" + method.parameters().stream()
+        .map(param -> {
+          if (param.type() instanceof CodeType.ClassType classType) {
+            return getQualifiedTypeName(classType);
+          }
+          return param.type().fullyQualifiedName();
+        })
+        .collect(Collectors.joining(", "))
+        + ")";
+  }
+
   protected String getMethodRefString(CodeMethod method, boolean local) {
     return local
-        ? "#" + method.javadocName()
-        : method.declaredClass().fullyQualifiedName() + "#" + method.javadocName();
+        ? "#" + javadocName(method)
+        : getQualifiedTypeName(method.declaredClass()) + "#" + javadocName(method);
   }
 }

@@ -91,14 +91,14 @@ class JavadocMarkdownVisitorTests extends CommonJavadocVisitorTests {
         /// The constructor is not accessible. There is no need for an instance
         /// to be created, as no state is stored and all methods are static.
         ///
-        /// @throws java.lang.IllegalAccessException always""";
+        /// @throws IllegalAccessException always""";
     checkOutput(expected, ctorJd(), JavaMarkdownJavadocVisitor::new);
   }
 
   @Test
   void testNamedClassReference() {
     @Language("JAVA") final String expected = """
-        /// This [environment][java.lang.ProcessEnvironment] does not help me
+        /// This [environment][ProcessEnvironment] does not help me
         /// at all.""";
     checkOutput(expected, combineLines(
         combine(text("This "), classReference(CodeClass.simple("java.lang.ProcessEnvironment"), "environment"), text(" does not help me")),
@@ -128,7 +128,7 @@ class JavadocMarkdownVisitorTests extends CommonJavadocVisitorTests {
         /// This is text with a
         /// new line.
         ///
-        /// @see java.lang.String#concat(java.lang.String)""";
+        /// @see String#concat(String)""";
     checkOutput(
         expected,
         combineLines(

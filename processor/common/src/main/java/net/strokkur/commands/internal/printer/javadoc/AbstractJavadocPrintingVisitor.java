@@ -17,13 +17,25 @@
  */
 package net.strokkur.commands.internal.printer.javadoc;
 
+import net.strokkur.commands.internal.codegen.CodePackage;
+import net.strokkur.commands.internal.codegen.CodeType;
 import net.strokkur.commands.internal.codegen.visitor.JavadocVisitor;
+import org.jetbrains.annotations.Unmodifiable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.SequencedCollection;
+import java.util.Set;
 
 /// @apiNote instances of this class cannot be reused
 public abstract class AbstractJavadocPrintingVisitor implements JavadocVisitor {
   protected final StringBuilder builder = new StringBuilder();
+  protected final @Nullable CodePackage currentPath;
+  protected final @Nullable @Unmodifiable Set<CodeType.ClassType> existingImports;
+
+  public AbstractJavadocPrintingVisitor(@Nullable CodePackage currentPath, @Nullable Set<CodeType.ClassType> existingImports) {
+    this.currentPath = currentPath;
+    this.existingImports = existingImports != null ? Set.copyOf(existingImports) : Set.of();
+  }
 
   public abstract SequencedCollection<String> getLines();
 }

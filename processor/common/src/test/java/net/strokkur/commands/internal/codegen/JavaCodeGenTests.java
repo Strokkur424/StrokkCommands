@@ -19,8 +19,8 @@ package net.strokkur.commands.internal.codegen;
 
 import net.strokkur.commands.internal.codegen.builder.Builders;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
-import net.strokkur.commands.internal.printer.command.JavaSourcePrintingVisitor;
 import net.strokkur.commands.internal.printer.javadoc.JavaMarkdownJavadocVisitor;
+import net.strokkur.commands.internal.printer.source.JavaSourcePrintingVisitor;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -33,7 +33,7 @@ class JavaCodeGenTests {
   private static final CodeClass EXAMPLE_CLASS = Builders.classBuilder("com.example.ExampleClass").build();
 
   private void check(String expected, CodeVisitable visitable) {
-    final JavaSourcePrintingVisitor visitor = new JavaSourcePrintingVisitor(JavaMarkdownJavadocVisitor::new, "  ");
+    final JavaSourcePrintingVisitor visitor = new JavaSourcePrintingVisitor(JavaMarkdownJavadocVisitor::new, "  ", "  ");
     final String actual = visitable.accept(visitor).toString();
     assertEquals(expected, actual);
   }
@@ -41,7 +41,7 @@ class JavaCodeGenTests {
   @Test
   void testPackageThrows() {
     assertThrows(IllegalStateException.class, () -> {
-      CodePackage.of("com.example").accept(new JavaSourcePrintingVisitor(JavaMarkdownJavadocVisitor::new, "  "));
+      CodePackage.of("com.example").accept(new JavaSourcePrintingVisitor(JavaMarkdownJavadocVisitor::new, "  ", "  "));
     });
   }
 
@@ -255,9 +255,9 @@ class JavaCodeGenTests {
         .setStatic()
         .setType(CodeType.STRING)
         .setNewline()
-        .chain("stream", true)
-        .chain("toLol", false)
-        .chain("toList", true)
+        .chain("stream", InvokesMethod.StyleConfig.NEWLINE)
+        .chain("toLol")
+        .chain("toList", InvokesMethod.StyleConfig.NEWLINE)
         .getAsStatement()
     );
   }
@@ -493,12 +493,12 @@ class JavaCodeGenTests {
                     Builders.methodInvocation("getCommandManager")
                         .setInstanceVariable("server")
                         .chain("metaBuilder", CodeExpression.variable("command"))
-                        .chain("aliases", true, Builders.methodInvocation("toArray")
+                        .chain("aliases", InvokesMethod.StyleConfig.NEWLINE, Builders.methodInvocation("toArray")
                             .setInstanceVariable("ALIASES")
                             .addParameter(CodeExpression.methodReference(CodeType.STRING_ARRAY, "new"))
                         )
-                        .chain("plugin", true, CodeExpression.variable("command$plugin"))
-                        .chain("build", true)
+                        .chain("plugin", InvokesMethod.StyleConfig.NEWLINE, CodeExpression.variable("command$plugin"))
+                        .chain("build", InvokesMethod.StyleConfig.NEWLINE)
                 ),
 
                 CodeStatement.blank(),

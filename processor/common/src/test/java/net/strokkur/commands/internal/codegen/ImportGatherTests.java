@@ -19,7 +19,7 @@ package net.strokkur.commands.internal.codegen;
 
 import net.strokkur.commands.internal.codegen.builder.Builders;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
-import net.strokkur.commands.internal.printer.command.ImportGatheringVisitor;
+import net.strokkur.commands.internal.printer.source.ImportGatheringVisitor;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -34,7 +34,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class ImportGatherTests {
 
   private void check(String expectedMultiline, CodeVisitable visitable) {
-    final Set<String> imports = visitable.accept(new ImportGatheringVisitor());
+    final Set<CodeType.ClassType> packages = visitable.accept(new ImportGatheringVisitor());
+    final Set<String> imports = packages.stream().map(CodeType::fullyQualifiedName).collect(Collectors.toSet());
 
     if (expectedMultiline.isBlank()) {
       assertEquals(0, imports.size());

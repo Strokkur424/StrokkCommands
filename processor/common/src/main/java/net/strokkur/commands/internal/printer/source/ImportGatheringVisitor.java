@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.printer.command;
+package net.strokkur.commands.internal.printer.source;
 
 import net.strokkur.commands.internal.codegen.CodeAnnotation;
 import net.strokkur.commands.internal.codegen.CodeClass;
@@ -37,30 +37,41 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class ImportGatheringVisitor implements CodeVisitor<Set<String>> {
+public class ImportGatheringVisitor implements CodeVisitor<Set<CodeType.ClassType>> {
 
-  private Set<String> collectMethodInvokesImports(InvokesMethod invokes) {
+  private Set<CodeType.ClassType> collectMethodInvokesImports(InvokesMethod invokes) {
+    final Set<CodeType.ClassType> chainedImports = collect(invokes.chained().stream()
+        .flatMap(chained -> chained.parameters().stream())
+        .toList()
+    );
+
     if (invokes.isCtor()) {
-      return Objects.requireNonNull(invokes.type()).accept(this);
-    }
-
-    if (invokes.isStatic() && invokes.type() != null) {
       return join(
-          invokes.type().accept(this),
-          collect(invokes.parameters())
+          Objects.requireNonNull(invokes.type()).accept(this),
+          collect(invokes.parameters()),
+          chainedImports
       );
     }
-    return collect(invokes.parameters());
+
+    final Set<CodeType.ClassType> typeImport = invokes.isStatic() && invokes.type() != null
+        ? invokes.type().accept(this)
+        : Set.of();
+
+    return join(
+        typeImport,
+        collect(invokes.parameters()),
+        chainedImports
+    );
   }
 
   @SafeVarargs
-  private Set<String> join(Set<String>... all) {
+  private Set<CodeType.ClassType> join(Set<CodeType.ClassType>... all) {
     return Stream.of(all)
         .flatMap(Collection::stream)
         .collect(Collectors.toSet());
   }
 
-  private Set<String> maybeAccess(@Nullable CodeVisitable visitable) {
+  private Set<CodeType.ClassType> maybeAccess(@Nullable CodeVisitable visitable) {
     if (visitable != null) {
       return visitable.accept(this);
     } else {
@@ -68,16 +79,16 @@ public class ImportGatheringVisitor implements CodeVisitor<Set<String>> {
     }
   }
 
-  private <S extends CodeVisitable> Set<String> collect(Collection<S> collection) {
+  private <S extends CodeVisitable> Set<CodeType.ClassType> collect(Collection<S> collection) {
     return collection.stream()
         .flatMap(visitable -> visitable.accept(this).stream())
         .collect(Collectors.toSet());
   }
 
   @Override
-  public Set<String> visitClass(CodeClass codeClass) {
+  public Set<CodeType.ClassType> visitClass(CodeClass codeClass) {
     return join(
-        Set.of(codeClass.fullyQualifiedName()),
+        Set.of(CodeType.ofClass(codeClass)),
         collect(codeClass.methods()),
         collect(codeClass.fields()),
         collect(codeClass.annotations())
@@ -85,42 +96,48 @@ public class ImportGatheringVisitor implements CodeVisitor<Set<String>> {
   }
 
   @Override
-  public Set<String> visitMethod(CodeMethod codeMethod) {
+  public Set<CodeType.ClassType> visitMethod(CodeMethod codeMethod) {
     return join(
         collect(codeMethod.parameters()),
         collect(codeMethod.throwsExceptions()),
-        codeMethod.returnType().accept(this)
+        codeMethod.returnType().accept(this),
+        collect(codeMethod.codeBlock().statements())
     );
   }
 
   @Override
-  public Set<String> visitPackage(CodePackage codePackage) {
+  public Set<CodeType.ClassType> visitPackage(CodePackage codePackage) {
     throw new IllegalStateException("This should not be called.");
   }
 
   @Override
-  public Set<String> visitParameter(CodeParameter codeParameter) {
+  public Set<CodeType.ClassType> visitParameter(CodeParameter codeParameter) {
     return codeParameter.type().accept(this);
   }
 
   @Override
-  public Set<String> visitType(CodeType codeType) {
+  public Set<CodeType.ClassType> visitType(CodeType codeType) {
     if (codeType instanceof CodeType.ArrayType array) {
       return array.inner().accept(this);
     }
 
-    return codeType instanceof CodeType.ClassType codeClass ?
-        Set.of(codeClass.fullyQualifiedName()) :
-        Set.of();
+    if (codeType instanceof CodeType.ClassType codeClass) {
+      return join(
+          codeClass.types() == null ? Set.of() : collect(codeClass.types()),
+          Set.of(codeClass)
+      );
+    }
+
+    return Set.of();
   }
 
   @Override
-  public Set<String> visitAnnotation(CodeAnnotation codeAnnotation) {
-    return Set.of(codeAnnotation.type().fullyQualifiedName());
+  public Set<CodeType.ClassType> visitAnnotation(CodeAnnotation codeAnnotation) {
+    return Set.of(codeAnnotation.type());
   }
 
   @Override
-  public Set<String> visitField(CodeField codeField) {
+  public Set<CodeType.ClassType> visitField(CodeField codeField) {
     return join(
         codeField.initialiser() != null ? codeField.initialiser().accept(this) : Set.of(),
         collect(codeField.annotations()),
@@ -129,7 +146,7 @@ public class ImportGatheringVisitor implements CodeVisitor<Set<String>> {
   }
 
   @Override
-  public Set<String> visitExpression(CodeExpression codeExpression) {
+  public Set<CodeType.ClassType> visitExpression(CodeExpression codeExpression) {
     return switch (codeExpression) {
       case CodeExpression.MethodInvocation(InvokesMethod invokes) -> collectMethodInvokesImports(invokes);
 
@@ -154,7 +171,7 @@ public class ImportGatheringVisitor implements CodeVisitor<Set<String>> {
   }
 
   @Override
-  public Set<String> visitStatement(CodeStatement codeStatement) {
+  public Set<CodeType.ClassType> visitStatement(CodeStatement codeStatement) {
     return switch (codeStatement) {
       case CodeStatement.VariableDeclaration variableDeclaration -> {
         if (variableDeclaration.assignment() != null) {

@@ -17,12 +17,23 @@
  */
 package net.strokkur.commands.internal.printer.javadoc;
 
+import net.strokkur.commands.internal.codegen.CodePackage;
+import net.strokkur.commands.internal.codegen.CodeType;
 import net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc;
 
 import java.util.Arrays;
 import java.util.SequencedCollection;
+import java.util.Set;
 
 public class JavaMarkdownJavadocVisitor extends JavaStarJavadocVisitor {
+  public JavaMarkdownJavadocVisitor() {
+    super();
+  }
+
+  public JavaMarkdownJavadocVisitor(CodePackage currentPath, Set<CodeType.ClassType> imports) {
+    super(currentPath, imports);
+  }
+
   @Override
   public SequencedCollection<String> getLines() {
     return Arrays.stream(builder.toString().strip().split("\n"))
@@ -68,7 +79,7 @@ public class JavaMarkdownJavadocVisitor extends JavaStarJavadocVisitor {
       builder.append('[').append(value.name()).append(']');
     }
 
-    builder.append('[').append(value.codeClass().fullyQualifiedName()).append(']');
+    builder.append('[').append(getQualifiedTypeName(value.codeClass())).append(']');
   }
 
   @Override

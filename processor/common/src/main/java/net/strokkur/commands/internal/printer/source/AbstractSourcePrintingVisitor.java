@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.printer.command;
+package net.strokkur.commands.internal.printer.source;
 
 import net.strokkur.commands.internal.codegen.CodeAnnotation;
 import net.strokkur.commands.internal.codegen.CodeExpression;
@@ -39,11 +39,14 @@ import java.util.stream.Collectors;
 public abstract class AbstractSourcePrintingVisitor implements CodeVisitor<StringBuilder> {
   protected final Supplier<AbstractJavadocPrintingVisitor> javadocPrintingVisitor;
   private final String indentString;
+  private final String continuationIndentString;
   private int indentation = 0;
+  private int continuationIndent = 0;
 
-  public AbstractSourcePrintingVisitor(Supplier<AbstractJavadocPrintingVisitor> javadocPrintingVisitor, String indentString) {
+  public AbstractSourcePrintingVisitor(Supplier<AbstractJavadocPrintingVisitor> javadocPrintingVisitor, String indentString, String continuationIndentString) {
     this.javadocPrintingVisitor = javadocPrintingVisitor;
     this.indentString = indentString;
+    this.continuationIndentString = continuationIndentString;
   }
 
   /// Packages are never printed.
@@ -53,9 +56,15 @@ public abstract class AbstractSourcePrintingVisitor implements CodeVisitor<Strin
   }
 
   protected final void appendIndented(Runnable run) {
-    incrementIndent();
+    indentation++;
     run.run();
-    decrementIndent();
+    indentation--;
+  }
+
+  protected final void appendIndentedContinuation(Runnable run) {
+    continuationIndent++;
+    run.run();
+    continuationIndent--;
   }
 
   protected final StringBuilder append(Consumer<StringBuilder> run) {
@@ -65,15 +74,7 @@ public abstract class AbstractSourcePrintingVisitor implements CodeVisitor<Strin
   }
 
   protected final void appendIndent(StringBuilder builder) {
-    builder.repeat(indentString, indentation);
-  }
-
-  protected final void incrementIndent() {
-    indentation++;
-  }
-
-  protected final void decrementIndent() {
-    indentation--;
+    builder.repeat(indentString, indentation).repeat(continuationIndentString, continuationIndent);
   }
 
   // Utility methods
@@ -118,7 +119,7 @@ public abstract class AbstractSourcePrintingVisitor implements CodeVisitor<Strin
   }
 
   protected void appendMethodParametersMultiline(StringBuilder builder, List<CodeExpression> parameters) {
-    appendIndented(() -> {
+    appendIndentedContinuation(() -> {
       builder.append("\n");
       for (int i = 0, parametersSize = parameters.size(); i < parametersSize; i++) {
         final CodeExpression parameter = parameters.get(i);
@@ -148,41 +149,46 @@ public abstract class AbstractSourcePrintingVisitor implements CodeVisitor<Strin
 
       if (source != null) {
         builder.append(source);
-        incrementIndent();
-        if (method.newline()) {
-          builder.append("\n");
-          appendIndent(builder);
-        }
-        builder.append(".");
-        decrementIndent();
+        appendIndentedContinuation(() -> {
+          if (method.style().newline()) {
+            builder.append("\n");
+            appendIndent(builder);
+          }
+          builder.append(".");
+        });
       }
     }
 
     builder.append(method.methodName());
     builder.append("(");
-    if (method.multilineParameters()) {
+    if (method.style().multilineParameters()) {
       appendMethodParametersMultiline(builder, method.parameters());
     } else {
       builder.append(joining(method.parameters()));
     }
     builder.append(")");
 
-    incrementIndent();
-    for (InvokesMethod.Chained chained : method.chained()) {
-      if (chained.newline()) {
-        builder.append("\n");
-        appendIndent(builder);
+    appendIndentedContinuation(() -> {
+      for (InvokesMethod.Chained chained : method.chained()) {
+        if (chained.style().newline()) {
+          builder.append("\n");
+          appendIndent(builder);
+        }
+        builder.append(".");
+        builder.append(chained.methodName());
+        builder.append("(");
+        if (chained.style().multilineParameters()) {
+          appendMethodParametersMultiline(builder, chained.parameters());
+        } else {
+          builder.append(joining(chained.parameters()));
+        }
+
+        if (chained.style().newlineClosingBrace()) {
+          builder.append("\n");
+          appendIndent(builder);
+        }
+        builder.append(")");
       }
-      builder.append(".");
-      builder.append(chained.methodName());
-      builder.append("(");
-      if (chained.multilineParameters()) {
-        appendMethodParametersMultiline(builder, chained.parameters());
-      } else {
-        builder.append(joining(chained.parameters()));
-      }
-      builder.append(")");
-    }
-    decrementIndent();
+    });
   }
 }

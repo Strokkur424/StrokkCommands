@@ -38,6 +38,7 @@ public class MethodInvocationBuilder implements AsExpression, AsStatement {
   private boolean isStatic = false;
   private boolean isCtor = false;
   private boolean multilineParameters = false;
+  private boolean newlineClosingBrace = false;
   private final List<InvokesMethod.Chained> chained = new ArrayList<>();
 
   MethodInvocationBuilder(String methodName) {
@@ -64,6 +65,10 @@ public class MethodInvocationBuilder implements AsExpression, AsStatement {
     return this;
   }
 
+  public MethodInvocationBuilder setStatic(CodeType.ClassType type) {
+    return setType(type).setStatic();
+  }
+
   public MethodInvocationBuilder setStatic() {
     this.isStatic = true;
     return this;
@@ -79,28 +84,36 @@ public class MethodInvocationBuilder implements AsExpression, AsStatement {
     return this;
   }
 
+  public MethodInvocationBuilder setNewlineClosingBrace() {
+    this.newlineClosingBrace = true;
+    return this;
+  }
+
   public MethodInvocationBuilder chain(String methodName, AsExpression... parameters) {
-    return chain(methodName, false, false, parameters);
+    return chain(methodName, InvokesMethod.StyleConfig.DEFAULT, parameters);
   }
 
-  public MethodInvocationBuilder chain(String methodName, boolean newline, AsExpression... parameters) {
-    return chain(methodName, newline, false, parameters);
-  }
-
-  public MethodInvocationBuilder chain(String methodName, boolean newline, boolean multilineParameters, AsExpression... parameters) {
+  public MethodInvocationBuilder chain(String methodName, InvokesMethod.StyleConfig config, AsExpression... parameters) {
     this.chained.add(new InvokesMethod.Chained(
         methodName,
         Arrays.stream(parameters)
             .map(AsExpression::getAsExpression)
             .toList(),
-        multilineParameters,
-        newline
+        config
     ));
     return this;
   }
 
   public InvokesMethod build() {
-    return new InvokesMethod(methodName, type, List.copyOf(parameters), instanceVariable, newline, isStatic, isCtor, multilineParameters, List.copyOf(chained));
+    return new InvokesMethod(methodName,
+        type,
+        List.copyOf(parameters),
+        instanceVariable,
+        isStatic,
+        isCtor,
+        new InvokesMethod.StyleConfig(newline, multilineParameters, newlineClosingBrace),
+        List.copyOf(chained)
+    );
   }
 
   @Override

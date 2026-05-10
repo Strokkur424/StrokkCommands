@@ -66,6 +66,10 @@ public class MethodBuilder implements ConvertableTo<CodeMethod> {
     return this;
   }
 
+  public MethodBuilder setModifiers(Modifiers... modifiers) {
+    return setModifiers(Set.of(modifiers));
+  }
+
   public MethodBuilder setModifiers(Set<Modifiers> modifiers) {
     this.modifiers = modifiers;
     return this;
@@ -74,6 +78,10 @@ public class MethodBuilder implements ConvertableTo<CodeMethod> {
   public MethodBuilder setJavadoc(@Nullable CodeJavadoc javadoc) {
     this.javadoc = javadoc;
     return this;
+  }
+
+  public MethodBuilder setCodeBlock(AsStatement... statements) {
+    return setCodeBlock(List.of(statements));
   }
 
   public MethodBuilder setCodeBlock(List<? extends AsStatement> statements) {

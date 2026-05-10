@@ -21,6 +21,7 @@ import net.strokkur.commands.internal.codegen.CodeClass;
 import net.strokkur.commands.internal.codegen.CodeMethod;
 import net.strokkur.commands.internal.codegen.CodeType;
 import net.strokkur.commands.internal.codegen.visitor.JavadocVisitor;
+import net.strokkur.commands.internal.util.ConvertableTo;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
@@ -53,12 +54,12 @@ public interface CodeJavadoc {
     return new Meta("version", version);
   }
 
-  static CodeJavadoc see(CodeMethod method, @Nullable String description) {
+  static CodeJavadoc see(ConvertableTo<CodeMethod> method, @Nullable String description) {
     return see(method, description, false);
   }
 
-  static CodeJavadoc see(CodeMethod method, @Nullable String description, boolean localMethod) {
-    return new MethodReferenceMeta("see", method, description, localMethod);
+  static CodeJavadoc see(ConvertableTo<CodeMethod> method, @Nullable String description, boolean localMethod) {
+    return new MethodReferenceMeta("see", method.convert(), description, localMethod);
   }
 
   static CodeJavadoc throwsMeta(CodeType.ClassType exception, @Nullable String description) {
@@ -100,20 +101,20 @@ public interface CodeJavadoc {
     return new ClassReference(ref, description);
   }
 
-  static CodeJavadoc methodReference(CodeMethod ref) {
+  static CodeJavadoc methodReference(ConvertableTo<CodeMethod> ref) {
     return methodReference(ref, null);
   }
 
-  static CodeJavadoc methodReference(CodeMethod ref, @Nullable String description) {
+  static CodeJavadoc methodReference(ConvertableTo<CodeMethod> ref, @Nullable String description) {
     return methodReference(ref, description, false);
   }
 
-  static CodeJavadoc methodReference(CodeMethod ref, boolean localMethod) {
+  static CodeJavadoc methodReference(ConvertableTo<CodeMethod> ref, boolean localMethod) {
     return methodReference(ref, null, localMethod);
   }
 
-  static CodeJavadoc methodReference(CodeMethod ref, @Nullable String description, boolean localMethod) {
-    return new MethodReference(ref, description, localMethod);
+  static CodeJavadoc methodReference(ConvertableTo<CodeMethod> ref, @Nullable String description, boolean localMethod) {
+    return new MethodReference(ref.convert(), description, localMethod);
   }
   //</editor-fold>
 

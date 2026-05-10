@@ -19,9 +19,9 @@ package net.strokkur.commands.internal.codegen;
 
 import net.strokkur.commands.internal.codegen.builder.Builders;
 import net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc;
-import net.strokkur.commands.internal.printer.command.ImportGatheringVisitor;
-import net.strokkur.commands.internal.printer.command.JavaSourcePrintingVisitor;
 import net.strokkur.commands.internal.printer.javadoc.JavaMarkdownJavadocVisitor;
+import net.strokkur.commands.internal.printer.source.ImportGatheringVisitor;
+import net.strokkur.commands.internal.printer.source.JavaSourcePrintingVisitor;
 import net.strokkur.commands.internal.util.Classes;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -37,7 +37,7 @@ class FullCommandClassBuilderTests {
     final CodeClass exampleClass = constructExampleCommandClass();
 
     final ImportGatheringVisitor visitor = new ImportGatheringVisitor();
-    final Set<String> collectedImports = exampleClass.accept(visitor);
+    final Set<CodeType.ClassType> collectedImports = exampleClass.accept(visitor);
 
     final String expected = """
         com.example.ExampleCommandBrigadier
@@ -48,6 +48,7 @@ class FullCommandClassBuilderTests {
         org.jspecify.annotations.Nullable""";
     final String actual = collectedImports.stream()
         .sorted()
+        .map(CodeType::fullyQualifiedName)
         .collect(Collectors.joining("\n"));
 
     Assertions.assertEquals(expected, actual);
@@ -56,7 +57,7 @@ class FullCommandClassBuilderTests {
   @Test
   void testFullClassExampleJavaPrinter() {
     final CodeClass exampleClass = constructExampleCommandClass();
-    final JavaSourcePrintingVisitor visitor = new JavaSourcePrintingVisitor(JavaMarkdownJavadocVisitor::new, "  ");
+    final JavaSourcePrintingVisitor visitor = new JavaSourcePrintingVisitor(JavaMarkdownJavadocVisitor::new, "  ", "  ");
 
     // language=java
     final String expected = """
@@ -66,7 +67,7 @@ class FullCommandClassBuilderTests {
         @NullMarked
         public final class ExampleCommandBrigadier {
           public static final String NAME = "example";
-          public static final String DESCRIPTION = null;
+          public static final @Nullable String DESCRIPTION = null;
           public static final String ALIASES = "example";
         
           /// Registers your command.
@@ -79,7 +80,7 @@ class FullCommandClassBuilderTests {
         
           /// The constructor is inaccessible.
           ///
-          /// @throws java.lang.IllegalAccessException always
+          /// @throws IllegalAccessException always
           private ExampleCommandBrigadier() throws IllegalAccessException {
             throw new IllegalAccessException("This class cannot be instantiated.");
           }

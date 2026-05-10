@@ -30,10 +30,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-public record CodeClass(CodePackage codePackage, @Nullable CodeClass parentClass, String name, Set<Modifiers> modifiers,
-                        List<CodeAnnotation> annotations, List<CodeMethod> methods, List<CodeField> fields,
-                        @Nullable CodeJavadoc javadoc,
-                        List<CodeType> typeParameters) implements CodeVisitable, ConvertableTo.Self<CodeClass> {
+public record CodeClass(
+    CodePackage codePackage, @Nullable CodeClass parentClass, String name, Set<Modifiers> modifiers,
+    List<CodeAnnotation> annotations, List<CodeMethod> methods, List<CodeField> fields,
+    @Nullable CodeJavadoc javadoc,
+    List<CodeType.GenericType> typeParameters
+) implements CodeVisitable, ConvertableTo.Self<CodeClass> {
+  public static CodeClass OBJECT = CodeClass.simple("java.lang.Object");
+  public static CodeClass LIST = CodeClass.simple("java.util.List");
   public static CodeClass STRING = CodeClass.simple("java.lang.String");
 
   private CodeClass(
@@ -88,7 +92,7 @@ public record CodeClass(CodePackage codePackage, @Nullable CodeClass parentClass
 
   @Override
   @UnmodifiableView
-  public List<CodeType> typeParameters() {
+  public List<CodeType.GenericType> typeParameters() {
     return Collections.unmodifiableList(typeParameters);
   }
 }

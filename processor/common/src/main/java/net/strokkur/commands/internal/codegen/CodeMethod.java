@@ -25,7 +25,6 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class CodeMethod implements CodeVisitable, ConvertableTo.Self<CodeMethod> {
   private final CodeClass declaredClass;
@@ -65,14 +64,6 @@ public class CodeMethod implements CodeVisitable, ConvertableTo.Self<CodeMethod>
   /// Example: `methodName`
   public String name() {
     return name;
-  }
-
-  /// Example: `methodName(String, int)`
-  public String javadocName() {
-    return name() + "(" + parameters().stream()
-        .map(param -> param.type().fullyQualifiedName())
-        .collect(Collectors.joining(", "))
-        + ")";
   }
 
   public CodeClass declaredClass() {

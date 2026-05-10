@@ -27,18 +27,38 @@ public record InvokesMethod(
     CodeType.@Nullable ClassType type,
     List<CodeExpression> parameters,
     @Nullable String instanceVariable,
-    boolean newline,
     boolean isStatic,
     boolean isCtor,
-    boolean multilineParameters,
+    StyleConfig style,
     List<Chained> chained
 ) implements ConvertableTo.Self<InvokesMethod> {
 
   public record Chained(
       String methodName,
       List<CodeExpression> parameters,
-      boolean multilineParameters,
-      boolean newline
+      StyleConfig style
   ) {
+  }
+
+  public record StyleConfig(
+      boolean newline,
+      boolean multilineParameters,
+      boolean newlineClosingBrace
+  ) {
+    public static final StyleConfig DEFAULT = new StyleConfig(
+        false, false, false
+    );
+    public static final StyleConfig NEWLINE = new StyleConfig(
+        true, false, false
+    );
+    public static final StyleConfig MULTILINE = new StyleConfig(
+        false, true, false
+    );
+    public static final StyleConfig NEWLINE_MULTILINE = new StyleConfig(
+        true, true, false
+    );
+    public static final StyleConfig NEWLINE_BOTH = new StyleConfig(
+        true, false, true
+    );
   }
 }

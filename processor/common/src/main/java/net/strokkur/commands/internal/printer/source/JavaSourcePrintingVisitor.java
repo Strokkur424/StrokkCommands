@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.printer.command;
+package net.strokkur.commands.internal.printer.source;
 
 import net.strokkur.commands.internal.codegen.CodeAnnotation;
 import net.strokkur.commands.internal.codegen.CodeClass;
@@ -35,8 +35,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class JavaSourcePrintingVisitor extends AbstractSourcePrintingVisitor {
-  public JavaSourcePrintingVisitor(Supplier<AbstractJavadocPrintingVisitor> javadocPrintingVisitor, String indentString) {
-    super(javadocPrintingVisitor, indentString);
+  public JavaSourcePrintingVisitor(Supplier<AbstractJavadocPrintingVisitor> javadocPrintingVisitor, String indent, String continuationIndent) {
+    super(javadocPrintingVisitor, indent, continuationIndent);
   }
 
   @Override
@@ -60,7 +60,19 @@ public class JavaSourcePrintingVisitor extends AbstractSourcePrintingVisitor {
       builder.append(" {\n");
 
       appendIndented(() -> {
-        codeClass.fields().forEach(field -> appendNested(builder, field));
+        final List<CodeField> staticFields = codeClass.fields().stream()
+            .filter(field -> field.modifiers().contains(Modifiers.STATIC))
+            .toList();
+        staticFields.forEach(field -> appendNested(builder, field));
+
+        final List<CodeField> instanceFields = codeClass.fields().stream()
+            .filter(field -> !field.modifiers().contains(Modifiers.STATIC))
+            .toList();
+
+        if (!staticFields.isEmpty() && !instanceFields.isEmpty()) {
+          builder.append("\n");
+        }
+        instanceFields.forEach(field -> appendNested(builder, field));
 
         final List<CodeMethod> staticMethods = codeClass.methods().stream()
             .filter(method -> method.modifiers().contains(Modifiers.STATIC))
@@ -124,7 +136,13 @@ public class JavaSourcePrintingVisitor extends AbstractSourcePrintingVisitor {
 
   @Override
   public StringBuilder visitType(CodeType codeType) {
-    return new StringBuilder(codeType.name());
+    final StringBuilder out = new StringBuilder(codeType.name());
+
+    if (codeType instanceof CodeType.ClassType classType && classType.types() != null) {
+      out.append("<").append(joining(classType.types())).append(">");
+    }
+
+    return out;
   }
 
   @Override
@@ -139,6 +157,10 @@ public class JavaSourcePrintingVisitor extends AbstractSourcePrintingVisitor {
   public StringBuilder visitField(CodeField codeField) {
     return append(builder -> {
       printModifiersIndented(builder, codeField.modifiers());
+      if (!codeField.annotations().isEmpty()) {
+        builder.append(joining(codeField.annotations()));
+        builder.append(" ");
+      }
       appendNested(builder, codeField.type());
       builder.append(" ");
       builder.append(codeField.name());
