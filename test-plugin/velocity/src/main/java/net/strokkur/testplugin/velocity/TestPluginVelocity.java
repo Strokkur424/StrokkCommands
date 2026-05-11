@@ -24,10 +24,10 @@ import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.proxy.ProxyServer;
-import net.strokkur.testplugin.velocity.reference.TestCommandBrigadier;
+import jakarta.inject.Inject;
 import org.slf4j.Logger;
 
-import javax.inject.Inject;
+//import net.strokkur.testplugin.velocity.reference.TestCommandBrigadier;
 
 @Plugin(
     id = "strokkcommands-testplugin",
@@ -50,7 +50,7 @@ public class TestPluginVelocity {
   @Subscribe
   void onProxyInitialize(ProxyInitializeEvent event) {
     final Injector injector = Guice.createInjector(new InjectionModule());
-    injector.getInstance(TestCommandBrigadier.class).register(this.proxy, this);
+//    injector.getInstance(TestCommandBrigadier.class).register(this.proxy, this);
   }
 
   private class InjectionModule extends AbstractModule {

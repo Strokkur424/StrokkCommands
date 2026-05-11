@@ -47,6 +47,10 @@ public sealed interface CodeExpression extends CodeVisitable, AsExpression {
     return new NumberConstant(number);
   }
 
+  static BooleanConstant bool(boolean value) {
+    return new BooleanConstant(value);
+  }
+
   static MethodReference methodReference(CodeType type, String methodName) {
     return new MethodReference(type, methodName);
   }
@@ -80,7 +84,7 @@ public sealed interface CodeExpression extends CodeVisitable, AsExpression {
 
   sealed abstract class BooleanExpression<S extends BooleanExpression<S>>
       implements CodeExpression, AsBooleanExpression
-      permits Instanceof {
+      permits Instanceof, BooleanConstant {
     private final boolean inverted;
 
     public BooleanExpression(boolean inverted) {
@@ -120,6 +124,20 @@ public sealed interface CodeExpression extends CodeVisitable, AsExpression {
 
     public Number value() {
       return value;
+    }
+  }
+
+  final class BooleanConstant extends BooleanExpression<BooleanConstant> {
+    private final boolean value;
+
+    private BooleanConstant(boolean value) {
+      super(false);
+      this.value = value;
+    }
+
+    @Override
+    public BooleanConstant invert() {
+      return new BooleanConstant(!value);
     }
   }
 

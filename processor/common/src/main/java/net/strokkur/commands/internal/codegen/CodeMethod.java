@@ -34,6 +34,7 @@ public class CodeMethod implements CodeVisitable, ConvertableTo.Self<CodeMethod>
   private final Set<Modifiers> modifiers;
   private final @Nullable CodeJavadoc javadoc;
   private final CodeBlock codeBlock;
+  private final List<CodeType.GenericType> generics;
   private final List<CodeType.ClassType> throwsExceptions;
 
   public CodeMethod(
@@ -44,6 +45,7 @@ public class CodeMethod implements CodeVisitable, ConvertableTo.Self<CodeMethod>
       Set<Modifiers> modifiers,
       @Nullable CodeJavadoc javadoc,
       CodeBlock codeBlock,
+      List<CodeType.GenericType> generics,
       List<CodeType.ClassType> throwsExceptions
   ) {
     this.declaredClass = declaredClass;
@@ -53,6 +55,7 @@ public class CodeMethod implements CodeVisitable, ConvertableTo.Self<CodeMethod>
     this.modifiers = modifiers;
     this.javadoc = javadoc;
     this.codeBlock = codeBlock;
+    this.generics = generics;
     this.throwsExceptions = throwsExceptions;
   }
 
@@ -92,5 +95,9 @@ public class CodeMethod implements CodeVisitable, ConvertableTo.Self<CodeMethod>
 
   public List<CodeType.ClassType> throwsExceptions() {
     return throwsExceptions;
+  }
+
+  public List<CodeType.GenericType> generics() {
+    return generics;
   }
 }

@@ -48,6 +48,7 @@ public class MethodBuilder implements ConvertableTo<CodeMethod> {
   private Set<Modifiers> modifiers = new HashSet<>();
   private @Nullable CodeJavadoc javadoc = null;
   private List<CodeStatement> methodStatements = new ArrayList<>();
+  private final List<CodeType.GenericType> generics = new ArrayList<>();
   private List<CodeType.ClassType> throwsExceptions = List.of();
 
   MethodBuilder(String name) {
@@ -56,6 +57,11 @@ public class MethodBuilder implements ConvertableTo<CodeMethod> {
 
   public MethodBuilder setDeclaringClass(CodeClass declaringClass) {
     this.declaredClass = declaringClass;
+    return this;
+  }
+
+  public MethodBuilder addGeneric(CodeType.GenericType generic) {
+    this.generics.add(generic);
     return this;
   }
 
@@ -106,7 +112,8 @@ public class MethodBuilder implements ConvertableTo<CodeMethod> {
     return this;
   }
 
-  public MethodBuilder setThrowsExceptions(AsCodeType<CodeType.ClassType>... throwsExceptions) {
+  @SafeVarargs
+  public final MethodBuilder setThrowsExceptions(AsCodeType<CodeType.ClassType>... throwsExceptions) {
     this.throwsExceptions = Arrays.stream(throwsExceptions)
         .map(AsCodeType::getAsCodeType)
         .toList();
@@ -128,6 +135,7 @@ public class MethodBuilder implements ConvertableTo<CodeMethod> {
         Set.copyOf(modifiers),
         javadoc,
         new CodeBlock(List.copyOf(methodStatements)),
+        List.copyOf(generics),
         List.copyOf(throwsExceptions)
     );
   }
@@ -140,6 +148,7 @@ public class MethodBuilder implements ConvertableTo<CodeMethod> {
         Set.copyOf(modifiers),
         javadoc,
         new CodeBlock(List.copyOf(methodStatements)),
+        List.copyOf(generics),
         List.copyOf(throwsExceptions)
     );
   }

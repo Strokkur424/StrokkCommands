@@ -1,5 +1,23 @@
+/*
+ * StrokkCommands - A super simple annotation based zero-shade Paper command API library.
+ * Copyright (C) 2025 Strokkur24
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <https://www.gnu.org/licenses/>.
+ */
 package net.strokkur.commands.internal.printer;
 
+import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.MultiLiteralCommandArgument;
@@ -16,6 +34,7 @@ import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
 import net.strokkur.commands.internal.intermediate.executable.Parameterizable;
+import net.strokkur.commands.internal.intermediate.executable.SourceParameterType;
 import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
@@ -125,9 +144,11 @@ public abstract class CommonBrigadierStatementBuilder {
     final MethodInvocationBuilder builder = Builders.methodInvocation(executable.executesMethod().getName())
         .setInstanceSource(source);
 
-    executable.parameterArguments().stream()
-        .map(CommandArgument.class::cast)
-        .forEach(arg -> builder.addParameter(getArgumentValueExpr(arg)));
+    executable.parameterArguments()
+        .forEach(arg -> builder.addParameter(switch (arg) {
+          case CommandArgument argument -> getArgumentValueExpr(argument);
+          case SourceParameterType(SourceVariable parameter) -> getParameterValueExpr(parameter);
+        }));
 
     return builder;
   }
@@ -140,6 +161,8 @@ public abstract class CommonBrigadierStatementBuilder {
       default -> throw new IllegalStateException("Unexpected argument type: " + argument.getClass().getName());
     };
   }
+
+  protected abstract AsExpression getParameterValueExpr(SourceVariable parameter);
 
   protected void appendNode(MethodInvocationBuilder builder, CommandNode node) {
     switch (node.argument()) {

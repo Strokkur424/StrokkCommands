@@ -43,8 +43,8 @@ public interface CodeType extends CodeVisitable, Comparable<CodeType> {
   ClassType LIST = CodeType.ofClass(CodeClass.LIST);
   ClassType LIST_STRING = CodeType.ofClassTyped(CodeClass.LIST, STRING);
 
-  static GenericType generic(String name) {
-    return new GenericType(name);
+  static GenericType generic(String name, @Nullable String definition) {
+    return new GenericType(name, definition);
   }
 
   static ClassType ofClass(CodeClass codeClass) {
@@ -112,8 +112,15 @@ public interface CodeType extends CodeVisitable, Comparable<CodeType> {
   }
 
   class GenericType extends SimpleType {
-    private GenericType(String name) {
+    private final @Nullable String definition;
+
+    private GenericType(String name, @Nullable String definition) {
       super(name);
+      this.definition = definition;
+    }
+
+    public @Nullable String definition() {
+      return definition;
     }
   }
 

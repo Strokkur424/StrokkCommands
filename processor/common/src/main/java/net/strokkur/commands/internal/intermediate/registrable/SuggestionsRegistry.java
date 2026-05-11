@@ -34,10 +34,10 @@ public class SuggestionsRegistry extends FunctionalInterfaceRegistry<SuggestionP
   @Override
   protected boolean inlineMethodPredicate(SourceMethod source) {
     final List<SourceParameter> params = source.getParameters();
-    return source.getReturnType().getFullyQualifiedAndTypedName().equals(Classes.COMPLETABLE_FUTURE + "<" + Classes.SUGGESTIONS + ">")
+    return source.getReturnType().getFullyQualifiedAndTypedName().equals(Classes.COMPLETABLE_FUTURE.getAsCodeType().fullyQualifiedName() + "<" + Classes.SUGGESTIONS.getAsCodeType().fullyQualifiedName() + ">")
         && params.size() == 2
-        && params.getFirst().getType().getFullyQualifiedAndTypedName().equals(Classes.COMMAND_CONTEXT + "<" + getPlatformType() + ">")
-        && params.get(1).getType().getFullyQualifiedName().equals(Classes.SUGGESTIONS_BUILDER);
+        && params.getFirst().getType().getFullyQualifiedAndTypedName().equals(Classes.COMMAND_CONTEXT.getAsCodeType().fullyQualifiedName() + "<" + getPlatformType() + ">")
+        && params.get(1).getType().getFullyQualifiedName().equals(Classes.SUGGESTIONS_BUILDER.getAsCodeType().fullyQualifiedName());
   }
 
   @Override

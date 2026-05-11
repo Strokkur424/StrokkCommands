@@ -1,6 +1,27 @@
+/*
+ * StrokkCommands - A super simple annotation based zero-shade Paper command API library.
+ * Copyright (C) 2025 Strokkur24
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <https://www.gnu.org/licenses/>.
+ */
 package net.strokkur.commands.internal.printer;
 
 import net.strokkur.commands.internal.BuildConstants;
+import net.strokkur.commands.internal.abstraction.SourceConstructor;
+import net.strokkur.commands.internal.abstraction.SourceParameter;
+import net.strokkur.commands.internal.abstraction.SourceTypeAnnotation;
+import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.codegen.CodeAnnotation;
 import net.strokkur.commands.internal.codegen.CodeClass;
 import net.strokkur.commands.internal.codegen.CodeExpression;
@@ -9,10 +30,12 @@ import net.strokkur.commands.internal.codegen.CodePackage;
 import net.strokkur.commands.internal.codegen.CodeStatement;
 import net.strokkur.commands.internal.codegen.CodeType;
 import net.strokkur.commands.internal.codegen.Modifiers;
+import net.strokkur.commands.internal.codegen.adapter.CodeTypeAdapter;
 import net.strokkur.commands.internal.codegen.as.AsExpression;
 import net.strokkur.commands.internal.codegen.builder.Builders;
 import net.strokkur.commands.internal.codegen.builder.ClassBuilder;
 import net.strokkur.commands.internal.codegen.builder.MethodBuilder;
+import net.strokkur.commands.internal.codegen.builder.MethodInvocationBuilder;
 import net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.printer.source.AbstractSourcePrintingVisitor;
@@ -27,16 +50,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public abstract class CommonClassBuilder<C extends CommandInformation> {
   private final CommandNode rootNode;
-  private final C commandInformation;
+  protected final C commandInformation;
   private final CommonBrigadierStatementBuilder statementBuilder;
   private final BiFunction<CodePackage, Set<CodeType.ClassType>, AbstractSourcePrintingVisitor> sourceVisitor;
 
-  private final CodeType.ClassType sourceType;
-  private final CodeType.ClassType selfType;
+  protected final CodeType.ClassType sourceType;
+  protected final CodeType.ClassType selfType;
 
   public CommonClassBuilder(
       CommandNode rootNode,
@@ -58,6 +82,8 @@ public abstract class CommonClassBuilder<C extends CommandInformation> {
     final CodeClass brigadierClass = createClass();
 
     final StringBuilder out = new StringBuilder();
+    out.append("package ").append(selfType.codePackage().path()).append(";\n\n");
+
     final Set<CodeType.ClassType> imports = gatherAndAppendImports(out, brigadierClass);
     out.append("\n");
 
@@ -106,7 +132,7 @@ public abstract class CommonClassBuilder<C extends CommandInformation> {
         createMethod.addMethodStatements(CodeStatement.variableDeclarationFinal(
             path.access().getLast(),
             path.name(),
-            Builders.ctorInvocation(path.access().getLast().getAsCodeType())
+            createInstanceConstructor((CodeType.ClassType) path.access().getLast().getAsCodeType())
         ));
       });
       if (!required.isEmpty()) {
@@ -141,6 +167,48 @@ public abstract class CommonClassBuilder<C extends CommandInformation> {
     return classBuilder.build();
   }
 
+  private void addSourceConstructorParameters(MethodInvocationBuilder builder) {
+    if (commandInformation.useInjection()) {
+      // Don't add constructor parameters
+      return;
+    }
+
+    if (commandInformation.constructor() instanceof SourceConstructor sourceCtor) {
+      for (SourceParameter parameter : sourceCtor.getParameters()) {
+        builder.addParameter(CodeExpression.variable(parameter.getName()));
+      }
+    }
+  }
+
+  protected AsExpression createInstanceConstructor(CodeType.ClassType classType) {
+    final MethodInvocationBuilder ctor = Builders.ctorInvocation(classType);
+    if (sourceType.equals(classType)) {
+      addSourceConstructorParameters(ctor);
+    }
+    return ctor;
+  }
+
+  /// The transmutation logic for the top-level constructor call, intended
+  /// for using existing instances (i.e., a Server instance) multiple times
+  /// to save on duplicate parameters in the create/register methods.
+  protected AsExpression transmuteConstructorParameter(SourceVariable parameter) {
+    return CodeExpression.variable(parameter.getName());
+  }
+
+  protected void addConstructorParametersTo(MethodBuilder builder, Predicate<SourceParameter> filter) {
+    if (!commandInformation.useInjection() && commandInformation.constructor() instanceof SourceConstructor ctor) {
+      for (SourceTypeAnnotation typeAnnotation : ctor.getTypeAnnotations()) {
+        builder.addGeneric(CodeType.generic(typeAnnotation.getName(), typeAnnotation.getDefinitionString()));
+      }
+
+      for (SourceParameter parameter : ctor.getParameters()) {
+        if (filter.test(parameter)) {
+          builder.addParameter(CodeTypeAdapter.from(parameter.getType()), parameter.getName());
+        }
+      }
+    }
+  }
+
   /// Creates the builder for the create method.
   ///
   /// @apiNote this method should always be overridden. Overriders should implement the create method logic now.
@@ -151,6 +219,10 @@ public abstract class CommonClassBuilder<C extends CommandInformation> {
     if (!commandInformation.useInjection()) {
       builder.addModifiers(Modifiers.STATIC);
     }
+
+    // Propagate constructor parameters
+    addConstructorParametersTo(builder, f -> true);
+
     return builder;
   }
 
@@ -187,7 +259,7 @@ public abstract class CommonClassBuilder<C extends CommandInformation> {
             CodeJavadoc.text(". You can either retrieve the unregistered node with this method")),
         CodeJavadoc.combine(
             CodeJavadoc.text("or register it directly with "),
-            CodeJavadoc.methodReference(registerMethod),
+            CodeJavadoc.methodReference(registerMethod, true),
             CodeJavadoc.text("."))
     ));
   }
@@ -208,8 +280,8 @@ public abstract class CommonClassBuilder<C extends CommandInformation> {
         CodeJavadoc.blank(),
         CodeJavadoc.author("Strokkur24 - StrokkCommands"),
         CodeJavadoc.version(BuildConstants.VERSION),
-        CodeJavadoc.see(createMethod, "creating the command"),
-        CodeJavadoc.see(registerMethod, "registering the command")
+        CodeJavadoc.see(createMethod, "creating the command", true),
+        CodeJavadoc.see(registerMethod, "registering the command", true)
     );
   }
 
@@ -225,14 +297,15 @@ public abstract class CommonClassBuilder<C extends CommandInformation> {
     final Map<Boolean, List<CodeType.ClassType>> split = imports.stream()
         .collect(Collectors.partitioningBy(type -> type.codePackage().path().startsWith("java")));
 
-    split.get(true).stream().sorted()
+    split.get(false).stream().sorted()
         .forEach(type -> builder.append("import ").append(type.fullyQualifiedName()).append(";\n"));
 
-    if (split.get(false).isEmpty()) {
+    if (!split.get(false).isEmpty() && !split.get(true).isEmpty()) {
       builder.append("\n");
-      split.get(false).stream().sorted()
-          .forEach(type -> builder.append("import ").append(type.fullyQualifiedName()).append(";\n"));
     }
+
+    split.get(true).stream().sorted()
+        .forEach(type -> builder.append("import ").append(type.fullyQualifiedName()).append(";\n"));
 
     return imports;
   }

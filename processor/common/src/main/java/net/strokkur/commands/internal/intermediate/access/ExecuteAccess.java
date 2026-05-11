@@ -24,7 +24,7 @@ import net.strokkur.commands.internal.codegen.CodeType;
 import net.strokkur.commands.internal.codegen.as.AsCodeType;
 
 public sealed interface ExecuteAccess<E extends SourceElement>
-    extends AsCodeType<CodeType.ClassType>
+    extends AsCodeType<CodeType>
     permits ExecuteAccessImpl, FieldAccess, InstanceAccess {
 
   static FieldAccess of(SourceField field) {

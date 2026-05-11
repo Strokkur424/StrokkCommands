@@ -28,7 +28,7 @@ final class FieldAccessImpl extends ExecuteAccessImpl<SourceField> implements Fi
   }
 
   @Override
-  public CodeType.ClassType getAsCodeType() {
+  public CodeType getAsCodeType() {
     return CodeTypeAdapter.from(element.getType());
   }
 

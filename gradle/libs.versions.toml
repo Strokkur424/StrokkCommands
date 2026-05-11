@@ -6,7 +6,7 @@ blossom = "2.1.0"
 shadow = "9.3.1"
 
 paper = "1.21.10-R0.1-SNAPSHOT"
-velocity = "3.4.0-SNAPSHOT"
+velocity = "3.5.0-SNAPSHOT"
 minecraft = "1.21.10"
 brigadier = "1.4.0"
 guice = "7.0.0"

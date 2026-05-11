@@ -17,6 +17,7 @@ module net.strokkur.commands.processor.common {
   exports net.strokkur.commands.internal.arguments;
   exports net.strokkur.commands.internal.codegen;
   exports net.strokkur.commands.internal.codegen.builder;
+  exports net.strokkur.commands.internal.codegen.adapter;
   exports net.strokkur.commands.internal.codegen.as;
   exports net.strokkur.commands.internal.codegen.javadoc;
   exports net.strokkur.commands.internal.codegen.visitor;
