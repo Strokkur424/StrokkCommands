@@ -20,6 +20,7 @@ package net.strokkur.commands.internal.codegen.javadoc;
 import net.strokkur.commands.internal.codegen.CodeClass;
 import net.strokkur.commands.internal.codegen.CodeMethod;
 import net.strokkur.commands.internal.codegen.CodeType;
+import net.strokkur.commands.internal.codegen.as.AsCodeType;
 import net.strokkur.commands.internal.codegen.visitor.JavadocVisitor;
 import net.strokkur.commands.internal.util.ConvertableTo;
 import org.jspecify.annotations.Nullable;
@@ -60,6 +61,10 @@ public interface CodeJavadoc {
 
   static CodeJavadoc see(ConvertableTo<CodeMethod> method, @Nullable String description, boolean localMethod) {
     return new MethodReferenceMeta("see", method.convert(), description, localMethod);
+  }
+
+  static CodeJavadoc throwsMeta(AsCodeType<CodeType.ClassType> exception, @Nullable String description) {
+    return throwsMeta(exception.getAsCodeType(), description);
   }
 
   static CodeJavadoc throwsMeta(CodeType.ClassType exception, @Nullable String description) {

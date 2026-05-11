@@ -19,6 +19,7 @@ package net.strokkur.commands.internal.codegen.builder;
 
 import net.strokkur.commands.internal.codegen.CodeExpression;
 import net.strokkur.commands.internal.codegen.CodeType;
+import net.strokkur.commands.internal.codegen.as.AsCodeType;
 import net.strokkur.commands.internal.codegen.as.AsExpression;
 import net.strokkur.commands.internal.util.ConvertableTo;
 import org.jspecify.annotations.Nullable;
@@ -42,6 +43,10 @@ public class FieldAccessBuilder implements ConvertableTo<CodeExpression.FieldAcc
   public FieldAccessBuilder setSource(AsExpression source) {
     this.source = source.getAsExpression();
     return this;
+  }
+
+  public FieldAccessBuilder setStatic(AsCodeType<CodeType.ClassType> type) {
+    return setStatic(type.getAsCodeType());
   }
 
   public FieldAccessBuilder setStatic(CodeType.ClassType type) {

@@ -18,11 +18,18 @@
 package net.strokkur.commands.internal.intermediate.access;
 
 import net.strokkur.commands.internal.abstraction.SourceClass;
+import net.strokkur.commands.internal.codegen.CodeType;
+import net.strokkur.commands.internal.codegen.adapter.CodeTypeAdapter;
 
 final class InstanceAccessImpl extends ExecuteAccessImpl<SourceClass> implements InstanceAccess {
 
   InstanceAccessImpl(SourceClass element) {
     super(element);
+  }
+
+  @Override
+  public CodeType.ClassType getAsCodeType() {
+    return CodeTypeAdapter.from(element);
   }
 
   @Override

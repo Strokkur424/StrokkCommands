@@ -22,7 +22,6 @@ import net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc;
 import net.strokkur.commands.internal.printer.javadoc.JavaMarkdownJavadocVisitor;
 import net.strokkur.commands.internal.printer.source.ImportGatheringVisitor;
 import net.strokkur.commands.internal.printer.source.JavaSourcePrintingVisitor;
-import net.strokkur.commands.internal.util.Classes;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -96,7 +95,7 @@ class FullCommandClassBuilderTests {
     final CodeClass current = CodeClass.simple("com.example.ExampleCommandBrigadier");
 
     return Builders.classBuilder(current.fullyQualifiedName())
-        .setAnnotations(List.of(CodeAnnotation.of(CodeType.ofClass(Classes.NULL_MARKED))))
+        .setAnnotations(List.of(CodeAnnotation.NULL_MARKED))
         .setModifiers(Set.of(Modifiers.PUBLIC, Modifiers.FINAL))
         .setJavadoc(CodeJavadoc.combineLines(
             CodeJavadoc.text("A very cool class."),
@@ -110,7 +109,7 @@ class FullCommandClassBuilderTests {
         .addField(Builders.field("DESCRIPTION", CodeType.ofClass(CodeClass.STRING))
             .setModifiers(Set.of(Modifiers.PUBLIC, Modifiers.STATIC, Modifiers.FINAL))
             .setInitialiser(CodeExpression.nullExpr())
-            .addAnnotation(CodeAnnotation.of(CodeType.ofClass(Classes.NULLABLE)))
+            .addAnnotation(CodeAnnotation.NULLABLE)
         )
         .addField(Builders.field("ALIASES", CodeType.ofClass(CodeClass.STRING))
             .setModifiers(Set.of(Modifiers.PUBLIC, Modifiers.STATIC, Modifiers.FINAL))
@@ -120,7 +119,7 @@ class FullCommandClassBuilderTests {
             .setJavadoc(CodeJavadoc.text("Registers your command."))
             .setModifiers(Set.of(Modifiers.PUBLIC, Modifiers.STATIC))
             .addParameter(CodeType.ofClass(commands), "commands")
-            .setCodeBlock(List.of(
+            .setMethodStatements(List.of(
                 Builders.methodInvocation("register")
                     .addParameter(Builders.methodInvocation("create"))
                     .addParameter(CodeExpression.variable("DESCRIPTION"))
@@ -133,14 +132,14 @@ class FullCommandClassBuilderTests {
             .setModifiers(Set.of(Modifiers.PUBLIC, Modifiers.STATIC))
         )
         .addMethod(Builders.method(current)
-            .setThrowsExceptions(List.of(CodeType.ofClass("java.lang.IllegalAccessException")))
+            .setThrowsExceptions(CodeType.ofClass("java.lang.IllegalAccessException"))
             .setModifiers(Set.of(Modifiers.PRIVATE))
             .setJavadoc(CodeJavadoc.combineLines(
                 CodeJavadoc.text("The constructor is inaccessible."),
                 CodeJavadoc.blank(),
                 CodeJavadoc.throwsMeta(CodeType.ofClass("java.lang.IllegalAccessException"), "always")
             ))
-            .setCodeBlock(List.of(
+            .setMethodStatements(List.of(
                 CodeStatement.throwStatement(Builders.ctorInvocation(CodeType.ofClass("java.lang.IllegalAccessException"))
                     .addParameter(CodeExpression.string("This class cannot be instantiated."))
                 )

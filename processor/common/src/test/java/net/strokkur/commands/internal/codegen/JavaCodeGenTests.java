@@ -159,7 +159,7 @@ class JavaCodeGenTests {
         }
         """;
     check(expectedWithStatements, Builders.method(EXAMPLE_CLASS, "method")
-        .setCodeBlock(List.of(
+        .setMethodStatements(List.of(
             Builders.methodInvocation(Builders.method(EXAMPLE_CLASS, "otherMethod"))
                 .addParameter(CodeExpression.variable("STATIC_VALUE"))
                 .addParameter(CodeExpression.string("Now"))
@@ -173,11 +173,11 @@ class JavaCodeGenTests {
         }
         """;
     check(expectedWithThrows, Builders.method(EXAMPLE_CLASS, "method")
-        .setThrowsExceptions(List.of(
+        .setThrowsExceptions(
             CodeType.ofClass("java.lang.NullPointerException"),
             CodeType.ofClass("java.sql.SQLException")
-        ))
-        .setCodeBlock(List.of(
+        )
+        .setMethodStatements(List.of(
             CodeStatement.throwStatement(Builders.ctorInvocation(CodeType.ofClass("java.sql.SQLException"))
                 .addParameter(CodeExpression.string("No database present :("))
             )
@@ -477,7 +477,7 @@ class JavaCodeGenTests {
             .setModifiers(Set.of(Modifiers.PUBLIC))
             .addParameter(CodeType.ofClass("velocity.ProxyServer"), "server")
             .addParameter(CodeType.ofClass("java.lang.Object"), "command$plugin")
-            .setCodeBlock(List.of(
+            .setMethodStatements(List.of(
                 // BrigadierCommand command
                 CodeStatement.variableDeclarationFinal(
                     CodeType.ofClass("velocity.BrigadierCommand"),

@@ -18,6 +18,8 @@
 package net.strokkur.commands.internal.intermediate.registrable;
 
 import net.strokkur.commands.internal.abstraction.SourceClass;
+import net.strokkur.commands.internal.codegen.CodeExpression;
+import net.strokkur.commands.internal.codegen.as.AsExpression;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -31,6 +33,11 @@ public record CombinedRequirementProvider(List<RequirementProvider> providers) i
             ? otherProviders.stream()
             : Stream.of(provider))
         .toList();
+  }
+
+  @Override
+  public AsExpression getRequirementExpression() {
+    return CodeExpression.lambda(List.of("source"), CodeExpression.nullExpr());
   }
 
   @Override

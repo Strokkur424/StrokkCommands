@@ -60,8 +60,13 @@ public class ClassBuilder implements ConvertableTo<CodeClass> {
     return setModifiers(Set.of(modifiers));
   }
 
+  public ClassBuilder addModifiers(Modifiers... modifiers) {
+    this.modifiers.addAll(Set.of(modifiers));
+    return this;
+  }
+
   public ClassBuilder setModifiers(Set<Modifiers> modifiers) {
-    this.modifiers = modifiers;
+    this.modifiers = new HashSet<>(modifiers);
     return this;
   }
 

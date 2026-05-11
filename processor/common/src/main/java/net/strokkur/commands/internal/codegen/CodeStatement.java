@@ -18,6 +18,7 @@
 package net.strokkur.commands.internal.codegen;
 
 import net.strokkur.commands.internal.codegen.as.AsBooleanExpression;
+import net.strokkur.commands.internal.codegen.as.AsCodeType;
 import net.strokkur.commands.internal.codegen.as.AsExpression;
 import net.strokkur.commands.internal.codegen.as.AsStatement;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
@@ -29,12 +30,12 @@ import java.util.Arrays;
 import java.util.List;
 
 public sealed interface CodeStatement extends CodeVisitable, AsStatement {
-  static VariableDeclaration variableDeclaration(CodeType type, String name, @Nullable AsExpression assignment) {
-    return new VariableDeclaration(type, name, assignment == null ? null : assignment.getAsExpression(), false);
+  static VariableDeclaration variableDeclaration(AsCodeType<?> type, String name, @Nullable AsExpression assignment) {
+    return new VariableDeclaration(type.getAsCodeType(), name, assignment == null ? null : assignment.getAsExpression(), false);
   }
 
-  static VariableDeclaration variableDeclarationFinal(CodeType type, String name, @Nullable AsExpression assignment) {
-    return new VariableDeclaration(type, name, assignment == null ? null : assignment.getAsExpression(), true);
+  static VariableDeclaration variableDeclarationFinal(AsCodeType<?> type, String name, @Nullable AsExpression assignment) {
+    return new VariableDeclaration(type.getAsCodeType(), name, assignment == null ? null : assignment.getAsExpression(), true);
   }
 
   static ReturnStatement returnStatement(@Nullable AsExpression returnExpression) {

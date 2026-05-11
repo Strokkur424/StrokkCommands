@@ -26,8 +26,8 @@ import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.paper.util.ExecutorType;
 import net.strokkur.commands.internal.paper.util.PaperAttributeKeys;
 import net.strokkur.commands.internal.paper.util.PaperClasses;
+import net.strokkur.commands.internal.printer.CommonClassBuilder;
 import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
-import net.strokkur.commands.internal.printer.CommonTreePrinter;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.paper.Executor;
 import org.jspecify.annotations.Nullable;
@@ -37,8 +37,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-final class PaperTreePrinter extends CommonTreePrinter {
-  PaperTreePrinter(CommonCommandTreePrinter<?> printer) {
+final class PaperClassBuilder extends CommonClassBuilder {
+  PaperClassBuilder(CommonCommandTreePrinter<?> printer) {
     super(printer);
   }
 

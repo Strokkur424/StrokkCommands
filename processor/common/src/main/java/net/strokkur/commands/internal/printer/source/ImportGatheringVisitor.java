@@ -39,6 +39,12 @@ import java.util.stream.Stream;
 
 public class ImportGatheringVisitor implements CodeVisitor<Set<CodeType.ClassType>> {
 
+  public Set<CodeType.ClassType> collectFilteredImports(CodeClass codeClass) {
+    return codeClass.accept(this).stream()
+        .filter(gathered -> !CodePackage.isRedundantImport(codeClass.codePackage(), gathered.codePackage()))
+        .collect(Collectors.toSet());
+  }
+
   private Set<CodeType.ClassType> collectMethodInvokesImports(InvokesMethod invokes) {
     final Set<CodeType.ClassType> chainedImports = collect(invokes.chained().stream()
         .flatMap(chained -> chained.parameters().stream())

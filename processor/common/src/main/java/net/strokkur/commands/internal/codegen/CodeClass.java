@@ -50,11 +50,27 @@ public record CodeClass(
 
   public static CodeClass simple(String string) {
     final String[] split = string.split("\\.");
-    return new CodeClass(
-        new CodePackage(Arrays.copyOf(split, split.length - 1)),
-        null,
-        split[split.length - 1]
-    );
+    final String[] splitName = split[split.length - 1].split("\\$");
+
+    final CodePackage codePackage = new CodePackage(Arrays.copyOf(split, split.length - 1));
+    if (splitName.length > 1) {
+      // This is an inner class
+      return nested(codePackage, List.of(splitName));
+    }
+
+    return new CodeClass(codePackage, null, splitName[0]);
+  }
+
+  public static CodeClass nested(CodePackage codePackage, List<String> innerClassNames) {
+    if (innerClassNames.size() > 1) {
+      return new CodeClass(
+          codePackage,
+          nested(codePackage, innerClassNames.subList(0, innerClassNames.size() - 1)),
+          innerClassNames.getLast()
+      );
+    }
+    // Finally, top level!
+    return new CodeClass(codePackage, null, innerClassNames.getLast());
   }
 
   @Override

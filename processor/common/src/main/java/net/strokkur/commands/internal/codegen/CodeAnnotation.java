@@ -19,8 +19,13 @@ package net.strokkur.commands.internal.codegen;
 
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitor;
+import net.strokkur.commands.internal.util.Classes;
 
 public record CodeAnnotation(CodeType.ClassType type) implements CodeVisitable {
+  public static CodeAnnotation NULL_MARKED = CodeAnnotation.of(Classes.NULL_MARKED.getAsCodeType());
+  public static CodeAnnotation NULLABLE = CodeAnnotation.of(Classes.NULLABLE.getAsCodeType());
+  public static CodeAnnotation INJECT = CodeAnnotation.of(Classes.INJECT.getAsCodeType());
+
   public static CodeAnnotation of(CodeType.ClassType type) {
     return new CodeAnnotation(type);
   }

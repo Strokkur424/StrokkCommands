@@ -36,7 +36,7 @@ import net.strokkur.commands.internal.parsing.CommandParser;
 import net.strokkur.commands.internal.parsing.CommandParserImpl;
 import net.strokkur.commands.internal.parsing.DefaultExecutesTransform;
 import net.strokkur.commands.internal.parsing.ExecutesTransform;
-import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
+import net.strokkur.commands.internal.printer.CommonClassBuilder;
 import net.strokkur.commands.internal.util.CommandInformation;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 import net.strokkur.commands.meta.StrokkCommandsDebug;
@@ -50,7 +50,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.tools.JavaFileObject;
-import java.io.PrintWriter;
+import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.util.Optional;
 import java.util.Set;
@@ -80,7 +80,7 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
 
   protected abstract CommonTreePostProcessor createPostProcessor(MessagerWrapper messager);
 
-  protected abstract CommonCommandTreePrinter<C> createPrinter(CommandNode node, C commandInformation);
+  protected abstract CommonClassBuilder<C> createBuilder(CommandNode node, C commandInformation);
 
   protected abstract BrigadierArgumentConverter getConverter(MessagerWrapper messager);
 
@@ -192,12 +192,11 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
     }
 
     try {
-      final CommonCommandTreePrinter<C> printer = createPrinter(commandTree, commandInformation);
-      final JavaFileObject obj = processingEnv.getFiler().createSourceFile(printer.getPackageName() + "." + printer.getBrigadierClassName());
+      final CommonClassBuilder<C> printer = createBuilder(commandTree, commandInformation);
+      final JavaFileObject obj = processingEnv.getFiler().createSourceFile(commandInformation.sourceClass().getFullyQualifiedName() + "Brigadier");
 
-      try (PrintWriter out = new PrintWriter(obj.openWriter())) {
-        printer.setWriter(out);
-        printer.print();
+      try (Writer writer = obj.openWriter()) {
+        writer.write(printer.getAsString());
       }
     } catch (Exception ex) {
       messagerWrapper.errorSource("A fatal exception occurred whilst printing source file: {}", sourceClass, ex.getMessage());

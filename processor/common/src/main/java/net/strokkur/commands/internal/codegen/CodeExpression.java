@@ -43,6 +43,10 @@ public sealed interface CodeExpression extends CodeVisitable, AsExpression {
     return new Variable(name);
   }
 
+  static NumberConstant number(Number number) {
+    return new NumberConstant(number);
+  }
+
   static MethodReference methodReference(CodeType type, String methodName) {
     return new MethodReference(type, methodName);
   }
@@ -103,6 +107,18 @@ public sealed interface CodeExpression extends CodeVisitable, AsExpression {
     }
 
     public String value() {
+      return value;
+    }
+  }
+
+  final class NumberConstant implements CodeExpression {
+    private final Number value;
+
+    private NumberConstant(Number value) {
+      this.value = value;
+    }
+
+    public Number value() {
       return value;
     }
   }

@@ -22,6 +22,7 @@ import net.strokkur.commands.internal.codegen.CodeMethod;
 import net.strokkur.commands.internal.codegen.CodePackage;
 import net.strokkur.commands.internal.codegen.CodeType;
 import net.strokkur.commands.internal.codegen.Modifiers;
+import net.strokkur.commands.internal.codegen.as.AsCodeType;
 import net.strokkur.commands.internal.util.ConvertableTo;
 
 import java.util.Arrays;
@@ -68,6 +69,10 @@ public class Builders {
       builder.setStatic();
     }
     return builder;
+  }
+
+  public static MethodInvocationBuilder ctorInvocation(AsCodeType<CodeType.ClassType> type) {
+    return ctorInvocation(type.getAsCodeType());
   }
 
   public static MethodInvocationBuilder ctorInvocation(CodeType.ClassType type) {

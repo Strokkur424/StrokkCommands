@@ -17,6 +17,7 @@
  */
 package net.strokkur.commands.internal.codegen;
 
+import net.strokkur.commands.internal.codegen.as.AsCodeType;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitable;
 import net.strokkur.commands.internal.codegen.visitor.CodeVisitor;
 import org.jetbrains.annotations.Contract;
@@ -116,13 +117,18 @@ public interface CodeType extends CodeVisitable, Comparable<CodeType> {
     }
   }
 
-  class ClassType implements CodeType {
+  class ClassType implements CodeType, AsCodeType<ClassType> {
     private final CodeClass codeClass;
     private final @Nullable List<CodeType> types;
 
     private ClassType(CodeClass codeClass, @Nullable List<CodeType> types) {
       this.codeClass = codeClass;
       this.types = types;
+    }
+
+    @Override
+    public CodeType.ClassType getAsCodeType() {
+      return this;
     }
 
     @Contract(pure = true)

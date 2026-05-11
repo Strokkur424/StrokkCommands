@@ -21,6 +21,7 @@ import net.strokkur.commands.internal.codegen.CodeExpression;
 import net.strokkur.commands.internal.codegen.CodeStatement;
 import net.strokkur.commands.internal.codegen.CodeType;
 import net.strokkur.commands.internal.codegen.InvokesMethod;
+import net.strokkur.commands.internal.codegen.as.AsCodeType;
 import net.strokkur.commands.internal.codegen.as.AsExpression;
 import net.strokkur.commands.internal.codegen.as.AsStatement;
 import org.jspecify.annotations.Nullable;
@@ -33,7 +34,7 @@ public class MethodInvocationBuilder implements AsExpression, AsStatement {
   private final String methodName;
   private CodeType.@Nullable ClassType type = null;
   private final List<CodeExpression> parameters = new ArrayList<>();
-  private @Nullable String instanceVariable = null;
+  private @Nullable CodeExpression instanceSource = null;
   private boolean newline = false;
   private boolean isStatic = false;
   private boolean isCtor = false;
@@ -55,14 +56,23 @@ public class MethodInvocationBuilder implements AsExpression, AsStatement {
     return this;
   }
 
-  public MethodInvocationBuilder setInstanceVariable(@Nullable String instanceVariable) {
-    this.instanceVariable = instanceVariable;
+  public MethodInvocationBuilder setInstanceSource(AsExpression instanceSource) {
+    this.instanceSource = instanceSource.getAsExpression();
+    return this;
+  }
+
+  public MethodInvocationBuilder setInstanceVariable(String instanceVariable) {
+    this.instanceSource = CodeExpression.variable(instanceVariable);
     return this;
   }
 
   public MethodInvocationBuilder setNewline() {
     this.newline = true;
     return this;
+  }
+
+  public MethodInvocationBuilder setStatic(AsCodeType<CodeType.ClassType> type) {
+    return setStatic(type.getAsCodeType());
   }
 
   public MethodInvocationBuilder setStatic(CodeType.ClassType type) {
@@ -108,7 +118,7 @@ public class MethodInvocationBuilder implements AsExpression, AsStatement {
     return new InvokesMethod(methodName,
         type,
         List.copyOf(parameters),
-        instanceVariable,
+        instanceSource,
         isStatic,
         isCtor,
         new InvokesMethod.StyleConfig(newline, multilineParameters, newlineClosingBrace),

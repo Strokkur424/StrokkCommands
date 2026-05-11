@@ -23,8 +23,8 @@ import net.strokkur.commands.internal.intermediate.attributes.Attributable;
 import net.strokkur.commands.internal.intermediate.executable.DefaultExecutable;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
+import net.strokkur.commands.internal.printer.CommonClassBuilder;
 import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
-import net.strokkur.commands.internal.printer.CommonTreePrinter;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.velocity.util.SenderType;
 import net.strokkur.commands.internal.velocity.util.VelocityAttributeKeys;
@@ -37,8 +37,8 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
-final class VelocityTreePrinter extends CommonTreePrinter {
-  VelocityTreePrinter(CommonCommandTreePrinter<?> printer) {
+final class VelocityClassBuilder extends CommonClassBuilder {
+  VelocityClassBuilder(CommonCommandTreePrinter<?> printer) {
     super(printer);
   }
 

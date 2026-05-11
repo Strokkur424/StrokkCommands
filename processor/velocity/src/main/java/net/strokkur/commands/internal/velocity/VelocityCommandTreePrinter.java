@@ -21,10 +21,10 @@ import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.abstraction.SourceParameter;
 import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
+import net.strokkur.commands.internal.printer.CommonClassBuilder;
 import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
 import net.strokkur.commands.internal.printer.CommonImportPrinter;
 import net.strokkur.commands.internal.printer.CommonInstanceFieldPrinter;
-import net.strokkur.commands.internal.printer.CommonTreePrinter;
 import net.strokkur.commands.internal.util.PrintParamsHolder;
 import net.strokkur.commands.internal.velocity.util.VelocityClasses;
 import net.strokkur.commands.internal.velocity.util.VelocityCommandInformation;
@@ -51,7 +51,7 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
 
   @Override
   protected void printExtraClassStart() throws IOException {
-    super.printExtraClassStart();
+    super.collectFields();
     final Optional<String[]> aliases = Optional.ofNullable(getCommandInformation().aliases());
     if (aliases.isPresent()) {
       final String aliasesVarargs = String.join(", ", Arrays.stream(aliases.get())
@@ -67,8 +67,8 @@ final class VelocityCommandTreePrinter extends CommonCommandTreePrinter<Velocity
   }
 
   @Override
-  protected CommonTreePrinter createTreePrinter() {
-    return new VelocityTreePrinter(this);
+  protected CommonClassBuilder createTreePrinter() {
+    return new VelocityClassBuilder(this);
   }
 
   @Override

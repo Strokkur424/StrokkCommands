@@ -17,38 +17,11 @@
  */
 package net.strokkur.commands.internal.arguments;
 
-import org.jspecify.annotations.Nullable;
+import net.strokkur.commands.internal.codegen.as.AsExpression;
 
-import java.util.Objects;
-import java.util.Set;
+public record BrigadierArgumentType(AsExpression initializer, AsExpression retriever) {
 
-public record BrigadierArgumentType(String initializer, String retriever, Set<String> imports) {
-
-  public static BrigadierArgumentType of(String initializer, String retriever) {
-    return new BrigadierArgumentType(initializer, retriever, Set.of());
-  }
-
-  public static BrigadierArgumentType of(String initializer, String retriever, String singleImport) {
-    return new BrigadierArgumentType(initializer, retriever, Set.of(singleImport));
-  }
-
-  public static BrigadierArgumentType of(String initializer, String retriever, Set<String> imports) {
-    return new BrigadierArgumentType(initializer, retriever, imports);
-  }
-
-  @Override
-  public boolean equals(@Nullable Object o) {
-    if (!(o instanceof BrigadierArgumentType(String initializer1, String retriever1, Set<String> imports1))) {
-      return false;
-    }
-
-    return Objects.equals(retriever(), retriever1)
-        && Objects.equals(initializer(), initializer1)
-        && Objects.equals(imports(), imports1);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(initializer(), retriever(), imports());
+  public static BrigadierArgumentType of(AsExpression initializer, AsExpression retriever) {
+    return new BrigadierArgumentType(initializer, retriever);
   }
 }

@@ -139,8 +139,8 @@ public abstract class AbstractSourcePrintingVisitor implements CodeVisitor<Strin
       builder.append("new ");
     } else {
       final String source;
-      if (method.instanceVariable() != null) {
-        source = method.instanceVariable();
+      if (method.instanceSource() != null) {
+        source = method.instanceSource().accept(this).toString();
       } else if (method.isStatic() && method.type() != null) {
         source = method.type().name();
       } else {

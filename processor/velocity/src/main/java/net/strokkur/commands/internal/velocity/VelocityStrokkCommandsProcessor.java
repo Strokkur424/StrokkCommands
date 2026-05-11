@@ -62,7 +62,7 @@ public final class VelocityStrokkCommandsProcessor extends StrokkCommandsProcess
   }
 
   @Override
-  protected CommonCommandTreePrinter<VelocityCommandInformation> createPrinter(CommandNode node, VelocityCommandInformation commandInformation) {
+  protected CommonCommandTreePrinter<VelocityCommandInformation> createBuilder(CommandNode node, VelocityCommandInformation commandInformation) {
     return new VelocityCommandTreePrinter(0, null, node, commandInformation, this.processingEnv, getPlatformUtils());
   }
 

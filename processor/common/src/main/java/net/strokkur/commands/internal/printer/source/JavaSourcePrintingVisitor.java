@@ -185,6 +185,9 @@ public class JavaSourcePrintingVisitor extends AbstractSourcePrintingVisitor {
         case CodeExpression.StringLiteral stringLiteral -> {
           builder.append('"').append(stringLiteral.value()).append('"');
         }
+        case CodeExpression.NumberConstant number -> {
+          builder.append(number);
+        }
         case CodeExpression.Variable variable -> {
           builder.append(variable.name());
         }

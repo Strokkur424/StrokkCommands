@@ -20,7 +20,6 @@ package net.strokkur.commands.internal.codegen.integration;
 import net.strokkur.commands.internal.codegen.CodeAnnotation;
 import net.strokkur.commands.internal.codegen.CodeClass;
 import net.strokkur.commands.internal.codegen.CodeExpression;
-import net.strokkur.commands.internal.codegen.CodePackage;
 import net.strokkur.commands.internal.codegen.CodeStatement;
 import net.strokkur.commands.internal.codegen.CodeType;
 import net.strokkur.commands.internal.codegen.InvokesMethod;
@@ -37,7 +36,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -156,9 +154,7 @@ class FullVelocityIntegrationTest {
     final CodeClass builtClass = buildClass();
 
     final ImportGatheringVisitor importVisitor = new ImportGatheringVisitor();
-    final Set<CodeType.ClassType> imports = builtClass.accept(importVisitor).stream()
-        .filter(gathered -> !CodePackage.isRedundantImport(builtClass.codePackage(), gathered.codePackage()))
-        .collect(Collectors.toSet());
+    final Set<CodeType.ClassType> imports = importVisitor.collectFilteredImports(builtClass);
 
     // Check if imports match
     final List<String> sortedImports = imports.stream().map(CodeType::fullyQualifiedName).sorted().toList();
@@ -250,7 +246,7 @@ class FullVelocityIntegrationTest {
             ))
             .setModifiers(Modifiers.PUBLIC)
 
-            .setCodeBlock(
+            .setMethodStatements(
                 CodeStatement.variableDeclarationFinal(BRIGADIER_COMMAND, "command", Builders.ctorInvocation(BRIGADIER_COMMAND)
                     .addParameter(Builders.methodInvocation("create"))),
                 CodeStatement.variableDeclarationFinal(COMMAND_META, "meta", Builders.methodInvocation("getCommandManager")
@@ -285,7 +281,7 @@ class FullVelocityIntegrationTest {
                 )
             ))
 
-            .setCodeBlock(CodeStatement.returnStatement(
+            .setMethodStatements(CodeStatement.returnStatement(
                 Builders.methodInvocation("literalArgumentBuilder")
                     .setStatic(BRIGADIER_COMMAND)
                     .addParameter(CodeExpression.variable("NAME"))

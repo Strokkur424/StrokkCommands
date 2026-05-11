@@ -23,9 +23,9 @@ import net.strokkur.commands.internal.abstraction.SourceParameter;
 import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.paper.util.PaperCommandInformation;
+import net.strokkur.commands.internal.printer.CommonClassBuilder;
 import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
 import net.strokkur.commands.internal.printer.CommonImportPrinter;
-import net.strokkur.commands.internal.printer.CommonTreePrinter;
 import net.strokkur.commands.internal.util.PrintParamsHolder;
 import org.jspecify.annotations.Nullable;
 
@@ -54,8 +54,8 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
   }
 
   @Override
-  protected CommonTreePrinter createTreePrinter() {
-    return new PaperTreePrinter(this);
+  protected CommonClassBuilder createTreePrinter() {
+    return new PaperClassBuilder(this);
   }
 
   @Override
@@ -79,7 +79,7 @@ final class PaperCommandTreePrinter extends CommonCommandTreePrinter<PaperComman
 
   @Override
   protected void printExtraClassStart() throws IOException {
-    super.printExtraClassStart();
+    super.collectFields();
     final String description = getCommandInformation().description() == null ? "null" : '"' + getCommandInformation().description() + '"';
     final String aliases = getCommandInformation().aliases() == null ? "" : '"' + String.join("\", \"", List.of(getCommandInformation().aliases())) + '"';
     println("public static final @Nullable String DESCRIPTION = %s;", description);

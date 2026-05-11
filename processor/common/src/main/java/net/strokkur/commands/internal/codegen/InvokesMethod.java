@@ -26,7 +26,7 @@ public record InvokesMethod(
     String methodName,
     CodeType.@Nullable ClassType type,
     List<CodeExpression> parameters,
-    @Nullable String instanceVariable,
+    @Nullable CodeExpression instanceSource,
     boolean isStatic,
     boolean isCtor,
     StyleConfig style,

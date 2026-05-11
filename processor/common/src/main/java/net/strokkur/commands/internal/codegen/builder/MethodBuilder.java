@@ -22,14 +22,17 @@ import net.strokkur.commands.internal.codegen.CodeClass;
 import net.strokkur.commands.internal.codegen.CodeConstructor;
 import net.strokkur.commands.internal.codegen.CodeMethod;
 import net.strokkur.commands.internal.codegen.CodeParameter;
+import net.strokkur.commands.internal.codegen.CodeStatement;
 import net.strokkur.commands.internal.codegen.CodeType;
 import net.strokkur.commands.internal.codegen.Modifiers;
+import net.strokkur.commands.internal.codegen.as.AsCodeType;
 import net.strokkur.commands.internal.codegen.as.AsStatement;
 import net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc;
 import net.strokkur.commands.internal.util.ConvertableTo;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -41,10 +44,10 @@ public class MethodBuilder implements ConvertableTo<CodeMethod> {
   private final String name;
 
   private CodeType returnType = CodeType.VOID;
-  private List<CodeParameter> parameters = new ArrayList<>();
+  private final List<CodeParameter> parameters = new ArrayList<>();
   private Set<Modifiers> modifiers = new HashSet<>();
   private @Nullable CodeJavadoc javadoc = null;
-  private CodeBlock codeBlock = new CodeBlock(List.of());
+  private List<CodeStatement> methodStatements = new ArrayList<>();
   private List<CodeType.ClassType> throwsExceptions = List.of();
 
   MethodBuilder(String name) {
@@ -70,8 +73,13 @@ public class MethodBuilder implements ConvertableTo<CodeMethod> {
     return setModifiers(Set.of(modifiers));
   }
 
+  public MethodBuilder addModifiers(Modifiers... modifiers) {
+    this.modifiers.addAll(Set.of(modifiers));
+    return this;
+  }
+
   public MethodBuilder setModifiers(Set<Modifiers> modifiers) {
-    this.modifiers = modifiers;
+    this.modifiers = new HashSet<>(modifiers);
     return this;
   }
 
@@ -80,20 +88,33 @@ public class MethodBuilder implements ConvertableTo<CodeMethod> {
     return this;
   }
 
-  public MethodBuilder setCodeBlock(AsStatement... statements) {
-    return setCodeBlock(List.of(statements));
-  }
-
-  public MethodBuilder setCodeBlock(List<? extends AsStatement> statements) {
-    this.codeBlock = new CodeBlock(statements.stream()
+  public MethodBuilder addMethodStatements(AsStatement... statements) {
+    this.methodStatements.addAll(Arrays.stream(statements)
         .map(AsStatement::getAsStatement)
-        .toList()
-    );
+        .toList());
     return this;
   }
 
-  public MethodBuilder setThrowsExceptions(List<CodeType.ClassType> throwsExceptions) {
-    this.throwsExceptions = throwsExceptions;
+  public MethodBuilder setMethodStatements(AsStatement... statements) {
+    return setMethodStatements(List.of(statements));
+  }
+
+  public MethodBuilder setMethodStatements(List<? extends AsStatement> statements) {
+    this.methodStatements = new ArrayList<>(statements.stream()
+        .map(AsStatement::getAsStatement)
+        .toList());
+    return this;
+  }
+
+  public MethodBuilder setThrowsExceptions(AsCodeType<CodeType.ClassType>... throwsExceptions) {
+    this.throwsExceptions = Arrays.stream(throwsExceptions)
+        .map(AsCodeType::getAsCodeType)
+        .toList();
+    return this;
+  }
+
+  public MethodBuilder setThrowsExceptions(CodeType.ClassType... throwsExceptions) {
+    this.throwsExceptions = List.of(throwsExceptions);
     return this;
   }
 
@@ -106,7 +127,7 @@ public class MethodBuilder implements ConvertableTo<CodeMethod> {
         List.copyOf(parameters),
         Set.copyOf(modifiers),
         javadoc,
-        codeBlock,
+        new CodeBlock(List.copyOf(methodStatements)),
         List.copyOf(throwsExceptions)
     );
   }
@@ -118,7 +139,7 @@ public class MethodBuilder implements ConvertableTo<CodeMethod> {
         List.copyOf(parameters),
         Set.copyOf(modifiers),
         javadoc,
-        codeBlock,
+        new CodeBlock(List.copyOf(methodStatements)),
         List.copyOf(throwsExceptions)
     );
   }

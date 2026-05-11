@@ -63,7 +63,7 @@ public final class PaperStrokkCommandsProcessor extends StrokkCommandsProcessor<
   }
 
   @Override
-  protected CommonCommandTreePrinter<PaperCommandInformation> createPrinter(CommandNode node, PaperCommandInformation commandInformation) {
+  protected CommonCommandTreePrinter<PaperCommandInformation> createBuilder(CommandNode node, PaperCommandInformation commandInformation) {
     return new PaperCommandTreePrinter(0, null, node, commandInformation, processingEnv, getPlatformUtils());
   }
 

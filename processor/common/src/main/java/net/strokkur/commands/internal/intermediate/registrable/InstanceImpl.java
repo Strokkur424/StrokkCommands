@@ -18,6 +18,7 @@
 package net.strokkur.commands.internal.intermediate.registrable;
 
 import net.strokkur.commands.internal.abstraction.SourceClass;
+import net.strokkur.commands.internal.codegen.as.AsExpression;
 
 import java.util.List;
 
@@ -30,6 +31,16 @@ record InstanceImpl(SourceClass sourceClass) implements SuggestionProvider, Requ
   @Override
   public String getRequirementString() {
     return "new %s().test(source)".formatted(sourceClass.getSourceName());
+  }
+
+  @Override
+  public AsExpression getRequirementExpression() {
+    return null;
+  }
+
+  @Override
+  public AsExpression getSuggestionExpression() {
+    return null;
   }
 
   @Override

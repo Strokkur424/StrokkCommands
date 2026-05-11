@@ -18,11 +18,18 @@
 package net.strokkur.commands.internal.intermediate.access;
 
 import net.strokkur.commands.internal.abstraction.SourceField;
+import net.strokkur.commands.internal.codegen.CodeType;
+import net.strokkur.commands.internal.codegen.adapter.CodeTypeAdapter;
 
 final class FieldAccessImpl extends ExecuteAccessImpl<SourceField> implements FieldAccess {
 
   FieldAccessImpl(SourceField element) {
     super(element);
+  }
+
+  @Override
+  public CodeType.ClassType getAsCodeType() {
+    return CodeTypeAdapter.from(element.getType());
   }
 
   @Override
