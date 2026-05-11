@@ -91,4 +91,8 @@ public interface Attributable {
   default <T> T getAttributeNotNull(AttributeKey<T> key) {
     return Objects.requireNonNull(getAttribute(key), "Attribute key " + key + " is null");
   }
+
+  default <T> Optional<T> getAttributeOptional(AttributeKey<T> key) {
+    return Optional.ofNullable(getAttribute(key));
+  }
 }

@@ -19,10 +19,15 @@ package net.strokkur.commands.internal.intermediate.registrable;
 
 import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
+import net.strokkur.commands.internal.codegen.CodeExpression;
+import net.strokkur.commands.internal.codegen.adapter.CodeTypeAdapter;
+import net.strokkur.commands.internal.codegen.as.AsExpression;
+import net.strokkur.commands.internal.codegen.builder.Builders;
 
 import java.util.List;
 
-record MethodImpl(SourceClass sourceClass, SourceMethod sourceMethod, boolean inline) implements SuggestionProvider, RequirementProvider {
+record MethodImpl(SourceClass sourceClass, SourceMethod sourceMethod,
+                  boolean inline) implements SuggestionProvider, RequirementProvider {
   @Override
   public String getSuggestionString() {
     if (inline) {
@@ -39,6 +44,38 @@ record MethodImpl(SourceClass sourceClass, SourceMethod sourceMethod, boolean in
     }
 
     return "%s.%s().test(source)".formatted(sourceClass.getSourceName(), sourceMethod.getName());
+  }
+
+  @Override
+  public AsExpression getRequirementExpression() {
+    if (inline) {
+      return CodeExpression.lambda(List.of("source"),
+          Builders.methodInvocation(sourceMethod.getName())
+              .setStatic(CodeTypeAdapter.from(sourceClass))
+              .addParameter(CodeExpression.variable("source"))
+      );
+    }
+
+    return CodeExpression.lambda(List.of("source"),
+        Builders.methodInvocation(sourceMethod.getName())
+            .setStatic(CodeTypeAdapter.from(sourceClass))
+            .chain("test", CodeExpression.variable("source"))
+    );
+  }
+
+  @Override
+  public AsExpression getSuggestionExpression() {
+    if (inline) {
+      return CodeExpression.methodReference(
+          CodeTypeAdapter.from(sourceClass),
+          sourceMethod.getName()
+      );
+    }
+
+    return CodeExpression.lambda(
+        List.of("source"),
+        Builders.methodInvocation(sourceMethod.getName()).setStatic(CodeTypeAdapter.from(sourceClass))
+    );
   }
 
   @Override

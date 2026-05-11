@@ -28,7 +28,8 @@ import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
 import net.strokkur.commands.internal.intermediate.CommonTreePostProcessor;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
-import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
+import net.strokkur.commands.internal.printer.CommonClassBuilder;
+import net.strokkur.commands.internal.printer.source.JavaSourcePrintingVisitor;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 import net.strokkur.commands.internal.velocity.util.VelocityCommandInformation;
 
@@ -62,8 +63,10 @@ public final class VelocityStrokkCommandsProcessor extends StrokkCommandsProcess
   }
 
   @Override
-  protected CommonCommandTreePrinter<VelocityCommandInformation> createPrinter(CommandNode node, VelocityCommandInformation commandInformation) {
-    return new VelocityCommandTreePrinter(0, null, node, commandInformation, this.processingEnv, getPlatformUtils());
+  protected CommonClassBuilder<VelocityCommandInformation> createBuilder(CommandNode node, VelocityCommandInformation commandInformation) {
+    return new VelocityClassBuilder(node, commandInformation,
+        (pkg, types) -> new JavaSourcePrintingVisitor(() -> createJavadocVisitor(pkg, types), "  ", "    ")
+    );
   }
 
   @Override

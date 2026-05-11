@@ -24,7 +24,11 @@ import net.strokkur.commands.arguments.LongArg;
 import net.strokkur.commands.arguments.StringArg;
 import net.strokkur.commands.arguments.StringArgType;
 import net.strokkur.commands.internal.abstraction.SourceVariable;
+import net.strokkur.commands.internal.codegen.CodeExpression;
+import net.strokkur.commands.internal.codegen.as.AsExpression;
+import net.strokkur.commands.internal.codegen.builder.Builders;
 import net.strokkur.commands.internal.exceptions.ConversionException;
+import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 import org.jspecify.annotations.Nullable;
@@ -32,7 +36,6 @@ import org.jspecify.annotations.Nullable;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -57,41 +60,58 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
 
   protected void initializeArguments() {
     putFor((unused, name) -> BrigadierArgumentType.of(
-        "BoolArgumentType.bool()",
-        "BoolArgumentType.getBool(ctx, \"%s\")".formatted(name),
-        "com.mojang.brigadier.arguments.BoolArgumentType"
+        Builders.methodInvocation("bool").setStatic(Classes.BOOL_ARGUMENT_TYPE),
+        Builders.methodInvocation("getBool").setStatic(Classes.BOOL_ARGUMENT_TYPE)
+            .addParameter(CodeExpression.variable("ctx"))
+            .addParameter(CodeExpression.string(name))
     ), "boolean", "java.lang.Boolean");
 
     putFor((p, name) -> annotatedOr(p, IntArg.class,
-        a -> "IntegerArgumentType.integer(%s, %s)".formatted(a.min(), a.max()),
-        "IntegerArgumentType.integer()", "IntegerArgumentType.getInteger(ctx, \"%s\")".formatted(name),
-        "com.mojang.brigadier.arguments.IntegerArgumentType"
+        a -> Builders.methodInvocation("integer").setStatic(Classes.INTEGER_ARGUMENT_TYPE)
+            .addParameter(CodeExpression.number(a.min()))
+            .addParameter(CodeExpression.number(a.max())),
+        Builders.methodInvocation("integer").setStatic(Classes.INTEGER_ARGUMENT_TYPE),
+        Builders.methodInvocation("getInteger").setStatic(Classes.INTEGER_ARGUMENT_TYPE)
+            .addParameter(CodeExpression.variable("ctx"))
+            .addParameter(CodeExpression.string(name))
     ), "int", "java.lang.Integer");
 
     putFor((p, name) -> annotatedOr(p, LongArg.class,
-        a -> "LongArgumentType.longArg(%s, %s)".formatted(a.min(), a.max()),
-        "LongArgumentType.longArg()", "LongArgumentType.getLong(ctx, \"%s\")".formatted(name),
-        "com.mojang.brigadier.arguments.LongArgumentType"
+        a -> Builders.methodInvocation("longArg").setStatic(Classes.LONG_ARGUMENT_TYPE)
+            .addParameter(CodeExpression.number(a.min()))
+            .addParameter(CodeExpression.number(a.max())),
+        Builders.methodInvocation("longArg").setStatic(Classes.LONG_ARGUMENT_TYPE),
+        Builders.methodInvocation("getLong").setStatic(Classes.LONG_ARGUMENT_TYPE)
+            .addParameter(CodeExpression.variable("ctx"))
+            .addParameter(CodeExpression.string(name))
     ), "long", "java.lang.Long");
 
     putFor((p, name) -> annotatedOr(p, FloatArg.class,
-        a -> "FloatArgumentType.floatArg(%s, %s)".formatted(a.min(), a.max()),
-        "FloatArgumentType.floatArg()",
-        "FloatArgumentType.getFloat(ctx, \"%s\")".formatted(name),
-        "com.mojang.brigadier.arguments.FloatArgumentType"
+        a -> Builders.methodInvocation("floatArg").setStatic(Classes.FLOAT_ARGUMENT_TYPE)
+            .addParameter(CodeExpression.number(a.min()))
+            .addParameter(CodeExpression.number(a.max())),
+        Builders.methodInvocation("floatArg").setStatic(Classes.FLOAT_ARGUMENT_TYPE),
+        Builders.methodInvocation("getFloat").setStatic(Classes.FLOAT_ARGUMENT_TYPE)
+            .addParameter(CodeExpression.variable("ctx"))
+            .addParameter(CodeExpression.string(name))
     ), "float", "java.lang.Float");
 
     putFor((p, name) -> annotatedOr(p, DoubleArg.class,
-        a -> "DoubleArgumentType.doubleArg(%s, %s)".formatted(a.min(), a.max()),
-        "DoubleArgumentType.doubleArg()", "DoubleArgumentType.getDouble(ctx, \"%s\")".formatted(name),
-        "com.mojang.brigadier.arguments.DoubleArgumentType"
+        a -> Builders.methodInvocation("doubleArg").setStatic(Classes.DOUBLE_ARGUMENT_TYPE)
+            .addParameter(CodeExpression.number(a.min()))
+            .addParameter(CodeExpression.number(a.max())),
+        Builders.methodInvocation("doubleArg").setStatic(Classes.DOUBLE_ARGUMENT_TYPE),
+        Builders.methodInvocation("getDouble").setStatic(Classes.DOUBLE_ARGUMENT_TYPE)
+            .addParameter(CodeExpression.variable("ctx"))
+            .addParameter(CodeExpression.string(name))
     ), "double", "java.lang.Double");
 
     putFor((p, name) -> annotatedOr(p, StringArg.class,
-        a -> "StringArgumentType.%s()".formatted(a.value().getBrigadierType()),
-        "StringArgumentType.%s()".formatted(StringArgType.WORD.getBrigadierType()),
-        "StringArgumentType.getString(ctx, \"%s\")".formatted(name),
-        "com.mojang.brigadier.arguments.StringArgumentType"
+        a -> Builders.methodInvocation(a.value().getBrigadierType()).setStatic(Classes.STRING_ARGUMENT_TYPE),
+        Builders.methodInvocation(StringArgType.WORD.getBrigadierType()).setStatic(Classes.STRING_ARGUMENT_TYPE),
+        Builders.methodInvocation("getString").setStatic(Classes.STRING_ARGUMENT_TYPE)
+            .addParameter(CodeExpression.variable("ctx"))
+            .addParameter(CodeExpression.string(name))
     ), "java.lang.String");
   }
 
@@ -104,25 +124,13 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
   protected final <T extends Annotation> BrigadierArgumentType annotatedOr(
       SourceVariable variable,
       Class<T> annotation,
-      Function<T, String> withAnnotation,
-      String withoutAnnotation,
-      String retrieval,
-      String singleImport
-  ) {
-    return annotatedOr(variable, annotation, withAnnotation, withoutAnnotation, retrieval, Set.of(singleImport));
-  }
-
-  protected final <T extends Annotation> BrigadierArgumentType annotatedOr(
-      SourceVariable variable,
-      Class<T> annotation,
-      Function<T, String> withAnnotation,
-      String withoutAnnotation,
-      String retrieval,
-      Set<String> imports
+      Function<T, AsExpression> withAnnotation,
+      AsExpression withoutAnnotation,
+      AsExpression retrieval
   ) {
     return variable.getAnnotationOptional(annotation)
-        .map(annotated -> BrigadierArgumentType.of(withAnnotation.apply(annotated), retrieval, imports))
-        .orElseGet(() -> BrigadierArgumentType.of(withoutAnnotation, retrieval, imports));
+        .map(annotated -> BrigadierArgumentType.of(withAnnotation.apply(annotated), retrieval))
+        .orElseGet(() -> BrigadierArgumentType.of(withoutAnnotation, retrieval));
   }
 
   public final BrigadierArgumentType getAsArgumentType(SourceVariable parameter) throws ConversionException {

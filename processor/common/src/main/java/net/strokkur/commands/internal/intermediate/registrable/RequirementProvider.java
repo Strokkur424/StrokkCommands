@@ -18,10 +18,13 @@
 package net.strokkur.commands.internal.intermediate.registrable;
 
 import net.strokkur.commands.internal.abstraction.SourceClass;
+import net.strokkur.commands.internal.codegen.as.AsExpression;
 
 import java.util.List;
 
 public interface RequirementProvider {
+  AsExpression getRequirementExpression();
+
   String getRequirementString();
 
   List<SourceClass> getSourceClasses();

@@ -18,8 +18,11 @@
 package net.strokkur.commands.internal.intermediate.registrable;
 
 import net.strokkur.commands.internal.abstraction.SourceClass;
+import net.strokkur.commands.internal.codegen.as.AsExpression;
 
 public interface SuggestionProvider {
+  AsExpression getSuggestionExpression();
+
   String getSuggestionString();
 
   SourceClass getSourceClass();

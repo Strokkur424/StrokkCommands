@@ -15,28 +15,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.printer;
+package net.strokkur.commands.internal.codegen.as;
 
-import java.io.IOException;
+import net.strokkur.commands.internal.codegen.CodeExpression;
 
-interface Printable {
-
-  void incrementIndent();
-
-  void decrementIndent();
-
-  void print(String message, Object... format) throws IOException;
-
-  void printIndent() throws IOException;
-
-  void println(String message, Object... format) throws IOException;
-
-  default void printIndented(String message, Object... format) throws IOException {
-    printIndent();
-    print(message, format);
-  }
-
-  void println() throws IOException;
-
-  void printBlock(String block, Object... format) throws IOException;
+public interface AsExpression {
+  CodeExpression getAsExpression();
 }

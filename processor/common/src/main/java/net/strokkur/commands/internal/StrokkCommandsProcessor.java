@@ -25,6 +25,8 @@ import net.strokkur.commands.internal.abstraction.impl.SourceClassImpl;
 import net.strokkur.commands.internal.abstraction.impl.SourceRecordImpl;
 import net.strokkur.commands.internal.abstraction.impl.SourceTypeUtils;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
+import net.strokkur.commands.internal.codegen.CodePackage;
+import net.strokkur.commands.internal.codegen.CodeType;
 import net.strokkur.commands.internal.exceptions.ProviderAlreadyRegisteredException;
 import net.strokkur.commands.internal.intermediate.CommonTreePostProcessor;
 import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperRegistry;
@@ -36,7 +38,10 @@ import net.strokkur.commands.internal.parsing.CommandParser;
 import net.strokkur.commands.internal.parsing.CommandParserImpl;
 import net.strokkur.commands.internal.parsing.DefaultExecutesTransform;
 import net.strokkur.commands.internal.parsing.ExecutesTransform;
-import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
+import net.strokkur.commands.internal.printer.CommonClassBuilder;
+import net.strokkur.commands.internal.printer.javadoc.AbstractJavadocPrintingVisitor;
+import net.strokkur.commands.internal.printer.javadoc.JavaMarkdownJavadocVisitor;
+import net.strokkur.commands.internal.printer.javadoc.JavaStarJavadocVisitor;
 import net.strokkur.commands.internal.util.CommandInformation;
 import net.strokkur.commands.internal.util.MessagerWrapper;
 import net.strokkur.commands.meta.StrokkCommandsDebug;
@@ -50,7 +55,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.tools.JavaFileObject;
-import java.io.PrintWriter;
+import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.util.Optional;
 import java.util.Set;
@@ -80,11 +85,28 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
 
   protected abstract CommonTreePostProcessor createPostProcessor(MessagerWrapper messager);
 
-  protected abstract CommonCommandTreePrinter<C> createPrinter(CommandNode node, C commandInformation);
+  protected abstract CommonClassBuilder<C> createBuilder(CommandNode node, C commandInformation);
 
   protected abstract BrigadierArgumentConverter getConverter(MessagerWrapper messager);
 
   protected abstract C getCommandInformation(SourceClass sourceClass);
+
+  protected AbstractJavadocPrintingVisitor createJavadocVisitor(CodePackage pkg, Set<CodeType.ClassType> imports) {
+    if (isJavaVersion(25)) {
+      return new JavaMarkdownJavadocVisitor(pkg, imports);
+    }
+    // We are on Java 24 or below, so use the star Javadoc visitor.
+    return new JavaStarJavadocVisitor(pkg, imports);
+  }
+
+  private boolean isJavaVersion(int version) {
+    try {
+      SourceVersion.valueOf("RELEASE_" + version);
+      return true;
+    } catch (IllegalArgumentException e) {
+      return false;
+    }
+  }
 
   @Override
   @NullUnmarked
@@ -192,12 +214,11 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
     }
 
     try {
-      final CommonCommandTreePrinter<C> printer = createPrinter(commandTree, commandInformation);
-      final JavaFileObject obj = processingEnv.getFiler().createSourceFile(printer.getPackageName() + "." + printer.getBrigadierClassName());
+      final CommonClassBuilder<C> printer = createBuilder(commandTree, commandInformation);
+      final JavaFileObject obj = processingEnv.getFiler().createSourceFile(commandInformation.sourceClass().getFullyQualifiedName() + "Brigadier");
 
-      try (PrintWriter out = new PrintWriter(obj.openWriter())) {
-        printer.setWriter(out);
-        printer.print();
+      try (Writer writer = obj.openWriter()) {
+        writer.write(printer.getAsString());
       }
     } catch (Exception ex) {
       messagerWrapper.errorSource("A fatal exception occurred whilst printing source file: {}", sourceClass, ex.getMessage());

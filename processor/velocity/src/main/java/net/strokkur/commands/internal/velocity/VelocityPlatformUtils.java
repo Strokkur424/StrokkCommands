@@ -20,6 +20,8 @@ package net.strokkur.commands.internal.velocity;
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.abstraction.AnnotationsHolder;
 import net.strokkur.commands.internal.abstraction.SourceVariable;
+import net.strokkur.commands.internal.codegen.CodeType;
+import net.strokkur.commands.internal.codegen.adapter.CodeTypeAdapter;
 import net.strokkur.commands.internal.exceptions.AnnotationException;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
 import net.strokkur.commands.internal.intermediate.executable.ParameterType;
@@ -43,7 +45,7 @@ final class VelocityPlatformUtils implements PlatformUtils {
 
   @Override
   public String platformType() {
-    return VelocityClasses.COMMAND_SOURCE;
+    return VelocityClasses.COMMAND_SOURCE.getAsCodeType().fullyQualifiedName();
   }
 
   @Override
@@ -59,12 +61,16 @@ final class VelocityPlatformUtils implements PlatformUtils {
       if (!(parameter instanceof SourceParameterType(SourceVariable sourceParam))) {
         continue;
       }
+      final CodeType adapted = CodeTypeAdapter.from(sourceParam.getType());
 
-      final SenderType thisType = switch (sourceParam.getType().getFullyQualifiedName()) {
-        case VelocityClasses.PLAYER -> SenderType.PLAYER;
-        case VelocityClasses.CONSOLE_COMMAND_SOURCE -> SenderType.CONSOLE;
-        default -> type;
-      };
+      final SenderType thisType;
+      if (adapted.equals(VelocityClasses.PLAYER.getAsCodeType())) {
+        thisType = SenderType.PLAYER;
+      } else if (adapted.equals(VelocityClasses.CONSOLE_COMMAND_SOURCE.getAsCodeType())) {
+        thisType = SenderType.CONSOLE;
+      } else {
+        thisType = type;
+      }
 
       if (type != SenderType.NORMAL && thisType != type) {
         throw new AnnotationException("Cannot satisfy both a player and a console source.");

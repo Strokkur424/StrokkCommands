@@ -18,37 +18,38 @@
 package net.strokkur.commands.internal.intermediate.executable;
 
 import net.strokkur.commands.internal.abstraction.SourceVariable;
+import net.strokkur.commands.internal.codegen.CodeExpression;
+import net.strokkur.commands.internal.codegen.as.AsExpression;
+import net.strokkur.commands.internal.codegen.builder.Builders;
 import net.strokkur.commands.internal.intermediate.attributes.Attributable;
 import net.strokkur.commands.internal.util.Classes;
 import org.jspecify.annotations.Nullable;
 
-import java.util.Set;
-
 public interface DefaultExecutable extends Executable, Attributable {
 
   enum Type {
-    NONE(null, Set.of()),
-    ARRAY("ctx.getInput().split(\" \")", Set.of()),
-    LIST("Collections.unmodifiableList(Arrays.asList(ctx.getInput().split(\" \")))", Set.of(Classes.COLLECTIONS, Classes.ARRAYS));
+    NONE(null),
+    ARRAY(Builders.methodInvocation("getInput").setInstanceVariable("ctx").chain("split", CodeExpression.string(" "))),
+    LIST(Builders.methodInvocation("unmodifiableList").setStatic(Classes.COLLECTIONS)
+        .addParameter(Builders.methodInvocation("asList").setStatic(Classes.ARRAYS)
+            .addParameter(Builders.methodInvocation("getInput")
+                .setInstanceVariable("ctx")
+                .chain("split", CodeExpression.string(" "))
+            ))
+    );
 
-    private final @Nullable String getter;
-    private final Set<String> imports;
+    private final @Nullable AsExpression getter;
 
-    Type(@Nullable String getter, Set<String> imports) {
+    Type(@Nullable AsExpression getter) {
       this.getter = getter;
-      this.imports = imports;
     }
 
-    public @Nullable String getGetter() {
+    public @Nullable AsExpression getGetter() {
       return this.getter;
     }
 
-    public Set<String> getImports() {
-      return this.imports;
-    }
-
     public static DefaultExecutable.Type getType(SourceVariable variable) {
-      if (variable.getType().getFullyQualifiedAndTypedName().equals(Classes.LIST_STRING)) {
+      if (variable.getType().getFullyQualifiedAndTypedName().equals("java.util.List<java.lang.String>")) {
         return LIST;
       }
       if (variable.getType().getFullyQualifiedName().equals("java.lang.String[]")) {

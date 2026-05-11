@@ -17,16 +17,41 @@
  */
 package net.strokkur.commands.internal.velocity.util;
 
+import net.strokkur.commands.internal.codegen.CodeType;
+import net.strokkur.commands.internal.codegen.as.AsCodeType;
 import net.strokkur.commands.internal.util.Classes;
 
-public interface VelocityClasses extends Classes {
-  String COMMAND_SOURCE = "com.velocitypowered.api.command.CommandSource";
-  String PLAYER = "com.velocitypowered.api.proxy.Player";
-  String CONSOLE_COMMAND_SOURCE = "com.velocitypowered.api.proxy.ConsoleCommandSource";
+import java.util.Arrays;
 
-  String BRIGADIER_COMMAND = "com.velocitypowered.api.command.BrigadierCommand";
-  String COMMAND_META = "com.velocitypowered.api.command.CommandMeta";
+public enum VelocityClasses implements AsCodeType<CodeType.ClassType> {
+  COMMAND_SOURCE("com.velocitypowered.api.command.CommandSource"),
+  PLAYER("com.velocitypowered.api.proxy.Player"),
+  CONSOLE_COMMAND_SOURCE("com.velocitypowered.api.proxy.ConsoleCommandSource"),
 
-  String PROXY_INITIALIZE_EVENT = "com.velocitypowered.api.event.proxy.ProxyInitializeEvent";
-  String PROXY_SERVER = "com.velocitypowered.api.proxy.ProxyServer";
+  BRIGADIER_COMMAND("com.velocitypowered.api.command.BrigadierCommand"),
+  COMMAND_META("com.velocitypowered.api.command.CommandMeta"),
+
+  PROXY_INITIALIZE_EVENT("com.velocitypowered.api.event.proxy.ProxyInitializeEvent"),
+  PROXY_SERVER("com.velocitypowered.api.proxy.ProxyServer"),
+
+  TYPED_LITERAL_COMMAND_NODE(Classes.LITERAL_COMMAND_NODE, COMMAND_SOURCE);
+
+  private final CodeType.ClassType classType;
+
+  VelocityClasses(String fqn) {
+    this.classType = CodeType.ofClass(fqn);
+  }
+
+  @SafeVarargs
+  VelocityClasses(AsCodeType<CodeType.ClassType> base, AsCodeType<CodeType.ClassType>... types) {
+    this.classType = CodeType.ofClassTyped(base.getAsCodeType().codeClass(), Arrays.stream(types)
+        .map(AsCodeType::getAsCodeType)
+        .toArray(CodeType[]::new)
+    );
+  }
+
+  @Override
+  public CodeType.ClassType getAsCodeType() {
+    return classType;
+  }
 }

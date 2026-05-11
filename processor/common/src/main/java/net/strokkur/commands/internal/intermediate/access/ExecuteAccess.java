@@ -20,8 +20,12 @@ package net.strokkur.commands.internal.intermediate.access;
 import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceElement;
 import net.strokkur.commands.internal.abstraction.SourceField;
+import net.strokkur.commands.internal.codegen.CodeType;
+import net.strokkur.commands.internal.codegen.as.AsCodeType;
 
-public sealed interface ExecuteAccess<E extends SourceElement> permits ExecuteAccessImpl, FieldAccess, InstanceAccess {
+public sealed interface ExecuteAccess<E extends SourceElement>
+    extends AsCodeType<CodeType>
+    permits ExecuteAccessImpl, FieldAccess, InstanceAccess {
 
   static FieldAccess of(SourceField field) {
     return new FieldAccessImpl(field);

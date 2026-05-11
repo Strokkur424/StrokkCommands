@@ -15,23 +15,17 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.velocity;
+package net.strokkur.commands.internal.codegen;
 
-import net.strokkur.commands.internal.abstraction.SourceParameter;
-import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
-import net.strokkur.commands.internal.printer.CommonInstanceFieldPrinter;
-import net.strokkur.commands.internal.velocity.util.VelocityClasses;
+import org.intellij.lang.annotations.Language;
 
-final class VelocityInstanceFieldPrinter extends CommonInstanceFieldPrinter {
-  VelocityInstanceFieldPrinter(CommonCommandTreePrinter<?> printer) {
-    super(printer);
-  }
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-  @Override
-  public String getParameterName(SourceParameter parameter) {
-    if (parameter.getType().getFullyQualifiedName().equals(VelocityClasses.PROXY_SERVER)) {
-      return "server";
-    }
-    return super.getParameterName(parameter);
-  }
+@Language(
+    value = "JAVA",
+    prefix = "class Wrapper__ { Object __method() { if (true) {",
+    suffix = "} return null; } }")
+@Retention(RetentionPolicy.SOURCE)
+public @interface JavaStatements {
 }

@@ -1,0 +1,41 @@
+/*
+ * StrokkCommands - A super simple annotation based zero-shade Paper command API library.
+ * Copyright (C) 2025 Strokkur24
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <https://www.gnu.org/licenses/>.
+ */
+package net.strokkur.commands.internal.printer.javadoc;
+
+import net.strokkur.commands.internal.codegen.CodePackage;
+import net.strokkur.commands.internal.codegen.CodeType;
+import net.strokkur.commands.internal.codegen.visitor.JavadocVisitor;
+import org.jetbrains.annotations.Unmodifiable;
+import org.jspecify.annotations.Nullable;
+
+import java.util.SequencedCollection;
+import java.util.Set;
+
+/// @apiNote instances of this class cannot be reused
+public abstract class AbstractJavadocPrintingVisitor implements JavadocVisitor {
+  protected final StringBuilder builder = new StringBuilder();
+  protected final @Nullable CodePackage currentPath;
+  protected final @Nullable @Unmodifiable Set<CodeType.ClassType> existingImports;
+
+  public AbstractJavadocPrintingVisitor(@Nullable CodePackage currentPath, @Nullable Set<CodeType.ClassType> existingImports) {
+    this.currentPath = currentPath;
+    this.existingImports = existingImports != null ? Set.copyOf(existingImports) : Set.of();
+  }
+
+  public abstract SequencedCollection<String> getLines();
+}

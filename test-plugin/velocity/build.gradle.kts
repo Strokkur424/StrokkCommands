@@ -15,3 +15,7 @@ tasks.runVelocity {
   velocityVersion(libs.versions.velocity.get())
   jvmArgs("-Xmx2G", "-Xms2G")
 }
+
+java {
+  toolchain.languageVersion = JavaLanguageVersion.of(25);
+}
