@@ -75,7 +75,7 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
     ), "long", "java.lang.Long");
 
     putFor((p, name) -> annotatedOr(p, FloatArg.class,
-        a -> "FloatArgumentType.floatArg(%s, %s)".formatted(a.min(), a.max()),
+        a -> "FloatArgumentType.floatArg(%sf, %sf)".formatted(a.min(), a.max()),
         "FloatArgumentType.floatArg()",
         "FloatArgumentType.getFloat(ctx, \"%s\")".formatted(name),
         "com.mojang.brigadier.arguments.FloatArgumentType"
