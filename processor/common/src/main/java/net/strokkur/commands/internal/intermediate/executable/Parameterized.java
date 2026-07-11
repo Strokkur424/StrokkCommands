@@ -15,21 +15,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.util;
+package net.strokkur.commands.internal.intermediate.executable;
 
-import javax.annotation.processing.Messager;
-import javax.lang.model.element.Element;
-import javax.tools.Diagnostic;
+import java.util.List;
 
-record MessagerWrapperImpl(Messager messager) implements MessagerWrapper {
-
-  @Override
-  public void print(Diagnostic.Kind kind, String format, Object... arguments) {
-    messager.printMessage(kind, format.replaceAll("\\{}", "%s").formatted(arguments));
-  }
-
-  @Override
-  public void printElement(Diagnostic.Kind kind, String format, Element element, Object... arguments) {
-    messager.printMessage(kind, format.replaceAll("\\{}", "%s").formatted(arguments), element);
-  }
+public interface Parameterized {
+  List<CommandParameter> parameters();
 }

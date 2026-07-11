@@ -17,42 +17,68 @@
  */
 package net.strokkur.commands.internal.intermediate.executable;
 
-import net.strokkur.commands.internal.abstraction.SourceVariable;
-import net.strokkur.commands.internal.codegen.CodeExpression;
-import net.strokkur.commands.internal.codegen.as.AsExpression;
-import net.strokkur.commands.internal.codegen.builder.Builders;
-import net.strokkur.commands.internal.intermediate.attributes.Attributable;
-import net.strokkur.commands.internal.util.Classes;
+import net.strokkur.commands.internal.exceptions.IllegalReturnTypeException;
+import net.strokkur.commands.internal.intermediate.attributes.AttributableHelper;
+import net.strokkur.jap.code.convert.ConvertToExpression;
+import net.strokkur.jap.code.expression.CodeExpression;
+import net.strokkur.jap.code.expression.Expressions;
+import net.strokkur.jap.code.type.CodeType;
+import net.strokkur.jap.code.type.preset.JavaTypes;
+import net.strokkur.jap.source.classmodel.SourceClassLike;
+import net.strokkur.jap.source.classmodel.SourceMethod;
+import net.strokkur.jap.source.type.SourceType;
 import org.jspecify.annotations.Nullable;
 
-public interface DefaultExecutable extends Executable, Attributable {
+import java.util.List;
+import java.util.Objects;
 
-  enum Type {
+public class DefaultExecutable extends Executable implements AttributableHelper {
+
+  public DefaultExecutable(SourceClassLike sourceClass, SourceMethod executesMethod, List<CommandParameter> parameters)
+    throws IllegalReturnTypeException {
+    super(sourceClass, executesMethod, parameters);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(
+      sourceClass,
+      executesMethod()
+    );
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj instanceof DefaultExecutable other) {
+      return Objects.equals(sourceClass, other.sourceClass)
+        && Objects.equals(executesMethod(), other.executesMethod());
+    }
+    return false;
+  }
+
+  public enum Type {
     NONE(null),
-    ARRAY(Builders.methodInvocation("getInput").setInstanceVariable("ctx").chain("split", CodeExpression.string(" "))),
-    LIST(Builders.methodInvocation("unmodifiableList").setStatic(Classes.COLLECTIONS)
-        .addParameter(Builders.methodInvocation("asList").setStatic(Classes.ARRAYS)
-            .addParameter(Builders.methodInvocation("getInput")
-                .setInstanceVariable("ctx")
-                .chain("split", CodeExpression.string(" "))
-            ))
+    ARRAY(Expressions.variable("ctx").chainMethod("getInput").chainMethod("split", Expressions.string(" "))),
+    LIST(JavaTypes.COLLECTIONS.chainMethod("unmodifiableList")
+      .addParameters(JavaTypes.ARRAYS.chainMethod("asList", ARRAY.getter()))
     );
 
-    private final @Nullable AsExpression getter;
+    private final @Nullable CodeExpression getter;
 
-    Type(@Nullable AsExpression getter) {
-      this.getter = getter;
+    Type(@Nullable ConvertToExpression getter) {
+      this.getter = getter != null ? getter.toExpression() : null;
     }
 
-    public @Nullable AsExpression getGetter() {
-      return this.getter;
+    public CodeExpression getter() {
+      return Objects.requireNonNull(this.getter);
     }
 
-    public static DefaultExecutable.Type getType(SourceVariable variable) {
-      if (variable.getType().getFullyQualifiedAndTypedName().equals("java.util.List<java.lang.String>")) {
+    public static DefaultExecutable.Type getType(SourceType type) {
+      CodeType codeType = type.toType();
+      if (JavaTypes.LIST.typed(JavaTypes.STRING).equals(codeType)) {
         return LIST;
       }
-      if (variable.getType().getFullyQualifiedName().equals("java.lang.String[]")) {
+      if (JavaTypes.STRING.toArray().equals(codeType)) {
         return ARRAY;
       }
       return NONE;

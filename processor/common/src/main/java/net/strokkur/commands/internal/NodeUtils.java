@@ -31,8 +31,8 @@ import net.strokkur.commands.internal.arguments.RequiredCommandArgumentImpl;
 import net.strokkur.commands.internal.exceptions.ConversionException;
 import net.strokkur.commands.internal.intermediate.attributes.Attributable;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
-import net.strokkur.commands.internal.intermediate.executable.ParameterType;
-import net.strokkur.commands.internal.intermediate.executable.SourceParameterType;
+import net.strokkur.commands.internal.intermediate.executable.CommandParameter;
+import net.strokkur.commands.internal.intermediate.executable.UnparsedCommandParameter;
 import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperRegistry;
 import net.strokkur.commands.internal.intermediate.registrable.RegistrableRegistry;
 import net.strokkur.commands.internal.intermediate.registrable.RequirementRegistry;
@@ -67,11 +67,11 @@ public record NodeUtils(
     );
   }
 
-  public ParameterType parseParameter(SourceVariable parameter) {
+  public CommandParameter parseParameter(SourceVariable parameter) {
     debug("| Parsing parameter: " + parameter.getName());
 
     if (!platformUtils().mayParameterBeArgument(parameter)) {
-      return new SourceParameterType(parameter);
+      return new UnparsedCommandParameter(parameter);
     }
 
     final Literal literal = parameter.getAnnotation(Literal.class);
@@ -90,7 +90,7 @@ public record NodeUtils(
     try {
       argumentType = converter.getAsArgumentType(parameter);
     } catch (ConversionException e) {
-      return new SourceParameterType(parameter);
+      return new UnparsedCommandParameter(parameter);
     }
 
     debug("  | Successfully found Brigadier type: {}", argumentType);

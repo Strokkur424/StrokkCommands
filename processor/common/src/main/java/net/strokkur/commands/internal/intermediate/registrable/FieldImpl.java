@@ -17,49 +17,22 @@
  */
 package net.strokkur.commands.internal.intermediate.registrable;
 
-import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.abstraction.SourceField;
-import net.strokkur.commands.internal.codegen.CodeExpression;
-import net.strokkur.commands.internal.codegen.adapter.CodeTypeAdapter;
-import net.strokkur.commands.internal.codegen.as.AsExpression;
-import net.strokkur.commands.internal.codegen.builder.Builders;
+import net.strokkur.jap.code.convert.ConvertToExpression;
+import net.strokkur.jap.code.expression.Expressions;
+import net.strokkur.jap.source.classmodel.SourceField;
 
-import java.util.List;
+record FieldImpl(SourceField field) implements SuggestionProvider, RequirementProvider {
 
-record FieldImpl(SourceClass sourceClass, SourceField field) implements SuggestionProvider, RequirementProvider {
   @Override
-  public String getSuggestionString() {
-    return "%s.%s".formatted(sourceClass.getSourceName(), field.getName());
+  public ConvertToExpression requirementExpression() {
+    return field.enclosed().classType()
+      .chainField(field.name())
+      .chainMethod("test", Expressions.variable("source"))
+      .toMethodInvocation();
   }
 
   @Override
-  public String getRequirementString() {
-    return "%s.%s.test(source)".formatted(sourceClass.getSourceName(), field.getName());
-  }
-
-  @Override
-  public AsExpression getRequirementExpression() {
-    return CodeExpression.lambda(List.of("source"), Builders.methodInvocation("test")
-        .setInstanceSource(Builders.fieldAccess(field.getName())
-            .setStatic(CodeTypeAdapter.from(sourceClass)))
-        .addParameter(CodeExpression.variable("source"))
-    );
-  }
-
-  @Override
-  public AsExpression getSuggestionExpression() {
-    return CodeExpression.lambda(List.of("source"),
-        Builders.fieldAccess(field.getName()).setStatic(CodeTypeAdapter.from(sourceClass))
-    );
-  }
-
-  @Override
-  public SourceClass getSourceClass() {
-    return this.sourceClass;
-  }
-
-  @Override
-  public List<SourceClass> getSourceClasses() {
-    return List.of(this.sourceClass);
+  public ConvertToExpression suggestionExpression() {
+    return field.enclosed().classType().chainField(field.name());
   }
 }

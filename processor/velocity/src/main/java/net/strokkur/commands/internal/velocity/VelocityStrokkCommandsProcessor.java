@@ -65,7 +65,7 @@ public final class VelocityStrokkCommandsProcessor extends StrokkCommandsProcess
   @Override
   protected CommonClassBuilder<VelocityCommandInformation> createBuilder(CommandNode node, VelocityCommandInformation commandInformation) {
     return new VelocityClassBuilder(node, commandInformation,
-        (pkg, types) -> new JavaSourcePrintingVisitor(() -> createJavadocVisitor(pkg, types), "  ", "    ")
+        (pkg, types) -> new JavaSourcePrintingVisitor(() -> createDocumentationRenderer(pkg, types), "  ", "    ")
     );
   }
 

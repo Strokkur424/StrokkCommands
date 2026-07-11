@@ -15,10 +15,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.codegen.as;
+package net.strokkur.commands.internal.intermediate.executable;
 
-import net.strokkur.commands.internal.codegen.CodeExpression;
+import net.strokkur.commands.internal.arguments.CommandArgument;
 
-public interface AsExpression {
-  CodeExpression getAsExpression();
+/// An interface generally denoting a parsed parameter/record component.
+public sealed interface CommandParameter permits CommandArgument, UnparsedCommandParameter {
 }

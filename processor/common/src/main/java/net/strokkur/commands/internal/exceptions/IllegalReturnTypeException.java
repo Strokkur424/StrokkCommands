@@ -17,10 +17,10 @@
  */
 package net.strokkur.commands.internal.exceptions;
 
-import net.strokkur.commands.internal.abstraction.SourceType;
+import net.strokkur.jap.code.convert.ConvertToType;
 
 public class IllegalReturnTypeException extends Exception {
-  public IllegalReturnTypeException(SourceType illegalType) {
-    super("Illegal return type: " + illegalType.getName());
+  public IllegalReturnTypeException(ConvertToType illegalType) {
+    super("Illegal return type: " + illegalType.toType().fullyQualifiedName());
   }
 }

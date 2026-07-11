@@ -17,33 +17,67 @@
  */
 package net.strokkur.commands.internal.intermediate.executable;
 
-import net.strokkur.commands.internal.abstraction.SourceMethod;
-import net.strokkur.commands.internal.abstraction.SourcePrimitive;
-import net.strokkur.commands.internal.abstraction.SourceType;
-import net.strokkur.commands.internal.abstraction.VoidSourceType;
 import net.strokkur.commands.internal.exceptions.IllegalReturnTypeException;
-import net.strokkur.commands.internal.intermediate.attributes.Attributable;
+import net.strokkur.commands.internal.intermediate.attributes.AttributableHelper;
+import net.strokkur.jap.source.classmodel.SourceClassLike;
+import net.strokkur.jap.source.classmodel.SourceMethod;
+import net.strokkur.jap.source.type.SourcePrimitiveType;
+import net.strokkur.jap.source.type.SourceType;
 
-public interface Executable extends Parameterizable, Attributable {
-  SourceMethod executesMethod();
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
-  ReturnType returnType();
+public class Executable implements Parameterized, AttributableHelper {
+  protected final SourceClassLike sourceClass;
+  private final SourceMethod executesMethod;
+  private final List<CommandParameter> parameters;
+  private final Map<String, Object> attributeMap = new TreeMap<>();
+  private final ReturnType returnType;
 
-  enum ReturnType {
+  public Executable(SourceClassLike sourceClass, SourceMethod executesMethod, List<CommandParameter> parameters)
+    throws IllegalReturnTypeException {
+    this.sourceClass = sourceClass;
+    this.executesMethod = executesMethod;
+    this.parameters = parameters;
+    this.returnType = ReturnType.getType(executesMethod.returnType());
+  }
+
+  public SourceMethod executesMethod() {
+    return this.executesMethod;
+  }
+
+  public ReturnType returnType() {
+    return this.returnType;
+  }
+
+  @Override
+  public Map<String, Object> attributeMap() {
+    return this.attributeMap;
+  }
+
+  @Override
+  public List<CommandParameter> parameters() {
+    return this.parameters;
+  }
+
+  @Override
+  public String toString() {
+    return this.getClass().getSimpleName() + "[" + this.executesMethod + ']';
+  }
+
+  public enum ReturnType {
     INT,
     VOID;
 
     public static ReturnType getType(SourceType type) throws IllegalReturnTypeException {
-      return switch (type) {
-        case VoidSourceType ignored -> ReturnType.VOID;
-        case SourcePrimitive primitive -> {
-          if (primitive.getName().equals("int")) {
-            yield ReturnType.INT;
-          }
-          throw new IllegalReturnTypeException(type);
-        }
-        default -> throw new IllegalReturnTypeException(type);
-      };
+      if (type == SourcePrimitiveType.VOID) {
+        return VOID;
+      }
+      if (type == SourcePrimitiveType.INT) {
+        return INT;
+      }
+      throw new IllegalReturnTypeException(type);
     }
   }
 }

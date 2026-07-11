@@ -17,74 +17,36 @@
  */
 package net.strokkur.commands.internal.intermediate.registrable;
 
-import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.abstraction.SourceMethod;
-import net.strokkur.commands.internal.codegen.CodeExpression;
-import net.strokkur.commands.internal.codegen.adapter.CodeTypeAdapter;
-import net.strokkur.commands.internal.codegen.as.AsExpression;
-import net.strokkur.commands.internal.codegen.builder.Builders;
+import net.strokkur.jap.code.convert.ConvertToExpression;
+import net.strokkur.jap.code.expression.CodeExpression;
+import net.strokkur.jap.code.expression.Expressions;
+import net.strokkur.jap.source.classmodel.SourceMethod;
 
-import java.util.List;
+record MethodImpl(SourceMethod sourceMethod, boolean inline) implements SuggestionProvider, RequirementProvider {
 
-record MethodImpl(SourceClass sourceClass, SourceMethod sourceMethod,
-                  boolean inline) implements SuggestionProvider, RequirementProvider {
   @Override
-  public String getSuggestionString() {
+  public ConvertToExpression suggestionExpression() {
     if (inline) {
-      return "%s::%s".formatted(sourceClass.getSourceName(), sourceMethod.getName());
+      return Expressions.methodReference(sourceMethod.enclosed(), sourceMethod().name());
     }
-
-    return "%s.%s()".formatted(sourceClass.getSourceName(), sourceMethod.getName());
+    return sourceMethod.enclosed().chainMethod(sourceMethod.name());
   }
 
   @Override
-  public String getRequirementString() {
+  public ConvertToExpression requirementExpression() {
     if (inline) {
-      return "%s.%s(source)".formatted(sourceClass.getSourceName(), sourceMethod.getName());
+      return sourceMethod.enclosed().chainMethod(sourceMethod.name(), Expressions.variable("source"));
     }
-
-    return "%s.%s().test(source)".formatted(sourceClass.getSourceName(), sourceMethod.getName());
+    return sourceMethod.enclosed().chainMethod(sourceMethod.name())
+      .chainMethod("test", Expressions.variable("source"));
   }
 
   @Override
-  public AsExpression getRequirementExpression() {
+  public CodeExpression toSuggestionLambda() {
     if (inline) {
-      return CodeExpression.lambda(List.of("source"),
-          Builders.methodInvocation(sourceMethod.getName())
-              .setStatic(CodeTypeAdapter.from(sourceClass))
-              .addParameter(CodeExpression.variable("source"))
-      );
+      // We actually don't want this to turn into a lambda.
+      return suggestionExpression().toExpression();
     }
-
-    return CodeExpression.lambda(List.of("source"),
-        Builders.methodInvocation(sourceMethod.getName())
-            .setStatic(CodeTypeAdapter.from(sourceClass))
-            .chain("test", CodeExpression.variable("source"))
-    );
-  }
-
-  @Override
-  public AsExpression getSuggestionExpression() {
-    if (inline) {
-      return CodeExpression.methodReference(
-          CodeTypeAdapter.from(sourceClass),
-          sourceMethod.getName()
-      );
-    }
-
-    return CodeExpression.lambda(
-        List.of("source"),
-        Builders.methodInvocation(sourceMethod.getName()).setStatic(CodeTypeAdapter.from(sourceClass))
-    );
-  }
-
-  @Override
-  public SourceClass getSourceClass() {
-    return this.sourceClass;
-  }
-
-  @Override
-  public List<SourceClass> getSourceClasses() {
-    return List.of(this.sourceClass);
+    return SuggestionProvider.super.toSuggestionLambda();
   }
 }

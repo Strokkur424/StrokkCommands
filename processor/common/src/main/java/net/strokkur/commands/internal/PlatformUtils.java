@@ -20,14 +20,14 @@ package net.strokkur.commands.internal;
 import net.strokkur.commands.internal.abstraction.AnnotationsHolder;
 import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.exceptions.UnknownSenderException;
+import net.strokkur.commands.internal.intermediate.executable.CommandParameter;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
-import net.strokkur.commands.internal.intermediate.executable.ParameterType;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 
 import java.util.List;
 
 public interface PlatformUtils {
-  default void populateExecutesNode(Executable executable, CommandNode node, List<ParameterType> parameters) throws UnknownSenderException {
+  default void populateExecutesNode(Executable executable, CommandNode node, List<CommandParameter> parameters) throws UnknownSenderException {
     // noop
   }
 

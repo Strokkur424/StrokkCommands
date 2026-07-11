@@ -17,62 +17,65 @@
  */
 package net.strokkur.commands.internal.intermediate.registrable;
 
-import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.abstraction.SourceField;
-import net.strokkur.commands.internal.abstraction.SourceMethod;
-import net.strokkur.commands.internal.abstraction.SourceParameter;
 import net.strokkur.commands.internal.util.Classes;
+import net.strokkur.jap.code.type.CodeClassType;
+import net.strokkur.jap.code.type.preset.JavaTypes;
+import net.strokkur.jap.source.classmodel.SourceClass;
+import net.strokkur.jap.source.classmodel.SourceField;
+import net.strokkur.jap.source.classmodel.SourceMethod;
+import net.strokkur.jap.source.classmodel.SourceMethodParameter;
 
 import java.util.List;
 
 public class SuggestionsRegistry extends FunctionalInterfaceRegistry<SuggestionProvider> {
 
-  public SuggestionsRegistry(String platformType) {
+  public SuggestionsRegistry(CodeClassType platformType) {
     super(platformType);
   }
 
   @Override
   protected boolean inlineMethodPredicate(SourceMethod source) {
-    final List<SourceParameter> params = source.getParameters();
-    return source.getReturnType().getFullyQualifiedAndTypedName().equals(Classes.COMPLETABLE_FUTURE.getAsCodeType().fullyQualifiedName() + "<" + Classes.SUGGESTIONS.getAsCodeType().fullyQualifiedName() + ">")
-        && params.size() == 2
-        && params.getFirst().getType().getFullyQualifiedAndTypedName().equals(Classes.COMMAND_CONTEXT.getAsCodeType().fullyQualifiedName() + "<" + getPlatformType() + ">")
-        && params.get(1).getType().getFullyQualifiedName().equals(Classes.SUGGESTIONS_BUILDER.getAsCodeType().fullyQualifiedName());
+    final List<SourceMethodParameter> params = source.parameters();
+    return JavaTypes.COMPLETABLE_FUTURE.typed(Classes.SUGGESTIONS).equals(source.returnType().toType())
+      && params.size() == 2
+      && Classes.COMMAND_CONTEXT.typed(getPlatformType()).equals(params.getFirst().type().toType())
+      && Classes.SUGGESTIONS_BUILDER.equals(params.get(2).type().toType());
   }
 
   @Override
   protected boolean providerMethodPredicate(SourceMethod source) {
-    return source.getReturnType().getFullyQualifiedAndTypedName().equals(Classes.SUGGESTION_PROVIDER + "<" + getPlatformType() + ">")
-        && source.getParameters().isEmpty();
+    return Classes.SUGGESTION_PROVIDER.typed(getPlatformType()).equals(source.returnType().toType())
+      && source.parameters().isEmpty();
   }
 
   @Override
   protected boolean instancePredicate(SourceClass source) {
-    return source.implementsInterface(Classes.SUGGESTION_PROVIDER + "<" + getPlatformType() + ">");
+    return source.implementsClasses()
+      .stream().anyMatch(impl -> Classes.SUGGESTION_PROVIDER.typed(getPlatformType()).equals(impl.classType()));
   }
 
   @Override
   protected boolean fieldPredicate(SourceField source) {
-    return source.getType().getFullyQualifiedAndTypedName().equals(Classes.SUGGESTION_PROVIDER + "<" + getPlatformType() + ">");
+    return Classes.SUGGESTION_PROVIDER.typed(getPlatformType()).equals(source.type().toType());
   }
 
   @Override
-  protected SuggestionProvider createInline(SourceClass enclosed, SourceMethod method) {
-    return new MethodImpl(enclosed, method, true);
+  protected SuggestionProvider createInline(net.strokkur.jap.source.classmodel.SourceMethod method) {
+    return new MethodImpl(method, true);
   }
 
   @Override
-  protected SuggestionProvider createProvider(SourceClass enclosed, SourceMethod method) {
-    return new MethodImpl(enclosed, method, false);
+  protected SuggestionProvider createProvider(net.strokkur.jap.source.classmodel.SourceMethod method) {
+    return new MethodImpl(method, false);
   }
 
   @Override
-  protected SuggestionProvider createField(SourceClass enclosed, SourceField field) {
-    return new FieldImpl(enclosed, field);
+  protected SuggestionProvider createField(net.strokkur.jap.source.classmodel.SourceField field) {
+    return new FieldImpl(field);
   }
 
   @Override
-  protected SuggestionProvider createInstance(SourceClass source) {
+  protected SuggestionProvider createInstance(net.strokkur.jap.source.classmodel.SourceClass source) {
     return new InstanceImpl(source);
   }
 }

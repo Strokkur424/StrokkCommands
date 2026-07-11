@@ -17,30 +17,23 @@
  */
 package net.strokkur.commands.internal.printer;
 
-import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.MultiLiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
-import net.strokkur.commands.internal.codegen.CodeExpression;
-import net.strokkur.commands.internal.codegen.CodeStatement;
-import net.strokkur.commands.internal.codegen.InvokesMethod;
-import net.strokkur.commands.internal.codegen.adapter.CodeTypeAdapter;
-import net.strokkur.commands.internal.codegen.as.AsExpression;
-import net.strokkur.commands.internal.codegen.as.AsStatement;
-import net.strokkur.commands.internal.codegen.builder.Builders;
-import net.strokkur.commands.internal.codegen.builder.MethodInvocationBuilder;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
-import net.strokkur.commands.internal.intermediate.executable.Parameterizable;
-import net.strokkur.commands.internal.intermediate.executable.SourceParameterType;
 import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.Classes;
+import net.strokkur.jap.code.expression.CodeExpression;
+import net.strokkur.jap.code.expression.builder.MethodInvocationBuilder;
+import net.strokkur.jap.code.statement.CodeStatement;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
 
+import javax.lang.model.element.Parameterizable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;

@@ -17,7 +17,7 @@
  */
 package net.strokkur.commands.internal.intermediate.registrable;
 
-import net.strokkur.commands.internal.abstraction.SourceMethod;
+import net.strokkur.jap.source.classmodel.SourceMethod;
 
 /// Holds information about an executor wrapper.
 ///

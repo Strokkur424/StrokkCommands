@@ -92,7 +92,7 @@ class VelocityBrigadierStatementBuilder extends CommonBrigadierStatementBuilder 
 
     final DefaultExecutable.Type type = DefaultExecutable.Type.getType(parameter);
     if (type == DefaultExecutable.Type.LIST || type == DefaultExecutable.Type.ARRAY) {
-      return Objects.requireNonNull(type.getGetter());
+      return Objects.requireNonNull(type.getter());
     }
 
     throw new IllegalStateException("Unknown parameter type: " + parameter.getFullDefinition());

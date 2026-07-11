@@ -24,9 +24,9 @@ import net.strokkur.commands.internal.exceptions.IllegalReturnTypeException;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
 import net.strokkur.commands.internal.exceptions.UnknownSenderException;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.executable.CommandParameter;
 import net.strokkur.commands.internal.intermediate.executable.DefaultExecutable;
 import net.strokkur.commands.internal.intermediate.executable.DefaultExecutableImpl;
-import net.strokkur.commands.internal.intermediate.executable.ParameterType;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 
 import java.util.List;
@@ -49,7 +49,7 @@ public final class DefaultExecutesTransform extends ExecutesTransform {
   }
 
   @Override
-  protected void populatePath(CommandNode node, SourceMethod method, List<ParameterType> args)
+  protected void populatePath(CommandNode node, SourceMethod method, List<CommandParameter> args)
       throws UnknownSenderException, IllegalReturnTypeException {
     final DefaultExecutable executable = new DefaultExecutableImpl(method, args);
     node.setAttribute(AttributeKey.DEFAULT_EXECUTABLE, executable);

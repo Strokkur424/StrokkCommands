@@ -25,9 +25,9 @@ import net.strokkur.commands.internal.exceptions.IllegalReturnTypeException;
 import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
 import net.strokkur.commands.internal.exceptions.UnknownSenderException;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.executable.CommandParameter;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
 import net.strokkur.commands.internal.intermediate.executable.ExecutableImpl;
-import net.strokkur.commands.internal.intermediate.executable.ParameterType;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 
@@ -54,7 +54,7 @@ public sealed class ExecutesTransform implements NodeTransform<SourceMethod>, Fo
   protected void populatePath(
       CommandNode node,
       SourceMethod method,
-      List<ParameterType> args
+      List<CommandParameter> args
   ) throws UnknownSenderException, IllegalReturnTypeException {
     final Executable executable = new ExecutableImpl(method, args);
     node.setAttribute(AttributeKey.EXECUTABLE, executable);
@@ -69,7 +69,7 @@ public sealed class ExecutesTransform implements NodeTransform<SourceMethod>, Fo
     debug("> {}: parsing {} for '{}'", transformName(), element, root.argument().argumentName());
     final CommandNode thisPath = this.createThisPath(root, element);
 
-    final List<ParameterType> params = element.getParameters().stream()
+    final List<CommandParameter> params = element.getParameters().stream()
         .map(nodeUtils()::parseParameter)
         .toList();
     final List<CommandArgument> args = params.stream()

@@ -17,27 +17,27 @@
  */
 package net.strokkur.commands.internal.intermediate.access;
 
-import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.abstraction.SourceElement;
-import net.strokkur.commands.internal.abstraction.SourceField;
-import net.strokkur.commands.internal.codegen.CodeType;
-import net.strokkur.commands.internal.codegen.as.AsCodeType;
+import net.strokkur.jap.code.convert.ConvertToType;
+import net.strokkur.jap.source.classmodel.SourceClass;
+import net.strokkur.jap.source.classmodel.SourceElement;
+import net.strokkur.jap.source.classmodel.SourceField;
+import net.strokkur.jap.source.classmodel.SourceRecord;
 
 public sealed interface ExecuteAccess<E extends SourceElement>
-    extends AsCodeType<CodeType>
-    permits ExecuteAccessImpl, FieldAccess, InstanceAccess {
+  extends ConvertToType
+  permits FieldAccess, InstanceAccess {
 
   static FieldAccess of(SourceField field) {
-    return new FieldAccessImpl(field);
+    return new FieldAccess(field);
   }
 
   static InstanceAccess of(SourceClass type) {
-    return new InstanceAccessImpl(type);
+    return new InstanceAccess(type);
   }
 
-  E getElement();
+  E element();
 
-  String getSourceName();
-
-  boolean isRecord();
+  default boolean isRecord() {
+    return element() instanceof SourceRecord;
+  }
 }

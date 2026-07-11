@@ -4,8 +4,13 @@ plugins {
   id("commands-publish")
 }
 
+repositories {
+  mavenLocal()
+}
+
 dependencies {
   compileOnlyApi(project(":annotations-common"))
+  api("net.strokkur.japutil:source-map:0.1.0-SNAPSHOT")
 
   testImplementation(platform(libs.junit.bom))
   testImplementation(libs.junit.jupiter)

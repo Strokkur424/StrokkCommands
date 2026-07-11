@@ -19,15 +19,19 @@ package net.strokkur.commands.internal.intermediate.registrable;
 
 import net.strokkur.commands.DefaultExecutes;
 import net.strokkur.commands.Executes;
-import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.abstraction.SourceElement;
-import net.strokkur.commands.internal.abstraction.SourceField;
-import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.exceptions.ProviderAlreadyRegisteredException;
-import net.strokkur.commands.internal.util.MessagerWrapper;
+import net.strokkur.jap.code.type.CodeClassType;
+import net.strokkur.jap.code.util.Modifiers;
+import net.strokkur.jap.source.classmodel.SourceAnnotationInterface;
+import net.strokkur.jap.source.classmodel.SourceClass;
+import net.strokkur.jap.source.classmodel.SourceConstructor;
+import net.strokkur.jap.source.classmodel.SourceElement;
+import net.strokkur.jap.source.classmodel.SourceField;
+import net.strokkur.jap.source.classmodel.SourceMethod;
+import net.strokkur.jap.source.util.MessagerWrapper;
 
 public abstract class FunctionalInterfaceRegistry<T> extends RegistrableRegistry<T> {
-  public FunctionalInterfaceRegistry(String platformType) {
+  public FunctionalInterfaceRegistry(CodeClassType platformType) {
     super(platformType);
   }
 
@@ -39,37 +43,37 @@ public abstract class FunctionalInterfaceRegistry<T> extends RegistrableRegistry
 
   protected abstract boolean fieldPredicate(SourceField source);
 
-  protected abstract T createInline(SourceClass enclosed, SourceMethod method);
+  protected abstract T createInline(SourceMethod method);
 
-  protected abstract T createProvider(SourceClass enclosed, SourceMethod method);
+  protected abstract T createProvider(SourceMethod method);
 
-  protected abstract T createField(SourceClass enclosed, SourceField field);
+  protected abstract T createField(SourceField field);
 
   protected abstract T createInstance(SourceClass source);
 
-  public final boolean tryRegisterProvider(MessagerWrapper messager, SourceClass annotationClass, SourceElement sourceElement)
-      throws ProviderAlreadyRegisteredException {
+  public final boolean tryRegisterProvider(MessagerWrapper messager, SourceAnnotationInterface annotationClass, SourceElement sourceElement)
+    throws ProviderAlreadyRegisteredException {
     return switch (sourceElement) {
       case SourceMethod method -> {
-        if (method.isConstructor() || method.hasAnnotationInherited(Executes.class) || method.hasAnnotationInherited(DefaultExecutes.class)) {
+        if (method instanceof SourceConstructor || method.hasAnnotationInherited(Executes.class) || method.hasAnnotationInherited(DefaultExecutes.class)) {
           yield false;
         }
 
         if (inlineMethodPredicate(method)) {
-          if (!method.isStaticallyAccessible()) {
-            messager.infoSource("This method matches the @" + annotationClass.getName() + " provider method, but is not static. Is this a mistake?", method);
+          if (!method.modifiers().contains(Modifiers.STATIC)) {
+            messager.infoSource("This method matches the @" + annotationClass.classType().simpleName() + " provider method, but is not static. Is this a mistake?", method);
             yield false;
           }
-          registerProvider(annotationClass, createInline(method.getEnclosed(), method));
+          registerProvider(annotationClass, createInline(method));
           yield true;
         }
 
         if (providerMethodPredicate(method)) {
-          if (!method.isStaticallyAccessible()) {
-            messager.infoSource("This method matches the @" + annotationClass.getName() + " provider method, but is not static. Is this a mistake?", method);
+          if (!method.modifiers().contains(Modifiers.STATIC)) {
+            messager.infoSource("This method matches the @" + annotationClass.classType().simpleName() + " provider method, but is not static. Is this a mistake?", method);
             yield false;
           }
-          registerProvider(annotationClass, createProvider(method.getEnclosed(), method));
+          registerProvider(annotationClass, createProvider(method));
           yield true;
         }
 
@@ -77,19 +81,19 @@ public abstract class FunctionalInterfaceRegistry<T> extends RegistrableRegistry
       }
       case SourceField field -> {
         if (fieldPredicate(field)) {
-          if (!field.isStaticallyAccessible()) {
-            messager.infoSource("This field matches the @" + annotationClass.getName() + " provider field, but is not static. Is this a mistake?", field);
+          if (!field.modifiers().contains(Modifiers.STATIC)) {
+            messager.infoSource("This field matches the @" + annotationClass.classType().simpleName() + " provider field, but is not static. Is this a mistake?", field);
             yield false;
           }
-          registerProvider(annotationClass, createField(field.getEnclosed(), field));
+          registerProvider(annotationClass, createField(field));
           yield true;
         }
         yield false;
       }
       case SourceClass type -> {
         if (instancePredicate(type)) {
-          if (type.hasNonStaticConstructor()) {
-            messager.infoSource("This class matches the @" + annotationClass.getName() + " provider class, but is not statically accessible. Is this a mistake?", type);
+          if (type.constructors().stream().anyMatch(ctor -> !ctor.parameters().isEmpty())) {
+            messager.infoSource("This class matches the @" + annotationClass.classType().simpleName() + " provider class, but is not statically accessible. Is this a mistake?", type);
             yield false;
           }
           registerProvider(annotationClass, createInstance(type));

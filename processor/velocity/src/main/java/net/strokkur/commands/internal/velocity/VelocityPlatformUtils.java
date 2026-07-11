@@ -23,9 +23,9 @@ import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.codegen.CodeType;
 import net.strokkur.commands.internal.codegen.adapter.CodeTypeAdapter;
 import net.strokkur.commands.internal.exceptions.AnnotationException;
+import net.strokkur.commands.internal.intermediate.executable.CommandParameter;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
-import net.strokkur.commands.internal.intermediate.executable.ParameterType;
-import net.strokkur.commands.internal.intermediate.executable.SourceParameterType;
+import net.strokkur.commands.internal.intermediate.executable.UnparsedCommandParameter;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.velocity.util.SenderType;
 import net.strokkur.commands.internal.velocity.util.VelocityAttributeKeys;
@@ -37,7 +37,7 @@ import java.util.Set;
 
 final class VelocityPlatformUtils implements PlatformUtils {
   @Override
-  public void populateExecutesNode(Executable executable, CommandNode node, List<ParameterType> parameters) {
+  public void populateExecutesNode(Executable executable, CommandNode node, List<CommandParameter> parameters) {
     final SenderType type = this.getSenderType(parameters);
     executable.setAttribute(VelocityAttributeKeys.SENDER_TYPE, type);
     node.setAttribute(VelocityAttributeKeys.SENDER_TYPE, type);
@@ -55,10 +55,10 @@ final class VelocityPlatformUtils implements PlatformUtils {
     );
   }
 
-  private SenderType getSenderType(List<ParameterType> parameters) throws AnnotationException {
+  private SenderType getSenderType(List<CommandParameter> parameters) throws AnnotationException {
     SenderType type = SenderType.NORMAL;
-    for (ParameterType parameter : parameters) {
-      if (!(parameter instanceof SourceParameterType(SourceVariable sourceParam))) {
+    for (CommandParameter parameter : parameters) {
+      if (!(parameter instanceof UnparsedCommandParameter(SourceVariable sourceParam))) {
         continue;
       }
       final CodeType adapted = CodeTypeAdapter.from(sourceParam.getType());

@@ -22,9 +22,9 @@ import net.strokkur.commands.internal.abstraction.AnnotationsHolder;
 import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.exceptions.AnnotationException;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.executable.CommandParameter;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
-import net.strokkur.commands.internal.intermediate.executable.ParameterType;
-import net.strokkur.commands.internal.intermediate.executable.SourceParameterType;
+import net.strokkur.commands.internal.intermediate.executable.UnparsedCommandParameter;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.paper.util.ExecutorType;
 import net.strokkur.commands.internal.paper.util.PaperAttributeKeys;
@@ -46,7 +46,7 @@ final class PaperPlatformUtils implements PlatformUtils {
   }
 
   @Override
-  public void populateExecutesNode(Executable executable, CommandNode node, List<ParameterType> parameters) {
+  public void populateExecutesNode(Executable executable, CommandNode node, List<CommandParameter> parameters) {
     final ExecutorType type = getExecutorType(parameters);
     executable.setAttribute(PaperAttributeKeys.EXECUTOR_TYPE, type);
     node.setAttribute(PaperAttributeKeys.EXECUTOR_TYPE, type);
@@ -83,10 +83,10 @@ final class PaperPlatformUtils implements PlatformUtils {
     }
   }
 
-  private ExecutorType getExecutorType(List<ParameterType> parameters) throws AnnotationException {
+  private ExecutorType getExecutorType(List<CommandParameter> parameters) throws AnnotationException {
     ExecutorType type = ExecutorType.NONE;
-    for (ParameterType parameter : parameters) {
-      if (!(parameter instanceof SourceParameterType(SourceVariable sourceParam))) {
+    for (CommandParameter parameter : parameters) {
+      if (!(parameter instanceof UnparsedCommandParameter(SourceVariable sourceParam))) {
         continue;
       }
 

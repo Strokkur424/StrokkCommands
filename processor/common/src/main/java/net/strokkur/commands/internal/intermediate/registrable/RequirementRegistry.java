@@ -17,58 +17,59 @@
  */
 package net.strokkur.commands.internal.intermediate.registrable;
 
-import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.abstraction.SourceField;
-import net.strokkur.commands.internal.abstraction.SourceMethod;
-import net.strokkur.commands.internal.abstraction.SourceParameter;
-import net.strokkur.commands.internal.abstraction.SourcePrimitive;
-import net.strokkur.commands.internal.util.Classes;
+import net.strokkur.jap.code.type.CodeClassType;
+import net.strokkur.jap.code.type.preset.JavaTypes;
+import net.strokkur.jap.source.classmodel.SourceClass;
+import net.strokkur.jap.source.classmodel.SourceField;
+import net.strokkur.jap.source.classmodel.SourceMethod;
+import net.strokkur.jap.source.classmodel.SourceMethodParameter;
+import net.strokkur.jap.source.type.SourcePrimitiveType;
 
 import java.util.List;
 
 public class RequirementRegistry extends FunctionalInterfaceRegistry<RequirementProvider> {
 
-  public RequirementRegistry(String platformType) {
+  public RequirementRegistry(CodeClassType platformType) {
     super(platformType);
   }
 
   @Override
   protected boolean inlineMethodPredicate(SourceMethod source) {
-    final List<SourceParameter> params = source.getParameters();
-    return source.getReturnType() instanceof SourcePrimitive primitive
-        && primitive.getName().equals("boolean")
-        && params.size() == 1
-        && params.getFirst().getType().getFullyQualifiedName().equals(getPlatformType());
+    final List<SourceMethodParameter> params = source.parameters();
+    return SourcePrimitiveType.BOOL.equals(source.returnType())
+      && params.size() == 1
+      && getPlatformType().equals(params.getFirst().type().toType());
   }
 
   @Override
   protected boolean providerMethodPredicate(SourceMethod source) {
-    return source.getReturnType().getFullyQualifiedAndTypedName().equals(Classes.PREDICATE + "<" + getPlatformType() + ">");
+    return JavaTypes.PREDICATE.typed(getPlatformType()).equals(source.returnType().toType());
   }
 
   @Override
   protected boolean instancePredicate(SourceClass source) {
-    return source.implementsInterface(Classes.PREDICATE + "<" + getPlatformType() + ">");
+    return source.implementsClasses().stream()
+      .anyMatch(type -> JavaTypes.PREDICATE.typed(getPlatformType()).equals(type.classType()));
   }
 
   @Override
   protected boolean fieldPredicate(SourceField source) {
-    return source.getType().getFullyQualifiedAndTypedName().equals(Classes.PREDICATE + "<" + getPlatformType() + ">");
+    return JavaTypes.PREDICATE.typed(getPlatformType()).equals(source.type().toType());
   }
 
   @Override
-  protected RequirementProvider createInline(SourceClass enclosed, SourceMethod method) {
-    return new MethodImpl(enclosed, method, true);
+  protected RequirementProvider createInline(SourceMethod method) {
+    return new MethodImpl(method, true);
   }
 
   @Override
-  protected RequirementProvider createProvider(SourceClass enclosed, SourceMethod method) {
-    return new MethodImpl(enclosed, method, false);
+  protected RequirementProvider createProvider(SourceMethod method) {
+    return new MethodImpl(method, false);
   }
 
   @Override
-  protected RequirementProvider createField(SourceClass enclosed, SourceField field) {
-    return new FieldImpl(enclosed, field);
+  protected RequirementProvider createField(SourceField field) {
+    return new FieldImpl(field);
   }
 
   @Override

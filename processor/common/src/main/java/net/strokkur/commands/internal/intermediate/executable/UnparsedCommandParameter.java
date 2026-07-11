@@ -15,30 +15,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.abstraction;
+package net.strokkur.commands.internal.intermediate.executable;
 
-import java.util.Collections;
-import java.util.Set;
+import net.strokkur.jap.source.classmodel.SourceMethodParameter;
 
-public interface SourcePrimitive extends SourceType {
-
-  @Override
-  default String getPackageName() {
-    return "";
-  }
-
-  @Override
-  default String getFullyQualifiedName() {
-    return getSourceName();
-  }
-
-  @Override
-  default String getName() {
-    return getSourceName();
-  }
-
-  @Override
-  default Set<String> getImports() {
-    return Collections.emptySet();
-  }
+/// A catch-all [CommandParameter] that is not a proper command argument.
+public record UnparsedCommandParameter(SourceMethodParameter parameter) implements CommandParameter {
 }

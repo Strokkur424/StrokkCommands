@@ -20,13 +20,7 @@ package net.strokkur.commands.internal;
 import net.strokkur.commands.CustomExecutorWrapper;
 import net.strokkur.commands.CustomRequirement;
 import net.strokkur.commands.CustomSuggestion;
-import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.abstraction.impl.SourceClassImpl;
-import net.strokkur.commands.internal.abstraction.impl.SourceRecordImpl;
-import net.strokkur.commands.internal.abstraction.impl.SourceTypeUtils;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
-import net.strokkur.commands.internal.codegen.CodePackage;
-import net.strokkur.commands.internal.codegen.CodeType;
 import net.strokkur.commands.internal.exceptions.ProviderAlreadyRegisteredException;
 import net.strokkur.commands.internal.intermediate.CommonTreePostProcessor;
 import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperRegistry;
@@ -39,12 +33,15 @@ import net.strokkur.commands.internal.parsing.CommandParserImpl;
 import net.strokkur.commands.internal.parsing.DefaultExecutesTransform;
 import net.strokkur.commands.internal.parsing.ExecutesTransform;
 import net.strokkur.commands.internal.printer.CommonClassBuilder;
-import net.strokkur.commands.internal.printer.javadoc.AbstractJavadocPrintingVisitor;
-import net.strokkur.commands.internal.printer.javadoc.JavaMarkdownJavadocVisitor;
-import net.strokkur.commands.internal.printer.javadoc.JavaStarJavadocVisitor;
 import net.strokkur.commands.internal.util.CommandInformation;
-import net.strokkur.commands.internal.util.MessagerWrapper;
 import net.strokkur.commands.meta.StrokkCommandsDebug;
+import net.strokkur.jap.code.convert.ConvertToClassType;
+import net.strokkur.jap.code.documentation.AbstractDocumentationRenderer;
+import net.strokkur.jap.code.documentation.MarkdownJavadocRenderer;
+import net.strokkur.jap.code.documentation.StarJavadocRenderer;
+import net.strokkur.jap.code.type.CodePackage;
+import net.strokkur.jap.source.classmodel.SourceClass;
+import net.strokkur.jap.source.util.MessagerWrapper;
 import org.jspecify.annotations.NullUnmarked;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -60,6 +57,8 @@ import java.lang.annotation.Annotation;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+
+import static net.strokkur.jap.code.documentation.AbstractDocumentationRenderer.createContext;
 
 public abstract class StrokkCommandsProcessor<A extends Annotation, C extends CommandInformation> extends AbstractProcessor {
 
@@ -91,12 +90,13 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
 
   protected abstract C getCommandInformation(SourceClass sourceClass);
 
-  protected AbstractJavadocPrintingVisitor createJavadocVisitor(CodePackage pkg, Set<CodeType.ClassType> imports) {
+  protected AbstractDocumentationRenderer createDocumentationRenderer(CodePackage pkg, Set<? extends ConvertToClassType> imports) {
+    AbstractDocumentationRenderer.Context ctx = createContext(pkg, imports);
     if (isJavaVersion(25)) {
-      return new JavaMarkdownJavadocVisitor(pkg, imports);
+      return new MarkdownJavadocRenderer(ctx);
     }
     // We are on Java 24 or below, so use the star Javadoc visitor.
-    return new JavaStarJavadocVisitor(pkg, imports);
+    return new StarJavadocRenderer(ctx);
   }
 
   private boolean isJavaVersion(int version) {
@@ -120,10 +120,10 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
 
     final NodeUtils nodeUtils = new NodeUtils(getPlatformUtils(), messagerWrapper, getConverter(messagerWrapper), suggestionsRegistry, requirementRegistry, executorWrapperRegistry);
     final CommandParser parser = new CommandParserImpl(
-        messagerWrapper,
-        nodeUtils,
-        p -> new ExecutesTransform(p, nodeUtils),
-        p -> new DefaultExecutesTransform(p, nodeUtils)
+      messagerWrapper,
+      nodeUtils,
+      p -> new ExecutesTransform(p, nodeUtils),
+      p -> new DefaultExecutesTransform(p, nodeUtils)
     );
     final CommonTreePostProcessor treePostProcessor = createPostProcessor(messagerWrapper);
 
@@ -153,10 +153,10 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
 
       if (typeElement.getNestingKind().isNested()) {
         messagerWrapper.warnElement(
-            "This class is annotated with @%s, but is nested. This is unsupported behavior. If this " +
-                "class is meant as a subcommand, annotate it with @Subcommand instead",
-            typeElement,
-            targetAnnotationClass().getSimpleName()
+          "This class is annotated with @%s, but is nested. This is unsupported behavior. If this " +
+            "class is meant as a subcommand, annotate it with @Subcommand instead",
+          typeElement,
+          targetAnnotationClass().getSimpleName()
         );
         continue;
       }
@@ -166,8 +166,8 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
       }
 
       final SourceClass sourceClass = typeElement.getKind() == ElementKind.RECORD
-          ? new SourceRecordImpl(this.processingEnv, (DeclaredType) typeElement.asType())
-          : new SourceClassImpl(this.processingEnv, (DeclaredType) typeElement.asType());
+        ? new SourceRecordImpl(this.processingEnv, (DeclaredType) typeElement.asType())
+        : new SourceClassImpl(this.processingEnv, (DeclaredType) typeElement.asType());
 
       try {
         processElement(sourceClass, messagerWrapper, parser, treePostProcessor);
@@ -185,10 +185,10 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
   }
 
   private void processElement(
-      SourceClass sourceClass,
-      MessagerWrapper messagerWrapper,
-      CommandParser parser,
-      CommonTreePostProcessor treePostProcessor
+    SourceClass sourceClass,
+    MessagerWrapper messagerWrapper,
+    CommandParser parser,
+    CommonTreePostProcessor treePostProcessor
   ) {
     final boolean debug = System.getProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY) != null;
 
@@ -227,10 +227,10 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
   }
 
   private <T extends RegistrableRegistry<?>> T createAndFillRegistry(
-      Class<? extends Annotation> annotationClass,
-      Function<String, T> ctor,
-      RoundEnvironment roundEnv,
-      MessagerWrapper messager
+    Class<? extends Annotation> annotationClass,
+    Function<String, T> ctor,
+    RoundEnvironment roundEnv,
+    MessagerWrapper messager
   ) {
     final T registry = ctor.apply(getPlatformUtils().platformType());
     for (Element element : roundEnv.getElementsAnnotatedWith(annotationClass)) {
@@ -242,9 +242,9 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
 
         for (Element annotatedElement : roundEnv.getElementsAnnotatedWith(typeElement)) {
           if (registry.tryRegisterProvider(
-              messager,
-              new SourceClassImpl(this.processingEnv, (DeclaredType) typeElement.asType()),
-              SourceTypeUtils.getSourceElement(this.processingEnv, annotatedElement)
+            messager,
+            new SourceClassImpl(this.processingEnv, (DeclaredType) typeElement.asType()),
+            SourceTypeUtils.getSourceElement(this.processingEnv, annotatedElement)
           )) {
             break;
           }

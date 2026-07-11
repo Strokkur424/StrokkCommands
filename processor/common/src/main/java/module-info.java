@@ -11,6 +11,7 @@ module net.strokkur.commands.processor.common {
   requires java.xml;
   requires java.desktop;
   requires jakarta.inject;
+  requires net.strokkur.jap.source;
 
   exports net.strokkur.commands.internal;
   exports net.strokkur.commands.internal.abstraction;

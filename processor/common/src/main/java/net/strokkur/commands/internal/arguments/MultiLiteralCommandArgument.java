@@ -17,22 +17,18 @@
  */
 package net.strokkur.commands.internal.arguments;
 
-import net.strokkur.commands.internal.abstraction.SourceElement;
-import org.jetbrains.annotations.UnmodifiableView;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.Set;
 
-public interface MultiLiteralCommandArgument extends CommandArgument {
+public record MultiLiteralCommandArgument(@Unmodifiable Set<String> literals) implements CommandArgument {
 
-  static MultiLiteralCommandArgument multiLiteral(Set<String> literals, SourceElement element) {
-    return new MultiLiteralCommandArgumentImpl(literals, element);
+  static MultiLiteralCommandArgument multiLiteral(Set<String> literals) {
+    return new MultiLiteralCommandArgument(Set.copyOf(literals));
   }
 
-  @UnmodifiableView
-  Set<String> literals();
-
   @Override
-  default String argumentName() {
-    return "<multiliteral>";
+  public String argumentName() {
+    throw new IllegalStateException("#argumentName is not implemented for the MultiLiteralCommandArgument.");
   }
 }

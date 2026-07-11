@@ -17,39 +17,20 @@
  */
 package net.strokkur.commands.internal.intermediate.registrable;
 
-import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.codegen.as.AsExpression;
-
-import java.util.List;
+import net.strokkur.jap.code.convert.ConvertToExpression;
+import net.strokkur.jap.code.expression.Expressions;
+import net.strokkur.jap.source.classmodel.SourceClass;
 
 record InstanceImpl(SourceClass sourceClass) implements SuggestionProvider, RequirementProvider {
+
   @Override
-  public String getSuggestionString() {
-    return "new %s()".formatted(sourceClass.getSourceName());
+  public ConvertToExpression requirementExpression() {
+    return sourceClass.classType().ctor()
+      .chainMethod("test", Expressions.variable("source"));
   }
 
   @Override
-  public String getRequirementString() {
-    return "new %s().test(source)".formatted(sourceClass.getSourceName());
-  }
-
-  @Override
-  public AsExpression getRequirementExpression() {
-    return null;
-  }
-
-  @Override
-  public AsExpression getSuggestionExpression() {
-    return null;
-  }
-
-  @Override
-  public List<SourceClass> getSourceClasses() {
-    return List.of(this.sourceClass);
-  }
-
-  @Override
-  public SourceClass getSourceClass() {
-    return this.sourceClass;
+  public ConvertToExpression suggestionExpression() {
+    return sourceClass.classType().ctor();
   }
 }

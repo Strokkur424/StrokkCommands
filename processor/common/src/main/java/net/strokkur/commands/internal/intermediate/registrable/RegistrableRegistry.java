@@ -17,10 +17,12 @@
  */
 package net.strokkur.commands.internal.intermediate.registrable;
 
-import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.abstraction.SourceElement;
 import net.strokkur.commands.internal.exceptions.ProviderAlreadyRegisteredException;
-import net.strokkur.commands.internal.util.MessagerWrapper;
+import net.strokkur.commands.internal.util.Classes;
+import net.strokkur.jap.code.type.CodeClassType;
+import net.strokkur.jap.source.classmodel.SourceAnnotationInterface;
+import net.strokkur.jap.source.classmodel.SourceElement;
+import net.strokkur.jap.source.util.MessagerWrapper;
 
 import java.util.Map;
 import java.util.Optional;
@@ -29,35 +31,39 @@ import java.util.TreeMap;
 
 public abstract class RegistrableRegistry<T> {
   private final Map<String, T> providerMap = new TreeMap<>();
-  private final String platformType;
+  private final CodeClassType platformType;
 
-  public RegistrableRegistry(String platformType) {
+  public RegistrableRegistry(CodeClassType platformType) {
     this.platformType = platformType;
   }
 
-  protected final String getPlatformType() {
+  protected final CodeClassType getPlatformType() {
     return this.platformType;
+  }
+
+  protected CodeClassType getTypedCommandType() {
+    return Classes.COMMAND.typed(getPlatformType());
   }
 
   public final Set<String> getAllRegistrations() {
     return providerMap.keySet();
   }
 
-  public final Optional<T> getProvider(SourceClass annotationClass) {
-    return Optional.ofNullable(this.providerMap.get(annotationClass.getFullyQualifiedName()));
+  public final Optional<T> getProvider(SourceAnnotationInterface annotationClass) {
+    return Optional.ofNullable(this.providerMap.get(annotationClass.toType().fullyQualifiedName()));
   }
 
-  public final void registerProvider(SourceClass annotationClass, T provider)
-      throws ProviderAlreadyRegisteredException {
-    if (this.providerMap.containsKey(annotationClass.getFullyQualifiedName())) {
+  public final void registerProvider(SourceAnnotationInterface annotationClass, T provider)
+    throws ProviderAlreadyRegisteredException {
+    if (this.providerMap.containsKey(annotationClass.toType().fullyQualifiedName())) {
       throw new ProviderAlreadyRegisteredException(annotationClass);
     }
-    this.providerMap.put(annotationClass.getFullyQualifiedName(), provider);
+    this.providerMap.put(annotationClass.toType().fullyQualifiedName(), provider);
   }
 
   public abstract boolean tryRegisterProvider(
-      MessagerWrapper messager,
-      SourceClass annotationClass,
-      SourceElement sourceElement
+    MessagerWrapper messager,
+    SourceAnnotationInterface annotationClass,
+    SourceElement sourceElement
   ) throws ProviderAlreadyRegisteredException;
 }

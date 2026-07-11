@@ -17,11 +17,11 @@
  */
 package net.strokkur.commands.internal.arguments;
 
-import net.strokkur.commands.internal.codegen.as.AsExpression;
+import net.strokkur.jap.code.convert.ConvertToExpression;
 
-public record BrigadierArgumentType(AsExpression initializer, AsExpression retriever) {
+public record BrigadierArgumentType(ConvertToExpression initializer, ConvertToExpression retriever) {
 
-  public static BrigadierArgumentType of(AsExpression initializer, AsExpression retriever) {
+  public static BrigadierArgumentType of(ConvertToExpression initializer, ConvertToExpression retriever) {
     return new BrigadierArgumentType(initializer, retriever);
   }
 }
