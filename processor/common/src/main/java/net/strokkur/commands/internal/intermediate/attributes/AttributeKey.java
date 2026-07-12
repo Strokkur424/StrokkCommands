@@ -18,20 +18,19 @@
 package net.strokkur.commands.internal.intermediate.attributes;
 
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
-import net.strokkur.commands.internal.intermediate.executable.CommandParameter;
 import net.strokkur.commands.internal.intermediate.executable.DefaultExecutable;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
+import net.strokkur.commands.internal.intermediate.record.RecordArguments;
 import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperProvider;
 import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
 import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.Nullable;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 public interface AttributeKey<T> {
-  AttributeKey<List<CommandParameter>> RECORD_ARGUMENTS = create("record_arguments", null);
+  AttributeKey<RecordArguments> RECORD_ARGUMENTS = create("record_arguments", null);
   AttributeKey<Executable> EXECUTABLE = create("executable", null);
   AttributeKey<DefaultExecutable> DEFAULT_EXECUTABLE = create("default_executable", null);
   AttributeKey<ExecuteAccess<?>> ACCESS = create("access", null);

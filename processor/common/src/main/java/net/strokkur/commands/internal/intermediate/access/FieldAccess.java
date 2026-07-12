@@ -17,7 +17,7 @@
  */
 package net.strokkur.commands.internal.intermediate.access;
 
-import net.strokkur.jap.code.type.CodeType;
+import net.strokkur.jap.code.type.CodeClassType;
 import net.strokkur.jap.source.classmodel.SourceField;
 
 public record FieldAccess(
@@ -29,7 +29,7 @@ public record FieldAccess(
   }
 
   @Override
-  public CodeType toType() {
-    return element.type().toType();
+  public CodeClassType toClassType() {
+    return (CodeClassType) element.type().toType();
   }
 }

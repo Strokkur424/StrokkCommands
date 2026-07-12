@@ -14,6 +14,7 @@ import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.executable.CommandParameter;
 import net.strokkur.commands.internal.intermediate.executable.DefaultExecutable;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
+import net.strokkur.commands.internal.intermediate.record.RecordArguments;
 import net.strokkur.commands.internal.intermediate.registrable.CombinedRequirementProvider;
 import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
@@ -205,7 +206,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
 
     // Apply some attributes to the root node before returning it.
     rootNode.setAttribute(AttributeKey.ACCESS, ExecuteAccess.of(record));
-    rootNode.setAttribute(AttributeKey.RECORD_ARGUMENTS, parsedComponents);
+    rootNode.setAttribute(AttributeKey.RECORD_ARGUMENTS, RecordArguments.of(record, parsedComponents));
     utils.applyExecutorTransform(record, rootNode);
     utils.platformUtils().populateNode(record, rootNode);
     applyRequirements(record, rootNode);

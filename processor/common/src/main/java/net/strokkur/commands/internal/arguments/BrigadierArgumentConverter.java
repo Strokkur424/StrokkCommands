@@ -69,14 +69,14 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
   ) {
     return a -> {
       final ConvertToExpression minExpr = a.isSet("min")
-        ? a.parameter("min").value()
+        ? a.parameter("min").expression()
         : defaultMin;
 
       if (a.isSet("max")) {
         return builder
           .addParameters(
             minExpr,
-            a.parameter("max").value()
+            a.parameter("max").expression()
           );
       }
 

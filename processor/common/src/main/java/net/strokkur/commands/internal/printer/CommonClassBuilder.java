@@ -19,161 +19,150 @@ package net.strokkur.commands.internal.printer;
 
 import net.strokkur.commands.internal.BuildConstants;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
-import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.util.CommandInformation;
-import net.strokkur.jap.code.annotations.CodeAnnotation;
 import net.strokkur.jap.code.classmodel.CodeClass;
+import net.strokkur.jap.code.classmodel.CodeField;
 import net.strokkur.jap.code.classmodel.CodeMethod;
 import net.strokkur.jap.code.classmodel.builder.ClassBuilder;
 import net.strokkur.jap.code.classmodel.builder.MethodBuilder;
+import net.strokkur.jap.code.convert.ConvertToClassType;
+import net.strokkur.jap.code.convert.ConvertToExpression;
+import net.strokkur.jap.code.convert.ConvertToMethod;
+import net.strokkur.jap.code.convert.ConvertToStatement;
+import net.strokkur.jap.code.documentation.CodeDocumentation;
 import net.strokkur.jap.code.expression.CodeExpression;
-import net.strokkur.jap.code.expression.builder.MethodInvocationBuilder;
-import net.strokkur.jap.code.statement.CodeStatement;
-import net.strokkur.jap.code.type.CodePackage;
-import net.strokkur.jap.code.type.CodeType;
+import net.strokkur.jap.code.expression.Expressions;
+import net.strokkur.jap.code.expression.builder.ConstructorInvocationBuilder;
+import net.strokkur.jap.code.expression.builder.MethodLikeInvocationBuilder;
+import net.strokkur.jap.code.statement.Statements;
+import net.strokkur.jap.code.type.CodeClassType;
+import net.strokkur.jap.code.type.CodeTypes;
+import net.strokkur.jap.code.type.preset.JSpecifyTypes;
+import net.strokkur.jap.code.type.preset.JakartaInjectTypes;
+import net.strokkur.jap.code.type.preset.JavaTypes;
 import net.strokkur.jap.code.util.Modifiers;
-import net.strokkur.jap.code.visitor.ImportGatheringVisitor;
-import net.strokkur.jap.code.visitor.source.AbstractSourcePrintingVisitor;
 import net.strokkur.jap.source.classmodel.SourceConstructor;
+import net.strokkur.jap.source.classmodel.SourceMethodParameter;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public abstract class CommonClassBuilder<C extends CommandInformation> {
   private final CommandNode rootNode;
   protected final C commandInformation;
   private final CommonBrigadierStatementBuilder statementBuilder;
-  private final BiFunction<CodePackage, Set<CodeType.ClassType>, AbstractSourcePrintingVisitor> sourceVisitor;
 
-  protected final CodeType.ClassType sourceType;
-  protected final CodeType.ClassType selfType;
+  protected final CodeClassType sourceType;
+  protected final CodeClassType selfType;
 
   public CommonClassBuilder(
-      CommandNode rootNode,
-      C commandInformation,
-      CommonBrigadierStatementBuilder statementBuilder,
-      BiFunction<CodePackage, Set<CodeType.ClassType>, AbstractSourcePrintingVisitor> sourceVisitor
+    CommandNode rootNode,
+    C commandInformation,
+    CommonBrigadierStatementBuilder statementBuilder
   ) {
     this.rootNode = rootNode;
     this.commandInformation = commandInformation;
     this.statementBuilder = statementBuilder;
-    this.sourceVisitor = sourceVisitor;
 
-    this.sourceType = CodeType.ofClass(commandInformation.sourceClass().getFullyQualifiedName());
-    this.selfType = CodeType.ofClass(sourceType.fullyQualifiedName() + "Brigadier");
-  }
-
-  /// Converts the passed root command node into a proper Java file.
-  public final String getAsString() {
-    final CodeClass brigadierClass = createClass();
-
-    final StringBuilder out = new StringBuilder();
-    out.append("package ").append(selfType.codePackage().path()).append(";\n\n");
-
-    final Set<CodeType.ClassType> imports = gatherAndAppendImports(out, brigadierClass);
-    out.append("\n");
-
-    final AbstractSourcePrintingVisitor visitor = sourceVisitor.apply(brigadierClass.codePackage(), imports);
-    out.append(brigadierClass.accept(visitor));
-    return out.toString();
+    this.sourceType = commandInformation.sourceClass().classType();
+    this.selfType = CodeTypes.ofClass(sourceType.fullyQualifiedName() + "Brigadier");
   }
 
   /// Creates the actual class, which will be printed to a file.
   public CodeClass createClass() {
     // Create skeletons for create and register methods for use in Javadocs.
-    final MethodBuilder createMethod = getCreateMethodBuilder();
-    final MethodBuilder registerMethod = getRegisterMethodBuilder();
+    MethodBuilder createMethod = getCreateMethodBuilder();
+    MethodBuilder registerMethod = getRegisterMethodBuilder();
+
+    List<ConvertToStatement> createMethodStatements = new ArrayList<>();
 
     applyCreateMethodJavadoc(createMethod, registerMethod);
     applyRegisterMethodJavadoc(registerMethod, createMethod);
 
     // Start building up the actual class
-    final ClassBuilder classBuilder = Builders.classBuilder(selfType.fullyQualifiedName());
-    classBuilder.setJavadoc(getClassJavadoc(createMethod, registerMethod));
-    classBuilder.setModifiers(Modifiers.PUBLIC, Modifiers.FINAL);
-    classBuilder.addAnnotations(CodeAnnotation.NULL_MARKED);
+    final ClassBuilder classBuilder = CodeClass.builder(selfType);
+    classBuilder.setDocumentation(getClassJavadoc(createMethod, registerMethod));
+    classBuilder.addModifiers(Modifiers.PUBLIC, Modifiers.FINAL);
+    classBuilder.addAnnotations(JSpecifyTypes.NULL_MARKED);
 
     populateStaticFields(classBuilder);
 
     // Run the brigadier tree builder so we can use the statements
     statementBuilder.reset();
-    final AsExpression treeExpr = statementBuilder.build(rootNode, CodeExpression.variable("NAME"));
+    ConvertToExpression treeExpr = statementBuilder.build(rootNode, Expressions.variable("NAME"));
 
-    final List<PrintedAccessPath> required = statementBuilder.requiredPaths.stream()
-        .map(PrintedAccessPath::requiredParent)
-        .distinct()
-        .sorted(Comparator.comparing(PrintedAccessPath::name))
-        .toList();
+    List<PrintedAccessPath> required = statementBuilder.requiredPaths.stream()
+      .map(PrintedAccessPath::requiredParent)
+      .distinct()
+      .sorted(Comparator.comparing(PrintedAccessPath::name))
+      .toList();
     if (commandInformation.useInjection()) {
       // Use injection for the required fields
       required.forEach(path -> {
-        classBuilder.addField(Builders.field(path.name(), path.access().getLast().getAsCodeType())
-            .setModifiers(Modifiers.PRIVATE)
-            .addAnnotation(CodeAnnotation.INJECT)
+        classBuilder.addFields(CodeField.builder(path.access().getLast(), path.name())
+          .addModifiers(Modifiers.PRIVATE)
+          .addAnnotations(JakartaInjectTypes.INJECT)
         );
       });
     } else {
       // We are not using injection, so instead create the instances inside the create method
       required.forEach(path -> {
-        createMethod.addMethodStatements(CodeStatement.variableDeclarationFinal(
-            path.access().getLast(),
-            path.name(),
-            createInstanceConstructor((CodeType.ClassType) path.access().getLast().getAsCodeType())
+        createMethodStatements.add(Statements.variableDeclarationFinal(
+          path.access().getLast(),
+          path.name(),
+          createInstanceConstructor(path.access().getLast().toClassType())
         ));
       });
       if (!required.isEmpty()) {
-        createMethod.addMethodStatements(CodeStatement.blank());
+        createMethodStatements.add(Statements.blank());
       }
     }
 
-    createMethod.addMethodStatements(CodeStatement.returnStatement(treeExpr));
+    createMethodStatements.add(Statements.returnStmt(treeExpr));
+    createMethod.setCodeBlock(createMethodStatements.toArray(ConvertToStatement[]::new));
 
     // Add the methods to the class
-    classBuilder.addMethod(registerMethod);
-    classBuilder.addMethod(createMethod);
+    classBuilder.addMethods(registerMethod, createMethod);
 
     // If the class is not injectable, the ctor should be private
     if (!commandInformation.useInjection()) {
-      classBuilder.addMethod(Builders.method(selfType.codeClass())
-          .setJavadoc(CodeJavadoc.combineLines(
-              CodeJavadoc.text("The constructor is not accessible. There is no need for an instance"),
-              CodeJavadoc.text("to be created, as no state is stored and all methods are static."),
-              CodeJavadoc.blank(),
-              CodeJavadoc.throwsMeta(Classes.ILLEGAL_ACCESS_EXCEPTION, "always")
-          ))
-          .setThrowsExceptions(Classes.ILLEGAL_ACCESS_EXCEPTION)
-          .setMethodStatements(CodeStatement.throwStatement(
-              Builders.ctorInvocation(Classes.ILLEGAL_ACCESS_EXCEPTION).addParameter(CodeExpression.string(
-                  "This class cannot be instantiated."
-              ))
-          ))
+      classBuilder.addConstructor(builder -> builder
+        .setDocumentation(CodeDocumentation.combineLines(
+          CodeDocumentation.text("The constructor is not accessible. There is no need for an instance"),
+          CodeDocumentation.text("to be created, as no state is stored and all methods are static."),
+          CodeDocumentation.blank(),
+          CodeDocumentation.throwsMeta(JavaTypes.ILLEGAL_ACCESS_EXCEPTION, "always")
+        ))
+        .addThrowsExceptions(JavaTypes.ILLEGAL_ACCESS_EXCEPTION)
+        .setCodeBlock(JavaTypes.ILLEGAL_ACCESS_EXCEPTION
+          .ctor(Expressions.string("This class cannot be instantiated."))
+          .throwStmt()
+        )
       );
     }
 
     return classBuilder.build();
   }
 
-  private void addSourceConstructorParameters(MethodInvocationBuilder builder) {
+  private void addSourceConstructorParameters(MethodLikeInvocationBuilder<?> builder) {
     if (commandInformation.useInjection()) {
       // Don't add constructor parameters
       return;
     }
 
     if (commandInformation.constructor() instanceof SourceConstructor sourceCtor) {
-      for (SourceParameter parameter : sourceCtor.getParameters()) {
-        builder.addParameter(CodeExpression.variable(parameter.getName()));
-      }
+      builder.addParameters(sourceCtor.parameters().stream()
+        .map(p -> Expressions.variable(p.name()))
+        .toArray(CodeExpression[]::new)
+      );
     }
   }
 
-  protected AsExpression createInstanceConstructor(CodeType.ClassType classType) {
-    final MethodInvocationBuilder ctor = Builders.ctorInvocation(classType);
+  protected ConvertToExpression createInstanceConstructor(ConvertToClassType classType) {
+    final ConstructorInvocationBuilder ctor = classType.ctor();
     if (sourceType.equals(classType)) {
       addSourceConstructorParameters(ctor);
     }
@@ -183,19 +172,19 @@ public abstract class CommonClassBuilder<C extends CommandInformation> {
   /// The transmutation logic for the top-level constructor call, intended
   /// for using existing instances (i.e., a Server instance) multiple times
   /// to save on duplicate parameters in the create/register methods.
-  protected AsExpression transmuteConstructorParameter(SourceVariable parameter) {
-    return CodeExpression.variable(parameter.getName());
+  protected ConvertToExpression transmuteConstructorParameter(SourceMethodParameter parameter) {
+    return Expressions.variable(parameter.name());
   }
 
-  protected void addConstructorParametersTo(MethodBuilder builder, Predicate<SourceParameter> filter) {
+  protected void addConstructorParametersTo(MethodBuilder builder, Predicate<SourceMethodParameter> filter) {
     if (!commandInformation.useInjection() && commandInformation.constructor() instanceof SourceConstructor ctor) {
-      for (SourceTypeAnnotation typeAnnotation : ctor.getTypeAnnotations()) {
-        builder.addGeneric(CodeType.generic(typeAnnotation.getName(), typeAnnotation.getDefinitionString()));
-      }
+      // for (SourceTypeAnnotation typeAnnotation : ctor.getTypeAnnotations()) {
+      //   builder.addGeneric(CodeType.generic(typeAnnotation.getName(), typeAnnotation.getDefinitionString()));
+      // }
 
-      for (SourceParameter parameter : ctor.getParameters()) {
+      for (SourceMethodParameter parameter : ctor.parameters()) {
         if (filter.test(parameter)) {
-          builder.addParameter(CodeTypeAdapter.from(parameter.getType()), parameter.getName());
+          builder.addParameter(parameter.type(), parameter.name());
         }
       }
     }
@@ -206,8 +195,8 @@ public abstract class CommonClassBuilder<C extends CommandInformation> {
   /// @apiNote this method should always be overridden. Overriders should implement the create method logic now.
   @MustBeInvokedByOverriders
   protected MethodBuilder getCreateMethodBuilder() {
-    final MethodBuilder builder = Builders.method("create");
-    builder.setModifiers(Modifiers.PUBLIC);
+    final MethodBuilder builder = CodeMethod.builder("create");
+    builder.addModifiers(Modifiers.PUBLIC);
     if (!commandInformation.useInjection()) {
       builder.addModifiers(Modifiers.STATIC);
     }
@@ -223,8 +212,8 @@ public abstract class CommonClassBuilder<C extends CommandInformation> {
   /// @apiNote this method should always be overridden. Overrides should **not** implement any logic at this point.
   @MustBeInvokedByOverriders
   protected MethodBuilder getRegisterMethodBuilder() {
-    final MethodBuilder builder = Builders.method("register");
-    builder.setModifiers(Modifiers.PUBLIC);
+    final MethodBuilder builder = CodeMethod.builder("register");
+    builder.addModifiers(Modifiers.PUBLIC);
     if (!commandInformation.useInjection()) {
       builder.addModifiers(Modifiers.STATIC);
     }
@@ -235,70 +224,45 @@ public abstract class CommonClassBuilder<C extends CommandInformation> {
   /// source class, such as the command name, command description, and aliases.
   @MustBeInvokedByOverriders
   protected void populateStaticFields(ClassBuilder builder) {
-    builder.addField(Builders.field("NAME", CodeType.STRING)
-        .setModifiers(Modifiers.PUBLIC, Modifiers.STATIC, Modifiers.FINAL)
-        .setInitialiser(CodeExpression.string(rootNode.argument().argumentName())) // The name of the command
+    builder.addFields(CodeField.builder(JavaTypes.STRING, "NAME")
+      .addModifiers(Modifiers.PUBLIC, Modifiers.STATIC, Modifiers.FINAL)
+      .setInitializer(Expressions.string(commandInformation.name()))
     );
   }
 
   /// Sets the Javadoc for the create method.
-  protected void applyCreateMethodJavadoc(MethodBuilder createMethod, ConvertableTo<CodeMethod> registerMethod) {
-    createMethod.setJavadoc(CodeJavadoc.combineLines(
-        CodeJavadoc.text("A method for creating a Brigadier command node which denotes the declared command"),
-        CodeJavadoc.combine(
-            CodeJavadoc.text("in "),
-            CodeJavadoc.classReference(sourceType.codeClass()),
-            CodeJavadoc.text(". You can either retrieve the unregistered node with this method")),
-        CodeJavadoc.combine(
-            CodeJavadoc.text("or register it directly with "),
-            CodeJavadoc.methodReference(registerMethod, true),
-            CodeJavadoc.text("."))
+  protected void applyCreateMethodJavadoc(MethodBuilder createMethod, ConvertToMethod registerMethod) {
+    createMethod.setDocumentation(CodeDocumentation.combineLines(
+      CodeDocumentation.text("A method for creating a Brigadier command node which denotes the declared command"),
+      CodeDocumentation.combine(
+        CodeDocumentation.text("in "),
+        CodeDocumentation.classReference(sourceType),
+        CodeDocumentation.text(". You can either retrieve the unregistered node with this method")),
+      CodeDocumentation.combine(
+        CodeDocumentation.text("or register it directly with "),
+        CodeDocumentation.methodReference(registerMethod),
+        CodeDocumentation.text("."))
     ));
   }
 
   /// Sets the Javadoc for the register method. Not directly implemented due to platform-dependent differences
   /// in command registration.
-  protected abstract void applyRegisterMethodJavadoc(MethodBuilder registerMethod, ConvertableTo<CodeMethod> createMethod);
+  protected abstract void applyRegisterMethodJavadoc(MethodBuilder registerMethod, ConvertToMethod createMethod);
 
-  /// Gets the Javadoc for the class file, cannot currently be overriden.
-  private CodeJavadoc getClassJavadoc(ConvertableTo<CodeMethod> createMethod, ConvertableTo<CodeMethod> registerMethod) {
-    return CodeJavadoc.combineLines(
-        CodeJavadoc.text("A class holding the Brigadier source tree generated from"),
-        CodeJavadoc.combine(
-            CodeJavadoc.classReference(CodeClass.simple(commandInformation.sourceClass().getFullyQualifiedName())),
-            CodeJavadoc.text(" using "),
-            CodeJavadoc.url("StrokkCommands", "https://commands.strokkur.net")
-        ),
-        CodeJavadoc.blank(),
-        CodeJavadoc.author("Strokkur24 - StrokkCommands"),
-        CodeJavadoc.version(BuildConstants.VERSION),
-        CodeJavadoc.see(createMethod, "creating the command", true),
-        CodeJavadoc.see(registerMethod, "registering the command", true)
+  /// Gets the Javadoc for the class file, cannot currently be overridden.
+  private CodeDocumentation getClassJavadoc(ConvertToMethod createMethod, ConvertToMethod registerMethod) {
+    return CodeDocumentation.combineLines(
+      CodeDocumentation.text("A class holding the Brigadier source tree generated from"),
+      CodeDocumentation.combine(
+        CodeDocumentation.classReference(commandInformation.sourceClass()),
+        CodeDocumentation.text(" using "),
+        CodeDocumentation.url("StrokkCommands", "https://commands.strokkur.net")
+      ),
+      CodeDocumentation.blank(),
+      CodeDocumentation.author("Strokkur24 - StrokkCommands"),
+      CodeDocumentation.version(BuildConstants.VERSION),
+      CodeDocumentation.see(createMethod, "creating the command"),
+      CodeDocumentation.see(registerMethod, "registering the command")
     );
-  }
-
-  /// This method constructs an import-gathering visitor, gathers all imports from the class,
-  /// and finally splits them by Java and non-Java imports, sorts them, and appends them to the string builder.
-  /// This mimics IntelliJ IDEA's own import format behavior.
-  ///
-  /// @return all collected imports
-  private Set<CodeType.ClassType> gatherAndAppendImports(StringBuilder builder, CodeClass brigadierClass) {
-    final ImportGatheringVisitor importVisitor = new ImportGatheringVisitor();
-    final Set<CodeType.ClassType> imports = importVisitor.collectFilteredImports(brigadierClass);
-
-    final Map<Boolean, List<CodeType.ClassType>> split = imports.stream()
-        .collect(Collectors.partitioningBy(type -> type.codePackage().path().startsWith("java")));
-
-    split.get(false).stream().sorted()
-        .forEach(type -> builder.append("import ").append(type.fullyQualifiedName()).append(";\n"));
-
-    if (!split.get(false).isEmpty() && !split.get(true).isEmpty()) {
-      builder.append("\n");
-    }
-
-    split.get(true).stream().sorted()
-        .forEach(type -> builder.append("import ").append(type.fullyQualifiedName()).append(";\n"));
-
-    return imports;
   }
 }

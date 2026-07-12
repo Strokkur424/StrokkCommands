@@ -17,13 +17,13 @@
  */
 package net.strokkur.commands.internal.printer;
 
-import net.strokkur.commands.internal.codegen.CodeExpression;
-import net.strokkur.commands.internal.codegen.CodeType;
-import net.strokkur.commands.internal.codegen.as.AsExpression;
-import net.strokkur.commands.internal.codegen.builder.Builders;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.access.FieldAccess;
 import net.strokkur.commands.internal.util.Utils;
+import net.strokkur.jap.code.convert.ConvertToFieldMethodSource;
+import net.strokkur.jap.code.expression.Expressions;
+import net.strokkur.jap.code.type.CodeClassType;
+import net.strokkur.jap.source.classmodel.SourceField;
 
 import java.util.List;
 import java.util.Objects;
@@ -37,7 +37,7 @@ public record PrintedAccessPath(List<ExecuteAccess<?>> access) {
   }
 
   public boolean needsCreating() {
-    return !(access.getLast() instanceof FieldAccess field) || !field.getElement().isInitialized();
+    return !(access.getLast() instanceof FieldAccess(SourceField element)) || element.initializer() == null;
   }
 
   public String name() {
@@ -45,7 +45,7 @@ public record PrintedAccessPath(List<ExecuteAccess<?>> access) {
   }
 
   public String elementName() {
-    return access.getLast().getElement().getName();
+    return access.getLast().name();
   }
 
   public PrintedAccessPath parent() {
@@ -59,17 +59,17 @@ public record PrintedAccessPath(List<ExecuteAccess<?>> access) {
     return parent().requiredParent();
   }
 
-  public AsExpression getVariableAccess() {
+  public ConvertToFieldMethodSource getVariableAccess() {
     if (needsCreating()) {
       // The field with this name
-      return CodeExpression.variable(name());
+      return Expressions.variable(name());
     }
 
-    return Builders.fieldAccess(elementName()).setSource(parent().getVariableAccess());
+    return parent().getVariableAccess().chainField(elementName());
   }
 
-  public CodeType type() {
-    return access.getLast().getAsCodeType();
+  public CodeClassType type() {
+    return access.getLast().toClassType();
   }
 
   @Override

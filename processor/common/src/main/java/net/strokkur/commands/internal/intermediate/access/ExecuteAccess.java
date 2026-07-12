@@ -17,14 +17,14 @@
  */
 package net.strokkur.commands.internal.intermediate.access;
 
-import net.strokkur.jap.code.convert.ConvertToType;
+import net.strokkur.jap.code.convert.ConvertToClassType;
 import net.strokkur.jap.source.classmodel.SourceClassLike;
 import net.strokkur.jap.source.classmodel.SourceElement;
 import net.strokkur.jap.source.classmodel.SourceField;
 import net.strokkur.jap.source.classmodel.SourceRecord;
 
 public sealed interface ExecuteAccess<E extends SourceElement>
-  extends ConvertToType
+  extends ConvertToClassType
   permits FieldAccess, InstanceAccess {
 
   static FieldAccess of(SourceField field) {

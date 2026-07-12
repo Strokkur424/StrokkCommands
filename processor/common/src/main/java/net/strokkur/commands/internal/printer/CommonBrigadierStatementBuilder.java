@@ -24,16 +24,26 @@ import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
+import net.strokkur.commands.internal.intermediate.executable.UnparsedCommandParameter;
+import net.strokkur.commands.internal.intermediate.record.RecordArguments;
 import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
+import net.strokkur.commands.internal.intermediate.tree.ArgumentNode;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.Classes;
-import net.strokkur.jap.code.expression.CodeExpression;
+import net.strokkur.jap.code.convert.ConvertToExpression;
+import net.strokkur.jap.code.convert.ConvertToFieldMethodSource;
+import net.strokkur.jap.code.convert.ConvertToStatement;
+import net.strokkur.jap.code.expression.Expressions;
+import net.strokkur.jap.code.expression.builder.ConstructorInvocationBuilder;
+import net.strokkur.jap.code.expression.builder.InvocationChainBuilder;
 import net.strokkur.jap.code.expression.builder.MethodInvocationBuilder;
-import net.strokkur.jap.code.statement.CodeStatement;
+import net.strokkur.jap.code.statement.Statements;
+import net.strokkur.jap.code.util.StyleConfig;
+import net.strokkur.jap.source.classmodel.SourceParameterLike;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
+import org.jetbrains.annotations.Nullable;
 
-import javax.lang.model.element.Parameterizable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -45,18 +55,21 @@ public abstract class CommonBrigadierStatementBuilder {
   protected final Set<PrintedAccessPath> requiredPaths = new HashSet<>();
   private final Stack<ExecuteAccess<?>> accessStack = new Stack<>();
   private final Stack<String> literalStack = new Stack<>();
+  private final Stack<RecordArguments> recordStack = new Stack<>();
   private int literalPointer = 0;
 
-  protected abstract MethodInvocationBuilder literalBuilder(AsExpression name);
+  protected abstract InvocationChainBuilder literalBuilder(ConvertToExpression name);
 
-  protected abstract MethodInvocationBuilder argumentBuilder(AsExpression name, AsExpression argument);
+  protected abstract InvocationChainBuilder argumentBuilder(ConvertToExpression name, ConvertToExpression argument);
 
-  protected abstract List<AsStatement> validationStatements(Executable executable);
+  protected abstract List<? extends ConvertToExpression> validationStatements(Executable executable);
 
-  public final AsExpression build(CommandNode node, AsExpression rootNameExpression) {
-    final MethodInvocationBuilder builder = literalBuilder(rootNameExpression);
-    fill(builder, node);
-    builder.chain("build", InvokesMethod.StyleConfig.NEWLINE);
+  protected abstract ConvertToExpression convertUnparsedParameter(SourceParameterLike parameter);
+
+  public final ConvertToExpression build(CommandNode node, ConvertToExpression rootNameExpression) {
+    final InvocationChainBuilder builder = literalBuilder(rootNameExpression);
+    createTree(builder, node);
+    builder.chainMethod("build", StyleConfig.NEWLINE);
     return builder;
   }
 
@@ -68,6 +81,10 @@ public abstract class CommonBrigadierStatementBuilder {
       System.err.println("The access stack was not empty; something is leaking resources.");
       accessStack.clear();
     }
+    if (!recordStack.isEmpty()) {
+      System.err.println("The record stack was not empty; something is leaking resources.");
+      recordStack.clear();
+    }
     if (!literalStack.isEmpty()) {
       System.err.println("The literal stack was not empty; something is leaking resources.");
       literalStack.clear();
@@ -78,112 +95,121 @@ public abstract class CommonBrigadierStatementBuilder {
     }
   }
 
-  protected void fill(MethodInvocationBuilder builder, CommandNode node) {
-    scopeAccessStack(node, () -> {
-      populateNode(builder, node);
+  protected void createTree(InvocationChainBuilder builder, CommandNode node) {
+    scopeAccessStack(node, () -> scopeRecordStack(node.getAttribute(AttributeKey.RECORD_ARGUMENTS), () -> {
+      if (node instanceof ArgumentNode argumentNode) {
+        populateNode(builder, argumentNode);
+      }
       for (CommandNode child : node.children()) {
         appendNode(builder, child);
       }
-    });
+    }));
   }
 
-  protected void populateNode(MethodInvocationBuilder builder, CommandNode node) {
+  protected void populateNode(InvocationChainBuilder builder, ArgumentNode node) {
     // Requirements
     if (node.hasAttribute(AttributeKey.REQUIREMENT_PROVIDER)) {
       final RequirementProvider provider = node.getAttributeNotNull(AttributeKey.REQUIREMENT_PROVIDER);
-      builder.chain("requires", InvokesMethod.StyleConfig.NEWLINE, provider.getRequirementExpression());
+      builder.chainMethod("requires", StyleConfig.NEWLINE, provider.toRequirementLambda());
     }
 
     // Suggestions
     if (node.argument() instanceof RequiredCommandArgument req && req.hasAttribute(AttributeKey.SUGGESTION_PROVIDER)) {
       final SuggestionProvider provider = req.getAttributeNotNull(AttributeKey.SUGGESTION_PROVIDER);
-      builder.chain("suggests", InvokesMethod.StyleConfig.NEWLINE, provider.getSuggestionExpression());
+      builder.chainMethod("suggests", StyleConfig.NEWLINE, provider.toSuggestionLambda());
     }
 
     final Executable executable = node.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE);
     if (executable != null) {
       scopeLiteralAccess(() -> {
-        builder.chain("executes", InvokesMethod.StyleConfig.NEWLINE, getExecutesExpression(node, executable));
+        builder.chainMethod("executes", StyleConfig.NEWLINE, getExecutesExpression(node, executable));
       });
     }
   }
 
-  private AsExpression getExecutesExpression(CommandNode node, Executable executable) {
-    final List<AsStatement> statements = new ArrayList<>(validationStatements(executable));
+  private ConvertToExpression getExecutesExpression(CommandNode node, Executable executable) {
+    final List<ConvertToStatement> statements = new ArrayList<>(validationStatements(executable));
 
-    if (node.parent() instanceof CommandNode parent && parent.getAttribute(AttributeKey.RECORD_ARGUMENTS) instanceof Parameterizable recordArguments) {
-      // Method defined inside a record class
-      final MethodInvocationBuilder builder = Builders.ctorInvocation(CodeTypeAdapter.from(executable.executesMethod().getEnclosed()));
-      if (recordArguments.parameterArguments().size() > 2) {
-        builder.setMultilineParameters();
+    if (!recordStack.isEmpty()) {
+      RecordArguments args = recordStack.peek();
+      ConstructorInvocationBuilder builder = args.record().ctor();
+      if (args.parameters().size() > 2) {
+        builder.setStyle(StyleConfig.MULTILINE);
       }
 
-      recordArguments.parameterArguments().stream()
-          .map(CommandArgument.class::cast)
-          .forEach(arg -> builder.addParameter(getArgumentValueExpr(arg)));
+      args.parameters().stream()
+        .map((param) -> switch (param) {
+          case CommandArgument arg -> getArgumentValueExpr(arg);
+          case UnparsedCommandParameter(SourceParameterLike parameter) -> convertUnparsedParameter(parameter);
+        }).forEach(builder::addParameters);
 
-      statements.add(createCallStatement(builder.getAsExpression(), executable));
+      statements.add(createCallStatement(builder, executable));
     } else {
       final PrintedAccessPath path = new PrintedAccessPath(accessStack);
       statements.add(createCallStatement(path.getVariableAccess(), executable));
       requiredPaths.add(path);
     }
 
-    statements.add(CodeStatement.returnStatement(Builders.fieldAccess("SINGLE_SUCCESS").setStatic(Classes.COMMAND)));
-    return CodeExpression.lambda(List.of("ctx"), statements.toArray(AsStatement[]::new));
+    statements.add(Statements.returnStmt(Classes.COMMAND.chainField("SINGLE_SUCCESS")));
+    return Expressions.lambda("ctx", statements.toArray(ConvertToStatement[]::new));
   }
 
-  private AsStatement createCallStatement(AsExpression source, Executable executable) {
-    final MethodInvocationBuilder builder = Builders.methodInvocation(executable.executesMethod().getName())
-        .setInstanceSource(source);
+  private ConvertToStatement createCallStatement(ConvertToFieldMethodSource source, Executable executable) {
+    final MethodInvocationBuilder builder = source.chainMethod(executable.executesMethod().name());
 
-    executable.parameterArguments()
-        .forEach(arg -> builder.addParameter(switch (arg) {
-          case CommandArgument argument -> getArgumentValueExpr(argument);
-          case SourceParameterType(SourceVariable parameter) -> getParameterValueExpr(parameter);
-        }));
+    executable.parameters()
+      .forEach(arg -> builder.addParameters(switch (arg) {
+        case CommandArgument argument -> getArgumentValueExpr(argument);
+        case UnparsedCommandParameter(SourceParameterLike parameter) -> convertUnparsedParameter(parameter);
+      }));
 
     return builder;
   }
 
-  private AsExpression getArgumentValueExpr(CommandArgument argument) {
+  private ConvertToExpression getArgumentValueExpr(CommandArgument argument) {
     return switch (argument) {
       case RequiredCommandArgument required -> required.argumentType().retriever();
-      case LiteralCommandArgument ignored -> CodeExpression.string(nextLiteral());
-      case MultiLiteralCommandArgument ignored -> CodeExpression.string(nextLiteral());
+      case LiteralCommandArgument ignored -> Expressions.string(nextLiteral());
+      case MultiLiteralCommandArgument ignored -> Expressions.string(nextLiteral());
       default -> throw new IllegalStateException("Unexpected argument type: " + argument.getClass().getName());
     };
   }
 
-  protected abstract AsExpression getParameterValueExpr(SourceVariable parameter);
+  protected void appendNode(InvocationChainBuilder builder, CommandNode node) {
+    if (!(node instanceof ArgumentNode argNode)) {
+      for (CommandNode child : node.children()) {
+        appendNode(builder, child);
+      }
+      return;
+    }
 
-  protected void appendNode(MethodInvocationBuilder builder, CommandNode node) {
-    switch (node.argument()) {
+    switch (argNode.argument()) {
       case LiteralCommandArgument literal -> {
         scopeLiteral(literal.literal(), () -> {
-          final MethodInvocationBuilder nested = literalBuilder(CodeExpression.string(literal.literal()));
-          fill(nested, node);
-          builder.chain("then", InvokesMethod.StyleConfig.NEWLINE_BOTH, nested);
+          InvocationChainBuilder nested = literalBuilder(Expressions.string(literal.literal()));
+          createTree(nested, node);
+          builder.chainMethod("then", StyleConfig.NEWLINE_BOTH, nested);
         });
       }
       case RequiredCommandArgument required -> {
-        final MethodInvocationBuilder nested = argumentBuilder(
-            CodeExpression.string(required.argumentName()),
-            required.argumentType().initializer()
+        InvocationChainBuilder nested = argumentBuilder(
+          Expressions.string(required.argumentName()),
+          required.argumentType().initializer()
         );
-        fill(nested, node);
-        builder.chain("then", InvokesMethod.StyleConfig.NEWLINE_BOTH, nested);
+        createTree(nested, node);
+        builder.chainMethod("then", StyleConfig.NEWLINE_BOTH, nested);
       }
       case MultiLiteralCommandArgument multiLiteral -> {
         for (String literal : multiLiteral.literals()) {
           scopeLiteral(literal, () -> {
-            final MethodInvocationBuilder nested = literalBuilder(CodeExpression.string(literal));
-            fill(nested, node);
-            builder.chain("then", InvokesMethod.StyleConfig.NEWLINE_BOTH, nested);
+            InvocationChainBuilder nested = literalBuilder(Expressions.string(literal));
+            createTree(nested, node);
+            builder.chainMethod("then", StyleConfig.NEWLINE_BOTH, nested);
           });
         }
       }
-      default -> throw new IllegalArgumentException("Unknown argument class: " + node.argument().getClass().getName());
+      default ->
+        throw new IllegalArgumentException("Unknown argument class: " + argNode.argument().getClass().getName());
     }
   }
 
@@ -192,14 +218,19 @@ public abstract class CommonBrigadierStatementBuilder {
   }
 
   protected final void scopeAccessStack(CommandNode node, Runnable run) {
-    final Optional<List<ExecuteAccess<?>>> access = node.getAttributeOptional(AttributeKey.ACCESS);
-    final int numberOfPushes = access.map(List::size).orElse(0);
-    access.ifPresent(list -> list.forEach(accessStack::push));
-
+    final Optional<ExecuteAccess<?>> access = node.getAttributeOptional(AttributeKey.ACCESS);
+    access.ifPresent(accessStack::push);
     run.run();
+    access.ifPresent(ignored -> accessStack.pop());
+  }
 
-    for (int i = 0; i < numberOfPushes; i++) {
-      accessStack.pop();
+  protected final void scopeRecordStack(@Nullable RecordArguments record, Runnable run) {
+    if (record != null) {
+      recordStack.push(record);
+      run.run();
+      recordStack.pop();
+    } else {
+      run.run();
     }
   }
 

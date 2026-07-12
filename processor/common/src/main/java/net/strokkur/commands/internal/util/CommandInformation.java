@@ -23,6 +23,8 @@ import org.jspecify.annotations.Nullable;
 
 public interface CommandInformation {
 
+  String name();
+
   @Nullable
   SourceConstructor constructor();
 
