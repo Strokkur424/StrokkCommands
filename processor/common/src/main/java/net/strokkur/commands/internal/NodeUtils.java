@@ -19,15 +19,11 @@ package net.strokkur.commands.internal;
 
 import net.strokkur.commands.Literal;
 import net.strokkur.commands.UnsetExecutorWrapper;
-import net.strokkur.commands.internal.abstraction.AnnotationsHolder;
-import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentType;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.MultiLiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
-import net.strokkur.commands.internal.arguments.RequiredCommandArgumentImpl;
 import net.strokkur.commands.internal.exceptions.ConversionException;
 import net.strokkur.commands.internal.intermediate.attributes.Attributable;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
@@ -38,7 +34,10 @@ import net.strokkur.commands.internal.intermediate.registrable.RegistrableRegist
 import net.strokkur.commands.internal.intermediate.registrable.RequirementRegistry;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionsRegistry;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
-import net.strokkur.commands.internal.util.MessagerWrapper;
+import net.strokkur.jap.source.annotation.AnnotationsHolder;
+import net.strokkur.jap.source.annotation.SourceAnnotation;
+import net.strokkur.jap.source.classmodel.SourceParameterLike;
+import net.strokkur.jap.source.util.MessagerWrapper;
 
 import java.util.Optional;
 import java.util.Set;
@@ -52,7 +51,7 @@ public record NodeUtils(
     ExecutorWrapperRegistry executorWrapperRegistry
 ) implements ForwardingMessagerWrapper {
 
-  public void applyExecutorTransform(Attributable node, AnnotationsHolder element) {
+  public void applyExecutorTransform(AnnotationsHolder element, Attributable node) {
     if (element.hasAnnotationInherited(UnsetExecutorWrapper.class)) {
       node.setAttribute(AttributeKey.EXECUTOR_WRAPPER_UNSET, true);
       return;
@@ -67,22 +66,22 @@ public record NodeUtils(
     );
   }
 
-  public CommandParameter parseParameter(SourceVariable parameter) {
-    debug("| Parsing parameter: " + parameter.getName());
+  public CommandParameter parseParameter(SourceParameterLike parameter) {
+    debug("| Parsing parameter: " + parameter.name());
 
     if (!platformUtils().mayParameterBeArgument(parameter)) {
       return new UnparsedCommandParameter(parameter);
     }
 
-    final Literal literal = parameter.getAnnotation(Literal.class);
-    if (literal != null) {
-      final String[] declared = literal.value();
+    if (parameter.hasAnnotationInherited(Literal.class)) {
+      Literal literal = parameter.firstAnnotationByType(Literal.class).value(Literal.class);
+      String[] declared = literal.value();
       if (declared.length == 0) {
-        return LiteralCommandArgument.literal(parameter.getName(), parameter);
+        return LiteralCommandArgument.literal(parameter.name());
       } else if (declared.length == 1) {
-        return LiteralCommandArgument.literal(declared[0], parameter);
+        return LiteralCommandArgument.literal(declared[0]);
       } else {
-        return MultiLiteralCommandArgument.multiLiteral(Set.of(declared), parameter);
+        return MultiLiteralCommandArgument.multiLiteral(Set.of(declared));
       }
     }
 
@@ -94,7 +93,7 @@ public record NodeUtils(
     }
 
     debug("  | Successfully found Brigadier type: {}", argumentType);
-    final RequiredCommandArgument commandArgument = new RequiredCommandArgumentImpl(argumentType, parameter.getName(), parameter);
+    final RequiredCommandArgument commandArgument = RequiredCommandArgument.of(argumentType, parameter.name());
     applyRegistrableProvider(commandArgument, parameter, this.suggestionsRegistry, AttributeKey.SUGGESTION_PROVIDER, "suggestion");
     return commandArgument;
   }
@@ -107,8 +106,8 @@ public record NodeUtils(
       String name
   ) {
     boolean found = false;
-    for (SourceClass annotationType : element.getAllAnnotations()) {
-      final Optional<T> provider = registry.getProvider(annotationType);
+    for (SourceAnnotation annotation : element.annotations()) {
+      final Optional<T> provider = registry.getProvider(annotation.source());
       if (provider.isPresent()) {
         if (found) {
           this.infoSource("Multiple %s providers has been declared", element, name);

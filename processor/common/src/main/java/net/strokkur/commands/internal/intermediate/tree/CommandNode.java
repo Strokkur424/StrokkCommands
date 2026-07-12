@@ -18,14 +18,10 @@
 package net.strokkur.commands.internal.intermediate.tree;
 
 import net.strokkur.commands.internal.arguments.CommandArgument;
-import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
-import net.strokkur.commands.internal.exceptions.MismatchedArgumentTypeException;
 import net.strokkur.commands.internal.intermediate.attributes.Attributable;
-import net.strokkur.commands.internal.util.IOExceptionIgnoringConsumer;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.UnmodifiableView;
-import org.jspecify.annotations.Nullable;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
@@ -33,16 +29,16 @@ import java.util.function.Consumer;
 /// Represents a single node in a command tree.
 public interface CommandNode extends Attributable {
 
-  static CommandNode createRoot(LiteralCommandArgument name) {
-    return new CommandNodeImpl(null, name);
+  static CommandNode createArgument(CommandArgument arg) {
+    return new ArgumentNode(arg);
   }
 
-  /// {@return the argument held by this node}
-  CommandArgument argument();
+  static CommandNode createEmpty() {
+    return new EmptyNode();
+  }
 
-  /// {@return the parent of this node. May be `null` if this node is a root node}
-  @Nullable
-  CommandNode parent();
+  /// {@return the name of this node}
+  String name();
 
   /// {@return the children of this node}
   @UnmodifiableView
@@ -65,38 +61,40 @@ public interface CommandNode extends Attributable {
     action.accept(this);
   }
 
-  /// Executes the action for each node in the tree, starting with this node.
-  default void forEachIo(IOExceptionIgnoringConsumer<CommandNode> action) throws IOException {
-    action.accept(this);
-    for (CommandNode child : this.children()) {
-      child.forEachIo(action);
-    }
-  }
-
-  /// Executes the action for each node in the tree, starting with the
-  /// nodes deepest in the tree.
-  default void forEachDepthFirstIo(IOExceptionIgnoringConsumer<CommandNode> action) throws IOException {
-    for (CommandNode child : this.children()) {
-      child.forEachIo(action);
-    }
-    action.accept(this);
-  }
+  /// Insert a node after this node.
+  @Contract("_ -> param1")
+  CommandNode addChild(CommandNode node);
 
   /// Insert an argument after this node.
   ///
-  /// @return the node which represents this argument
-  CommandNode addChild(CommandArgument argument) throws MismatchedArgumentTypeException;
+  /// @return the node that represents this argument
+  default CommandNode addArgument(CommandArgument argument) {
+    CommandNode node = new ArgumentNode(argument);
+    addChild(node);
+    return node;
+  }
 
   /// Insert multiple arguments linearly after each other.
   ///
   /// @return the last node
-  default CommandNode addChildren(List<CommandArgument> arguments) throws MismatchedArgumentTypeException {
+  default CommandNode addArguments(List<? extends CommandArgument> arguments) {
+    if (arguments.isEmpty()) {
+      // the returned node is sometimes used for attributes which should be different
+      // to the parent node, hence if no arguments are present to get a new node from,
+      // insert an empty one.
+      return addEmpty();
+    }
+
     CommandNode node = this;
     for (CommandArgument argument : arguments) {
-      node = node.addChild(argument);
+      node = node.addArgument(argument);
     }
     return node;
   }
 
-  String toString(int indent);
+  default CommandNode addEmpty() {
+    CommandNode node = new EmptyNode();
+    addChild(node);
+    return node;
+  }
 }

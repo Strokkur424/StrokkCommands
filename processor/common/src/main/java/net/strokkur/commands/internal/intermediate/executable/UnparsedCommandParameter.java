@@ -17,8 +17,8 @@
  */
 package net.strokkur.commands.internal.intermediate.executable;
 
-import net.strokkur.jap.source.classmodel.SourceMethodParameter;
+import net.strokkur.jap.source.classmodel.SourceParameterLike;
 
 /// A catch-all [CommandParameter] that is not a proper command argument.
-public record UnparsedCommandParameter(SourceMethodParameter parameter) implements CommandParameter {
+public record UnparsedCommandParameter(SourceParameterLike parameter) implements CommandParameter {
 }

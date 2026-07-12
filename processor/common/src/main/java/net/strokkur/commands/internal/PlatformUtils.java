@@ -17,12 +17,12 @@
  */
 package net.strokkur.commands.internal;
 
-import net.strokkur.commands.internal.abstraction.AnnotationsHolder;
-import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.exceptions.UnknownSenderException;
 import net.strokkur.commands.internal.intermediate.executable.CommandParameter;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
+import net.strokkur.jap.source.annotation.AnnotationsHolder;
+import net.strokkur.jap.source.classmodel.SourceParameterLike;
 
 import java.util.List;
 
@@ -31,7 +31,7 @@ public interface PlatformUtils {
     // noop
   }
 
-  default boolean mayParameterBeArgument(SourceVariable param) {
+  default boolean mayParameterBeArgument(SourceParameterLike param) {
     return true;
   }
 
@@ -41,7 +41,7 @@ public interface PlatformUtils {
 
   String platformType();
 
-  default void populateNode(CommandNode node, AnnotationsHolder element) {
+  default void populateNode(AnnotationsHolder element, CommandNode node) {
     // noop
   }
 }

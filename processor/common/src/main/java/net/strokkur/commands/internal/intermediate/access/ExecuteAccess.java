@@ -18,7 +18,7 @@
 package net.strokkur.commands.internal.intermediate.access;
 
 import net.strokkur.jap.code.convert.ConvertToType;
-import net.strokkur.jap.source.classmodel.SourceClass;
+import net.strokkur.jap.source.classmodel.SourceClassLike;
 import net.strokkur.jap.source.classmodel.SourceElement;
 import net.strokkur.jap.source.classmodel.SourceField;
 import net.strokkur.jap.source.classmodel.SourceRecord;
@@ -31,7 +31,7 @@ public sealed interface ExecuteAccess<E extends SourceElement>
     return new FieldAccess(field);
   }
 
-  static InstanceAccess of(SourceClass type) {
+  static InstanceAccess of(SourceClassLike type) {
     return new InstanceAccess(type);
   }
 

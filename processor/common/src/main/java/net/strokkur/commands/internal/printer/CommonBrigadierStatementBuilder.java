@@ -192,7 +192,7 @@ public abstract class CommonBrigadierStatementBuilder {
   }
 
   protected final void scopeAccessStack(CommandNode node, Runnable run) {
-    final Optional<List<ExecuteAccess<?>>> access = node.getAttributeOptional(AttributeKey.ACCESS_STACK);
+    final Optional<List<ExecuteAccess<?>>> access = node.getAttributeOptional(AttributeKey.ACCESS);
     final int numberOfPushes = access.map(List::size).orElse(0);
     access.ifPresent(list -> list.forEach(accessStack::push));
 

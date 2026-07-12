@@ -19,7 +19,7 @@ package net.strokkur.commands.internal.exceptions;
 
 import net.strokkur.jap.code.convert.ConvertToType;
 
-public class IllegalReturnTypeException extends Exception {
+public class IllegalReturnTypeException extends RuntimeException {
   public IllegalReturnTypeException(ConvertToType illegalType) {
     super("Illegal return type: " + illegalType.toType().fullyQualifiedName());
   }

@@ -17,7 +17,7 @@
  */
 package net.strokkur.commands.internal.exceptions;
 
-public class UnknownSenderException extends Exception {
+public class UnknownSenderException extends RuntimeException {
   public UnknownSenderException(String message) {
     super(message);
   }

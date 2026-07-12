@@ -18,11 +18,11 @@
 package net.strokkur.commands.internal.intermediate.access;
 
 import net.strokkur.jap.code.type.CodeType;
-import net.strokkur.jap.source.classmodel.SourceClass;
+import net.strokkur.jap.source.classmodel.SourceClassLike;
 
 public record InstanceAccess(
-  SourceClass element
-) implements ExecuteAccess<SourceClass> {
+  SourceClassLike element
+) implements ExecuteAccess<SourceClassLike> {
   @Override
   public CodeType toType() {
     return element.toType();

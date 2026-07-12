@@ -24,23 +24,32 @@ import net.strokkur.jap.source.classmodel.SourceMethod;
 import net.strokkur.jap.source.type.SourcePrimitiveType;
 import net.strokkur.jap.source.type.SourceType;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 public class Executable implements Parameterized, AttributableHelper {
   protected final SourceClassLike sourceClass;
   private final SourceMethod executesMethod;
   private final List<CommandParameter> parameters;
-  private final Map<String, Object> attributeMap = new TreeMap<>();
+  private final Map<String, Object> attributeMap;
   private final ReturnType returnType;
 
   public Executable(SourceClassLike sourceClass, SourceMethod executesMethod, List<CommandParameter> parameters)
     throws IllegalReturnTypeException {
     this.sourceClass = sourceClass;
     this.executesMethod = executesMethod;
-    this.parameters = parameters;
+    this.parameters = List.copyOf(parameters);
+    this.attributeMap = new HashMap<>();
     this.returnType = ReturnType.getType(executesMethod.returnType());
+  }
+
+  public Executable(Executable from) {
+    this.sourceClass = from.sourceClass;
+    this.executesMethod = from.executesMethod;
+    this.parameters = List.copyOf(from.parameters);
+    this.attributeMap = new HashMap<>(from.attributeMap);
+    this.returnType = from.returnType;
   }
 
   public SourceMethod executesMethod() {

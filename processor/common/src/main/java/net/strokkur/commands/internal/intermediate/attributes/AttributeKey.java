@@ -18,9 +18,9 @@
 package net.strokkur.commands.internal.intermediate.attributes;
 
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
+import net.strokkur.commands.internal.intermediate.executable.CommandParameter;
 import net.strokkur.commands.internal.intermediate.executable.DefaultExecutable;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
-import net.strokkur.commands.internal.intermediate.executable.Parameterized;
 import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperProvider;
 import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
@@ -31,10 +31,10 @@ import java.util.List;
 import java.util.function.Supplier;
 
 public interface AttributeKey<T> {
-  AttributeKey<Parameterized> RECORD_ARGUMENTS = create("record_arguments", null);
+  AttributeKey<List<CommandParameter>> RECORD_ARGUMENTS = create("record_arguments", null);
   AttributeKey<Executable> EXECUTABLE = create("executable", null);
   AttributeKey<DefaultExecutable> DEFAULT_EXECUTABLE = create("default_executable", null);
-  AttributeKey<List<ExecuteAccess<?>>> ACCESS_STACK = create("access_stack", null);
+  AttributeKey<ExecuteAccess<?>> ACCESS = create("access", null);
 
   AttributeKey<ExecutorWrapperProvider> EXECUTOR_WRAPPER = create("executor_wrapper", null);
   AttributeKey<Boolean> EXECUTOR_WRAPPER_UNSET = create("executor_wrapper_unset", false);

@@ -23,7 +23,7 @@ import java.util.Set;
 
 public record MultiLiteralCommandArgument(@Unmodifiable Set<String> literals) implements CommandArgument {
 
-  static MultiLiteralCommandArgument multiLiteral(Set<String> literals) {
+  public static MultiLiteralCommandArgument multiLiteral(Set<String> literals) {
     return new MultiLiteralCommandArgument(Set.copyOf(literals));
   }
 

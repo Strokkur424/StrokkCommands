@@ -17,7 +17,9 @@
  */
 package net.strokkur.commands.internal.util;
 
-import javax.lang.model.element.Element;
+import net.strokkur.jap.source.classmodel.SourceElement;
+import net.strokkur.jap.source.util.MessagerWrapper;
+
 import javax.tools.Diagnostic;
 
 public interface ForwardingMessagerWrapper extends MessagerWrapper {
@@ -39,7 +41,7 @@ public interface ForwardingMessagerWrapper extends MessagerWrapper {
    * {@inheritDoc}
    */
   @Override
-  default void printElement(Diagnostic.Kind kind, String format, Element element, Object... arguments) {
-    delegateMessager().printElement(kind, format, element, arguments);
+  default void printSource(Diagnostic.Kind kind, String s, SourceElement sourceElement, Object... objects) {
+    delegateMessager().printSource(kind, s, sourceElement, objects);
   }
 }

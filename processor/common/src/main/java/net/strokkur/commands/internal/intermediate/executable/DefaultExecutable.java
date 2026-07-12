@@ -39,6 +39,10 @@ public class DefaultExecutable extends Executable implements AttributableHelper 
     super(sourceClass, executesMethod, parameters);
   }
 
+  public DefaultExecutable(Executable executable) {
+    super(executable);
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(

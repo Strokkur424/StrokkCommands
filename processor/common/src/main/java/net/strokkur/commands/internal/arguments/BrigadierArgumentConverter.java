@@ -26,7 +26,6 @@ import net.strokkur.commands.arguments.StringArgType;
 import net.strokkur.commands.internal.exceptions.ConversionException;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
-import net.strokkur.commands.internal.util.MessagerWrapper;
 import net.strokkur.jap.code.convert.ConvertToExpression;
 import net.strokkur.jap.code.convert.ConvertToType;
 import net.strokkur.jap.code.expression.Expressions;
@@ -35,7 +34,8 @@ import net.strokkur.jap.code.type.CodePrimitiveType;
 import net.strokkur.jap.code.type.CodeType;
 import net.strokkur.jap.code.type.preset.JavaTypes;
 import net.strokkur.jap.source.annotation.SourceAnnotation;
-import net.strokkur.jap.source.classmodel.SourceMethodParameter;
+import net.strokkur.jap.source.classmodel.SourceParameterLike;
+import net.strokkur.jap.source.util.MessagerWrapper;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
@@ -47,7 +47,7 @@ import java.util.function.Function;
 
 public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
   private final MessagerWrapper messagerWrapper;
-  protected final Map<CodeType, BiFunction<SourceMethodParameter, String, BrigadierArgumentType>> conversionMap;
+  protected final Map<CodeType, BiFunction<SourceParameterLike, String, BrigadierArgumentType>> conversionMap;
 
   public BrigadierArgumentConverter(MessagerWrapper messagerWrapper) {
     this.messagerWrapper = messagerWrapper;
@@ -58,7 +58,7 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
   protected @Nullable BrigadierArgumentType handleCustomArgumentAnnotations(
     String argumentName,
     CodeType type,
-    SourceMethodParameter parameter
+    SourceParameterLike parameter
   ) throws ConversionException {
     return null;
   }
@@ -121,7 +121,7 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
     putFor((p, name) -> annotatedOr(p, FloatArg.class,
       minMaxValued(
         Classes.FLOAT_ARGUMENT_TYPE.chainMethod("floatArg"),
-        JavaTypes.FLOAT.chainField("MAX_VALUE").unaryMinus()
+        JavaTypes.FLOAT.chainField("MAX_VALUE").negate()
       ),
       Classes.FLOAT_ARGUMENT_TYPE.chainMethod("floatArg"),
       Classes.FLOAT_ARGUMENT_TYPE.chainMethod("getFloat")
@@ -132,7 +132,7 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
     putFor((p, name) -> annotatedOr(p, DoubleArg.class,
       minMaxValued(
         Classes.DOUBLE_ARGUMENT_TYPE.chainMethod("doubleArg"),
-        JavaTypes.DOUBLE.chainField("MAX_VALUE").unaryMinus()
+        JavaTypes.DOUBLE.chainField("MAX_VALUE").negate()
       ),
       Classes.DOUBLE_ARGUMENT_TYPE.chainMethod("doubleArg"),
       Classes.DOUBLE_ARGUMENT_TYPE.chainMethod("getDouble")
@@ -149,14 +149,14 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
     ), JavaTypes.STRING);
   }
 
-  protected final void putFor(BiFunction<SourceMethodParameter, String, BrigadierArgumentType> value, ConvertToType... types) {
+  protected final void putFor(BiFunction<SourceParameterLike, String, BrigadierArgumentType> value, ConvertToType... types) {
     for (ConvertToType key : types) {
       conversionMap.put(key.toType(), value);
     }
   }
 
   protected final <T extends Annotation> BrigadierArgumentType annotatedOr(
-    SourceMethodParameter variable,
+    SourceParameterLike variable,
     Class<T> annotation,
     Function<SourceAnnotation, ConvertToExpression> withAnnotation,
     ConvertToExpression withoutAnnotation,
@@ -170,7 +170,7 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
     return BrigadierArgumentType.of(withoutAnnotation, retrieval);
   }
 
-  public final BrigadierArgumentType getAsArgumentType(SourceMethodParameter parameter) throws ConversionException {
+  public final BrigadierArgumentType getAsArgumentType(SourceParameterLike parameter) throws ConversionException {
     final String argumentName = parameter.name();
     final CodeType type = parameter.type().toType();
 
