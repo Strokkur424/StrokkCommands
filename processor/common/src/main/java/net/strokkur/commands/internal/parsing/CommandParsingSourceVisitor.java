@@ -1,3 +1,20 @@
+/*
+ * StrokkCommands - A super simple annotation based zero-shade Paper command API library.
+ * Copyright (C) 2025 Strokkur24
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <https://www.gnu.org/licenses/>.
+ */
 package net.strokkur.commands.internal.parsing;
 
 import net.strokkur.commands.Command;
@@ -76,16 +93,16 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
 
   @Override
   public CommandNode visitMethod(SourceMethod sourceMethod, Void unused) {
-    List<CommandParameter> arguments = sourceMethod.parameters().stream()
+    final List<CommandParameter> arguments = sourceMethod.parameters().stream()
       .map(utils::parseParameter)
       .toList();
-    List<CommandArgument> commandArguments = arguments.stream()
+    final List<CommandArgument> commandArguments = arguments.stream()
       .filter(CommandArgument.class::isInstance)
       .map(CommandArgument.class::cast)
       .toList();
 
-    CommandNode rootNode = CommandNode.createEmpty();
-    Executable executable = new Executable(sourceMethod.enclosed(), sourceMethod, arguments);
+    final CommandNode rootNode = CommandNode.createEmpty();
+    final Executable executable = new Executable(sourceMethod.enclosed(), sourceMethod, arguments);
 
     applyExecutesLogic(
       sourceMethod, rootNode,
@@ -110,17 +127,17 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
 
   @Override
   public CommandNode visitField(SourceField sourceField, Void unused) {
-    CommandNode nestedNode = switch (sourceField.type()) {
+    final CommandNode nestedNode = switch (sourceField.type()) {
       case SourceClass sourceClass -> sourceClass.accept(this, unused);
       case SourceRecord record -> record.accept(this, unused);
       default -> throw new IllegalSubcommandFieldType(sourceField.type());
     };
 
-    CommandNode rootNode = CommandNode.createEmpty();
+    final CommandNode rootNode = CommandNode.createEmpty();
     forEachPathAnnotation(
       sourceField, rootNode,
       Subcommand.class, Subcommand::value,
-      (node) -> node.addChild(nestedNode)
+      node -> node.addChild(nestedNode)
     );
 
     // Apply attribute modifiers
@@ -142,7 +159,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
   ) {
     // Parse nested elements first, so that the same CommandNode instances can be reused inside the
     // final node consumers.
-    List<CommandNode> nestedNodes = new ArrayList<>();
+    final List<CommandNode> nestedNodes = new ArrayList<>();
     nestedNodes.addAll(sourceClass.methods().stream()
       .filter(method -> method.hasAnnotationInherited(Executes.class) || method.hasAnnotationInherited(DefaultExecutes.class))
       .map(method -> method.accept(this, unused))
@@ -156,11 +173,11 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
       .map(nested -> nested.accept(this, unused))
       .toList());
 
-    CommandNode rootNode = CommandNode.createEmpty();
+    final CommandNode rootNode = CommandNode.createEmpty();
     forEachPathAnnotation(
       sourceClass, rootNode,
       annotationClass, toPath,
-      (node) -> nestedNodes.forEach(node::addChild)
+      node -> nestedNodes.forEach(node::addChild)
     );
 
     // Apply some attributes to the root node before returning it.
@@ -178,7 +195,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
   ) {
     // Parse nested elements first, so that the same CommandNode instances can be reused inside the
     // final node consumers.
-    List<CommandNode> nestedNodes = new ArrayList<>();
+    final List<CommandNode> nestedNodes = new ArrayList<>();
     nestedNodes.addAll(record.methods().stream()
       .filter(method -> method.hasAnnotationInherited(Executes.class) || method.hasAnnotationInherited(DefaultExecutes.class))
       .map(method -> method.accept(this, unused))
@@ -188,12 +205,12 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
       .map(nested -> nested.accept(this, unused))
       .toList());
 
-    CommandNode rootNode = CommandNode.createEmpty();
-    List<CommandParameter> parsedComponents = record.components().stream()
+    final CommandNode rootNode = CommandNode.createEmpty();
+    final List<CommandParameter> parsedComponents = record.components().stream()
       .map(utils::parseParameter)
       .toList();
 
-    CommandNode postArgumentsNode = rootNode.addArguments(parsedComponents.stream()
+    final CommandNode postArgumentsNode = rootNode.addArguments(parsedComponents.stream()
       .filter(CommandArgument.class::isInstance)
       .map(CommandArgument.class::cast)
       .toList());
@@ -201,7 +218,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
     forEachPathAnnotation(
       record, postArgumentsNode,
       annotationClass, toPath,
-      (node) -> nestedNodes.forEach(node::addChild)
+      node -> nestedNodes.forEach(node::addChild)
     );
 
     // Apply some attributes to the root node before returning it.
@@ -223,8 +240,8 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
     forEachPathAnnotation(
       sourceMethod, root,
       annotationClass, toPath,
-      (node) -> {
-        CommandNode endNode = node.addArguments(commandArguments);
+      node -> {
+        final CommandNode endNode = node.addArguments(commandArguments);
         endNode.setAttribute(key, executable);
         utils.platformUtils().populateExecutesNode(executable, endNode, arguments);
       }
@@ -243,7 +260,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
 
     holder.annotationsInherited(annotationClass).stream()
       .map(a -> {
-        A anno = a.value(annotationClass);
+        final A anno = a.value(annotationClass);
         return toPath.apply(anno);
       })
       .distinct()
@@ -251,13 +268,13 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
         .map(LiteralCommandArgument::new)
         .toList())
       .forEach(args -> {
-        CommandNode endNode = root.addArguments(args);
+        final CommandNode endNode = root.addArguments(args);
         endNodeConsumer.accept(endNode);
       });
   }
 
   private void applyRequirements(AnnotationsHolder holder, CommandNode node) {
-    List<RequirementProvider> providers = holder.annotations().stream()
+    final List<RequirementProvider> providers = holder.annotations().stream()
       .flatMap(anno -> utils.requirementRegistry().getProvider(anno.source()).stream())
       .distinct()
       .toList();

@@ -80,7 +80,8 @@ final class PaperBrigadierArgumentConverter extends BrigadierArgumentConverter {
   }
 
   @Override
-  protected @Nullable BrigadierArgumentType handleCustomArgumentAnnotations(String argumentName, String type, SourceVariable variable)
+  @Nullable
+  private BrigadierArgumentType handleCustomArgumentAnnotations(String argumentName, String type, SourceVariable variable)
       throws ConversionException {
     final CustomArg customArg = variable.getAnnotation(CustomArg.class);
     if (customArg != null) {

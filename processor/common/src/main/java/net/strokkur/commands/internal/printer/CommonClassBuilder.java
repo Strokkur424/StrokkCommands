@@ -74,10 +74,10 @@ public abstract class CommonClassBuilder<C extends CommandInformation> {
   /// Creates the actual class, which will be printed to a file.
   public CodeClass createClass() {
     // Create skeletons for create and register methods for use in Javadocs.
-    MethodBuilder createMethod = getCreateMethodBuilder();
-    MethodBuilder registerMethod = getRegisterMethodBuilder();
+    final MethodBuilder createMethod = getCreateMethodBuilder();
+    final MethodBuilder registerMethod = getRegisterMethodBuilder();
 
-    List<ConvertToStatement> createMethodStatements = new ArrayList<>();
+    final List<ConvertToStatement> createMethodStatements = new ArrayList<>();
 
     applyCreateMethodJavadoc(createMethod, registerMethod);
     applyRegisterMethodJavadoc(registerMethod, createMethod);
@@ -92,9 +92,9 @@ public abstract class CommonClassBuilder<C extends CommandInformation> {
 
     // Run the brigadier tree builder so we can use the statements
     statementBuilder.reset();
-    ConvertToExpression treeExpr = statementBuilder.build(rootNode, Expressions.variable("NAME"));
+    final ConvertToExpression treeExpr = statementBuilder.build(rootNode, Expressions.variable("NAME"));
 
-    List<PrintedAccessPath> required = statementBuilder.requiredPaths.stream()
+    final List<PrintedAccessPath> required = statementBuilder.requiredPaths.stream()
       .map(PrintedAccessPath::requiredParent)
       .distinct()
       .sorted(Comparator.comparing(PrintedAccessPath::name))

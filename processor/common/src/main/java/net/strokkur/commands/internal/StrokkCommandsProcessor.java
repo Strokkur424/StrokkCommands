@@ -92,7 +92,7 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
   protected abstract C getCommandInformation(SourceClassLike sourceClass);
 
   protected AbstractDocumentationRenderer createDocumentationRenderer(CodePackage pkg, Set<? extends ConvertToClassType> imports) {
-    AbstractDocumentationRenderer.Context ctx = createContext(pkg, imports);
+    final AbstractDocumentationRenderer.Context ctx = createContext(pkg, imports);
     if (isJava25()) {
       return new MarkdownJavadocRenderer(ctx);
     }
@@ -112,20 +112,20 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
   @Override
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     init();
-    SourceMapUtil sourceMap = new SourceMapUtil(this);
+    final SourceMapUtil sourceMap = new SourceMapUtil(this);
 
-    MessagerWrapper messagerWrapper = MessagerWrapper.wrap(super.processingEnv.getMessager());
-    SuggestionsRegistry suggestionsRegistry = createAndFillRegistry(CustomSuggestion.class, SuggestionsRegistry::new, roundEnv, messagerWrapper);
-    RequirementRegistry requirementRegistry = createAndFillRegistry(CustomRequirement.class, RequirementRegistry::new, roundEnv, messagerWrapper);
-    ExecutorWrapperRegistry executorWrapperRegistry = createAndFillRegistry(CustomExecutorWrapper.class, ExecutorWrapperRegistry::new, roundEnv, messagerWrapper);
+    final MessagerWrapper messagerWrapper = MessagerWrapper.wrap(super.processingEnv.getMessager());
+    final SuggestionsRegistry suggestionsRegistry = createAndFillRegistry(CustomSuggestion.class, SuggestionsRegistry::new, roundEnv, messagerWrapper);
+    final RequirementRegistry requirementRegistry = createAndFillRegistry(CustomRequirement.class, RequirementRegistry::new, roundEnv, messagerWrapper);
+    final ExecutorWrapperRegistry executorWrapperRegistry = createAndFillRegistry(CustomExecutorWrapper.class, ExecutorWrapperRegistry::new, roundEnv, messagerWrapper);
 
-    NodeUtils nodeUtils = new NodeUtils(getPlatformUtils(), messagerWrapper, getConverter(messagerWrapper), suggestionsRegistry, requirementRegistry, executorWrapperRegistry);
-    CommandParsingSourceVisitor parser = new CommandParsingSourceVisitor(messagerWrapper, nodeUtils);
-    CommonTreePostProcessor treePostProcessor = createPostProcessor(messagerWrapper);
+    final NodeUtils nodeUtils = new NodeUtils(getPlatformUtils(), messagerWrapper, getConverter(messagerWrapper), suggestionsRegistry, requirementRegistry, executorWrapperRegistry);
+    final CommandParsingSourceVisitor parser = new CommandParsingSourceVisitor(messagerWrapper, nodeUtils);
+    final CommonTreePostProcessor treePostProcessor = createPostProcessor(messagerWrapper);
 
     CodeClassType debugOnly = null;
-    Optional<? extends Element> debugAnnotation = roundEnv.getElementsAnnotatedWith(StrokkCommandsDebug.class).stream().findFirst();
 
+    final Optional<? extends Element> debugAnnotation = roundEnv.getElementsAnnotatedWith(StrokkCommandsDebug.class).stream().findFirst();
     if (debugAnnotation.isPresent()) {
       System.setProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY, "true");
 
@@ -147,7 +147,7 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
         continue;
       }
 
-      SourceClassLike sourceClass = sourceMap.parseClassElement(typeElement);
+      final SourceClassLike sourceClass = sourceMap.parseClassElement(typeElement);
       if (sourceClass.enclosingClass() != null) {
         messagerWrapper.warnSource(
           "This class is annotated with @%s, but is nested. This is unsupported behavior. If this " +
@@ -211,10 +211,10 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
       messagerWrapper.debug("\nCommand Tree:\n{}\n ", commandTree.toString());
     }
 
-    CodeGenUtil codeGen = new CodeGenUtil(this);
+    final CodeGenUtil codeGen = new CodeGenUtil(this);
     try {
-      CommonClassBuilder<C> printer = createBuilder(commandTree, commandInformation);
-      codeGen.printJavaFile(printer.createClass());
+      final CommonClassBuilder<C> builder = createBuilder(commandTree, commandInformation);
+      codeGen.printJavaFile(builder.createClass());
     } catch (Exception ex) {
       messagerWrapper.errorSource("A fatal exception occurred whilst printing source file: {}", sourceClass, ex.getMessage());
       ex.printStackTrace();
@@ -227,8 +227,8 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
     RoundEnvironment roundEnv,
     MessagerWrapper messager
   ) {
-    SourceMapUtil sourceMap = new SourceMapUtil(this);
-    T registry = ctor.apply(getPlatformUtils().platformType());
+    final SourceMapUtil sourceMap = new SourceMapUtil(this);
+    final T registry = ctor.apply(getPlatformUtils().platformType());
 
     for (Element element : roundEnv.getElementsAnnotatedWith(annotationClass)) {
       try {
@@ -240,7 +240,7 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
           continue;
         }
 
-        SourceAnnotationInterface annotationInterface = (SourceAnnotationInterface) sourceMap.parseClassElement(typeElement);
+        final SourceAnnotationInterface annotationInterface = (SourceAnnotationInterface) sourceMap.parseClassElement(typeElement);
         for (Element annotatedElement : roundEnv.getElementsAnnotatedWith(typeElement)) {
           if (registry.tryRegisterProvider(
             messager,

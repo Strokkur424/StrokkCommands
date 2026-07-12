@@ -42,7 +42,7 @@ import net.strokkur.jap.code.statement.Statements;
 import net.strokkur.jap.code.util.StyleConfig;
 import net.strokkur.jap.source.classmodel.SourceParameterLike;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -131,14 +131,14 @@ public abstract class CommonBrigadierStatementBuilder {
     final List<ConvertToStatement> statements = new ArrayList<>(validationStatements(executable));
 
     if (!recordStack.isEmpty()) {
-      RecordArguments args = recordStack.peek();
-      ConstructorInvocationBuilder builder = args.record().ctor();
+      final RecordArguments args = recordStack.peek();
+      final ConstructorInvocationBuilder builder = args.record().ctor();
       if (args.parameters().size() > 2) {
         builder.setStyle(StyleConfig.MULTILINE);
       }
 
       args.parameters().stream()
-        .map((param) -> switch (param) {
+        .map(param -> switch (param) {
           case CommandArgument arg -> getArgumentValueExpr(arg);
           case UnparsedCommandParameter(SourceParameterLike parameter) -> convertUnparsedParameter(parameter);
         }).forEach(builder::addParameters);
@@ -186,13 +186,13 @@ public abstract class CommonBrigadierStatementBuilder {
     switch (argNode.argument()) {
       case LiteralCommandArgument literal -> {
         scopeLiteral(literal.literal(), () -> {
-          InvocationChainBuilder nested = literalBuilder(Expressions.string(literal.literal()));
+          final InvocationChainBuilder nested = literalBuilder(Expressions.string(literal.literal()));
           createTree(nested, node);
           builder.chainMethod("then", StyleConfig.NEWLINE_BOTH, nested);
         });
       }
       case RequiredCommandArgument required -> {
-        InvocationChainBuilder nested = argumentBuilder(
+        final InvocationChainBuilder nested = argumentBuilder(
           Expressions.string(required.argumentName()),
           required.argumentType().initializer()
         );
@@ -202,7 +202,7 @@ public abstract class CommonBrigadierStatementBuilder {
       case MultiLiteralCommandArgument multiLiteral -> {
         for (String literal : multiLiteral.literals()) {
           scopeLiteral(literal, () -> {
-            InvocationChainBuilder nested = literalBuilder(Expressions.string(literal));
+            final InvocationChainBuilder nested = literalBuilder(Expressions.string(literal));
             createTree(nested, node);
             builder.chainMethod("then", StyleConfig.NEWLINE_BOTH, nested);
           });

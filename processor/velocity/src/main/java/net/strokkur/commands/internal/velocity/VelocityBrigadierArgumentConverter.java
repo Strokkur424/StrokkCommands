@@ -31,8 +31,9 @@ final class VelocityBrigadierArgumentConverter extends BrigadierArgumentConverte
 
   /// We do not support custom arguments for Velocity... yet!
   @Override
-  protected @Nullable BrigadierArgumentType handleCustomArgumentAnnotations(
-      String argumentName, String type, SourceVariable parameter
+  @Nullable
+  private BrigadierArgumentType handleCustomArgumentAnnotations(
+    String argumentName, String type, SourceVariable parameter
   ) throws ConversionException {
     return null;
   }

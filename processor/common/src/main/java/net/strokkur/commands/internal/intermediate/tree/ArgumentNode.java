@@ -37,9 +37,9 @@ public class ArgumentNode extends AbstractCommandNode {
       case MultiLiteralCommandArgument multi -> '[' + String.join("|", multi.literals()) + ']';
       case LiteralCommandArgument lit -> lit.literal();
       case RequiredCommandArgument req -> {
-        JavaSourcePrintingVisitor visitor = new JavaSourcePrintingVisitor(DiscardingDocumentationRenderer::new, "", "");
-        String rawInitializer = req.argumentType().initializer().toExpression().accept(visitor).toString();
-        String initializer = rawInitializer.replace("\n", " ");
+        final JavaSourcePrintingVisitor visitor = new JavaSourcePrintingVisitor(DiscardingDocumentationRenderer::new, "", "");
+        final String rawInitializer = req.argumentType().initializer().toExpression().accept(visitor).toString();
+        final String initializer = rawInitializer.replace("\n", " ");
         yield req.argumentName() + " (" + initializer + ')';
       }
       default -> throw new IllegalStateException("Unknown argument type class: " + this.argument.getClass());

@@ -78,7 +78,7 @@ public class DefaultExecutable extends Executable implements AttributableHelper 
     }
 
     public static DefaultExecutable.Type getType(SourceType type) {
-      CodeType codeType = type.toType();
+      final CodeType codeType = type.toType();
       if (JavaTypes.LIST.typed(JavaTypes.STRING).equals(codeType)) {
         return LIST;
       }

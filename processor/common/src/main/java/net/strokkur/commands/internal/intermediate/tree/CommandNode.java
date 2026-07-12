@@ -19,7 +19,6 @@ package net.strokkur.commands.internal.intermediate.tree;
 
 import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.intermediate.attributes.Attributable;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.Collection;
@@ -62,14 +61,13 @@ public interface CommandNode extends Attributable {
   }
 
   /// Insert a node after this node.
-  @Contract("_ -> param1")
-  CommandNode addChild(CommandNode node);
+  void addChild(CommandNode node);
 
   /// Insert an argument after this node.
   ///
   /// @return the node that represents this argument
   default CommandNode addArgument(CommandArgument argument) {
-    CommandNode node = new ArgumentNode(argument);
+    final CommandNode node = new ArgumentNode(argument);
     addChild(node);
     return node;
   }
@@ -93,7 +91,7 @@ public interface CommandNode extends Attributable {
   }
 
   default CommandNode addEmpty() {
-    CommandNode node = new EmptyNode();
+    final CommandNode node = new EmptyNode();
     addChild(node);
     return node;
   }

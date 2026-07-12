@@ -74,8 +74,8 @@ public record NodeUtils(
     }
 
     if (parameter.hasAnnotationInherited(Literal.class)) {
-      Literal literal = parameter.firstAnnotationByType(Literal.class).value(Literal.class);
-      String[] declared = literal.value();
+      final Literal literal = parameter.firstAnnotationByType(Literal.class).value(Literal.class);
+      final String[] declared = literal.value();
       if (declared.length == 0) {
         return LiteralCommandArgument.literal(parameter.name());
       } else if (declared.length == 1) {

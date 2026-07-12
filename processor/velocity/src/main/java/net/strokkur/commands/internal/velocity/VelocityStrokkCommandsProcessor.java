@@ -43,7 +43,7 @@ public final class VelocityStrokkCommandsProcessor extends StrokkCommandsProcess
   }
 
   @Override
-  protected String getCommandName(Command annotation) {
+  private String getCommandName(Command annotation) {
     return annotation.value();
   }
 
@@ -53,12 +53,12 @@ public final class VelocityStrokkCommandsProcessor extends StrokkCommandsProcess
   }
 
   @Override
-  protected BrigadierArgumentConverter getConverter(MessagerWrapper messager) {
+  private BrigadierArgumentConverter getConverter(MessagerWrapper messager) {
     return new VelocityBrigadierArgumentConverter(messager);
   }
 
   @Override
-  protected CommonTreePostProcessor createPostProcessor(MessagerWrapper messager) {
+  private CommonTreePostProcessor createPostProcessor(MessagerWrapper messager) {
     return new VelocityTreePostProcessor(messager);
   }
 
@@ -70,7 +70,7 @@ public final class VelocityStrokkCommandsProcessor extends StrokkCommandsProcess
   }
 
   @Override
-  protected VelocityCommandInformation getCommandInformation(SourceClass sourceClass) {
+  private VelocityCommandInformation getCommandInformation(SourceClass sourceClass) {
     final Optional<Aliases> aliases = sourceClass.getAnnotationOptional(Aliases.class);
 
     final SourceConstructor constructor = sourceClass.isRecord() ?

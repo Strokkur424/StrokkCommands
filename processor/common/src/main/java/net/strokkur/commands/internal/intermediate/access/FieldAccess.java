@@ -22,7 +22,7 @@ import net.strokkur.jap.source.classmodel.SourceField;
 
 public record FieldAccess(
   SourceField element
-) implements ExecuteAccess<SourceField>{
+) implements ExecuteAccess<SourceField> {
   @Override
   public String name() {
     return element.name();

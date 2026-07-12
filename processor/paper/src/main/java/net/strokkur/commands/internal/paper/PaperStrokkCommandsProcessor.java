@@ -43,7 +43,7 @@ public final class PaperStrokkCommandsProcessor extends StrokkCommandsProcessor<
   }
 
   @Override
-  protected String getCommandName(Command annotation) {
+  private String getCommandName(Command annotation) {
     return annotation.value();
   }
 
@@ -53,12 +53,12 @@ public final class PaperStrokkCommandsProcessor extends StrokkCommandsProcessor<
   }
 
   @Override
-  protected BrigadierArgumentConverter getConverter(MessagerWrapper messager) {
+  private BrigadierArgumentConverter getConverter(MessagerWrapper messager) {
     return new PaperBrigadierArgumentConverter(messager);
   }
 
   @Override
-  protected CommonTreePostProcessor createPostProcessor(MessagerWrapper messager) {
+  private CommonTreePostProcessor createPostProcessor(MessagerWrapper messager) {
     return new PaperTreePostProcessor(messager);
   }
 
@@ -68,7 +68,7 @@ public final class PaperStrokkCommandsProcessor extends StrokkCommandsProcessor<
   }
 
   @Override
-  protected PaperCommandInformation getCommandInformation(SourceClass sourceClass) {
+  private PaperCommandInformation getCommandInformation(SourceClass sourceClass) {
     final Optional<Description> description = sourceClass.getAnnotationOptional(Description.class);
     final Optional<Aliases> aliases = sourceClass.getAnnotationOptional(Aliases.class);
 

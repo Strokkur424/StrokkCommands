@@ -17,5 +17,5 @@ tasks.runVelocity {
 }
 
 java {
-  toolchain.languageVersion = JavaLanguageVersion.of(25);
+  toolchain.languageVersion = JavaLanguageVersion.of(25)
 }
