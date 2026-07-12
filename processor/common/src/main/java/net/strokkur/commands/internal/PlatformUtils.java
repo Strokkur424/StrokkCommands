@@ -21,6 +21,7 @@ import net.strokkur.commands.internal.exceptions.UnknownSenderException;
 import net.strokkur.commands.internal.intermediate.executable.CommandParameter;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
+import net.strokkur.jap.code.type.CodeClassType;
 import net.strokkur.jap.source.annotation.AnnotationsHolder;
 import net.strokkur.jap.source.classmodel.SourceParameterLike;
 
@@ -35,11 +36,7 @@ public interface PlatformUtils {
     return true;
   }
 
-  default String getNodeReturnType() {
-    return "LiteralArgumentBuilder";
-  }
-
-  String platformType();
+  CodeClassType platformType();
 
   default void populateNode(AnnotationsHolder element, CommandNode node) {
     // noop

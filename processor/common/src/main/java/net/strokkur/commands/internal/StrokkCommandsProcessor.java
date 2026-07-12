@@ -28,21 +28,25 @@ import net.strokkur.commands.internal.intermediate.registrable.RegistrableRegist
 import net.strokkur.commands.internal.intermediate.registrable.RequirementRegistry;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionsRegistry;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
-import net.strokkur.commands.internal.parsing.CommandParser;
-import net.strokkur.commands.internal.parsing.CommandParserImpl;
-import net.strokkur.commands.internal.parsing.DefaultExecutesTransform;
-import net.strokkur.commands.internal.parsing.ExecutesTransform;
+import net.strokkur.commands.internal.parsing.CommandParsingSourceVisitor;
 import net.strokkur.commands.internal.printer.CommonClassBuilder;
 import net.strokkur.commands.internal.util.CommandInformation;
 import net.strokkur.commands.meta.StrokkCommandsDebug;
+import net.strokkur.jap.code.CodeGenUtil;
 import net.strokkur.jap.code.convert.ConvertToClassType;
 import net.strokkur.jap.code.documentation.AbstractDocumentationRenderer;
 import net.strokkur.jap.code.documentation.MarkdownJavadocRenderer;
 import net.strokkur.jap.code.documentation.StarJavadocRenderer;
+import net.strokkur.jap.code.type.CodeClassType;
 import net.strokkur.jap.code.type.CodePackage;
+import net.strokkur.jap.source.SourceMapProcessor;
+import net.strokkur.jap.source.SourceMapUtil;
+import net.strokkur.jap.source.annotation.SourceAnnotation;
+import net.strokkur.jap.source.classmodel.SourceAnnotationInterface;
 import net.strokkur.jap.source.classmodel.SourceClass;
+import net.strokkur.jap.source.classmodel.SourceClassLike;
+import net.strokkur.jap.source.classmodel.SourceRecord;
 import net.strokkur.jap.source.util.MessagerWrapper;
-import org.jspecify.annotations.NullUnmarked;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
@@ -50,9 +54,6 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.tools.JavaFileObject;
-import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.util.Optional;
 import java.util.Set;
@@ -60,11 +61,11 @@ import java.util.function.Function;
 
 import static net.strokkur.jap.code.documentation.AbstractDocumentationRenderer.createContext;
 
-public abstract class StrokkCommandsProcessor<A extends Annotation, C extends CommandInformation> extends AbstractProcessor {
+public abstract class StrokkCommandsProcessor<A extends Annotation, C extends CommandInformation>
+  extends AbstractProcessor
+  implements SourceMapProcessor {
 
   protected abstract Class<A> targetAnnotationClass();
-
-  protected abstract String getCommandName(A annotation);
 
   @Override
   public Set<String> getSupportedAnnotationTypes() {
@@ -88,20 +89,20 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
 
   protected abstract BrigadierArgumentConverter getConverter(MessagerWrapper messager);
 
-  protected abstract C getCommandInformation(SourceClass sourceClass);
+  protected abstract C getCommandInformation(SourceClassLike sourceClass);
 
   protected AbstractDocumentationRenderer createDocumentationRenderer(CodePackage pkg, Set<? extends ConvertToClassType> imports) {
     AbstractDocumentationRenderer.Context ctx = createContext(pkg, imports);
-    if (isJavaVersion(25)) {
+    if (isJava25()) {
       return new MarkdownJavadocRenderer(ctx);
     }
     // We are on Java 24 or below, so use the star Javadoc visitor.
     return new StarJavadocRenderer(ctx);
   }
 
-  private boolean isJavaVersion(int version) {
+  private boolean isJava25() {
     try {
-      SourceVersion.valueOf("RELEASE_" + version);
+      SourceVersion.valueOf("RELEASE_25");
       return true;
     } catch (IllegalArgumentException e) {
       return false;
@@ -109,70 +110,70 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
   }
 
   @Override
-  @NullUnmarked
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     init();
+    SourceMapUtil sourceMap = new SourceMapUtil(this);
 
-    final MessagerWrapper messagerWrapper = MessagerWrapper.wrap(super.processingEnv.getMessager());
-    final SuggestionsRegistry suggestionsRegistry = createAndFillRegistry(CustomSuggestion.class, SuggestionsRegistry::new, roundEnv, messagerWrapper);
-    final RequirementRegistry requirementRegistry = createAndFillRegistry(CustomRequirement.class, RequirementRegistry::new, roundEnv, messagerWrapper);
-    final ExecutorWrapperRegistry executorWrapperRegistry = createAndFillRegistry(CustomExecutorWrapper.class, ExecutorWrapperRegistry::new, roundEnv, messagerWrapper);
+    MessagerWrapper messagerWrapper = MessagerWrapper.wrap(super.processingEnv.getMessager());
+    SuggestionsRegistry suggestionsRegistry = createAndFillRegistry(CustomSuggestion.class, SuggestionsRegistry::new, roundEnv, messagerWrapper);
+    RequirementRegistry requirementRegistry = createAndFillRegistry(CustomRequirement.class, RequirementRegistry::new, roundEnv, messagerWrapper);
+    ExecutorWrapperRegistry executorWrapperRegistry = createAndFillRegistry(CustomExecutorWrapper.class, ExecutorWrapperRegistry::new, roundEnv, messagerWrapper);
 
-    final NodeUtils nodeUtils = new NodeUtils(getPlatformUtils(), messagerWrapper, getConverter(messagerWrapper), suggestionsRegistry, requirementRegistry, executorWrapperRegistry);
-    final CommandParser parser = new CommandParserImpl(
-      messagerWrapper,
-      nodeUtils,
-      p -> new ExecutesTransform(p, nodeUtils),
-      p -> new DefaultExecutesTransform(p, nodeUtils)
-    );
-    final CommonTreePostProcessor treePostProcessor = createPostProcessor(messagerWrapper);
+    NodeUtils nodeUtils = new NodeUtils(getPlatformUtils(), messagerWrapper, getConverter(messagerWrapper), suggestionsRegistry, requirementRegistry, executorWrapperRegistry);
+    CommandParsingSourceVisitor parser = new CommandParsingSourceVisitor(messagerWrapper, nodeUtils);
+    CommonTreePostProcessor treePostProcessor = createPostProcessor(messagerWrapper);
 
-    final String debugOnly;
+    CodeClassType debugOnly = null;
+    Optional<? extends Element> debugAnnotation = roundEnv.getElementsAnnotatedWith(StrokkCommandsDebug.class).stream().findFirst();
 
-    final Optional<? extends Element> debugAnnotation = roundEnv.getElementsAnnotatedWith(StrokkCommandsDebug.class).stream().findFirst();
     if (debugAnnotation.isPresent()) {
       System.setProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY, "true");
 
-      final SourceClass annotated = new SourceClassImpl(this.processingEnv, (DeclaredType) debugAnnotation.get().asType());
-      final SourceClass only = annotated.getAnnotationSourceClassField(StrokkCommandsDebug.class, "only");
-      if (only != null && !only.getName().equals("Class")) {
-        debugOnly = only.getName();
-      } else {
-        debugOnly = null;
+      final SourceClassLike annotated = sourceMap.parseClassElement((TypeElement) debugAnnotation.get());
+      if (annotated.hasAnnotation(StrokkCommandsDebug.class)) {
+        final SourceAnnotation debugAnnotationType = annotated.firstAnnotationByType(StrokkCommandsDebug.class);
+
+        if (debugAnnotationType.isSet("only")) {
+          debugOnly = debugAnnotationType.parameter("only").classValue();
+        }
       }
     } else {
-      debugOnly = null;
       System.clearProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY);
     }
 
     for (Element element : roundEnv.getElementsAnnotatedWith(targetAnnotationClass())) {
       if (!(element instanceof TypeElement typeElement)) {
-        // Element is not a top-level class
+        // Element is not a class.
         continue;
       }
 
-      if (typeElement.getNestingKind().isNested()) {
-        messagerWrapper.warnElement(
+      SourceClassLike sourceClass = sourceMap.parseClassElement(typeElement);
+      if (sourceClass.enclosingClass() != null) {
+        messagerWrapper.warnSource(
           "This class is annotated with @%s, but is nested. This is unsupported behavior. If this " +
             "class is meant as a subcommand, annotate it with @Subcommand instead",
-          typeElement,
+          sourceClass,
           targetAnnotationClass().getSimpleName()
         );
         continue;
       }
 
-      if (debugOnly != null && !typeElement.getQualifiedName().toString().contains(debugOnly)) {
+      if (debugOnly != null && !sourceClass.toClassType().equals(debugOnly)) {
         continue;
       }
 
-      final SourceClass sourceClass = typeElement.getKind() == ElementKind.RECORD
-        ? new SourceRecordImpl(this.processingEnv, (DeclaredType) typeElement.asType())
-        : new SourceClassImpl(this.processingEnv, (DeclaredType) typeElement.asType());
+      if (!(sourceClass instanceof SourceClass) && !(sourceClass instanceof SourceRecord)) {
+        messagerWrapper.warnSource(
+          "Command classes should be non-abstract classes or records.",
+          sourceClass
+        );
+        continue;
+      }
 
       try {
         processElement(sourceClass, messagerWrapper, parser, treePostProcessor);
       } catch (Exception e) {
-        messagerWrapper.errorElement("An error occurred: {}", typeElement, e.getMessage());
+        messagerWrapper.errorSource("An error occurred: {}", sourceClass, e.getMessage());
         e.printStackTrace();
       }
 
@@ -185,25 +186,22 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
   }
 
   private void processElement(
-    SourceClass sourceClass,
+    SourceClassLike sourceClass,
     MessagerWrapper messagerWrapper,
-    CommandParser parser,
+    CommandParsingSourceVisitor parser,
     CommonTreePostProcessor treePostProcessor
   ) {
     final boolean debug = System.getProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY) != null;
 
     final C commandInformation = getCommandInformation(sourceClass);
-    final CommandNode commandTree = parser.createCommandTree(getCommandName(sourceClass.getAnnotationInheritedElseThrow(targetAnnotationClass())), sourceClass);
-    if (commandTree == null) {
-      return;
-    }
+    final CommandNode commandTree = parser.visitCommandClass(sourceClass, null);
 
     if (debug) {
       // debug log all paths.
       messagerWrapper.debug("\nCommand Tree (Before PostProcess):\n{}\n ", commandTree.toString());
     }
 
-    // Before we print the paths we do some post-processing to move some stuff around, which
+    // Before we print the paths, we do some post-processing to move some stuff around, which
     // is relevant for certain things to print correctly (a.e. executor requirements).
     treePostProcessor.cleanupPath(commandTree);
     treePostProcessor.applyDefaultExecutorPaths(commandTree);
@@ -213,13 +211,10 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
       messagerWrapper.debug("\nCommand Tree:\n{}\n ", commandTree.toString());
     }
 
+    CodeGenUtil codeGen = new CodeGenUtil(this);
     try {
-      final CommonClassBuilder<C> printer = createBuilder(commandTree, commandInformation);
-      final JavaFileObject obj = processingEnv.getFiler().createSourceFile(commandInformation.sourceClass().getFullyQualifiedName() + "Brigadier");
-
-      try (Writer writer = obj.openWriter()) {
-        writer.write(printer.getAsString());
-      }
+      CommonClassBuilder<C> printer = createBuilder(commandTree, commandInformation);
+      codeGen.printJavaFile(printer.createClass());
     } catch (Exception ex) {
       messagerWrapper.errorSource("A fatal exception occurred whilst printing source file: {}", sourceClass, ex.getMessage());
       ex.printStackTrace();
@@ -228,29 +223,38 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
 
   private <T extends RegistrableRegistry<?>> T createAndFillRegistry(
     Class<? extends Annotation> annotationClass,
-    Function<String, T> ctor,
+    Function<CodeClassType, T> ctor,
     RoundEnvironment roundEnv,
     MessagerWrapper messager
   ) {
-    final T registry = ctor.apply(getPlatformUtils().platformType());
+    SourceMapUtil sourceMap = new SourceMapUtil(this);
+    T registry = ctor.apply(getPlatformUtils().platformType());
+
     for (Element element : roundEnv.getElementsAnnotatedWith(annotationClass)) {
       try {
         if (element.getKind() != ElementKind.ANNOTATION_TYPE || !(element instanceof TypeElement typeElement)) {
-          messager.errorElement("non-annotation type annotated with @" + annotationClass.getSimpleName(), element);
+          processingEnv.getMessager().printError(
+            "non-annotation type annotated with @" + annotationClass.getSimpleName(),
+            element
+          );
           continue;
         }
 
+        SourceAnnotationInterface annotationInterface = (SourceAnnotationInterface) sourceMap.parseClassElement(typeElement);
         for (Element annotatedElement : roundEnv.getElementsAnnotatedWith(typeElement)) {
           if (registry.tryRegisterProvider(
             messager,
-            new SourceClassImpl(this.processingEnv, (DeclaredType) typeElement.asType()),
-            SourceTypeUtils.getSourceElement(this.processingEnv, annotatedElement)
+            annotationInterface,
+            sourceMap.parseElement(annotatedElement)
           )) {
             break;
           }
         }
       } catch (ProviderAlreadyRegisteredException suggestion) {
-        messager.errorElement(suggestion.getMessage(), element);
+        processingEnv.getMessager().printError(
+          suggestion.getMessage(),
+          element
+        );
       }
     }
     return registry;

@@ -18,31 +18,23 @@
 package net.strokkur.commands.internal.printer;
 
 import net.strokkur.commands.internal.BuildConstants;
-import net.strokkur.commands.internal.abstraction.SourceConstructor;
-import net.strokkur.commands.internal.abstraction.SourceParameter;
-import net.strokkur.commands.internal.abstraction.SourceTypeAnnotation;
-import net.strokkur.commands.internal.abstraction.SourceVariable;
-import net.strokkur.commands.internal.codegen.CodeAnnotation;
-import net.strokkur.commands.internal.codegen.CodeClass;
-import net.strokkur.commands.internal.codegen.CodeExpression;
-import net.strokkur.commands.internal.codegen.CodeMethod;
-import net.strokkur.commands.internal.codegen.CodePackage;
-import net.strokkur.commands.internal.codegen.CodeStatement;
-import net.strokkur.commands.internal.codegen.CodeType;
-import net.strokkur.commands.internal.codegen.Modifiers;
-import net.strokkur.commands.internal.codegen.adapter.CodeTypeAdapter;
-import net.strokkur.commands.internal.codegen.as.AsExpression;
-import net.strokkur.commands.internal.codegen.builder.Builders;
-import net.strokkur.commands.internal.codegen.builder.ClassBuilder;
-import net.strokkur.commands.internal.codegen.builder.MethodBuilder;
-import net.strokkur.commands.internal.codegen.builder.MethodInvocationBuilder;
-import net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
-import net.strokkur.commands.internal.printer.source.AbstractSourcePrintingVisitor;
-import net.strokkur.commands.internal.printer.source.ImportGatheringVisitor;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.util.CommandInformation;
-import net.strokkur.commands.internal.util.ConvertableTo;
+import net.strokkur.jap.code.annotations.CodeAnnotation;
+import net.strokkur.jap.code.classmodel.CodeClass;
+import net.strokkur.jap.code.classmodel.CodeMethod;
+import net.strokkur.jap.code.classmodel.builder.ClassBuilder;
+import net.strokkur.jap.code.classmodel.builder.MethodBuilder;
+import net.strokkur.jap.code.expression.CodeExpression;
+import net.strokkur.jap.code.expression.builder.MethodInvocationBuilder;
+import net.strokkur.jap.code.statement.CodeStatement;
+import net.strokkur.jap.code.type.CodePackage;
+import net.strokkur.jap.code.type.CodeType;
+import net.strokkur.jap.code.util.Modifiers;
+import net.strokkur.jap.code.visitor.ImportGatheringVisitor;
+import net.strokkur.jap.code.visitor.source.AbstractSourcePrintingVisitor;
+import net.strokkur.jap.source.classmodel.SourceConstructor;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
 
 import java.util.Comparator;
@@ -93,7 +85,7 @@ public abstract class CommonClassBuilder<C extends CommandInformation> {
   }
 
   /// Creates the actual class, which will be printed to a file.
-  private CodeClass createClass() {
+  public CodeClass createClass() {
     // Create skeletons for create and register methods for use in Javadocs.
     final MethodBuilder createMethod = getCreateMethodBuilder();
     final MethodBuilder registerMethod = getRegisterMethodBuilder();

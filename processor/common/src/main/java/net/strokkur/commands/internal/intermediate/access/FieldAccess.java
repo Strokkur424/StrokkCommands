@@ -24,6 +24,11 @@ public record FieldAccess(
   SourceField element
 ) implements ExecuteAccess<SourceField>{
   @Override
+  public String name() {
+    return element.name();
+  }
+
+  @Override
   public CodeType toType() {
     return element.type().toType();
   }

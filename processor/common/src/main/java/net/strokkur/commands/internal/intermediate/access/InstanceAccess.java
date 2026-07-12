@@ -24,6 +24,11 @@ public record InstanceAccess(
   SourceClassLike element
 ) implements ExecuteAccess<SourceClassLike> {
   @Override
+  public String name() {
+    return element.classType().simpleName();
+  }
+
+  @Override
   public CodeType toType() {
     return element.toType();
   }

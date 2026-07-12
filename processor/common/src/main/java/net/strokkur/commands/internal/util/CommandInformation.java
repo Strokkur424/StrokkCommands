@@ -17,8 +17,8 @@
  */
 package net.strokkur.commands.internal.util;
 
-import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.abstraction.SourceConstructor;
+import net.strokkur.jap.source.classmodel.SourceClass;
+import net.strokkur.jap.source.classmodel.SourceConstructor;
 import org.jspecify.annotations.Nullable;
 
 public interface CommandInformation {

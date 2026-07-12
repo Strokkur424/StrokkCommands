@@ -37,6 +37,8 @@ public sealed interface ExecuteAccess<E extends SourceElement>
 
   E element();
 
+  String name();
+
   default boolean isRecord() {
     return element() instanceof SourceRecord;
   }
