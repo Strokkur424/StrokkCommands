@@ -22,16 +22,14 @@ import net.strokkur.commands.Command;
 import net.strokkur.commands.UseInjection;
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.StrokkCommandsProcessor;
-import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.abstraction.SourceConstructor;
-import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
 import net.strokkur.commands.internal.intermediate.CommonTreePostProcessor;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.printer.CommonClassBuilder;
-import net.strokkur.commands.internal.printer.source.JavaSourcePrintingVisitor;
-import net.strokkur.commands.internal.util.MessagerWrapper;
 import net.strokkur.commands.internal.velocity.util.VelocityCommandInformation;
+import net.strokkur.jap.source.classmodel.SourceClass;
+import net.strokkur.jap.source.classmodel.SourceClassLike;
+import net.strokkur.jap.source.classmodel.SourceConstructor;
 
 import java.util.Optional;
 
@@ -43,49 +41,40 @@ public final class VelocityStrokkCommandsProcessor extends StrokkCommandsProcess
   }
 
   @Override
-  private String getCommandName(Command annotation) {
-    return annotation.value();
-  }
-
-  @Override
   protected PlatformUtils getPlatformUtils() {
     return new VelocityPlatformUtils();
   }
 
   @Override
-  private BrigadierArgumentConverter getConverter(MessagerWrapper messager) {
-    return new VelocityBrigadierArgumentConverter(messager);
-  }
-
-  @Override
-  private CommonTreePostProcessor createPostProcessor(MessagerWrapper messager) {
-    return new VelocityTreePostProcessor(messager);
+  protected CommonTreePostProcessor createPostProcessor() {
+    return new VelocityTreePostProcessor(messager());
   }
 
   @Override
   protected CommonClassBuilder<VelocityCommandInformation> createBuilder(CommandNode node, VelocityCommandInformation commandInformation) {
-    return new VelocityClassBuilder(node, commandInformation,
-        (pkg, types) -> new JavaSourcePrintingVisitor(() -> createDocumentationRenderer(pkg, types), "  ", "    ")
-    );
+    return new VelocityClassBuilder(node, commandInformation);
   }
 
   @Override
-  private VelocityCommandInformation getCommandInformation(SourceClass sourceClass) {
-    final Optional<Aliases> aliases = sourceClass.getAnnotationOptional(Aliases.class);
+  protected BrigadierArgumentConverter getConverter() {
+    return new VelocityBrigadierArgumentConverter(messager());
+  }
 
-    final SourceConstructor constructor = sourceClass.isRecord() ?
-        null :
-        sourceClass.getNestedMethods(SourceMethod::isConstructor)
-            .stream()
-            .findFirst()
-            .map(SourceConstructor.class::cast)
-            .orElse(null);
+  @Override
+  protected VelocityCommandInformation getCommandInformation(SourceClassLike classLike) {
+    final Optional<Aliases> aliases = classLike.firstAnnotationByTypeOptional(Aliases.class)
+      .map(anno -> anno.value(Aliases.class));
+
+    final SourceConstructor constructor = classLike instanceof SourceClass sourceClass
+      ? sourceClass.constructors().stream().findFirst().orElse(null)
+      : null;
 
     return new VelocityCommandInformation(
-        constructor,
-        sourceClass,
-        aliases.map(Aliases::value).orElse(null),
-        sourceClass.hasAnnotationInherited(UseInjection.class)
+      classLike.firstAnnotationByType(Command.class).value(Command.class).value(),
+      constructor,
+      classLike,
+      aliases.map(Aliases::value).orElse(null),
+      classLike.hasAnnotationInherited(UseInjection.class)
     );
   }
 }

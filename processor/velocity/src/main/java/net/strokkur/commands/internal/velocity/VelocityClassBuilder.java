@@ -17,135 +17,130 @@
  */
 package net.strokkur.commands.internal.velocity;
 
-import net.strokkur.commands.internal.abstraction.SourceConstructor;
-import net.strokkur.commands.internal.abstraction.SourceParameter;
-import net.strokkur.commands.internal.abstraction.SourceVariable;
-import net.strokkur.commands.internal.codegen.CodeExpression;
-import net.strokkur.commands.internal.codegen.CodeMethod;
-import net.strokkur.commands.internal.codegen.CodePackage;
-import net.strokkur.commands.internal.codegen.CodeStatement;
-import net.strokkur.commands.internal.codegen.CodeType;
-import net.strokkur.commands.internal.codegen.InvokesMethod;
-import net.strokkur.commands.internal.codegen.Modifiers;
-import net.strokkur.commands.internal.codegen.adapter.CodeTypeAdapter;
-import net.strokkur.commands.internal.codegen.builder.Builders;
-import net.strokkur.commands.internal.codegen.builder.ClassBuilder;
-import net.strokkur.commands.internal.codegen.builder.MethodBuilder;
-import net.strokkur.commands.internal.codegen.builder.MethodInvocationBuilder;
-import net.strokkur.commands.internal.codegen.javadoc.CodeJavadoc;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.printer.CommonClassBuilder;
-import net.strokkur.commands.internal.printer.source.AbstractSourcePrintingVisitor;
-import net.strokkur.commands.internal.util.ConvertableTo;
+import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.velocity.util.VelocityClasses;
 import net.strokkur.commands.internal.velocity.util.VelocityCommandInformation;
-
-import java.util.Set;
-import java.util.function.BiFunction;
+import net.strokkur.jap.code.classmodel.CodeField;
+import net.strokkur.jap.code.classmodel.builder.ClassBuilder;
+import net.strokkur.jap.code.classmodel.builder.MethodBuilder;
+import net.strokkur.jap.code.convert.ConvertToMethod;
+import net.strokkur.jap.code.documentation.CodeDocumentation;
+import net.strokkur.jap.code.expression.Expressions;
+import net.strokkur.jap.code.expression.builder.MethodInvocationBuilder;
+import net.strokkur.jap.code.statement.Statements;
+import net.strokkur.jap.code.type.preset.JavaTypes;
+import net.strokkur.jap.code.util.Modifiers;
+import net.strokkur.jap.code.util.StyleConfig;
+import net.strokkur.jap.source.classmodel.SourceConstructor;
+import net.strokkur.jap.source.classmodel.SourceMethodParameter;
+import net.strokkur.jap.source.classmodel.SourceParameterLike;
 
 class VelocityClassBuilder extends CommonClassBuilder<VelocityCommandInformation> {
   VelocityClassBuilder(
-      CommandNode rootNode,
-      VelocityCommandInformation commandInformation,
-      BiFunction<CodePackage, Set<CodeType.ClassType>, AbstractSourcePrintingVisitor> sourceVisitor
+    CommandNode rootNode,
+    VelocityCommandInformation commandInformation
   ) {
-    super(rootNode, commandInformation, new VelocityBrigadierStatementBuilder(), sourceVisitor);
+    super(rootNode, commandInformation, new VelocityBrigadierStatementBuilder());
   }
 
   @Override
   protected MethodBuilder getCreateMethodBuilder() {
     return super.getCreateMethodBuilder()
-        .setReturnType(VelocityClasses.TYPED_LITERAL_COMMAND_NODE.getAsCodeType());
+      .setReturnType(Classes.LITERAL_COMMAND_NODE.typed(VelocityClasses.COMMAND_SOURCE));
   }
 
   @Override
   protected void populateStaticFields(ClassBuilder builder) {
     super.populateStaticFields(builder);
 
-    final MethodInvocationBuilder listOf = Builders.methodInvocation("of").setStatic(CodeType.LIST);
+    final MethodInvocationBuilder listOf = JavaTypes.LIST.chainMethod("of");
     if (commandInformation.aliases() != null) {
       for (String alias : commandInformation.aliases()) {
-        listOf.addParameter(CodeExpression.string(alias));
+        listOf.addParameters(Expressions.string(alias));
       }
     }
 
-    builder.addField(Builders.field("ALIASES", CodeType.LIST_STRING)
-        .setModifiers(Modifiers.PUBLIC, Modifiers.STATIC, Modifiers.FINAL)
-        .setInitialiser(listOf)
+    builder.addFields(CodeField.builder(JavaTypes.LIST.typed(JavaTypes.STRING), "ALIASES")
+      .addModifiers(Modifiers.PUBLIC, Modifiers.STATIC, Modifiers.FINAL)
+      .setInitializer(listOf)
     );
   }
 
   @Override
   protected MethodBuilder getRegisterMethodBuilder() {
-    final MethodInvocationBuilder createInvocation = Builders.methodInvocation("create");
+    final MethodInvocationBuilder createInvocation = new MethodInvocationBuilder()
+      .setName("create");
 
     if (!commandInformation.useInjection()) {
       if (commandInformation.constructor() instanceof SourceConstructor sourceCtor) {
-        for (SourceParameter parameter : sourceCtor.getParameters()) {
+        for (SourceMethodParameter parameter : sourceCtor.parameters()) {
           final String variableName;
           if (isProxyServer(parameter)) {
             variableName = "server";
           } else {
-            variableName = parameter.getName();
+            variableName = parameter.name();
           }
 
-          createInvocation.addParameter(CodeExpression.variable(variableName));
+          createInvocation.addParameters(Expressions.variable(variableName));
         }
       }
     }
 
     final MethodBuilder builder = super.getRegisterMethodBuilder()
-        .addParameter(VelocityClasses.PROXY_SERVER.getAsCodeType(), "server")
-        .addParameter(CodeType.OBJECT, "command$plugin")
-        .setMethodStatements(
-            CodeStatement.variableDeclarationFinal(VelocityClasses.BRIGADIER_COMMAND, "command", Builders.ctorInvocation(VelocityClasses.BRIGADIER_COMMAND)
-                .addParameter(createInvocation)),
-            CodeStatement.variableDeclarationFinal(VelocityClasses.COMMAND_META, "meta", Builders.methodInvocation("getCommandManager")
-                .setInstanceVariable("server")
-                .chain("metaBuilder", CodeExpression.variable("command"))
-                .chain("aliases", InvokesMethod.StyleConfig.NEWLINE, Builders.methodInvocation("toArray")
-                    .setInstanceVariable("ALIASES")
-                    .addParameter(CodeExpression.methodReference(CodeType.STRING_ARRAY, "new")))
-                .chain("plugin", InvokesMethod.StyleConfig.NEWLINE, CodeExpression.variable("command$plugin"))
-                .chain("build", InvokesMethod.StyleConfig.NEWLINE)),
-            CodeStatement.blank(),
-            Builders.methodInvocation("getCommandManager")
-                .setInstanceVariable("server")
-                .chain("register", CodeExpression.variable("meta"), CodeExpression.variable("command"))
-        );
+      .addParameter(VelocityClasses.PROXY_SERVER, "server")
+      .addParameter(JavaTypes.OBJECT, "command$plugin")
+      .setCodeBlock(
+        Statements.variableDeclarationFinal(VelocityClasses.BRIGADIER_COMMAND, "command", VelocityClasses.BRIGADIER_COMMAND.ctor(createInvocation)),
+
+        Statements.variableDeclarationFinal(VelocityClasses.COMMAND_META, "meta", Expressions.variable("server")
+          .chainMethod("getCommandManager")
+          .chainMethod("metaBuilder", Expressions.variable("command"))
+          .chainMethod("aliases", Expressions.variable("ALIASES").chainMethod("toArray")
+            .addParameters(Expressions.methodReference(JavaTypes.STRING.toArray(), "new"))
+          ).setStyle(StyleConfig.NEWLINE)
+          .chainMethod("plugin", Expressions.variable("command$plugin")).setStyle(StyleConfig.NEWLINE)
+          .chainMethod("build").setStyle(StyleConfig.NEWLINE)
+        ),
+        Statements.blank(),
+        Expressions.variable("server")
+          .chainMethod("getCommandManager")
+          .chainMethod("register", Expressions.variable("meta"), Expressions.variable("command"))
+      );
 
     addConstructorParametersTo(builder, f -> !isProxyServer(f));
     return builder;
   }
 
-  private boolean isProxyServer(SourceVariable sourceVar) {
-    return CodeTypeAdapter.from(sourceVar.getType()).equals(VelocityClasses.PROXY_SERVER.getAsCodeType());
+  private boolean isProxyServer(SourceParameterLike sourceVar) {
+    return VelocityClasses.PROXY_SERVER.toClassType().equals(sourceVar.type().toType());
   }
 
   @Override
-  protected void applyRegisterMethodJavadoc(MethodBuilder registerMethod, ConvertableTo<CodeMethod> createMethod) {
-    registerMethod.setJavadoc(CodeJavadoc.combineLines(
-        CodeJavadoc.text("Shortcut for registering the command node returned from"),
-        CodeJavadoc.combine(CodeJavadoc.methodReference(createMethod, true), CodeJavadoc.text(". This method uses the provided aliases")),
-        CodeJavadoc.text("from the original source file."),
+  protected void applyRegisterMethodJavadoc(MethodBuilder registerMethod, ConvertToMethod createMethod) {
+    registerMethod.setDocumentation(CodeDocumentation.combineLines(
+      CodeDocumentation.text("Shortcut for registering the command node returned from"),
+      CodeDocumentation.combine(CodeDocumentation.methodReference(createMethod), CodeDocumentation.text(". This method uses the provided aliases")),
+      CodeDocumentation.text("from the original source file."),
 
-        CodeJavadoc.header("Registering the command", 3),
+      CodeDocumentation.header("Registering the command", 3),
 
-        CodeJavadoc.combine(
-            CodeJavadoc.text("Commands should only be registered during the "),
-            CodeJavadoc.classReference(VelocityClasses.PROXY_INITIALIZE_EVENT.getAsCodeType().codeClass()),
-            CodeJavadoc.text(".")
-        ),
-        CodeJavadoc.text("The example below shows an example of how to do this. For more information,"),
-        CodeJavadoc.combine(CodeJavadoc.text("refer to "), CodeJavadoc.url("The Velocity Command API docs", "https://docs.papermc.io/velocity/dev/command-api/#registering-a-command")),
+      CodeDocumentation.combine(
+        CodeDocumentation.text("Commands should only be registered during the "),
+        CodeDocumentation.classReference(VelocityClasses.PROXY_INITIALIZE_EVENT),
+        CodeDocumentation.text(".")
+      ),
+      CodeDocumentation.text("The example below shows an example of how to do this. For more information,"),
+      CodeDocumentation.combine(CodeDocumentation.text("refer to "), CodeDocumentation.url("The Velocity Command API docs", "https://docs.papermc.io/velocity/dev/command-api/#registering-a-command")),
 
-        CodeJavadoc.blank(),
+      CodeDocumentation.blank(),
 
-        CodeJavadoc.codeBlock("""
-            @Subscribe
-            void onProxyInitialize(final ProxyInitializeEvent event) {
-              %s.register(this.proxy, this);
-            }""".formatted(selfType.name()))
+      CodeDocumentation.codeBlock("""
+        @Subscribe
+        void onProxyInitialize(final ProxyInitializeEvent event) {
+          %s.register(this.proxy, this);
+        }""".formatted(selfType.name()))
     ));
   }
 }

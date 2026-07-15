@@ -19,9 +19,9 @@ package net.strokkur.commands.internal.velocity;
 
 import net.strokkur.commands.internal.intermediate.CommonTreePostProcessor;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
-import net.strokkur.commands.internal.util.MessagerWrapper;
 import net.strokkur.commands.internal.velocity.util.SenderType;
 import net.strokkur.commands.internal.velocity.util.VelocityAttributeKeys;
+import net.strokkur.jap.source.util.MessagerWrapper;
 
 import java.util.Collection;
 import java.util.Set;

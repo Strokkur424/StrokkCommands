@@ -62,7 +62,7 @@ public abstract class CommonBrigadierStatementBuilder {
 
   protected abstract InvocationChainBuilder argumentBuilder(ConvertToExpression name, ConvertToExpression argument);
 
-  protected abstract List<? extends ConvertToExpression> validationStatements(Executable executable);
+  protected abstract List<? extends ConvertToStatement> validationStatements(Executable executable);
 
   protected abstract ConvertToExpression convertUnparsedParameter(SourceParameterLike parameter);
 

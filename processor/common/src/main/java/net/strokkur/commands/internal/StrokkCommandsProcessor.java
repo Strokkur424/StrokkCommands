@@ -49,6 +49,7 @@ import net.strokkur.jap.source.classmodel.SourceRecord;
 import net.strokkur.jap.source.util.MessagerWrapper;
 
 import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
@@ -83,11 +84,11 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
 
   protected abstract PlatformUtils getPlatformUtils();
 
-  protected abstract CommonTreePostProcessor createPostProcessor(MessagerWrapper messager);
+  protected abstract CommonTreePostProcessor createPostProcessor();
 
   protected abstract CommonClassBuilder<C> createBuilder(CommandNode node, C commandInformation);
 
-  protected abstract BrigadierArgumentConverter getConverter(MessagerWrapper messager);
+  protected abstract BrigadierArgumentConverter getConverter();
 
   protected abstract C getCommandInformation(SourceClassLike sourceClass);
 
@@ -119,9 +120,9 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
     final RequirementRegistry requirementRegistry = createAndFillRegistry(CustomRequirement.class, RequirementRegistry::new, roundEnv, messagerWrapper);
     final ExecutorWrapperRegistry executorWrapperRegistry = createAndFillRegistry(CustomExecutorWrapper.class, ExecutorWrapperRegistry::new, roundEnv, messagerWrapper);
 
-    final NodeUtils nodeUtils = new NodeUtils(getPlatformUtils(), messagerWrapper, getConverter(messagerWrapper), suggestionsRegistry, requirementRegistry, executorWrapperRegistry);
+    final NodeUtils nodeUtils = new NodeUtils(getPlatformUtils(), messagerWrapper, getConverter(), suggestionsRegistry, requirementRegistry, executorWrapperRegistry);
     final CommandParsingSourceVisitor parser = new CommandParsingSourceVisitor(messagerWrapper, nodeUtils);
-    final CommonTreePostProcessor treePostProcessor = createPostProcessor(messagerWrapper);
+    final CommonTreePostProcessor treePostProcessor = createPostProcessor();
 
     CodeClassType debugOnly = null;
 
@@ -258,5 +259,10 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
       }
     }
     return registry;
+  }
+
+  @Override
+  public ProcessingEnvironment processingEnv() {
+    return processingEnv;
   }
 }

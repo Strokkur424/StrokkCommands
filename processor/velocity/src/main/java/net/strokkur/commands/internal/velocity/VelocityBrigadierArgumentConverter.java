@@ -17,11 +17,12 @@
  */
 package net.strokkur.commands.internal.velocity;
 
-import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentType;
 import net.strokkur.commands.internal.exceptions.ConversionException;
-import net.strokkur.commands.internal.util.MessagerWrapper;
+import net.strokkur.jap.code.type.CodeType;
+import net.strokkur.jap.source.classmodel.SourceParameterLike;
+import net.strokkur.jap.source.util.MessagerWrapper;
 import org.jspecify.annotations.Nullable;
 
 final class VelocityBrigadierArgumentConverter extends BrigadierArgumentConverter {
@@ -31,9 +32,8 @@ final class VelocityBrigadierArgumentConverter extends BrigadierArgumentConverte
 
   /// We do not support custom arguments for Velocity... yet!
   @Override
-  @Nullable
-  private BrigadierArgumentType handleCustomArgumentAnnotations(
-    String argumentName, String type, SourceVariable parameter
+  protected @Nullable BrigadierArgumentType handleCustomArgumentAnnotations(
+    String argumentName, CodeType type, SourceParameterLike parameter
   ) throws ConversionException {
     return null;
   }

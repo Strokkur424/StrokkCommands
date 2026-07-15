@@ -17,41 +17,21 @@
  */
 package net.strokkur.commands.internal.velocity.util;
 
-import net.strokkur.commands.internal.codegen.CodeType;
-import net.strokkur.commands.internal.codegen.as.AsCodeType;
-import net.strokkur.commands.internal.util.Classes;
+import net.strokkur.jap.code.convert.ConvertToClassType;
+import net.strokkur.jap.code.type.CodeTypes;
 
-import java.util.Arrays;
+public interface VelocityClasses extends ConvertToClassType {
+  VelocityClasses COMMAND_SOURCE = create("com.velocitypowered.api.command.CommandSource");
+  VelocityClasses PLAYER = create("com.velocitypowered.api.proxy.Player");
+  VelocityClasses CONSOLE_COMMAND_SOURCE = create("com.velocitypowered.api.proxy.ConsoleCommandSource");
 
-public enum VelocityClasses implements AsCodeType<CodeType.ClassType> {
-  COMMAND_SOURCE("com.velocitypowered.api.command.CommandSource"),
-  PLAYER("com.velocitypowered.api.proxy.Player"),
-  CONSOLE_COMMAND_SOURCE("com.velocitypowered.api.proxy.ConsoleCommandSource"),
+  VelocityClasses BRIGADIER_COMMAND = create("com.velocitypowered.api.command.BrigadierCommand");
+  VelocityClasses COMMAND_META = create("com.velocitypowered.api.command.CommandMeta");
 
-  BRIGADIER_COMMAND("com.velocitypowered.api.command.BrigadierCommand"),
-  COMMAND_META("com.velocitypowered.api.command.CommandMeta"),
+  VelocityClasses PROXY_INITIALIZE_EVENT = create("com.velocitypowered.api.event.proxy.ProxyInitializeEvent");
+  VelocityClasses PROXY_SERVER = create("com.velocitypowered.api.proxy.ProxyServer");
 
-  PROXY_INITIALIZE_EVENT("com.velocitypowered.api.event.proxy.ProxyInitializeEvent"),
-  PROXY_SERVER("com.velocitypowered.api.proxy.ProxyServer"),
-
-  TYPED_LITERAL_COMMAND_NODE(Classes.LITERAL_COMMAND_NODE, COMMAND_SOURCE);
-
-  private final CodeType.ClassType classType;
-
-  VelocityClasses(String fqn) {
-    this.classType = CodeType.ofClass(fqn);
-  }
-
-  @SafeVarargs
-  VelocityClasses(AsCodeType<CodeType.ClassType> base, AsCodeType<CodeType.ClassType>... types) {
-    this.classType = CodeType.ofClassTyped(base.getAsCodeType().codeClass(), Arrays.stream(types)
-        .map(AsCodeType::getAsCodeType)
-        .toArray(CodeType[]::new)
-    );
-  }
-
-  @Override
-  public CodeType.ClassType getAsCodeType() {
-    return classType;
+  static VelocityClasses create(String fqn) {
+    return () -> CodeTypes.ofClass(fqn);
   }
 }

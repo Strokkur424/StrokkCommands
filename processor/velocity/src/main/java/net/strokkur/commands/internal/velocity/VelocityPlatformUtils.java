@@ -18,10 +18,6 @@
 package net.strokkur.commands.internal.velocity;
 
 import net.strokkur.commands.internal.PlatformUtils;
-import net.strokkur.commands.internal.abstraction.AnnotationsHolder;
-import net.strokkur.commands.internal.abstraction.SourceVariable;
-import net.strokkur.commands.internal.codegen.CodeType;
-import net.strokkur.commands.internal.codegen.adapter.CodeTypeAdapter;
 import net.strokkur.commands.internal.exceptions.AnnotationException;
 import net.strokkur.commands.internal.intermediate.executable.CommandParameter;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
@@ -31,6 +27,10 @@ import net.strokkur.commands.internal.velocity.util.SenderType;
 import net.strokkur.commands.internal.velocity.util.VelocityAttributeKeys;
 import net.strokkur.commands.internal.velocity.util.VelocityClasses;
 import net.strokkur.commands.permission.Permission;
+import net.strokkur.jap.code.type.CodeClassType;
+import net.strokkur.jap.code.type.CodeType;
+import net.strokkur.jap.source.annotation.AnnotationsHolder;
+import net.strokkur.jap.source.classmodel.SourceParameterLike;
 
 import java.util.List;
 import java.util.Set;
@@ -44,29 +44,33 @@ final class VelocityPlatformUtils implements PlatformUtils {
   }
 
   @Override
-  public String platformType() {
-    return VelocityClasses.COMMAND_SOURCE.getAsCodeType().fullyQualifiedName();
+  public CodeClassType platformType() {
+    return VelocityClasses.COMMAND_SOURCE.toClassType();
   }
 
   @Override
-  public void populateNode(CommandNode node, AnnotationsHolder element) {
-    element.getAnnotationOptional(Permission.class).ifPresent(
-        permission -> node.editAttributeMutable(VelocityAttributeKeys.PERMISSIONS, s -> s.add(permission.value()), () -> Set.of(permission.value()))
-    );
+  public void populateNode(AnnotationsHolder element, CommandNode node) {
+    element.firstAnnotationInheritedOptional(Permission.class)
+      .map(anno -> anno.value(Permission.class))
+      .ifPresent(permission -> node.editAttributeMutable(
+        VelocityAttributeKeys.PERMISSIONS,
+        s -> s.add(permission.value()),
+        () -> Set.of(permission.value())
+      ));
   }
 
   private SenderType getSenderType(List<CommandParameter> parameters) throws AnnotationException {
     SenderType type = SenderType.NORMAL;
     for (CommandParameter parameter : parameters) {
-      if (!(parameter instanceof UnparsedCommandParameter(SourceVariable sourceParam))) {
+      if (!(parameter instanceof UnparsedCommandParameter(SourceParameterLike sourceParam))) {
         continue;
       }
-      final CodeType adapted = CodeTypeAdapter.from(sourceParam.getType());
+      final CodeType adapted = sourceParam.type().toType();
 
       final SenderType thisType;
-      if (adapted.equals(VelocityClasses.PLAYER.getAsCodeType())) {
+      if (adapted.equals(VelocityClasses.PLAYER.toType())) {
         thisType = SenderType.PLAYER;
-      } else if (adapted.equals(VelocityClasses.CONSOLE_COMMAND_SOURCE.getAsCodeType())) {
+      } else if (adapted.equals(VelocityClasses.CONSOLE_COMMAND_SOURCE.toType())) {
         thisType = SenderType.CONSOLE;
       } else {
         thisType = type;

@@ -17,7 +17,7 @@
  */
 package net.strokkur.commands.internal.util;
 
-import net.strokkur.jap.source.classmodel.SourceClass;
+import net.strokkur.jap.source.classmodel.SourceClassLike;
 import net.strokkur.jap.source.classmodel.SourceConstructor;
 import org.jspecify.annotations.Nullable;
 
@@ -28,7 +28,7 @@ public interface CommandInformation {
   @Nullable
   SourceConstructor constructor();
 
-  SourceClass sourceClass();
+  SourceClassLike sourceClass();
 
   String @Nullable [] aliases();
 
