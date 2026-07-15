@@ -18,6 +18,7 @@ checkstyle {
 
 repositories {
   mavenCentral()
+  mavenLocal()
   maven("https://repo.papermc.io/repository/maven-public/")
   maven("https://eldonexus.de/repository/maven-releases/")
 }

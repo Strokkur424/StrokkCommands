@@ -5,13 +5,13 @@ module net.strokkur.commands.processor.common {
   requires transitive java.compiler;
   requires transitive jdk.compiler;
   requires transitive net.strokkur.commands.common;
+  requires transitive net.strokkur.jap.source;
   requires static transitive org.jetbrains.annotations;
   requires static transitive org.jspecify;
   requires jdk.sctp;
   requires java.xml;
   requires java.desktop;
   requires jakarta.inject;
-  requires net.strokkur.jap.source;
 
   exports net.strokkur.commands.internal;
   exports net.strokkur.commands.internal.arguments;

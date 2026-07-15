@@ -21,6 +21,7 @@ fun importProjectsIn(folder: File) {
 
 importProjectsIn(rootDir.resolve("annotations"))
 importProjectsIn(rootDir.resolve("processor"))
+importProjectsIn(rootDir.resolve("internal"))
 
 if (System.getenv("SKIP_TESTS") == null) {
   importProjectsIn(rootDir.resolve("test-plugin"))

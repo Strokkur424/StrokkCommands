@@ -17,7 +17,6 @@
  */
 package net.strokkur.commands.internal.velocity.util;
 
-import net.strokkur.commands.internal.codegen.CodeExpression;
 
 public enum SenderType {
   NORMAL(VelocityClasses.COMMAND_SOURCE, CodeExpression.bool(true)),
@@ -26,7 +25,7 @@ public enum SenderType {
   private final VelocityClasses classType;
   private final CodeExpression.BooleanExpression<?> predicate;
 
-  SenderType(VelocityClasses classType, CodeExpression.BooleanExpression<?> predicate) {
+  SenderType(VelocityClasses classType, ConvertToExpression predicate) {
     this.classType = classType;
     this.predicate = predicate;
   }
