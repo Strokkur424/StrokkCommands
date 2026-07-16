@@ -27,6 +27,14 @@ import java.util.Map;
 import java.util.TreeMap;
 
 abstract class AbstractCommandNode implements CommandNode, AttributableHelper {
+  private static final String VALUE = "\033[0;36m";
+  private static final String ATTRIBUTE = "\033[0;34m";
+  private static final String NODE = "\033[1;32m";
+
+  private static final String WHITE = "\033[0;37m";
+  private static final String GRAY = "\033[0;30m";
+  private static final String RESET = "\033[0m";
+
   protected final Map<String, Object> attributes;
   protected final List<CommandNode> children;
 
@@ -52,40 +60,47 @@ abstract class AbstractCommandNode implements CommandNode, AttributableHelper {
 
   @Override
   public String toString() {
-    final StringBuilder builder = new StringBuilder(name());
+    final StringBuilder builder = new StringBuilder();
+    builder.append(NODE).append(name()).append(RESET).append("\n");
+
     final List<String> attribList = attributes.entrySet().stream()
-      .map(e -> e.getKey() + ": " + e.getValue())
+      .map(e -> ATTRIBUTE + e.getKey() + WHITE + ": " + VALUE + e.getValue())
       .toList();
 
     for (int i = 0; i < attribList.size() - 1; i++) {
-      builder.append("├ ").append(attribList.get(i));
+      builder.append(GRAY).append("├ ").append(attribList.get(i)).append(RESET).append("\n");
     }
 
     if (children().isEmpty()) {
-      builder.append("└ ").append(attribList.getLast());
+      if (!attribList.isEmpty()) {
+        builder.append(GRAY).append("└ ").append(attribList.getLast()).append("\n");
+      }
     } else {
-      builder.append("┟ ").append(attribList.getLast());
+      if (!attribList.isEmpty()) {
+        builder.append(GRAY).append("┟ ").append(attribList.getLast()).append("\n");
+      }
       for (int i = 0; i < children.size(); i++) {
         final String[] childToString = children.get(i).toString().split("\n");
         final boolean lastChild = i + 1 == children.size();
 
         if (childToString.length == 1 && lastChild) {
-          builder.append("┖ ").append(childToString[0]);
+          builder.append(GRAY).append("┖ ").append(childToString[0]).append("\n");
           break;
         }
 
-        builder.append("┣ ").append(childToString[0]);
+        builder.append(GRAY).append("┣ ").append(childToString[0]).append("\n");
         for (int ci = 1; ci < childToString.length - 1; ci++) {
-          builder.append("┃ ").append(childToString[ci]);
+          builder.append(GRAY).append("┃ ").append(childToString[ci]).append("\n");
         }
 
         if (lastChild) {
-          builder.append("┗ ");
+          builder.append(GRAY).append("┗ ");
         } else {
-          builder.append("┃ ");
+          builder.append(GRAY).append("┃ ");
         }
 
         builder.append(childToString[childToString.length - 1]);
+        builder.append(RESET).append("\n");
       }
     }
 
