@@ -92,7 +92,6 @@ public abstract class CommonClassBuilder<C extends CommandInformation> {
 
     // Run the brigadier tree builder so we can use the statements
     statementBuilder.reset();
-    final ConvertToExpression treeExpr = statementBuilder.build(rootNode, Expressions.variable("NAME"));
 
     final List<PrintedAccessPath> required = statementBuilder.requiredPaths.stream()
       .map(PrintedAccessPath::requiredParent)
@@ -121,6 +120,7 @@ public abstract class CommonClassBuilder<C extends CommandInformation> {
       }
     }
 
+    final ConvertToExpression treeExpr = statementBuilder.build(rootNode, Expressions.variable("NAME"));
     createMethodStatements.add(Statements.returnStmt(treeExpr));
     createMethod.setCodeBlock(createMethodStatements.toArray(ConvertToStatement[]::new));
 
@@ -136,6 +136,7 @@ public abstract class CommonClassBuilder<C extends CommandInformation> {
           CodeDocumentation.blank(),
           CodeDocumentation.throwsMeta(JavaTypes.ILLEGAL_ACCESS_EXCEPTION, "always")
         ))
+        .addModifiers(Modifiers.PRIVATE)
         .addThrowsExceptions(JavaTypes.ILLEGAL_ACCESS_EXCEPTION)
         .setCodeBlock(JavaTypes.ILLEGAL_ACCESS_EXCEPTION
           .ctor(Expressions.string("This class cannot be instantiated."))

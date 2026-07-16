@@ -33,12 +33,8 @@ import net.strokkur.commands.internal.printer.CommonClassBuilder;
 import net.strokkur.commands.internal.util.CommandInformation;
 import net.strokkur.commands.meta.StrokkCommandsDebug;
 import net.strokkur.jap.code.CodeGenUtil;
-import net.strokkur.jap.code.convert.ConvertToClassType;
-import net.strokkur.jap.code.documentation.AbstractDocumentationRenderer;
-import net.strokkur.jap.code.documentation.MarkdownJavadocRenderer;
-import net.strokkur.jap.code.documentation.StarJavadocRenderer;
+import net.strokkur.jap.code.classmodel.CodeClass;
 import net.strokkur.jap.code.type.CodeClassType;
-import net.strokkur.jap.code.type.CodePackage;
 import net.strokkur.jap.source.SourceMapProcessor;
 import net.strokkur.jap.source.SourceMapUtil;
 import net.strokkur.jap.source.annotation.SourceAnnotation;
@@ -60,8 +56,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
-import static net.strokkur.jap.code.documentation.AbstractDocumentationRenderer.createContext;
-
 public abstract class StrokkCommandsProcessor<A extends Annotation, C extends CommandInformation>
   extends AbstractProcessor
   implements SourceMapProcessor {
@@ -78,10 +72,6 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
     return SourceVersion.latestSupported();
   }
 
-  protected void init() {
-    // noop
-  }
-
   protected abstract PlatformUtils getPlatformUtils();
 
   protected abstract CommonTreePostProcessor createPostProcessor();
@@ -92,27 +82,8 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
 
   protected abstract C getCommandInformation(SourceClassLike sourceClass);
 
-  protected AbstractDocumentationRenderer createDocumentationRenderer(CodePackage pkg, Set<? extends ConvertToClassType> imports) {
-    final AbstractDocumentationRenderer.Context ctx = createContext(pkg, imports);
-    if (isJava25()) {
-      return new MarkdownJavadocRenderer(ctx);
-    }
-    // We are on Java 24 or below, so use the star Javadoc visitor.
-    return new StarJavadocRenderer(ctx);
-  }
-
-  private boolean isJava25() {
-    try {
-      SourceVersion.valueOf("RELEASE_25");
-      return true;
-    } catch (IllegalArgumentException e) {
-      return false;
-    }
-  }
-
   @Override
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-    init();
     final SourceMapUtil sourceMap = new SourceMapUtil(this);
 
     final MessagerWrapper messagerWrapper = MessagerWrapper.wrap(super.processingEnv.getMessager());
@@ -215,7 +186,9 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
     final CodeGenUtil codeGen = new CodeGenUtil(this);
     try {
       final CommonClassBuilder<C> builder = createBuilder(commandTree, commandInformation);
-      codeGen.printJavaFile(builder.createClass());
+      final CodeClass theClass = builder.createClass();
+      codeGen.printJavaFile(theClass);
+      messager().info("Printed: " + theClass.classType().fullyQualifiedName());
     } catch (Exception ex) {
       messagerWrapper.errorSource("A fatal exception occurred whilst printing source file: {}", sourceClass, ex.getMessage());
       ex.printStackTrace();

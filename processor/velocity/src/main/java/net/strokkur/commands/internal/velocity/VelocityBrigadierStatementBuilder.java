@@ -42,15 +42,15 @@ class VelocityBrigadierStatementBuilder extends CommonBrigadierStatementBuilder 
   @Override
   protected InvocationChainBuilder literalBuilder(ConvertToExpression name) {
     return VelocityClasses.BRIGADIER_COMMAND
-      .chainMethod("literalArgumentBuilder", name)
-      .chainBuilder();
+      .chainBuilder()
+      .chainMethod("literalArgumentBuilder", name);
   }
 
   @Override
   protected InvocationChainBuilder argumentBuilder(ConvertToExpression name, ConvertToExpression argument) {
     return VelocityClasses.BRIGADIER_COMMAND
-      .chainMethod("requiredArgumentBuilder", name, argument)
-      .chainBuilder();
+      .chainBuilder()
+      .chainMethod("requiredArgumentBuilder", name, argument);
   }
 
   @Override

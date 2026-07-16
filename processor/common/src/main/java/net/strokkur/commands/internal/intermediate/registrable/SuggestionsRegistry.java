@@ -39,7 +39,7 @@ public class SuggestionsRegistry extends FunctionalInterfaceRegistry<SuggestionP
     return JavaTypes.COMPLETABLE_FUTURE.typed(Classes.SUGGESTIONS).equals(source.returnType().toType())
       && params.size() == 2
       && Classes.COMMAND_CONTEXT.typed(getPlatformType()).equals(params.getFirst().type().toType())
-      && Classes.SUGGESTIONS_BUILDER.equals(params.get(2).type().toType());
+      && Classes.SUGGESTIONS_BUILDER.equals(params.get(1).type().toType());
   }
 
   @Override

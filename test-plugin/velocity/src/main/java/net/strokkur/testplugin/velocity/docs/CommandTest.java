@@ -20,8 +20,10 @@ package net.strokkur.testplugin.velocity.docs;
 import com.velocitypowered.api.proxy.Player;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
+import net.strokkur.commands.meta.StrokkCommandsDebug;
 import net.strokkur.commands.permission.Permission;
 
+@StrokkCommandsDebug(only = CommandTest.class)
 @Command("test")
 class CommandTest {
 
