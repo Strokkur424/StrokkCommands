@@ -58,6 +58,8 @@ public abstract class CommonBrigadierStatementBuilder {
   private final Stack<RecordArguments> recordStack = new Stack<>();
   private int literalPointer = 0;
 
+  private @Nullable CommandNode rootLiteralNode = null;
+
   protected abstract InvocationChainBuilder literalBuilder(ConvertToExpression name);
 
   protected abstract InvocationChainBuilder argumentBuilder(ConvertToExpression name, ConvertToExpression argument);
@@ -68,6 +70,7 @@ public abstract class CommonBrigadierStatementBuilder {
 
   public final ConvertToExpression build(CommandNode node, ConvertToExpression rootNameExpression) {
     final InvocationChainBuilder builder = literalBuilder(rootNameExpression);
+    rootLiteralNode = node.children().getFirst();
     createTree(builder, node);
     builder.chainMethod("build", StyleConfig.NEWLINE);
     return builder;
@@ -180,6 +183,12 @@ public abstract class CommonBrigadierStatementBuilder {
       for (CommandNode child : node.children()) {
         appendNode(builder, child);
       }
+      return;
+    }
+
+    if (node == rootLiteralNode) {
+      // It is already printed... I think
+      createTree(builder, node);
       return;
     }
 

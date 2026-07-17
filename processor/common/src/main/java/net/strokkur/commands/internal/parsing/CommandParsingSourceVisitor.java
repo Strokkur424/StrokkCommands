@@ -110,12 +110,14 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
       arguments, commandArguments,
       new Executable(executable), AttributeKey.EXECUTABLE
     );
-    applyExecutesLogic(
-      sourceMethod, rootNode,
-      DefaultExecutes.class, DefaultExecutes::value,
-      arguments, commandArguments,
-      new DefaultExecutable(executable), AttributeKey.DEFAULT_EXECUTABLE
-    );
+    if (sourceMethod.hasAnnotationInherited(DefaultExecutes.class)) {
+      applyExecutesLogic(
+        sourceMethod, rootNode,
+        DefaultExecutes.class, DefaultExecutes::value,
+        arguments, commandArguments,
+        new DefaultExecutable(executable), AttributeKey.DEFAULT_EXECUTABLE
+      );
+    }
 
     // Apply attributes
     utils.applyExecutorTransform(sourceMethod, rootNode);

@@ -21,7 +21,6 @@ import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.intermediate.attributes.Attributable;
 import org.jetbrains.annotations.UnmodifiableView;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -41,7 +40,7 @@ public interface CommandNode extends Attributable {
 
   /// {@return the children of this node}
   @UnmodifiableView
-  Collection<CommandNode> children();
+  List<CommandNode> children();
 
   /// Executes the action for each node in the tree, starting with this node.
   default void forEach(Consumer<CommandNode> action) {
