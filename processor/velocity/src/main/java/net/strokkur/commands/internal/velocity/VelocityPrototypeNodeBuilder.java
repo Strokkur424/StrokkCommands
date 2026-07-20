@@ -17,9 +17,10 @@
  */
 package net.strokkur.commands.internal.velocity;
 
+import com.google.auto.service.AutoService;
 import net.strokkur.commands.internal.intermediate.executable.DefaultExecutable;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
-import net.strokkur.commands.internal.printer.CommonBrigadierStatementBuilder;
+import net.strokkur.commands.internal.prototype.PrototypeNodeBuilder;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.velocity.util.SenderType;
 import net.strokkur.commands.internal.velocity.util.VelocityAttributeKeys;
@@ -27,7 +28,6 @@ import net.strokkur.commands.internal.velocity.util.VelocityClasses;
 import net.strokkur.jap.code.convert.ConvertToExpression;
 import net.strokkur.jap.code.convert.ConvertToStatement;
 import net.strokkur.jap.code.expression.Expressions;
-import net.strokkur.jap.code.expression.builder.InvocationChainBuilder;
 import net.strokkur.jap.code.statement.Statements;
 import net.strokkur.jap.code.type.CodeType;
 import net.strokkur.jap.code.util.StyleConfig;
@@ -37,21 +37,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-class VelocityBrigadierStatementBuilder extends CommonBrigadierStatementBuilder {
-
-  @Override
-  protected InvocationChainBuilder literalBuilder(ConvertToExpression name) {
-    return VelocityClasses.BRIGADIER_COMMAND
-      .chainBuilder()
-      .chainMethod("literalArgumentBuilder", name);
-  }
-
-  @Override
-  protected InvocationChainBuilder argumentBuilder(ConvertToExpression name, ConvertToExpression argument) {
-    return VelocityClasses.BRIGADIER_COMMAND
-      .chainBuilder()
-      .chainMethod("requiredArgumentBuilder", name, argument);
-  }
+@AutoService(PrototypeNodeBuilder.class)
+public class VelocityPrototypeNodeBuilder extends PrototypeNodeBuilder {
 
   @Override
   protected List<? extends ConvertToStatement> validationStatements(Executable executable) {

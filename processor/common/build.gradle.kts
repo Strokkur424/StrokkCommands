@@ -6,6 +6,7 @@ plugins {
 dependencies {
   compileOnlyApi(project(":annotations-common"))
   api(libs.source.map)
+  api(libs.auto.service)
 
   testImplementation(platform(libs.junit.bom))
   testImplementation(libs.junit.jupiter)

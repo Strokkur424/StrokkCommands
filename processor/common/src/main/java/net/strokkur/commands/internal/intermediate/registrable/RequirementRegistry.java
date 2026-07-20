@@ -17,7 +17,6 @@
  */
 package net.strokkur.commands.internal.intermediate.registrable;
 
-import net.strokkur.jap.code.type.CodeClassType;
 import net.strokkur.jap.code.type.preset.JavaTypes;
 import net.strokkur.jap.source.classmodel.SourceClass;
 import net.strokkur.jap.source.classmodel.SourceField;
@@ -28,9 +27,10 @@ import net.strokkur.jap.source.type.SourcePrimitiveType;
 import java.util.List;
 
 public class RequirementRegistry extends FunctionalInterfaceRegistry<RequirementProvider> {
+  private static final RequirementRegistry INSTANCE = new RequirementRegistry();
 
-  public RequirementRegistry(CodeClassType platformType) {
-    super(platformType);
+  public static RequirementRegistry get() {
+    return INSTANCE;
   }
 
   @Override

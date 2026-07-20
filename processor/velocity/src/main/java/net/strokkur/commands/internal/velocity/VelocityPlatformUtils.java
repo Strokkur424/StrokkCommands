@@ -17,6 +17,7 @@
  */
 package net.strokkur.commands.internal.velocity;
 
+import com.google.auto.service.AutoService;
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.exceptions.AnnotationException;
 import net.strokkur.commands.internal.intermediate.executable.CommandParameter;
@@ -37,6 +38,7 @@ import net.strokkur.jap.source.classmodel.SourceParameterLike;
 import java.util.List;
 import java.util.Set;
 
+@AutoService(PlatformUtils.class)
 public final class VelocityPlatformUtils implements PlatformUtils {
   @Override
   public void populateExecutesNode(Executable executable, CommandNode node, List<CommandParameter> parameters) {

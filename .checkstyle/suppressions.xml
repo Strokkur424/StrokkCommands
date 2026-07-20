@@ -4,5 +4,4 @@
 <suppressions>
   <suppress files="annotations[\\/].*" checks="UnusedImports"/>
   <suppress files=".*[\\/]CodePackageEqualityTests.java" checks="Indentation"/>
-  <suppress files=".*[\\/]PlatformUtils.java" checks="HideUtilityClassConstructor"/>
 </suppressions>

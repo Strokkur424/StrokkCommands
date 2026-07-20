@@ -26,7 +26,7 @@ import net.strokkur.commands.internal.abstraction.SourceClass;
 import net.strokkur.commands.internal.abstraction.SourceConstructor;
 import net.strokkur.commands.internal.abstraction.SourceMethod;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
-import net.strokkur.commands.internal.intermediate.CommonTreePostProcessor;
+import net.strokkur.commands.internal.intermediate.TreePostProcessor;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.paper.util.PaperCommandInformation;
 import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
@@ -58,7 +58,7 @@ public final class PaperStrokkCommandsProcessor extends StrokkCommandsProcessor<
   }
 
   @Override
-  private CommonTreePostProcessor createPostProcessor(MessagerWrapper messager) {
+  private TreePostProcessor createPostProcessor(MessagerWrapper messager) {
     return new PaperTreePostProcessor(messager);
   }
 

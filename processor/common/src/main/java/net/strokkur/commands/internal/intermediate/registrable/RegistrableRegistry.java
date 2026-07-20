@@ -17,25 +17,22 @@
  */
 package net.strokkur.commands.internal.intermediate.registrable;
 
+import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.exceptions.ProviderAlreadyRegisteredException;
 import net.strokkur.commands.internal.util.Classes;
+import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.jap.code.type.CodeClassType;
 import net.strokkur.jap.source.classmodel.SourceAnnotationInterface;
 import net.strokkur.jap.source.classmodel.SourceElement;
-import net.strokkur.jap.source.util.MessagerWrapper;
 
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
-public abstract class RegistrableRegistry<T> {
+public abstract class RegistrableRegistry<T> implements ForwardingMessagerWrapper {
   private final Map<String, T> providerMap = new TreeMap<>();
-  private final CodeClassType platformType;
-
-  public RegistrableRegistry(CodeClassType platformType) {
-    this.platformType = platformType;
-  }
+  private final CodeClassType platformType = PlatformUtils.get().platformType();
 
   protected final CodeClassType getPlatformType() {
     return this.platformType;
@@ -62,7 +59,6 @@ public abstract class RegistrableRegistry<T> {
   }
 
   public abstract boolean tryRegisterProvider(
-    MessagerWrapper messager,
     SourceAnnotationInterface annotationClass,
     SourceElement sourceElement
   ) throws ProviderAlreadyRegisteredException;

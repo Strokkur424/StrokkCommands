@@ -20,23 +20,37 @@ package net.strokkur.commands.internal.parsing;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.DefaultExecutes;
 import net.strokkur.commands.Executes;
+import net.strokkur.commands.Literal;
 import net.strokkur.commands.Subcommand;
-import net.strokkur.commands.internal.NodeUtils;
+import net.strokkur.commands.UnsetExecutorWrapper;
+import net.strokkur.commands.internal.PlatformUtils;
+import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
+import net.strokkur.commands.internal.arguments.BrigadierArgumentType;
 import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
+import net.strokkur.commands.internal.arguments.MultiLiteralCommandArgument;
+import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
+import net.strokkur.commands.internal.exceptions.ConversionException;
 import net.strokkur.commands.internal.exceptions.IllegalCommandClassTypeException;
 import net.strokkur.commands.internal.exceptions.IllegalSubcommandFieldType;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
+import net.strokkur.commands.internal.intermediate.attributes.Attributable;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.executable.CommandParameter;
 import net.strokkur.commands.internal.intermediate.executable.DefaultExecutable;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
+import net.strokkur.commands.internal.intermediate.executable.UnparsedCommandParameter;
 import net.strokkur.commands.internal.intermediate.record.RecordArguments;
 import net.strokkur.commands.internal.intermediate.registrable.CombinedRequirementProvider;
+import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperRegistry;
+import net.strokkur.commands.internal.intermediate.registrable.RegistrableRegistry;
 import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
+import net.strokkur.commands.internal.intermediate.registrable.RequirementRegistry;
+import net.strokkur.commands.internal.intermediate.registrable.SuggestionsRegistry;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.jap.source.annotation.AnnotationsHolder;
+import net.strokkur.jap.source.annotation.SourceAnnotation;
 import net.strokkur.jap.source.classmodel.SourceAnnotationInterface;
 import net.strokkur.jap.source.classmodel.SourceClass;
 import net.strokkur.jap.source.classmodel.SourceClassLike;
@@ -44,24 +58,24 @@ import net.strokkur.jap.source.classmodel.SourceConstructor;
 import net.strokkur.jap.source.classmodel.SourceField;
 import net.strokkur.jap.source.classmodel.SourceInterface;
 import net.strokkur.jap.source.classmodel.SourceMethod;
+import net.strokkur.jap.source.classmodel.SourceParameterLike;
 import net.strokkur.jap.source.classmodel.SourceRecord;
-import net.strokkur.jap.source.util.MessagerWrapper;
 import net.strokkur.jap.source.visitor.SourceVisitor;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, Void>, ForwardingMessagerWrapper {
-  private final MessagerWrapper messager;
-  protected final NodeUtils utils;
+  private static final CommandParsingSourceVisitor INSTANCE = new CommandParsingSourceVisitor();
 
-  public CommandParsingSourceVisitor(MessagerWrapper messager, NodeUtils utils) {
-    this.messager = messager;
-    this.utils = utils;
+  public static CommandParsingSourceVisitor get() {
+    return INSTANCE;
   }
 
   //
@@ -102,7 +116,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
   @Override
   public CommandNode visitMethod(SourceMethod sourceMethod, Void unused) {
     final List<CommandParameter> arguments = sourceMethod.parameters().stream()
-      .map(utils::parseParameter)
+      .map(this::parseParameter)
       .toList();
     final List<CommandArgument> commandArguments = arguments.stream()
       .filter(CommandArgument.class::isInstance)
@@ -128,8 +142,8 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
     }
 
     // Apply attributes
-    utils.applyExecutorTransform(sourceMethod, rootNode);
-    utils.platformUtils().populateNode(sourceMethod, rootNode);
+    applyExecutorTransform(sourceMethod, rootNode);
+    PlatformUtils.get().populateNode(sourceMethod, rootNode);
     applyRequirements(sourceMethod, rootNode);
 
     return rootNode;
@@ -152,8 +166,8 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
 
     // Apply attribute modifiers
     rootNode.setAttribute(AttributeKey.ACCESS, ExecuteAccess.of(sourceField));
-    utils.applyExecutorTransform(sourceField, rootNode);
-    utils.platformUtils().populateNode(sourceField, rootNode);
+    applyExecutorTransform(sourceField, rootNode);
+    PlatformUtils.get().populateNode(sourceField, rootNode);
     applyRequirements(sourceField, rootNode);
 
     return nestedNode;
@@ -192,8 +206,8 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
 
     // Apply some attributes to the root node before returning it.
     rootNode.setAttribute(AttributeKey.ACCESS, ExecuteAccess.of(sourceClass));
-    utils.applyExecutorTransform(sourceClass, rootNode);
-    utils.platformUtils().populateNode(sourceClass, rootNode);
+    applyExecutorTransform(sourceClass, rootNode);
+    PlatformUtils.get().populateNode(sourceClass, rootNode);
     applyRequirements(sourceClass, rootNode);
 
     return rootNode;
@@ -217,7 +231,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
 
     final CommandNode rootNode = CommandNode.createEmpty();
     final List<CommandParameter> parsedComponents = record.components().stream()
-      .map(utils::parseParameter)
+      .map(this::parseParameter)
       .toList();
 
     final CommandNode postArgumentsNode = rootNode.addArguments(parsedComponents.stream()
@@ -234,8 +248,8 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
     // Apply some attributes to the root node before returning it.
     rootNode.setAttribute(AttributeKey.ACCESS, ExecuteAccess.of(record));
     rootNode.setAttribute(AttributeKey.RECORD_ARGUMENTS, RecordArguments.of(record, parsedComponents));
-    utils.applyExecutorTransform(record, rootNode);
-    utils.platformUtils().populateNode(record, rootNode);
+    applyExecutorTransform(record, rootNode);
+    PlatformUtils.get().populateNode(record, rootNode);
     applyRequirements(record, rootNode);
 
     return rootNode;
@@ -253,7 +267,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
       node -> {
         final CommandNode endNode = node.addArguments(commandArguments);
         endNode.setAttribute(key, executable);
-        utils.platformUtils().populateExecutesNode(executable, endNode, arguments);
+        PlatformUtils.get().populateExecutesNode(executable, endNode, arguments);
       }
     );
   }
@@ -285,7 +299,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
 
   private void applyRequirements(AnnotationsHolder holder, CommandNode node) {
     final List<RequirementProvider> providers = holder.annotations().stream()
-      .flatMap(anno -> utils.requirementRegistry().getProvider(anno.source()).stream())
+      .flatMap(anno -> RequirementRegistry.get().getProvider(anno.source()).stream())
       .distinct()
       .toList();
     node.setAttribute(AttributeKey.REQUIREMENT_PROVIDER, new CombinedRequirementProvider(providers));
@@ -314,8 +328,71 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
   // Misc.
   //
 
-  @Override
-  public MessagerWrapper delegateMessager() {
-    return this.messager;
+  private void applyExecutorTransform(AnnotationsHolder element, Attributable node) {
+    if (element.hasAnnotationInherited(UnsetExecutorWrapper.class)) {
+      node.setAttribute(AttributeKey.EXECUTOR_WRAPPER_UNSET, true);
+      return;
+    }
+
+    this.applyRegistrableProvider(
+      node,
+      element,
+      ExecutorWrapperRegistry.get(),
+      AttributeKey.EXECUTOR_WRAPPER,
+      "executor wrapper"
+    );
+  }
+
+  private CommandParameter parseParameter(SourceParameterLike parameter) {
+    debug("| Parsing parameter: " + parameter.name());
+
+    if (!PlatformUtils.get().mayParameterBeArgument(parameter)) {
+      return new UnparsedCommandParameter(parameter);
+    }
+
+    if (parameter.hasAnnotationInherited(Literal.class)) {
+      final Literal literal = parameter.firstAnnotationByType(Literal.class).value(Literal.class);
+      final String[] declared = literal.value();
+      if (declared.length == 0) {
+        return LiteralCommandArgument.literal(parameter.name());
+      } else if (declared.length == 1) {
+        return LiteralCommandArgument.literal(declared[0]);
+      } else {
+        return MultiLiteralCommandArgument.multiLiteral(Set.of(declared));
+      }
+    }
+
+    final BrigadierArgumentType argumentType;
+    try {
+      argumentType = BrigadierArgumentConverter.get().getAsArgumentType(parameter);
+    } catch (ConversionException e) {
+      return new UnparsedCommandParameter(parameter);
+    }
+
+    debug("  | Successfully found Brigadier type: {}", argumentType);
+    final RequiredCommandArgument commandArgument = RequiredCommandArgument.of(argumentType, parameter.name());
+    applyRegistrableProvider(commandArgument, parameter, SuggestionsRegistry.get(), AttributeKey.SUGGESTION_PROVIDER, "suggestion");
+    return commandArgument;
+  }
+
+  private <T> void applyRegistrableProvider(
+    Attributable attributable,
+    AnnotationsHolder element,
+    RegistrableRegistry<T> registry,
+    AttributeKey<T> key,
+    String name
+  ) {
+    boolean found = false;
+    for (SourceAnnotation annotation : element.annotations()) {
+      final Optional<T> provider = registry.getProvider(annotation.source());
+      if (provider.isPresent()) {
+        if (found) {
+          this.infoSource("Multiple %s providers has been declared", element, name);
+        } else {
+          attributable.setAttribute(key, provider.get());
+          found = true;
+        }
+      }
+    }
   }
 }

@@ -18,7 +18,6 @@
 package net.strokkur.commands.internal.intermediate.registrable;
 
 import net.strokkur.commands.internal.util.Classes;
-import net.strokkur.jap.code.type.CodeClassType;
 import net.strokkur.jap.code.type.preset.JavaTypes;
 import net.strokkur.jap.source.classmodel.SourceClass;
 import net.strokkur.jap.source.classmodel.SourceField;
@@ -28,9 +27,10 @@ import net.strokkur.jap.source.classmodel.SourceMethodParameter;
 import java.util.List;
 
 public class SuggestionsRegistry extends FunctionalInterfaceRegistry<SuggestionProvider> {
+  private static final SuggestionsRegistry INSTANCE = new SuggestionsRegistry();
 
-  public SuggestionsRegistry(CodeClassType platformType) {
-    super(platformType);
+  public static SuggestionsRegistry get() {
+    return INSTANCE;
   }
 
   @Override

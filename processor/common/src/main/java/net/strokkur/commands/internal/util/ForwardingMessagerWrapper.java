@@ -17,6 +17,7 @@
  */
 package net.strokkur.commands.internal.util;
 
+import net.strokkur.commands.internal.StrokkCommandsProcessor;
 import net.strokkur.jap.source.classmodel.SourceElement;
 import net.strokkur.jap.source.util.MessagerWrapper;
 
@@ -27,7 +28,9 @@ public interface ForwardingMessagerWrapper extends MessagerWrapper {
   /**
    * {@return the messager wrapper to delegate all logger calls to}
    */
-  MessagerWrapper delegateMessager();
+  default MessagerWrapper delegateMessager() {
+    return StrokkCommandsProcessor.messagerWrapper();
+  }
 
   /**
    * {@inheritDoc}

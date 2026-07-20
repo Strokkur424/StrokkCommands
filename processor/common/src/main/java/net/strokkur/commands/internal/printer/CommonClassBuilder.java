@@ -66,8 +66,6 @@ public abstract class CommonClassBuilder<C extends CommandInformation> {
     this.selfType = CodeTypes.ofClass(sourceType.fullyQualifiedName() + "Brigadier");
   }
 
-  abstract PrototypeNodeBuilder createPrototypeBuilder();
-
   /// Creates the actual class, which will be printed to a file.
   public CodeClass createClass() {
     // Create skeletons for create and register methods for use in Javadocs.
@@ -87,7 +85,7 @@ public abstract class CommonClassBuilder<C extends CommandInformation> {
 
     populateStaticFields(classBuilder);
 
-    final PrototypeRoot prototype = createPrototypeBuilder().createRoot(rootNode);
+    final PrototypeRoot prototype = PrototypeNodeBuilder.create().createRoot(rootNode);
     final ConvertToExpression treeExpr = prototype.toExpression();
 
     final List<PrintedAccessPath> required = prototype.requiredAccessPaths().stream()

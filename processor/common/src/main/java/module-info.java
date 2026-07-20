@@ -1,9 +1,15 @@
 import net.strokkur.commands.internal.PlatformUtils;
+import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
+import net.strokkur.commands.internal.intermediate.TreePostProcessor;
+import net.strokkur.commands.internal.prototype.PrototypeNodeBuilder;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
 module net.strokkur.commands.processor.common {
   uses PlatformUtils;
+  uses PrototypeNodeBuilder;
+  uses TreePostProcessor;
+  uses BrigadierArgumentConverter;
 
   requires transitive java.compiler;
   requires transitive jdk.compiler;
@@ -27,6 +33,7 @@ module net.strokkur.commands.processor.common {
   exports net.strokkur.commands.internal.intermediate.record;
   exports net.strokkur.commands.internal.parsing;
   exports net.strokkur.commands.internal.printer;
+  exports net.strokkur.commands.internal.prototype;
   exports net.strokkur.commands.internal.util;
   exports net.strokkur.commands.internal.intermediate.executable;
 }

@@ -17,19 +17,17 @@
  */
 package net.strokkur.commands.internal.velocity;
 
-import net.strokkur.commands.internal.intermediate.CommonTreePostProcessor;
+import com.google.auto.service.AutoService;
+import net.strokkur.commands.internal.intermediate.TreePostProcessor;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.velocity.util.SenderType;
 import net.strokkur.commands.internal.velocity.util.VelocityAttributeKeys;
-import net.strokkur.jap.source.util.MessagerWrapper;
 
 import java.util.Collection;
 import java.util.Set;
 
-final class VelocityTreePostProcessor extends CommonTreePostProcessor {
-  VelocityTreePostProcessor(MessagerWrapper delegateMessager) {
-    super(delegateMessager);
-  }
+@AutoService(TreePostProcessor.class)
+public final class VelocityTreePostProcessor extends TreePostProcessor {
 
   @Override
   public void cleanupPath(CommandNode root) {

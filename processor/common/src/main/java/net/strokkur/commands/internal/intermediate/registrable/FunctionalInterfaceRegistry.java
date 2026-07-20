@@ -20,7 +20,6 @@ package net.strokkur.commands.internal.intermediate.registrable;
 import net.strokkur.commands.DefaultExecutes;
 import net.strokkur.commands.Executes;
 import net.strokkur.commands.internal.exceptions.ProviderAlreadyRegisteredException;
-import net.strokkur.jap.code.type.CodeClassType;
 import net.strokkur.jap.code.util.Modifiers;
 import net.strokkur.jap.source.classmodel.SourceAnnotationInterface;
 import net.strokkur.jap.source.classmodel.SourceClass;
@@ -28,13 +27,8 @@ import net.strokkur.jap.source.classmodel.SourceConstructor;
 import net.strokkur.jap.source.classmodel.SourceElement;
 import net.strokkur.jap.source.classmodel.SourceField;
 import net.strokkur.jap.source.classmodel.SourceMethod;
-import net.strokkur.jap.source.util.MessagerWrapper;
 
 public abstract class FunctionalInterfaceRegistry<T> extends RegistrableRegistry<T> {
-  public FunctionalInterfaceRegistry(CodeClassType platformType) {
-    super(platformType);
-  }
-
   protected abstract boolean inlineMethodPredicate(SourceMethod source);
 
   protected abstract boolean providerMethodPredicate(SourceMethod source);
@@ -51,7 +45,7 @@ public abstract class FunctionalInterfaceRegistry<T> extends RegistrableRegistry
 
   protected abstract T createInstance(SourceClass source);
 
-  public final boolean tryRegisterProvider(MessagerWrapper messager, SourceAnnotationInterface annotationClass, SourceElement sourceElement)
+  public final boolean tryRegisterProvider(SourceAnnotationInterface annotationClass, SourceElement sourceElement)
     throws ProviderAlreadyRegisteredException {
     return switch (sourceElement) {
       case SourceMethod method -> {
@@ -61,7 +55,7 @@ public abstract class FunctionalInterfaceRegistry<T> extends RegistrableRegistry
 
         if (inlineMethodPredicate(method)) {
           if (!method.modifiers().contains(Modifiers.STATIC)) {
-            messager.infoSource("This method matches the @" + annotationClass.classType().simpleName() + " provider method, but is not static. Is this a mistake?", method);
+            infoSource("This method matches the @" + annotationClass.classType().simpleName() + " provider method, but is not static. Is this a mistake?", method);
             yield false;
           }
           registerProvider(annotationClass, createInline(method));
@@ -70,7 +64,7 @@ public abstract class FunctionalInterfaceRegistry<T> extends RegistrableRegistry
 
         if (providerMethodPredicate(method)) {
           if (!method.modifiers().contains(Modifiers.STATIC)) {
-            messager.infoSource("This method matches the @" + annotationClass.classType().simpleName() + " provider method, but is not static. Is this a mistake?", method);
+            infoSource("This method matches the @" + annotationClass.classType().simpleName() + " provider method, but is not static. Is this a mistake?", method);
             yield false;
           }
           registerProvider(annotationClass, createProvider(method));
@@ -82,7 +76,7 @@ public abstract class FunctionalInterfaceRegistry<T> extends RegistrableRegistry
       case SourceField field -> {
         if (fieldPredicate(field)) {
           if (!field.modifiers().contains(Modifiers.STATIC)) {
-            messager.infoSource("This field matches the @" + annotationClass.classType().simpleName() + " provider field, but is not static. Is this a mistake?", field);
+            infoSource("This field matches the @" + annotationClass.classType().simpleName() + " provider field, but is not static. Is this a mistake?", field);
             yield false;
           }
           registerProvider(annotationClass, createField(field));
@@ -93,7 +87,7 @@ public abstract class FunctionalInterfaceRegistry<T> extends RegistrableRegistry
       case SourceClass type -> {
         if (instancePredicate(type)) {
           if (type.constructors().stream().anyMatch(ctor -> !ctor.parameters().isEmpty())) {
-            messager.infoSource("This class matches the @" + annotationClass.classType().simpleName() + " provider class, but is not statically accessible. Is this a mistake?", type);
+            infoSource("This class matches the @" + annotationClass.classType().simpleName() + " provider class, but is not statically accessible. Is this a mistake?", type);
             yield false;
           }
           registerProvider(annotationClass, createInstance(type));

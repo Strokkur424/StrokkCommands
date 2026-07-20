@@ -13,6 +13,7 @@ minecraft = "1.21.10"
 brigadier = "1.4.0"
 guice = "7.0.0"
 gson = "2.14.0"
+auto-service = "1.1.1"
 
 fabric-loader = "0.17.2"
 fabric-loom = "1.11-SNAPSHOT"
@@ -38,6 +39,7 @@ jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "j
 jakarta-inject = { module = "jakarta.inject:jakarta.inject-api", version.ref = "jakarta-inject" }
 guice = { module = "com.google.inject:guice", version.ref = "guice" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+auto-service = { module = "com.google.auto.service:auto-service-annotations", version.ref = "auto-service" }
 
 # Modded
 minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }

@@ -17,13 +17,11 @@
  */
 package net.strokkur.commands.internal.velocity;
 
+import com.google.auto.service.AutoService;
 import net.strokkur.commands.Aliases;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.UseInjection;
-import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.StrokkCommandsProcessor;
-import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
-import net.strokkur.commands.internal.intermediate.CommonTreePostProcessor;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.printer.CommonClassBuilder;
 import net.strokkur.commands.internal.velocity.util.VelocityCommandInformation;
@@ -31,8 +29,10 @@ import net.strokkur.jap.source.classmodel.SourceClass;
 import net.strokkur.jap.source.classmodel.SourceClassLike;
 import net.strokkur.jap.source.classmodel.SourceConstructor;
 
+import javax.annotation.processing.Processor;
 import java.util.Optional;
 
+@AutoService(Processor.class)
 public final class VelocityStrokkCommandsProcessor extends StrokkCommandsProcessor<Command, VelocityCommandInformation> {
 
   @Override
@@ -41,23 +41,8 @@ public final class VelocityStrokkCommandsProcessor extends StrokkCommandsProcess
   }
 
   @Override
-  protected PlatformUtils getPlatformUtils() {
-    return new VelocityPlatformUtils();
-  }
-
-  @Override
-  protected CommonTreePostProcessor createPostProcessor() {
-    return new VelocityTreePostProcessor(messager());
-  }
-
-  @Override
   protected CommonClassBuilder<VelocityCommandInformation> createBuilder(CommandNode node, VelocityCommandInformation commandInformation) {
     return new VelocityClassBuilder(node, commandInformation);
-  }
-
-  @Override
-  protected BrigadierArgumentConverter getConverter() {
-    return new VelocityBrigadierArgumentConverter(messager());
   }
 
   @Override

@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.Stack;
 
@@ -61,6 +62,12 @@ public abstract class PrototypeNodeBuilder {
   private final Deque<String> literalQueue = new ArrayDeque<>();
 
   private final List<String> warnings = new ArrayList<>();
+
+  public static PrototypeNodeBuilder create() {
+    return ServiceLoader.load(PrototypeNodeBuilder.class)
+      .findFirst()
+      .orElseThrow(() -> new RuntimeException("No implementation of PrototypeNodeBuilder found."));
+  }
 
   /// Gets initial validation statements to be put into an executes-block. This is used for stuff
   /// like sender filtering.

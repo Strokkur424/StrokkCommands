@@ -38,10 +38,7 @@ import net.strokkur.jap.source.classmodel.SourceMethodParameter;
 import net.strokkur.jap.source.classmodel.SourceParameterLike;
 
 class VelocityClassBuilder extends CommonClassBuilder<VelocityCommandInformation> {
-  VelocityClassBuilder(
-    CommandNode rootNode,
-    VelocityCommandInformation commandInformation
-  ) {
+  VelocityClassBuilder(CommandNode rootNode, VelocityCommandInformation commandInformation) {
     super(rootNode, commandInformation);
   }
 

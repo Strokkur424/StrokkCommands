@@ -23,6 +23,7 @@ import net.strokkur.commands.arguments.IntArg;
 import net.strokkur.commands.arguments.LongArg;
 import net.strokkur.commands.arguments.StringArg;
 import net.strokkur.commands.arguments.StringArgType;
+import net.strokkur.commands.internal.StrokkCommandsProcessor;
 import net.strokkur.commands.internal.exceptions.ConversionException;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
@@ -42,17 +43,26 @@ import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.ServiceLoader;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
-  private final MessagerWrapper messagerWrapper;
+  private final MessagerWrapper messagerWrapper = StrokkCommandsProcessor.messagerWrapper();
   protected final Map<CodeType, BiFunction<SourceParameterLike, String, BrigadierArgumentType>> conversionMap;
 
-  public BrigadierArgumentConverter(MessagerWrapper messagerWrapper) {
-    this.messagerWrapper = messagerWrapper;
+  public BrigadierArgumentConverter() {
     this.conversionMap = new HashMap<>();
     initializeArguments();
+  }
+
+  public static BrigadierArgumentConverter get() {
+    class Holder {
+      @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+      static final Optional<BrigadierArgumentConverter> INSTANCE = ServiceLoader.load(BrigadierArgumentConverter.class).findFirst();
+    }
+
+    return Holder.INSTANCE.orElseThrow(() -> new RuntimeException("No instance of BrigadierArgumentConverter found."));
   }
 
   protected @Nullable BrigadierArgumentType handleCustomArgumentAnnotations(

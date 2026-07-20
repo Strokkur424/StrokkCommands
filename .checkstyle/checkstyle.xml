@@ -74,7 +74,7 @@
     <module name="GenericWhitespace"/>
 
     <!-- https://checkstyle.org/config_design.html#HideUtilityClassConstructor -->
-    <module name="HideUtilityClassConstructor"/>
+    <!-- <module name="HideUtilityClassConstructor"/> -->
 
     <!-- https://checkstyle.org/config_misc.html#Indentation -->
     <module name="Indentation">
