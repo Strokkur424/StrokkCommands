@@ -1,7 +1,10 @@
+import net.strokkur.commands.internal.PlatformUtils;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
 module net.strokkur.commands.processor.common {
+  uses PlatformUtils;
+
   requires transitive java.compiler;
   requires transitive jdk.compiler;
   requires transitive net.strokkur.commands.common;

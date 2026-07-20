@@ -19,6 +19,8 @@ package net.strokkur.commands.internal.printer;
 
 import net.strokkur.commands.internal.BuildConstants;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
+import net.strokkur.commands.internal.prototype.PrototypeNodeBuilder;
+import net.strokkur.commands.internal.prototype.PrototypeRoot;
 import net.strokkur.commands.internal.util.CommandInformation;
 import net.strokkur.jap.code.classmodel.CodeClass;
 import net.strokkur.jap.code.classmodel.CodeField;
@@ -53,23 +55,18 @@ import java.util.function.Predicate;
 public abstract class CommonClassBuilder<C extends CommandInformation> {
   private final CommandNode rootNode;
   protected final C commandInformation;
-  private final CommonBrigadierStatementBuilder statementBuilder;
 
   protected final CodeClassType sourceType;
   protected final CodeClassType selfType;
 
-  public CommonClassBuilder(
-    CommandNode rootNode,
-    C commandInformation,
-    CommonBrigadierStatementBuilder statementBuilder
-  ) {
+  public CommonClassBuilder(CommandNode rootNode, C commandInformation) {
     this.rootNode = rootNode;
     this.commandInformation = commandInformation;
-    this.statementBuilder = statementBuilder;
-
     this.sourceType = commandInformation.sourceClass().classType();
     this.selfType = CodeTypes.ofClass(sourceType.fullyQualifiedName() + "Brigadier");
   }
+
+  abstract PrototypeNodeBuilder createPrototypeBuilder();
 
   /// Creates the actual class, which will be printed to a file.
   public CodeClass createClass() {
@@ -90,11 +87,10 @@ public abstract class CommonClassBuilder<C extends CommandInformation> {
 
     populateStaticFields(classBuilder);
 
-    // Run the brigadier tree builder so we can use the statements
-    statementBuilder.reset();
-    final ConvertToExpression treeExpr = statementBuilder.build(rootNode, Expressions.variable("NAME"));
+    final PrototypeRoot prototype = createPrototypeBuilder().createRoot(rootNode);
+    final ConvertToExpression treeExpr = prototype.toExpression();
 
-    final List<PrintedAccessPath> required = statementBuilder.requiredPaths.stream()
+    final List<PrintedAccessPath> required = prototype.requiredAccessPaths().stream()
       .map(PrintedAccessPath::requiredParent)
       .distinct()
       .sorted(Comparator.comparing(PrintedAccessPath::name))

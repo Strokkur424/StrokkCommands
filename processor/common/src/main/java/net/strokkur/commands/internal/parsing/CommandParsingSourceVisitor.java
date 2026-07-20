@@ -70,11 +70,19 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
 
   /// Handles [Command]-annotated classes instead of the standard [Subcommand].
   public CommandNode visitCommandClass(SourceClassLike classLike, Void unused) {
-    return switch (classLike) {
+    final CommandNode node = switch (classLike) {
       case SourceClass sourceClass -> visitClass(sourceClass, unused, Command.class, Command::value);
       case SourceRecord record -> visitRecord(record, unused, Command.class, Command::value);
       default -> throw new IllegalCommandClassTypeException(classLike);
     };
+
+    // A class annotated with @Command will ALWAYS result in a root empty node,
+    // followed by a single child, named the command name (ofc it may have a longer path too).
+    // For this reason, and to simplify further parsing down the line, move all attributes
+    // to the first child and return that first child instead.
+    final CommandNode child = node.children().getFirst();
+    node.transferAllAttributes(child);
+    return child;
   }
 
   //

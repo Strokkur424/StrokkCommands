@@ -70,7 +70,7 @@ public abstract class CommonBrigadierStatementBuilder {
 
   public final ConvertToExpression build(CommandNode node, ConvertToExpression rootNameExpression) {
     final InvocationChainBuilder builder = literalBuilder(rootNameExpression);
-    rootLiteralNode = node.children().getFirst();
+    rootLiteralNode = node;
     createTree(builder, node);
     builder.chainMethod("build", StyleConfig.NEWLINE);
     return builder;

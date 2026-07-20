@@ -42,7 +42,7 @@ class VelocityClassBuilder extends CommonClassBuilder<VelocityCommandInformation
     CommandNode rootNode,
     VelocityCommandInformation commandInformation
   ) {
-    super(rootNode, commandInformation, new VelocityBrigadierStatementBuilder());
+    super(rootNode, commandInformation);
   }
 
   @Override

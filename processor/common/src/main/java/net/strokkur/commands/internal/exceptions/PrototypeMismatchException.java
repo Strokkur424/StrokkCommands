@@ -15,27 +15,25 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.testplugin.velocity.commands;
+package net.strokkur.commands.internal.exceptions;
 
-import com.velocitypowered.api.proxy.ProxyServer;
-import net.strokkur.commands.Command;
-import net.strokkur.commands.Executes;
-import net.strokkur.commands.meta.StrokkCommandsDebug;
-import net.strokkur.testplugin.velocity.TestPluginVelocity;
+import net.strokkur.jap.source.classmodel.SourceElement;
+import org.jspecify.annotations.Nullable;
 
-@Command("propagation")
-@StrokkCommandsDebug(only = ConstructorPropagation.class)
-class ConstructorPropagation {
-  private final TestPluginVelocity plugin;
-  private final ProxyServer server;
+public class PrototypeMismatchException extends RuntimeException {
+  private final @Nullable SourceElement element;
 
-  ConstructorPropagation(TestPluginVelocity plugin, ProxyServer server) {
-    this.plugin = plugin;
-    this.server = server;
+  public PrototypeMismatchException(String message) {
+    super(message);
+    this.element = null;
   }
 
-  @Executes
-  void execute() {
-    this.plugin.logger().info("There are currently {} players online!", this.server.getAllPlayers().size());
+  public PrototypeMismatchException(String message, SourceElement element) {
+    super(message);
+    this.element = element;
+  }
+
+  public @Nullable SourceElement element() {
+    return element;
   }
 }

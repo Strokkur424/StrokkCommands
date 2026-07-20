@@ -15,27 +15,26 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.testplugin.velocity.commands;
+package net.strokkur.commands.internal.prototype;
 
-import com.velocitypowered.api.proxy.ProxyServer;
-import net.strokkur.commands.Command;
-import net.strokkur.commands.Executes;
-import net.strokkur.commands.meta.StrokkCommandsDebug;
-import net.strokkur.testplugin.velocity.TestPluginVelocity;
+import net.strokkur.commands.internal.PlatformUtils;
+import net.strokkur.jap.code.expression.Expressions;
+import net.strokkur.jap.code.expression.builder.InvocationChainBuilder;
 
-@Command("propagation")
-@StrokkCommandsDebug(only = ConstructorPropagation.class)
-class ConstructorPropagation {
-  private final TestPluginVelocity plugin;
-  private final ProxyServer server;
+public final class PrototypeLiteral extends PrototypeNode {
+  final String literal;
 
-  ConstructorPropagation(TestPluginVelocity plugin, ProxyServer server) {
-    this.plugin = plugin;
-    this.server = server;
+  PrototypeLiteral(String literal) {
+    this.literal = literal;
   }
 
-  @Executes
-  void execute() {
-    this.plugin.logger().info("There are currently {} players online!", this.server.getAllPlayers().size());
+  @Override
+  protected InvocationChainBuilder nodeElement() {
+    return PlatformUtils.get().literalBuilder(Expressions.string(literal));
+  }
+
+  @Override
+  protected String commandStringElement() {
+    return literal;
   }
 }

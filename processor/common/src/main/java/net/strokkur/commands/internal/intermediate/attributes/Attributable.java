@@ -46,6 +46,8 @@ public interface Attributable {
 
   <T> void setAttribute(AttributeKey<T> key, T value);
 
+  void setAttributeRaw(String key, Object value);
+
   void removeAttribute(AttributeKey<?> key);
 
   boolean hasAttribute(AttributeKey<?> key);
@@ -53,6 +55,8 @@ public interface Attributable {
   default <V> void transferAttribute(AttributeKey<V> key, Attributable other) {
     ifAttributeExists(key, v -> other.setAttribute(key, v));
   }
+
+  void transferAllAttributes(Attributable other);
 
   default <V> void ifAttributeExists(AttributeKey<V> key, Consumer<V> action) {
     final V value = getAttribute(key);

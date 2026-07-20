@@ -27,6 +27,8 @@ import net.strokkur.commands.internal.velocity.util.SenderType;
 import net.strokkur.commands.internal.velocity.util.VelocityAttributeKeys;
 import net.strokkur.commands.internal.velocity.util.VelocityClasses;
 import net.strokkur.commands.permission.Permission;
+import net.strokkur.jap.code.convert.ConvertToExpression;
+import net.strokkur.jap.code.expression.builder.InvocationChainBuilder;
 import net.strokkur.jap.code.type.CodeClassType;
 import net.strokkur.jap.code.type.CodeType;
 import net.strokkur.jap.source.annotation.AnnotationsHolder;
@@ -35,7 +37,7 @@ import net.strokkur.jap.source.classmodel.SourceParameterLike;
 import java.util.List;
 import java.util.Set;
 
-final class VelocityPlatformUtils implements PlatformUtils {
+public final class VelocityPlatformUtils implements PlatformUtils {
   @Override
   public void populateExecutesNode(Executable executable, CommandNode node, List<CommandParameter> parameters) {
     final SenderType type = this.getSenderType(parameters);
@@ -83,5 +85,19 @@ final class VelocityPlatformUtils implements PlatformUtils {
     }
 
     return type;
+  }
+
+  @Override
+  public InvocationChainBuilder literalBuilder(ConvertToExpression name) {
+    return VelocityClasses.BRIGADIER_COMMAND
+      .chainBuilder()
+      .chainMethod("literalArgumentBuilder", name);
+  }
+
+  @Override
+  public InvocationChainBuilder argumentBuilder(ConvertToExpression name, ConvertToExpression argument) {
+    return VelocityClasses.BRIGADIER_COMMAND
+      .chainBuilder()
+      .chainMethod("requiredArgumentBuilder", name, argument);
   }
 }
