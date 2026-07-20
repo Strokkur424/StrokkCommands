@@ -75,8 +75,13 @@ simply takes away the complexity from Brigadier. For many developers, the featur
 not required and just increases your plugin jar's file size for very little reasons.
 
 ## Star History
-<picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Strokkur424/StrokkCommands&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Strokkur424/StrokkCommands&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Strokkur424/StrokkCommands&type=Date" />
-</picture>
+
+<a href="https://www.star-history.com/?repos=Strokkur424%2FStrokkCommands&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=Strokkur424/StrokkCommands&type=date&theme=dark&legend=top-left&sealed_token=kg0OpP777wufPXFbdOXkD4PYbvxgGT-FwTropivkgG0yAwHIjzEKVS2KgqbBBMLW5IurxFmZVlHvR2QjHMd4Ol1OB3Z2eSM5P-Rcuu0oFn3OHT2yz8_XLk1yXeO-XeRqoo3Zmc4TAVTyseWlPRhhJameKgz6YtAVrBmR7vBD9fswYgp01NyIEmcIu365" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=Strokkur424/StrokkCommands&type=date&legend=top-left&sealed_token=kg0OpP777wufPXFbdOXkD4PYbvxgGT-FwTropivkgG0yAwHIjzEKVS2KgqbBBMLW5IurxFmZVlHvR2QjHMd4Ol1OB3Z2eSM5P-Rcuu0oFn3OHT2yz8_XLk1yXeO-XeRqoo3Zmc4TAVTyseWlPRhhJameKgz6YtAVrBmR7vBD9fswYgp01NyIEmcIu365" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Strokkur424/StrokkCommands&type=date&legend=top-left&sealed_token=kg0OpP777wufPXFbdOXkD4PYbvxgGT-FwTropivkgG0yAwHIjzEKVS2KgqbBBMLW5IurxFmZVlHvR2QjHMd4Ol1OB3Z2eSM5P-Rcuu0oFn3OHT2yz8_XLk1yXeO-XeRqoo3Zmc4TAVTyseWlPRhhJameKgz6YtAVrBmR7vBD9fswYgp01NyIEmcIu365" />
+ </picture>
+</a>
+
+<img width="1832" height="1404" alt="star-history-2026721" src="https://github.com/user-attachments/assets/053dd234-ca72-4e35-ae66-8601b3edb2c5" />
