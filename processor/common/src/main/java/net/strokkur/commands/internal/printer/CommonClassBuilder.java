@@ -43,6 +43,7 @@ import net.strokkur.jap.code.type.preset.JSpecifyTypes;
 import net.strokkur.jap.code.type.preset.JakartaInjectTypes;
 import net.strokkur.jap.code.type.preset.JavaTypes;
 import net.strokkur.jap.code.util.Modifiers;
+import net.strokkur.jap.code.util.StyleConfig;
 import net.strokkur.jap.source.classmodel.SourceConstructor;
 import net.strokkur.jap.source.classmodel.SourceMethodParameter;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
@@ -86,7 +87,8 @@ public abstract class CommonClassBuilder<C extends CommandInformation> {
     populateStaticFields(classBuilder);
 
     final PrototypeRoot prototype = PrototypeNodeBuilder.create().createRoot(rootNode);
-    final ConvertToExpression treeExpr = prototype.toExpression();
+    final ConvertToExpression treeExpr = prototype.toExpression()
+      .chainMethod("build", StyleConfig.NEWLINE);
 
     final List<PrintedAccessPath> required = prototype.requiredAccessPaths().stream()
       .map(PrintedAccessPath::requiredParent)

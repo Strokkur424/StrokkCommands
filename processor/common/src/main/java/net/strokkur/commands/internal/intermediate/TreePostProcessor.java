@@ -34,7 +34,9 @@ public abstract class TreePostProcessor implements ForwardingMessagerWrapper {
   public static TreePostProcessor get() {
     class Holder {
       @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-      static final Optional<TreePostProcessor> INSTANCE = ServiceLoader.load(TreePostProcessor.class).findFirst();
+      static final Optional<TreePostProcessor> INSTANCE = ServiceLoader.load(
+        TreePostProcessor.class, TreePostProcessor.class.getClassLoader()
+      ).findFirst();
     }
 
     return Holder.INSTANCE.orElseThrow(() -> new RuntimeException("No instance of TreePostProcessor found."));

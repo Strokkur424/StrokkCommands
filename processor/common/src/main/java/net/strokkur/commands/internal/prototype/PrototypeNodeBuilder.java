@@ -64,7 +64,7 @@ public abstract class PrototypeNodeBuilder {
   private final List<String> warnings = new ArrayList<>();
 
   public static PrototypeNodeBuilder create() {
-    return ServiceLoader.load(PrototypeNodeBuilder.class)
+    return ServiceLoader.load(PrototypeNodeBuilder.class, PrototypeNode.class.getClassLoader())
       .findFirst()
       .orElseThrow(() -> new RuntimeException("No implementation of PrototypeNodeBuilder found."));
   }

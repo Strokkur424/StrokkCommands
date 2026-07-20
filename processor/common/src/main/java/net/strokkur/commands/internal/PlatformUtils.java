@@ -36,7 +36,9 @@ public interface PlatformUtils {
   static PlatformUtils get() {
     class Holder {
       @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-      static final Optional<PlatformUtils> INSTANCE = ServiceLoader.load(PlatformUtils.class).findFirst();
+      static final Optional<PlatformUtils> INSTANCE = ServiceLoader.load(
+        PlatformUtils.class, PlatformUtils.class.getClassLoader()
+      ).findFirst();
     }
 
     return Holder.INSTANCE.orElseThrow(() -> new RuntimeException("No PlatformUtils provider registered."));

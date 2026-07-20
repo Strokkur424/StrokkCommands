@@ -39,7 +39,8 @@ jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "j
 jakarta-inject = { module = "jakarta.inject:jakarta.inject-api", version.ref = "jakarta-inject" }
 guice = { module = "com.google.inject:guice", version.ref = "guice" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
-auto-service = { module = "com.google.auto.service:auto-service-annotations", version.ref = "auto-service" }
+auto-service-annotations = { module = "com.google.auto.service:auto-service-annotations", version.ref = "auto-service" }
+auto-service = { module = "com.google.auto.service:auto-service", version.ref = "auto-service" }
 
 # Modded
 minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
