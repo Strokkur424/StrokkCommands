@@ -23,9 +23,11 @@ import net.strokkur.jap.code.expression.builder.InvocationChainBuilder;
 
 public final class PrototypeLiteral extends PrototypeNode {
   final String literal;
+  final boolean isArgumentParam;
 
-  PrototypeLiteral(String literal) {
+  PrototypeLiteral(String literal, boolean isArgumentParam) {
     this.literal = literal;
+    this.isArgumentParam = isArgumentParam;
   }
 
   @Override

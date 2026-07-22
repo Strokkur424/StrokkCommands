@@ -17,10 +17,10 @@
  */
 package net.strokkur.commands.internal.arguments;
 
-public record LiteralCommandArgument(String literal) implements CommandArgument {
+public record LiteralCommandArgument(String literal, boolean isArgumentParam) implements CommandArgument {
 
-  public static LiteralCommandArgument literal(String literal) {
-    return new LiteralCommandArgument(literal);
+  public static LiteralCommandArgument literal(String literal, boolean isArgumentParam) {
+    return new LiteralCommandArgument(literal, isArgumentParam);
   }
 
   @Override

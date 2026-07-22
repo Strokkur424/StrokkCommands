@@ -42,6 +42,11 @@ public abstract class PrototypeNode {
 
   protected abstract String commandStringElement();
 
+  public void addChild(PrototypeNode node) {
+    children.add(node);
+    node.parent = this;
+  }
+
   public InvocationChainBuilder toExpression() {
     final InvocationChainBuilder builder = nodeElement();
     if (requires != null) {

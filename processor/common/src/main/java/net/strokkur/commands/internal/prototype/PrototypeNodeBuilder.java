@@ -131,9 +131,9 @@ public abstract class PrototypeNodeBuilder {
     scopeAccessStack(node, () -> {
       if (node instanceof ArgumentNode arg) {
         switch (arg.argument()) {
-          case LiteralCommandArgument(String lit) -> appendLiteralTo(prototype, node, lit);
+          case LiteralCommandArgument(String lit, boolean isArgumentParam) -> appendLiteralTo(prototype, node, lit, isArgumentParam);
           case MultiLiteralCommandArgument(Set<String> literals) -> {
-            literals.forEach(lit -> appendLiteralTo(prototype, node, lit));
+            literals.forEach(lit -> appendLiteralTo(prototype, node, lit, true));
           }
           case RequiredCommandArgument req -> {
             final Optional<PrototypeArgument> found = prototype.findChild(
@@ -144,7 +144,7 @@ public abstract class PrototypeNodeBuilder {
             final PrototypeArgument next;
             if (found.isEmpty()) {
               next = new PrototypeArgument(req.argumentName(), req.argumentType());
-              prototype.children.add(next);
+              prototype.addChild(next);
             } else {
               next = found.get();
 
@@ -173,12 +173,12 @@ public abstract class PrototypeNodeBuilder {
     });
   }
 
-  private void appendLiteralTo(PrototypeNode prototype, CommandNode node, String literal) {
+  private void appendLiteralTo(PrototypeNode prototype, CommandNode node, String literal, boolean argumentParam) {
     final Optional<PrototypeLiteral> found = prototype.findChild(PrototypeLiteral.class, p -> p.literal.equals(literal));
     final PrototypeNode next;
     if (found.isEmpty()) {
-      next = new PrototypeLiteral(literal);
-      prototype.children.add(next);
+      next = new PrototypeLiteral(literal, argumentParam);
+      prototype.addChild(next);
     } else {
       next = found.get();
     }
@@ -240,7 +240,7 @@ public abstract class PrototypeNodeBuilder {
   }
 
   private void fillLiteralQueue(PrototypeNode node) {
-    if (node instanceof PrototypeLiteral literal) {
+    if (node instanceof PrototypeLiteral literal && literal.isArgumentParam) {
       literalQueue.push(literal.literal);
     }
     if (node.parent != null) {

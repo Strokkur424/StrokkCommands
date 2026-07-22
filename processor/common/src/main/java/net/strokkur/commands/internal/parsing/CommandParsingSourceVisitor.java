@@ -291,7 +291,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
       .map(path -> path.isBlank() ?
         List.<CommandArgument>of() :
         Arrays.stream(path.strip().split(" "))
-          .map(LiteralCommandArgument::new)
+          .map(lit -> LiteralCommandArgument.literal(lit, false))
           .toList())
       .forEach(args -> {
         final CommandNode endNode = args.isEmpty() ? root : root.addArguments(args);
@@ -358,9 +358,9 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
       final Literal literal = parameter.firstAnnotationByType(Literal.class).value(Literal.class);
       final String[] declared = literal.value();
       if (declared.length == 0) {
-        return LiteralCommandArgument.literal(parameter.name());
+        return LiteralCommandArgument.literal(parameter.name(), true);
       } else if (declared.length == 1) {
-        return LiteralCommandArgument.literal(declared[0]);
+        return LiteralCommandArgument.literal(declared[0], true);
       } else {
         return MultiLiteralCommandArgument.multiLiteral(Set.of(declared));
       }
