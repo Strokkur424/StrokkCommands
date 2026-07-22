@@ -17,11 +17,11 @@
  */
 package net.strokkur.commands.internal.paper;
 
+import com.google.auto.service.AutoService;
+import net.strokkur.commands.Executes;
 import net.strokkur.commands.internal.PlatformUtils;
-import net.strokkur.commands.internal.abstraction.AnnotationsHolder;
-import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.exceptions.AnnotationException;
-import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.exceptions.UnknownSenderException;
 import net.strokkur.commands.internal.intermediate.executable.CommandParameter;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
 import net.strokkur.commands.internal.intermediate.executable.UnparsedCommandParameter;
@@ -32,78 +32,91 @@ import net.strokkur.commands.internal.paper.util.PaperClasses;
 import net.strokkur.commands.paper.Executor;
 import net.strokkur.commands.paper.RequiresOP;
 import net.strokkur.commands.permission.Permission;
+import net.strokkur.jap.code.convert.ConvertToExpression;
+import net.strokkur.jap.code.expression.builder.InvocationChainBuilder;
+import net.strokkur.jap.code.type.CodeClassType;
+import net.strokkur.jap.source.annotation.AnnotationsHolder;
+import net.strokkur.jap.source.classmodel.SourceParameterLike;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 
-final class PaperPlatformUtils implements PlatformUtils {
-
-  @Override
-  public boolean mayParameterBeArgument(SourceVariable param) {
-    return !param.hasAnnotationInherited(Executor.class);
-  }
+@AutoService(PlatformUtils.class)
+public final class PaperPlatformUtils implements PlatformUtils {
 
   @Override
-  public void populateExecutesNode(Executable executable, CommandNode node, List<CommandParameter> parameters) {
+  public void populateExecutesNode(Executable executable, CommandNode node, List<CommandParameter> parameters) throws UnknownSenderException {
     final ExecutorType type = getExecutorType(parameters);
     executable.setAttribute(PaperAttributeKeys.EXECUTOR_TYPE, type);
     node.setAttribute(PaperAttributeKeys.EXECUTOR_TYPE, type);
   }
 
   @Override
-  public String platformType() {
-    return PaperClasses.COMMAND_SOURCE_STACK;
-  }
+  public void populateNode(AnnotationsHolder holder, CommandNode node) {
+    final List<String> permission = holder.annotationsValuesInherited(Permission.class).stream()
+      .map(Permission::value)
+      .toList();
 
-  @Override
-  public String getNodeReturnType() {
-    return "LiteralCommandNode";
-  }
-
-  @Override
-  public void populateNode(CommandNode node, AnnotationsHolder holder) {
-    final Optional<Permission> permission = holder.getAnnotationOptional(Permission.class);
-    if (permission.isPresent()) {
-      final String permissionValue = permission.get().value();
-      node.editAttributeMutable(
-          PaperAttributeKeys.PERMISSIONS,
-          s -> s.add(permissionValue),
-          () -> new HashSet<>(Set.of(permissionValue))
-      );
-    } else if (node.hasEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE)) {
-      if (!node.hasAttribute(PaperAttributeKeys.PERMISSIONS)) {
-        node.setAttribute(PaperAttributeKeys.PERMISSIONS, new HashSet<>());
-      }
+    if (!permission.isEmpty()) {
+      node.forEachChildElseSelf(n -> n.editAttributeMutable(
+        PaperAttributeKeys.PERMISSIONS,
+        s -> s.addAll(permission),
+        () -> new HashSet<>(permission)
+      ));
     }
 
     if (holder.hasAnnotationInherited(RequiresOP.class)) {
-      node.setAttribute(PaperAttributeKeys.REQUIRES_OP, true);
+      node.forEachChildElseSelf(n -> n.setAttribute(PaperAttributeKeys.REQUIRES_OP, true));
     }
   }
+
+  @Override
+  public boolean mayParameterBeArgument(SourceParameterLike param) {
+    return !param.hasAnnotation(Executes.class);
+  }
+
+  @Override
+  public CodeClassType platformType() {
+    return PaperClasses.COMMAND_SOURCE_STACK.toClassType();
+  }
+
+  @Override
+  public InvocationChainBuilder literalBuilder(ConvertToExpression name) {
+    return PaperClasses.COMMANDS.chainBuilder()
+      .chainMethod("literal", name);
+  }
+
+  @Override
+  public InvocationChainBuilder argumentBuilder(ConvertToExpression name, ConvertToExpression argument) {
+    return PaperClasses.COMMANDS.chainBuilder()
+      .chainMethod("argument", name, argument);
+  }
+
+  //
+  // Utils
+  //
 
   private ExecutorType getExecutorType(List<CommandParameter> parameters) throws AnnotationException {
     ExecutorType type = ExecutorType.NONE;
     for (CommandParameter parameter : parameters) {
-      if (!(parameter instanceof UnparsedCommandParameter(SourceVariable sourceParam))) {
+      if (!(parameter instanceof UnparsedCommandParameter(SourceParameterLike param))) {
         continue;
       }
 
-      if (!sourceParam.hasAnnotationInherited(Executor.class)) {
+      if (!param.hasAnnotationInherited(Executor.class)) {
         continue;
       }
 
-      type = switch (sourceParam.getType().getFullyQualifiedName()) {
-        case PaperClasses.PLAYER -> ExecutorType.PLAYER;
-        case PaperClasses.ENTITY -> ExecutorType.ENTITY;
-        default -> throw new AnnotationException("Illegal class annotated with @Executor: " + sourceParam.getType().getSourceName());
-      };
-
-      if (type == ExecutorType.PLAYER) {
-        // Even if an entity executor is requested, the required player executor works just fine; return the loop
-        break;
+      if (param.type().isType(PaperClasses.PLAYER)) {
+        return ExecutorType.PLAYER;
       }
+
+      if (param.type().isType(PaperClasses.ENTITY)) {
+        type = ExecutorType.ENTITY;
+        continue;
+      }
+
+      throw new AnnotationException("Illegal class annotated with @Executor", param);
     }
 
     return type;

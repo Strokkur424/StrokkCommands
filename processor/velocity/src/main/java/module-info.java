@@ -15,7 +15,7 @@ import javax.annotation.processing.Processor;
 module net.strokkur.commands.processor.velocity {
   requires net.strokkur.commands.processor.common;
   requires net.strokkur.commands.velocity;
-  requires com.google.auto.service;
+  requires static com.google.auto.service;
 
   provides Processor with VelocityStrokkCommandsProcessor;
   provides PlatformUtils with VelocityPlatformUtils;

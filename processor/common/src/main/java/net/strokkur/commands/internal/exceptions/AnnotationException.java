@@ -17,8 +17,13 @@
  */
 package net.strokkur.commands.internal.exceptions;
 
+import net.strokkur.jap.source.classmodel.SourceElement;
+
 public class AnnotationException extends RuntimeException {
-  public AnnotationException(String message) {
+  public final SourceElement element;
+
+  public AnnotationException(String message, SourceElement element) {
     super(message);
+    this.element = element;
   }
 }

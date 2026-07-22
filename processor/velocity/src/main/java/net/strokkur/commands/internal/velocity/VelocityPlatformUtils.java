@@ -81,7 +81,7 @@ public final class VelocityPlatformUtils implements PlatformUtils {
       }
 
       if (type != SenderType.NORMAL && thisType != type) {
-        throw new AnnotationException("Cannot satisfy both a player and a console source.");
+        throw new AnnotationException("Cannot satisfy both a player and a console source.", sourceParam);
       }
       type = thisType;
     }

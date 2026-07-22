@@ -21,17 +21,12 @@ import net.strokkur.commands.internal.intermediate.TreePostProcessor;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.paper.util.ExecutorType;
 import net.strokkur.commands.internal.paper.util.PaperAttributeKeys;
-import net.strokkur.commands.internal.util.MessagerWrapper;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
 final class PaperTreePostProcessor extends TreePostProcessor {
-
-  PaperTreePostProcessor(MessagerWrapper delegateMessager) {
-    super(delegateMessager);
-  }
 
   @Override
   public void cleanupPath(CommandNode root) {

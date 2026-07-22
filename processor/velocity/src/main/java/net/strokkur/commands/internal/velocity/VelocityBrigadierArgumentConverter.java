@@ -19,19 +19,8 @@ package net.strokkur.commands.internal.velocity;
 
 import com.google.auto.service.AutoService;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
-import net.strokkur.commands.internal.arguments.BrigadierArgumentType;
-import net.strokkur.commands.internal.exceptions.ConversionException;
-import net.strokkur.jap.code.type.CodeType;
-import net.strokkur.jap.source.classmodel.SourceParameterLike;
-import org.jspecify.annotations.Nullable;
 
 @AutoService(BrigadierArgumentConverter.class)
 public final class VelocityBrigadierArgumentConverter extends BrigadierArgumentConverter {
-  /// We do not support custom arguments for Velocity... yet!
-  @Override
-  protected @Nullable BrigadierArgumentType handleCustomArgumentAnnotations(
-    String argumentName, CodeType type, SourceParameterLike parameter
-  ) throws ConversionException {
-    return null;
-  }
+  // We do not support custom arguments for Velocity... yet!
 }

@@ -20,18 +20,14 @@ package net.strokkur.commands.internal.paper;
 import net.strokkur.commands.Aliases;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.UseInjection;
-import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.StrokkCommandsProcessor;
-import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.abstraction.SourceConstructor;
-import net.strokkur.commands.internal.abstraction.SourceMethod;
-import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
-import net.strokkur.commands.internal.intermediate.TreePostProcessor;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.paper.util.PaperCommandInformation;
-import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
-import net.strokkur.commands.internal.util.MessagerWrapper;
+import net.strokkur.commands.internal.printer.CommonClassBuilder;
 import net.strokkur.commands.paper.Description;
+import net.strokkur.jap.source.classmodel.SourceClass;
+import net.strokkur.jap.source.classmodel.SourceClassLike;
+import net.strokkur.jap.source.classmodel.SourceConstructor;
 
 import java.util.Optional;
 
@@ -43,49 +39,26 @@ public final class PaperStrokkCommandsProcessor extends StrokkCommandsProcessor<
   }
 
   @Override
-  private String getCommandName(Command annotation) {
-    return annotation.value();
+  protected CommonClassBuilder<PaperCommandInformation> createBuilder(CommandNode node, PaperCommandInformation commandInformation) {
+    return new PaperClassBuilder(node, commandInformation);
   }
 
   @Override
-  protected PlatformUtils getPlatformUtils() {
-    return new PaperPlatformUtils();
-  }
+  protected PaperCommandInformation getCommandInformation(SourceClassLike classLike) {
+    final Optional<Description> description = classLike.firstAnnotationValueByTypeOptional(Description.class);
+    final Optional<Aliases> aliases = classLike.firstAnnotationValueByTypeOptional(Aliases.class);
 
-  @Override
-  private BrigadierArgumentConverter getConverter(MessagerWrapper messager) {
-    return new PaperBrigadierArgumentConverter(messager);
-  }
-
-  @Override
-  private TreePostProcessor createPostProcessor(MessagerWrapper messager) {
-    return new PaperTreePostProcessor(messager);
-  }
-
-  @Override
-  protected CommonCommandTreePrinter<PaperCommandInformation> createBuilder(CommandNode node, PaperCommandInformation commandInformation) {
-    return new PaperCommandTreePrinter(0, null, node, commandInformation, processingEnv, getPlatformUtils());
-  }
-
-  @Override
-  private PaperCommandInformation getCommandInformation(SourceClass sourceClass) {
-    final Optional<Description> description = sourceClass.getAnnotationOptional(Description.class);
-    final Optional<Aliases> aliases = sourceClass.getAnnotationOptional(Aliases.class);
-
-    final SourceConstructor constructor = sourceClass.isRecord() ?
-        null :
-        sourceClass.getNestedMethods(SourceMethod::isConstructor)
-            .stream()
-            .findFirst()
-            .map(SourceConstructor.class::cast)
-            .orElse(null);
+    final SourceConstructor constructor = classLike instanceof SourceClass sourceClass
+      ? sourceClass.constructors().stream().findFirst().orElse(null)
+      : null;
 
     return new PaperCommandInformation(
-        constructor,
-        sourceClass,
-        description.map(Description::value).orElse(null),
-        aliases.map(Aliases::value).orElse(null),
-        sourceClass.hasAnnotationInherited(UseInjection.class)
+      classLike.firstAnnotationByType(Command.class).value(Command.class).value(),
+      constructor,
+      classLike,
+      description.map(Description::value).orElse(null),
+      aliases.map(Aliases::value).orElse(null),
+      classLike.hasAnnotationInherited(UseInjection.class)
     );
   }
 }
