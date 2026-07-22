@@ -30,6 +30,7 @@ abstract class AbstractCommandNode implements CommandNode, AttributableHelper {
   private static final String VALUE = "\033[0;36m";
   private static final String ATTRIBUTE = "\033[0;34m";
   private static final String NODE = "\033[1;32m";
+  private static final String EMPTY_NODE = "\033[0;32m";
 
   private static final String WHITE = "\033[0;37m";
   private static final String GRAY = "\033[0;30m";
@@ -61,7 +62,14 @@ abstract class AbstractCommandNode implements CommandNode, AttributableHelper {
   @Override
   public String toString() {
     final StringBuilder builder = new StringBuilder();
-    builder.append(NODE).append(name()).append(RESET).append("\n");
+
+    final String name = name();
+    if (name.isBlank()) {
+      builder.append(EMPTY_NODE).append("<blank>");
+    } else {
+      builder.append(NODE).append(name);
+    }
+    builder.append(RESET).append("\n");
 
     final List<String> attribList = attributes.entrySet().stream()
       .map(e -> ATTRIBUTE + e.getKey() + WHITE + ": " + VALUE + e.getValue())

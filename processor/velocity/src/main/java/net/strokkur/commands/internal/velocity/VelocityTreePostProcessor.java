@@ -31,14 +31,10 @@ public final class VelocityTreePostProcessor extends TreePostProcessor {
 
   @Override
   public void cleanupPath(CommandNode root) {
-    debug("Node before cleanup\n%s\n", root.toString());
-
     root.forEachDepthFirst(node -> {
       handleSender(node);
       handlePermissions(node);
     });
-
-    debug("Node after cleanup\n%s\n", root.toString());
   }
 
   private void handleSender(CommandNode root) {

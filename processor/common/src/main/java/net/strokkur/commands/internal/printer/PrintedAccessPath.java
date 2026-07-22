@@ -27,13 +27,15 @@ import net.strokkur.jap.source.classmodel.SourceField;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.SequencedCollection;
 
 public record PrintedAccessPath(List<ExecuteAccess<?>> access) {
-  public PrintedAccessPath(List<ExecuteAccess<?>> access) {
+
+  public static PrintedAccessPath of(SequencedCollection<ExecuteAccess<?>> access) {
     if (access.isEmpty()) {
       throw new IllegalStateException("Access stack cannot be empty.");
     }
-    this.access = List.copyOf(access);
+    return new PrintedAccessPath(List.copyOf(access));
   }
 
   public boolean needsCreating() {

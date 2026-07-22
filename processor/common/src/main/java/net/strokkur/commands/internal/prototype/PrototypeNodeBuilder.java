@@ -28,6 +28,7 @@ import net.strokkur.commands.internal.intermediate.executable.UnparsedCommandPar
 import net.strokkur.commands.internal.intermediate.record.RecordArguments;
 import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
+import net.strokkur.commands.internal.intermediate.tree.ArgumentNode;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.printer.PrintedAccessPath;
 import net.strokkur.commands.internal.util.Classes;
@@ -48,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.Stack;
@@ -55,10 +57,10 @@ import java.util.Stack;
 /// This class is supposed to be re-created each time a new command class is printed.
 /// For this reason, no reset method, or similar, is provided.
 public abstract class PrototypeNodeBuilder {
-  protected final Set<PrintedAccessPath> requiredPaths = new HashSet<>();
-  private final Stack<ExecuteAccess<?>> accessStack = new Stack<>();
   private final Stack<RecordArguments> recordStack = new Stack<>();
 
+  protected final Set<PrintedAccessPath> requiredPaths = new HashSet<>();
+  private final Deque<ExecuteAccess<?>> accessStack = new ArrayDeque<>();
   private final Deque<String> literalQueue = new ArrayDeque<>();
 
   private final List<String> warnings = new ArrayList<>();
@@ -78,11 +80,13 @@ public abstract class PrototypeNodeBuilder {
 
   public PrototypeRoot createRoot(CommandNode rootNode) {
     final PrototypeRoot root = new PrototypeRoot(rootNode.name());
-    handleAttributes(root, rootNode);
 
-    for (CommandNode child : rootNode.children()) {
-      appendTo(root, child);
-    }
+    scopeAccessStack(rootNode, () -> {
+      handleAttributes(root, rootNode);
+      for (CommandNode child : rootNode.children()) {
+        appendTo(root, child);
+      }
+    });
 
     return root;
   }
@@ -123,7 +127,15 @@ public abstract class PrototypeNodeBuilder {
   }
 
   private void appendTo(PrototypeNode prototype, CommandNode next) {
+    scopeAccessStack(next, () -> {
+      handleAttributes(prototype, next);
 
+      if (next instanceof ArgumentNode arg) {
+        // append to the prototype node and return new one.
+      }
+
+      next.children().forEach(child -> appendTo(prototype, child));
+    });
   }
 
   //
@@ -148,7 +160,7 @@ public abstract class PrototypeNodeBuilder {
 
       statements.add(createCallStatement(builder, executable));
     } else {
-      final PrintedAccessPath path = new PrintedAccessPath(accessStack);
+      final PrintedAccessPath path = PrintedAccessPath.of(accessStack);
       statements.add(createCallStatement(path.getVariableAccess(), executable));
       requiredPaths.add(path);
     }
@@ -185,5 +197,24 @@ public abstract class PrototypeNodeBuilder {
     if (node.parent != null) {
       fillLiteralQueue(node.parent);
     }
+  }
+
+  private void scopeAccessStack(CommandNode node, Runnable run) {
+    final Optional<ExecuteAccess<?>> access = node.getAttributeOptional(AttributeKey.ACCESS);
+    access.ifPresent(accessStack::push);
+    run.run();
+    access.ifPresent(ignored -> accessStack.pop());
+  }
+
+  //
+  // Getters
+  //
+
+  public Set<PrintedAccessPath> requiredPaths() {
+    return requiredPaths;
+  }
+
+  public List<String> warnings() {
+    return warnings;
   }
 }

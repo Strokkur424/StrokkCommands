@@ -19,7 +19,6 @@ package net.strokkur.commands.internal.prototype;
 
 import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
-import net.strokkur.commands.internal.printer.PrintedAccessPath;
 import net.strokkur.jap.code.classmodel.CodeBlock;
 import net.strokkur.jap.code.expression.Expressions;
 import net.strokkur.jap.code.expression.builder.InvocationChainBuilder;
@@ -43,7 +42,7 @@ public abstract class PrototypeNode {
 
   public InvocationChainBuilder toExpression() {
     final InvocationChainBuilder builder = nodeElement();
-    if (false && requires != null) {
+    if (requires != null) {
       builder.chainMethod("requires", StyleConfig.NEWLINE, requires.toRequirementLambda());
     }
     if (suggests != null) {
@@ -58,10 +57,6 @@ public abstract class PrototypeNode {
     }
 
     return builder;
-  }
-
-  public List<PrintedAccessPath> requiredAccessPaths() {
-    return List.of();
   }
 
   public String toCommandString() {

@@ -21,7 +21,6 @@ import net.strokkur.commands.CustomExecutorWrapper;
 import net.strokkur.commands.CustomRequirement;
 import net.strokkur.commands.CustomSuggestion;
 import net.strokkur.commands.internal.exceptions.ProviderAlreadyRegisteredException;
-import net.strokkur.commands.internal.intermediate.TreePostProcessor;
 import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperRegistry;
 import net.strokkur.commands.internal.intermediate.registrable.RegistrableRegistry;
 import net.strokkur.commands.internal.intermediate.registrable.RequirementRegistry;
@@ -159,25 +158,20 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
   }
 
   private void processElement(SourceClassLike sourceClass) {
-    final boolean debug = System.getProperty(MessagerWrapper.DEBUG_SYSTEM_PROPERTY) != null;
-
     final C commandInformation = getCommandInformation(sourceClass);
     final CommandNode commandTree = CommandParsingSourceVisitor.get().visitCommandClass(sourceClass, null);
 
-    if (debug) {
-      // debug log all paths.
-      messager().debug("\nCommand Tree (Before PostProcess):\n{}\n ", commandTree.toString());
-    }
+    messager().debug("Command Tree:\n%s", commandTree);
 
     // Before we print the paths, we do some post-processing to move some stuff around, which
     // is relevant for certain things to print correctly (a.e. executor requirements).
-    TreePostProcessor.get().cleanupPath(commandTree);
-    TreePostProcessor.get().applyDefaultExecutorPaths(commandTree);
+    // TreePostProcessor.get().cleanupPath(commandTree);
+    // TreePostProcessor.get().applyDefaultExecutorPaths(commandTree);
 
-    if (debug) {
-      // debug log all paths.
-      messager().debug("\nCommand Tree:\n{}\n ", commandTree.toString());
-    }
+    // if (debug) {
+    //   // debug log all paths.
+    //   messager().debug("\nCommand Tree:\n{}\n ", commandTree.toString());
+    // }
 
     final CodeGenUtil codeGen = new CodeGenUtil(this);
     try {

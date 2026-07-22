@@ -22,6 +22,7 @@ import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.prototype.PrototypeNodeBuilder;
 import net.strokkur.commands.internal.prototype.PrototypeRoot;
 import net.strokkur.commands.internal.util.CommandInformation;
+import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.jap.code.classmodel.CodeClass;
 import net.strokkur.jap.code.classmodel.CodeField;
 import net.strokkur.jap.code.classmodel.CodeMethod;
@@ -53,7 +54,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
 
-public abstract class CommonClassBuilder<C extends CommandInformation> {
+public abstract class CommonClassBuilder<C extends CommandInformation> implements ForwardingMessagerWrapper {
   private final CommandNode rootNode;
   protected final C commandInformation;
 
@@ -86,11 +87,16 @@ public abstract class CommonClassBuilder<C extends CommandInformation> {
 
     populateStaticFields(classBuilder);
 
-    final PrototypeRoot prototype = PrototypeNodeBuilder.create().createRoot(rootNode);
+    final PrototypeNodeBuilder nodeBuilder = PrototypeNodeBuilder.create();
+    final PrototypeRoot prototype = nodeBuilder.createRoot(rootNode);
     final ConvertToExpression treeExpr = prototype.toExpression()
       .chainMethod("build", StyleConfig.NEWLINE);
 
-    final List<PrintedAccessPath> required = prototype.requiredAccessPaths().stream()
+    for (String warning : nodeBuilder.warnings()) {
+      warn(warning);
+    }
+
+    final List<PrintedAccessPath> required = nodeBuilder.requiredPaths().stream()
       .map(PrintedAccessPath::requiredParent)
       .distinct()
       .sorted(Comparator.comparing(PrintedAccessPath::name))

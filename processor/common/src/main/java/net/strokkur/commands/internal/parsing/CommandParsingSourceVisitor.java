@@ -288,11 +288,13 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
         return toPath.apply(anno);
       })
       .distinct()
-      .map(path -> Arrays.stream(path.split(" "))
-        .map(LiteralCommandArgument::new)
-        .toList())
+      .map(path -> path.isBlank() ?
+        List.<CommandArgument>of() :
+        Arrays.stream(path.strip().split(" "))
+          .map(LiteralCommandArgument::new)
+          .toList())
       .forEach(args -> {
-        final CommandNode endNode = root.addArguments(args);
+        final CommandNode endNode = args.isEmpty() ? root : root.addArguments(args);
         endNodeConsumer.accept(endNode);
       });
   }
@@ -302,7 +304,9 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
       .flatMap(anno -> RequirementRegistry.get().getProvider(anno.source()).stream())
       .distinct()
       .toList();
-    node.setAttribute(AttributeKey.REQUIREMENT_PROVIDER, new CombinedRequirementProvider(providers));
+    if (!providers.isEmpty()) {
+      node.setAttribute(AttributeKey.REQUIREMENT_PROVIDER, new CombinedRequirementProvider(providers));
+    }
   }
 
   //

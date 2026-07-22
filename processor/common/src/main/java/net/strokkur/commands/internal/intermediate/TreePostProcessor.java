@@ -18,9 +18,6 @@
 package net.strokkur.commands.internal.intermediate;
 
 import net.strokkur.commands.internal.StrokkCommandsProcessor;
-import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
-import net.strokkur.commands.internal.intermediate.executable.DefaultExecutable;
-import net.strokkur.commands.internal.intermediate.tree.ArgumentNode;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.jap.source.util.MessagerWrapper;
@@ -43,34 +40,6 @@ public abstract class TreePostProcessor implements ForwardingMessagerWrapper {
   }
 
   public abstract void cleanupPath(CommandNode root);
-
-  public final void applyDefaultExecutorPaths(CommandNode node) {
-    final DefaultExecutable defaultExecutable = node.getAttribute(AttributeKey.DEFAULT_EXECUTABLE);
-
-    if (defaultExecutable == null) {
-      node.children().forEach(this::applyDefaultExecutorPaths);
-      return;
-    }
-
-    node.children().forEach(
-      child -> applyDefaultExecutorPathIfUnset(child, defaultExecutable)
-    );
-  }
-
-  private void applyDefaultExecutorPathIfUnset(CommandNode node, DefaultExecutable def) {
-    final DefaultExecutable defaultExecutable;
-
-    if (node instanceof ArgumentNode) {
-      // Only set explicitly on argument nodes.
-      defaultExecutable = node.getAttributeOrSet(AttributeKey.DEFAULT_EXECUTABLE, def);
-    } else {
-      defaultExecutable = node.getAttributeOr(AttributeKey.DEFAULT_EXECUTABLE, def);
-    }
-
-    for (CommandNode child : node.children()) {
-      applyDefaultExecutorPathIfUnset(child, defaultExecutable);
-    }
-  }
 
   @Override
   public final MessagerWrapper delegateMessager() {
