@@ -18,10 +18,23 @@
 package net.strokkur.commands.internal.arguments;
 
 import net.strokkur.jap.code.convert.ConvertToExpression;
+import net.strokkur.jap.code.documentation.DiscardingDocumentationRenderer;
+import net.strokkur.jap.code.visitor.source.JavaSourcePrintingVisitor;
 
 public record BrigadierArgumentType(ConvertToExpression initializer, ConvertToExpression retriever) {
 
   public static BrigadierArgumentType of(ConvertToExpression initializer, ConvertToExpression retriever) {
     return new BrigadierArgumentType(initializer, retriever);
+  }
+
+  @Override
+  public String toString() {
+    final JavaSourcePrintingVisitor visitor = new JavaSourcePrintingVisitor(DiscardingDocumentationRenderer::new, "", "");
+    final String rawInitializer = initializer().toExpression().accept(visitor).toString();
+    final String rawRetriever = retriever().toExpression().accept(visitor).toString();
+    final String initializer = rawInitializer.replace("\n", " ");
+    final String retriever = rawRetriever.replace("\n", " ");
+
+    return "[" + initializer + ", " + retriever + "]";
   }
 }

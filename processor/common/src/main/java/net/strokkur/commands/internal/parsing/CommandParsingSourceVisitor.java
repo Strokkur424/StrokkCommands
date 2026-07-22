@@ -373,7 +373,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
       return new UnparsedCommandParameter(parameter);
     }
 
-    debug("  | Successfully found Brigadier type: {}", argumentType);
+    debug("  | Successfully found Brigadier type: %s", argumentType);
     final RequiredCommandArgument commandArgument = RequiredCommandArgument.of(argumentType, parameter.name());
     applyRegistrableProvider(commandArgument, parameter, SuggestionsRegistry.get(), AttributeKey.SUGGESTION_PROVIDER, "suggestion");
     return commandArgument;

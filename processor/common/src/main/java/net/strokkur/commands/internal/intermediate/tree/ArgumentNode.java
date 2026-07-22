@@ -21,6 +21,7 @@ import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.MultiLiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
+import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.jap.code.documentation.DiscardingDocumentationRenderer;
 import net.strokkur.jap.code.visitor.source.JavaSourcePrintingVisitor;
 
@@ -29,6 +30,9 @@ public class ArgumentNode extends AbstractCommandNode {
 
   public ArgumentNode(CommandArgument argument) {
     this.argument = argument;
+    if (argument instanceof RequiredCommandArgument req) {
+      req.transferAttribute(AttributeKey.SUGGESTION_PROVIDER, this);
+    }
   }
 
   @Override
