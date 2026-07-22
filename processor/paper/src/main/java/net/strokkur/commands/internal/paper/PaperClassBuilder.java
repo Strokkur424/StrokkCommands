@@ -41,8 +41,7 @@ import net.strokkur.jap.source.classmodel.SourceMethodParameter;
 import static net.strokkur.jap.code.documentation.CodeDocumentation.codeBlock;
 import static net.strokkur.jap.code.documentation.CodeDocumentation.combine;
 import static net.strokkur.jap.code.documentation.CodeDocumentation.header;
-import static net.strokkur.jap.code.documentation.CodeDocumentation.linebreak;
-import static net.strokkur.jap.code.documentation.CodeDocumentation.see;
+import static net.strokkur.jap.code.documentation.CodeDocumentation.methodReference;
 import static net.strokkur.jap.code.documentation.CodeDocumentation.text;
 
 final class PaperClassBuilder extends CommonClassBuilder<PaperCommandInformation> {
@@ -118,20 +117,17 @@ final class PaperClassBuilder extends CommonClassBuilder<PaperCommandInformation
 
     registerMethod.setDocumentation(CodeDocumentation.combineLines(
       text("Shortcut for registering the command node returned from"),
-      combine(see(createMethod, null), text(". This method uses the provided aliases")),
+      combine(methodReference(createMethod), text(". This method uses the provided aliases")),
       text("and description from the original source file."),
-      linebreak(),
       header("Registering the command", 3),
-      linebreak(),
       text("This method can safely be called either in your plugin bootstrapper's"),
-      combine(see(bootstrapMethod, null, PaperClasses.PLUGIN_BOOTSTRAP), text(", your main")),
+      combine(methodReference(bootstrapMethod, PaperClasses.PLUGIN_BOOTSTRAP), text(", your main")),
       combine(
         text("class' "),
-        see(CodeMethod.builder("onLoad"), null, PaperClasses.JAVA_PLUGIN),
+        methodReference(CodeMethod.builder("onLoad"), PaperClasses.JAVA_PLUGIN),
         text(" or "),
-        see(CodeMethod.builder("onEnable"), null, PaperClasses.JAVA_PLUGIN)),
+        methodReference(CodeMethod.builder("onEnable"), PaperClasses.JAVA_PLUGIN)),
       text("method."),
-      linebreak(),
       codeBlock("""
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS.newHandler(event -> {
             final Commands commands = event.registrar();

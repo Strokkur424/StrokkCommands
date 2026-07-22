@@ -32,6 +32,7 @@ import net.strokkur.jap.code.convert.ConvertToExpression;
 import net.strokkur.jap.code.convert.ConvertToStatement;
 import net.strokkur.jap.code.expression.Expressions;
 import net.strokkur.jap.code.statement.Statements;
+import net.strokkur.jap.code.util.StyleConfig;
 import net.strokkur.jap.source.classmodel.SourceParameterLike;
 
 import java.util.ArrayList;
@@ -50,7 +51,7 @@ public final class PaperPrototypeNodeBuilder extends PrototypeNodeBuilder {
 
     final ExecutorType executorType = node.getAttributeNotNull(PaperAttributeKeys.EXECUTOR_TYPE);
     if (executorType != ExecutorType.NONE) {
-      extraRequirements.add(Expressions.variable("source").chainMethod("getExecutor()").instanceOf(executorType.classType()));
+      extraRequirements.add(Expressions.variable("source").chainMethod("getExecutor").instanceOf(executorType.classType()));
     }
 
     final boolean operator = node.getAttributeNotNull(PaperAttributeKeys.REQUIRES_OP);
@@ -90,7 +91,7 @@ public final class PaperPrototypeNodeBuilder extends PrototypeNodeBuilder {
               executorType == ExecutorType.ENTITY ? "an" : "a",
               executorType.classType().toClassType().simpleName()
             )))
-          ).chainMethod("create").throwStmt()
+          ).setStyle(StyleConfig.MULTILINE).chainMethod("create").throwStmt()
         ),
         Statements.blank()
       );

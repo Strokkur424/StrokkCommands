@@ -17,6 +17,7 @@
  */
 package net.strokkur.commands.internal.paper;
 
+import com.google.auto.service.AutoService;
 import net.strokkur.commands.Aliases;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.UseInjection;
@@ -29,8 +30,10 @@ import net.strokkur.jap.source.classmodel.SourceClass;
 import net.strokkur.jap.source.classmodel.SourceClassLike;
 import net.strokkur.jap.source.classmodel.SourceConstructor;
 
+import javax.annotation.processing.Processor;
 import java.util.Optional;
 
+@AutoService(Processor.class)
 public final class PaperStrokkCommandsProcessor extends StrokkCommandsProcessor<Command, PaperCommandInformation> {
 
   @Override

@@ -5,5 +5,5 @@ plugins {
 dependencies {
   api(project(":annotations-paper"))
   api(project(":processor-common"))
-  compileOnly(libs.paper.api)
+  annotationProcessor(libs.auto.service)
 }
