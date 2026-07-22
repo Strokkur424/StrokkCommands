@@ -64,6 +64,7 @@ public abstract class PrototypeNodeBuilder {
   private final Deque<String> literalQueue = new ArrayDeque<>();
 
   private final List<String> warnings = new ArrayList<>();
+  private final List<String> errors = new ArrayList<>();
 
   public static PrototypeNodeBuilder create() {
     return ServiceLoader.load(PrototypeNodeBuilder.class, PrototypeNode.class.getClassLoader())
@@ -126,16 +127,63 @@ public abstract class PrototypeNodeBuilder {
     }
   }
 
-  private void appendTo(PrototypeNode prototype, CommandNode next) {
-    scopeAccessStack(next, () -> {
-      handleAttributes(prototype, next);
+  private void appendTo(PrototypeNode prototype, CommandNode node) {
+    scopeAccessStack(node, () -> {
+      if (node instanceof ArgumentNode arg) {
+        switch (arg.argument()) {
+          case LiteralCommandArgument(String lit) -> appendLiteralTo(prototype, node, lit);
+          case MultiLiteralCommandArgument(Set<String> literals) ->
+            literals.forEach(lit -> appendLiteralTo(prototype, node, lit));
+          case RequiredCommandArgument req -> {
+            final Optional<PrototypeArgument> found = prototype.findChild(
+              PrototypeArgument.class,
+              p -> p.argumentType.equals(req.argumentType()) || p.name.equals(req.argumentName())
+            );
 
-      if (next instanceof ArgumentNode arg) {
-        // append to the prototype node and return new one.
+            final PrototypeArgument next;
+            if (found.isEmpty()) {
+              next = new PrototypeArgument(req.argumentName(), req.argumentType());
+              prototype.children.add(next);
+            } else {
+              next = found.get();
+
+              // Do validation to ensure both argument type and name match, otherwise something went wrong.
+              if (!next.argumentType.equals(req.argumentType())) {
+                // Different argument type, but same name.
+                errors.add("Argument named " + req.argumentName() + " defined twice with different types. (Path: " + next.toCommandString() + ")");
+                return;
+              } else if (!next.name.equals(req.argumentName())) {
+                // Different argument names, but same type.
+                errors.add("Argument named %s clashes with argument named %s, as they have the same type. (Path: %s)".formatted(
+                  req.argumentName(), next.name, next.toCommandString()
+                ));
+                return;
+              }
+            }
+            handleAttributes(next, node);
+            node.children().forEach(child -> appendTo(next, child));
+          }
+          default -> throw new IllegalStateException("Illegal argument node type: " + arg.argument().getClass());
+        }
+      } else {
+        handleAttributes(prototype, node);
+        node.children().forEach(child -> appendTo(prototype, child));
       }
-
-      next.children().forEach(child -> appendTo(prototype, child));
     });
+  }
+
+  private void appendLiteralTo(PrototypeNode prototype, CommandNode node, String literal) {
+    final Optional<PrototypeLiteral> found = prototype.findChild(PrototypeLiteral.class, p -> p.literal.equals(literal));
+    final PrototypeNode next;
+    if (found.isEmpty()) {
+      next = new PrototypeLiteral(literal);
+      prototype.children.add(next);
+    } else {
+      next = found.get();
+    }
+
+    handleAttributes(next, node);
+    node.children().forEach(child -> appendTo(next, child));
   }
 
   //
@@ -216,5 +264,9 @@ public abstract class PrototypeNodeBuilder {
 
   public List<String> warnings() {
     return warnings;
+  }
+
+  public List<String> errors() {
+    return errors;
   }
 }

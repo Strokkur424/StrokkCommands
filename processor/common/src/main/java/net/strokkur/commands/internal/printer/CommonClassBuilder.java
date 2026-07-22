@@ -95,6 +95,9 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
     for (String warning : nodeBuilder.warnings()) {
       warn(warning);
     }
+    for (String warning : nodeBuilder.errors()) {
+      error(warning);
+    }
 
     final List<PrintedAccessPath> required = nodeBuilder.requiredPaths().stream()
       .map(PrintedAccessPath::requiredParent)

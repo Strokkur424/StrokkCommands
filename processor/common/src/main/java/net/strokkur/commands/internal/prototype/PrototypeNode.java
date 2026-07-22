@@ -27,6 +27,8 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 public abstract class PrototypeNode {
   protected final List<PrototypeNode> children = new ArrayList<>();
@@ -64,5 +66,13 @@ public abstract class PrototypeNode {
       return commandStringElement();
     }
     return parent.toCommandString() + " " + commandStringElement();
+  }
+
+  public <T extends PrototypeNode> Optional<T> findChild(Class<T> type, Predicate<T> node) {
+    return children.stream()
+      .filter(type::isInstance)
+      .map(type::cast)
+      .filter(node)
+      .findFirst();
   }
 }

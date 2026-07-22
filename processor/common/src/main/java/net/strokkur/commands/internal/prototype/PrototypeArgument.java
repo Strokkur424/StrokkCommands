@@ -18,22 +18,22 @@
 package net.strokkur.commands.internal.prototype;
 
 import net.strokkur.commands.internal.PlatformUtils;
-import net.strokkur.jap.code.convert.ConvertToExpression;
+import net.strokkur.commands.internal.arguments.BrigadierArgumentType;
 import net.strokkur.jap.code.expression.Expressions;
 import net.strokkur.jap.code.expression.builder.InvocationChainBuilder;
 
 public final class PrototypeArgument extends PrototypeNode {
-  private final String name;
-  private final ConvertToExpression initializer;
+  final String name;
+  final BrigadierArgumentType argumentType;
 
-  PrototypeArgument(String name, ConvertToExpression initializer) {
+  PrototypeArgument(String name, BrigadierArgumentType argumentType) {
     this.name = name;
-    this.initializer = initializer;
+    this.argumentType = argumentType;
   }
 
   @Override
   protected InvocationChainBuilder nodeElement() {
-    return PlatformUtils.get().argumentBuilder(Expressions.string(name), initializer);
+    return PlatformUtils.get().argumentBuilder(Expressions.string(name), argumentType.initializer());
   }
 
   @Override

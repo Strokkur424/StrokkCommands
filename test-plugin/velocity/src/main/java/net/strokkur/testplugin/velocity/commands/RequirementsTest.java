@@ -22,11 +22,9 @@ import com.velocitypowered.api.proxy.Player;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.CustomRequirement;
 import net.strokkur.commands.Executes;
-import net.strokkur.commands.meta.StrokkCommandsDebug;
 
 @Command("requirements-test")
 @RequirementsTest.MyRequirement
-@StrokkCommandsDebug(only = RequirementsTest.class)
 class RequirementsTest {
 
   @Executes
