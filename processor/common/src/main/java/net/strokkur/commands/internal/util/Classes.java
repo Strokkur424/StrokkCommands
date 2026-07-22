@@ -43,7 +43,6 @@ public interface Classes extends ConvertToClassType {
   // Other
   Classes NULL_MARKED = create("org.jspecify.annotations.NullMarked");
   Classes NULLABLE = create("org.jspecify.annotations.Nullable");
-  Classes INJECT = create("jakarta.inject.Inject");
 
   static Classes create(String fqn) {
     return () -> CodeTypes.ofClass(fqn);

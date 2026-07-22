@@ -116,7 +116,7 @@ public abstract class PrototypeNodeBuilder {
     if (executable != null) {
       if (prototype.executes == null) {
         fillLiteralQueue(prototype);
-        prototype.executes = getExecutesBlock(node, executable);
+        prototype.executes = getExecutesBlock(executable);
         if (!literalQueue.isEmpty()) {
           warnings.add("Literal queue was not empty after code block for path '" + prototype.toCommandString() + "'. You should report this.");
           literalQueue.clear();
@@ -191,7 +191,7 @@ public abstract class PrototypeNodeBuilder {
   // Executes block creation.
   //
 
-  private CodeBlock getExecutesBlock(CommandNode node, Executable executable) {
+  private CodeBlock getExecutesBlock(Executable executable) {
     final List<ConvertToStatement> statements = new ArrayList<>(validationStatements(executable));
 
     if (!recordStack.isEmpty()) {

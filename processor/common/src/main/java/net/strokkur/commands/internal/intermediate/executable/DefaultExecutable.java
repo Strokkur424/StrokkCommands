@@ -17,27 +17,18 @@
  */
 package net.strokkur.commands.internal.intermediate.executable;
 
-import net.strokkur.commands.internal.exceptions.IllegalReturnTypeException;
 import net.strokkur.commands.internal.intermediate.attributes.AttributableHelper;
 import net.strokkur.jap.code.convert.ConvertToExpression;
 import net.strokkur.jap.code.expression.CodeExpression;
 import net.strokkur.jap.code.expression.Expressions;
 import net.strokkur.jap.code.type.CodeType;
 import net.strokkur.jap.code.type.preset.JavaTypes;
-import net.strokkur.jap.source.classmodel.SourceClassLike;
-import net.strokkur.jap.source.classmodel.SourceMethod;
 import net.strokkur.jap.source.type.SourceType;
 import org.jspecify.annotations.Nullable;
 
-import java.util.List;
 import java.util.Objects;
 
 public class DefaultExecutable extends Executable implements AttributableHelper {
-
-  public DefaultExecutable(SourceClassLike sourceClass, SourceMethod executesMethod, List<CommandParameter> parameters)
-    throws IllegalReturnTypeException {
-    super(sourceClass, executesMethod, parameters);
-  }
 
   public DefaultExecutable(Executable executable) {
     super(executable);
