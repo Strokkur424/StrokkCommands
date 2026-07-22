@@ -59,7 +59,9 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
   public static BrigadierArgumentConverter get() {
     class Holder {
       @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-      static final Optional<BrigadierArgumentConverter> INSTANCE = ServiceLoader.load(BrigadierArgumentConverter.class).findFirst();
+      static final Optional<BrigadierArgumentConverter> INSTANCE = ServiceLoader.load(
+        BrigadierArgumentConverter.class, BrigadierArgumentConverter.class.getClassLoader()
+      ).findFirst();
     }
 
     return Holder.INSTANCE.orElseThrow(() -> new RuntimeException("No instance of BrigadierArgumentConverter found."));

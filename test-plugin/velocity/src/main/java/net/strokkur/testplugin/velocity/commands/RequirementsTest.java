@@ -22,9 +22,11 @@ import com.velocitypowered.api.proxy.Player;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.CustomRequirement;
 import net.strokkur.commands.Executes;
+import net.strokkur.commands.meta.StrokkCommandsDebug;
 
 @Command("requirements-test")
-@MyRequirement
+@RequirementsTest.MyRequirement
+@StrokkCommandsDebug(only = RequirementsTest.class)
 class RequirementsTest {
 
   @Executes
@@ -36,8 +38,9 @@ class RequirementsTest {
   static boolean require(CommandSource source) {
     return source instanceof Player player && player.getUsername().equals("Strokkur24");
   }
+
+  @CustomRequirement
+  @interface MyRequirement {}
 }
 
-@CustomRequirement
-@interface MyRequirement {}
 

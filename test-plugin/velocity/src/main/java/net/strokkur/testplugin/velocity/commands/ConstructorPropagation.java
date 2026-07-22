@@ -20,11 +20,9 @@ package net.strokkur.testplugin.velocity.commands;
 import com.velocitypowered.api.proxy.ProxyServer;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
-import net.strokkur.commands.meta.StrokkCommandsDebug;
 import net.strokkur.testplugin.velocity.TestPluginVelocity;
 
 @Command("propagation")
-@StrokkCommandsDebug(only = ConstructorPropagation.class)
 class ConstructorPropagation {
   private final TestPluginVelocity plugin;
   private final ProxyServer server;
