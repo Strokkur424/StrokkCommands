@@ -21,9 +21,11 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
+import net.strokkur.commands.meta.StrokkCommandsDebug;
 import net.strokkur.commands.permission.Permission;
 
 @Command("test")
+@StrokkCommandsDebug(only = CommandTest.class)
 class CommandTest {
 
   @Executes("print")

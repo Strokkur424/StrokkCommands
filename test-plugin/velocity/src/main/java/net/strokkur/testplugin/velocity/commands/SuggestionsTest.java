@@ -24,13 +24,11 @@ import com.velocitypowered.api.command.CommandSource;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.CustomSuggestion;
 import net.strokkur.commands.Executes;
-import net.strokkur.commands.meta.StrokkCommandsDebug;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 @Command("with-suggestions")
-@StrokkCommandsDebug(only = SuggestionsTest.class)
 class SuggestionsTest {
 
   @Executes

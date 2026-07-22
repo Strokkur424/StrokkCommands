@@ -20,6 +20,8 @@ package net.strokkur.commands.internal.velocity;
 import com.google.auto.service.AutoService;
 import net.strokkur.commands.internal.intermediate.executable.DefaultExecutable;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
+import net.strokkur.commands.internal.intermediate.tree.CommandNode;
+import net.strokkur.commands.internal.prototype.PrototypeNode;
 import net.strokkur.commands.internal.prototype.PrototypeNodeBuilder;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.velocity.util.SenderType;
@@ -36,9 +38,30 @@ import net.strokkur.jap.source.classmodel.SourceParameterLike;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 
 @AutoService(PrototypeNodeBuilder.class)
 public class VelocityPrototypeNodeBuilder extends PrototypeNodeBuilder {
+
+  @Override
+  protected void handleAttributes(PrototypeNode prototype, CommandNode node) {
+    super.handleAttributes(prototype, node);
+
+    if (node.hasAttribute(VelocityAttributeKeys.PERMISSIONS)) {
+      final Set<String> permissions = node.getAttributeNotNull(VelocityAttributeKeys.PERMISSIONS);
+      final ConvertToExpression permissionsCheck = permissions.stream()
+        .map(perm -> Expressions.variable("source").chainMethod("hasPermission", Expressions.string(perm)).toExpression())
+        .reduce(ConvertToExpression::or)
+        .orElseThrow();
+
+      if (prototype.requires == null) {
+        prototype.requires = () -> permissionsCheck;
+      } else {
+        final ConvertToExpression and = prototype.requires.requirementExpression().and(permissionsCheck);
+        prototype.requires = () -> and;
+      }
+    }
+  }
 
   @Override
   protected List<? extends ConvertToStatement> validationStatements(Executable executable) {

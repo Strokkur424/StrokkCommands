@@ -59,6 +59,16 @@ public interface CommandNode extends Attributable {
     action.accept(this);
   }
 
+  default void forEachChildElseSelf(Consumer<CommandNode> action) {
+    if (this.children().isEmpty()) {
+      action.accept(this);
+    } else {
+      for (CommandNode child : this.children()) {
+        action.accept(child);
+      }
+    }
+  }
+
   /// Insert a node after this node.
   void addChild(CommandNode node);
 

@@ -56,11 +56,11 @@ public final class VelocityPlatformUtils implements PlatformUtils {
   public void populateNode(AnnotationsHolder element, CommandNode node) {
     element.firstAnnotationInheritedOptional(Permission.class)
       .map(anno -> anno.value(Permission.class))
-      .ifPresent(permission -> node.editAttributeMutable(
+      .ifPresent(permission -> node.forEachChildElseSelf(n -> n.editAttributeMutable(
         VelocityAttributeKeys.PERMISSIONS,
         s -> s.add(permission.value()),
         () -> Set.of(permission.value())
-      ));
+      )));
   }
 
   private SenderType getSenderType(List<CommandParameter> parameters) throws AnnotationException {

@@ -63,8 +63,8 @@ public abstract class PrototypeNodeBuilder {
   private final Deque<ExecuteAccess<?>> accessStack = new ArrayDeque<>();
   private final Deque<String> literalQueue = new ArrayDeque<>();
 
-  private final List<String> warnings = new ArrayList<>();
-  private final List<String> errors = new ArrayList<>();
+  protected final List<String> warnings = new ArrayList<>();
+  protected final List<String> errors = new ArrayList<>();
 
   public static PrototypeNodeBuilder create() {
     return ServiceLoader.load(PrototypeNodeBuilder.class, PrototypeNode.class.getClassLoader())
@@ -108,7 +108,7 @@ public abstract class PrototypeNodeBuilder {
       if (prototype.requires == null) {
         prototype.requires = provider;
       } else if (!prototype.requires.equals(provider)) {
-        warnings.add("Command with path '" + prototype.toCommandString() + "' has conflicting requirement providers!");
+        warnings.add("Command with path '" + prototype.toCommandString() + "' has duplicate requirement providers!");
       }
     }
 
@@ -132,8 +132,9 @@ public abstract class PrototypeNodeBuilder {
       if (node instanceof ArgumentNode arg) {
         switch (arg.argument()) {
           case LiteralCommandArgument(String lit) -> appendLiteralTo(prototype, node, lit);
-          case MultiLiteralCommandArgument(Set<String> literals) ->
+          case MultiLiteralCommandArgument(Set<String> literals) -> {
             literals.forEach(lit -> appendLiteralTo(prototype, node, lit));
+          }
           case RequiredCommandArgument req -> {
             final Optional<PrototypeArgument> found = prototype.findChild(
               PrototypeArgument.class,

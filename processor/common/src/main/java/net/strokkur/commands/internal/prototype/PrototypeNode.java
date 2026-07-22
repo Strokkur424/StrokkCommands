@@ -34,9 +34,9 @@ public abstract class PrototypeNode {
   protected final List<PrototypeNode> children = new ArrayList<>();
   protected @Nullable PrototypeNode parent = null;
 
-  protected @Nullable SuggestionProvider suggests = null;
-  protected @Nullable RequirementProvider requires = null;
-  protected @Nullable CodeBlock executes = null;
+  public @Nullable SuggestionProvider suggests = null;
+  public @Nullable RequirementProvider requires = null;
+  public @Nullable CodeBlock executes = null;
 
   protected abstract InvocationChainBuilder nodeElement();
 
