@@ -10,8 +10,9 @@ repositories {
 
 dependencies {
   implementation("com.diffplug.spotless:spotless-plugin-gradle:8.0.0")
-  implementation("org.ow2.asm:asm:9.10.1")
-  implementation("com.google.code.gson:gson:2.14.0")
+  implementation("dev.denwav.hypo:hypo-asm:3.0.0")
+  implementation("dev.denwav.hypo:hypo-asm-hydrate:3.0.0")
+  implementation("net.strokkur.japutil:code-gen:0.1.0-SNAPSHOT")
 }
 
 kotlin {

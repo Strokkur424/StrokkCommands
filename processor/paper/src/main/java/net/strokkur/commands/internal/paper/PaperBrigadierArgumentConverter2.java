@@ -19,13 +19,47 @@ package net.strokkur.commands.internal.paper;
 
 import com.google.auto.service.AutoService;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
+import net.strokkur.commands.internal.arguments.BrigadierArgumentType;
+import net.strokkur.jap.code.expression.Expressions;
+import net.strokkur.jap.code.type.CodeClassType;
+import net.strokkur.jap.code.type.CodeType;
+import net.strokkur.jap.code.type.CodeTypes;
+import net.strokkur.jap.code.type.preset.JavaTypes;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @AutoService(BrigadierArgumentConverter.class)
-public final class PaperBrigadierArgumentConverter extends BrigadierArgumentConverter {
+public final class PaperBrigadierArgumentConverter2 extends BrigadierArgumentConverter {
+  private static final CodeClassType ARGUMENT_TYPES = CodeTypes.ofClass("io.papermc.paper.command.brigadier.argument.ArgumentTypes");
 
+  @Override
+  protected void initializeArguments() {
+    super.initializeArguments();
 
+    putSimple(
+      "doubleRange",
+      "io.papermc.paper.command.brigadier.argument.range.DoubleRangeProvider",
+      CodeTypes.ofClassTyped("io.papermc.paper.command.brigadier.argument.range.RangeProvider", JavaTypes.DOUBLE)
+    );
 
-//
+    putFor((p, name) -> BrigadierArgumentType.of(
+      ARGUMENT_TYPES.chainMethod("doubleRange"),
+      Expressions.variable("ctx").chainMethod("getArgument", Expressions.string(name))
+    ));
+  }
+
+  private void putSimple(String methodName, String returnTypeFqn, CodeType... extraTypes) {
+    final CodeClassType returnType = CodeTypes.ofClass(returnTypeFqn);
+    final List<CodeType> types = new ArrayList<>(Arrays.asList(extraTypes));
+    types.add(returnType);
+    putFor((p, name) -> BrigadierArgumentType.of(
+      ARGUMENT_TYPES.chainMethod(methodName),
+      Expressions.variable("ctx").chainMethod("getArgument", Expressions.string(name), returnType.chainField("class"))
+    ), types);
+  }
+
 //  //<editor-fold desc="Registry Entries">
 //  private static final List<RegistryEntry> REGISTRY_ENTRIES = List.of(
 //      registryEntry("Attribute", "org.bukkit.attribute.Attribute", "ATTRIBUTE"),

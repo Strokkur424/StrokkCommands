@@ -40,7 +40,9 @@ import net.strokkur.jap.source.util.MessagerWrapper;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ServiceLoader;
@@ -161,10 +163,14 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
     ), JavaTypes.STRING);
   }
 
-  protected final void putFor(BiFunction<SourceParameterLike, String, BrigadierArgumentType> value, ConvertToType... types) {
+  protected final void putFor(BiFunction<SourceParameterLike, String, BrigadierArgumentType> value, List<? extends ConvertToType> types) {
     for (ConvertToType key : types) {
       conversionMap.put(key.toType(), value);
     }
+  }
+
+  protected final void putFor(BiFunction<SourceParameterLike, String, BrigadierArgumentType> value, ConvertToType... types) {
+    putFor(value, Arrays.asList(types));
   }
 
   protected final <T extends Annotation> BrigadierArgumentType annotatedOr(
