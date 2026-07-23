@@ -38,7 +38,7 @@ internal class ArgumentTypesIterator(path: Path) : Iterable<ArgumentType> {
       .and(TypePatterns.hasTypeArguments(typeArgument));
 
     val data = ctx.provider.findClass("io/papermc/paper/command/brigadier/argument/ArgumentTypes")!!
-    argumentTypes = data.methods().stream()
+    argumentTypes = data.methods()
       .filter { !it.name().contains("resource") }
       .filter { it.signature()?.let { pattern.match(it.returnType).matches() } ?: false }
       .map { data ->
@@ -51,7 +51,7 @@ internal class ArgumentTypesIterator(path: Path) : Iterable<ArgumentType> {
             .toTypedArray()
         )
       }
-      .toList()
+      .sortedWith { a1, a2 -> a1.methodName.compareTo(a2.methodName) }
 
     ctx.close()
   }

@@ -33,7 +33,7 @@ internal class RegistryKeyTypeIterator(path: Path) : Iterable<RegistryKeyType> {
             it.name()
           )
         }
-        .toList()
+        .sortedWith { r1, r2 -> r1.name.compareTo(r2.name) }
     }
   }
 
