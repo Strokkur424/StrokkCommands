@@ -80,46 +80,6 @@ public final class PaperBrigadierArgumentConverter2 extends BrigadierArgumentCon
     ));
   }
 
-//  //<editor-fold desc="Registry Entries">
-//  private static final List<RegistryEntry> REGISTRY_ENTRIES = List.of(
-//      registryEntry("Attribute", "org.bukkit.attribute.Attribute", "ATTRIBUTE"),
-//      registryEntry("PatternType", "org.bukkit.block.banner.PatternType", "BANNER_PATTERN"),
-//      registryEntry("Biome", "org.bukkit.block.Biome", "BIOME"),
-//      registryEntry("Cat.Type", "org.bukkit.entity.Cat", "org.bukkit.entity.Cat.Type", "CAT_VARIANT"),
-//      registryEntry("Chicken.Variant", "org.bukkit.entity.Chicken", "org.bukkit.entity.Chicken.Variant", "CHICKEN_VARIANT"),
-//      registryEntry("Cow.Variant", "org.bukkit.entity.Cow", "org.bukkit.entity.Cow.Variant", "COW_VARIANT"),
-//      registryEntry("DamageType", "org.bukkit.damage.DamageType", "DAMAGE_TYPE"),
-//      registryEntry("DataComponentType", "io.papermc.paper.datacomponent.DataComponentType", "DATA_COMPONENT_TYPE"),
-//      registryEntry("Enchantment", "org.bukkit.enchantments.Enchantment", "ENCHANTMENT"),
-//      registryEntry("EntityType", "org.bukkit.entity.EntityType", "ENTITY_TYPE"),
-//      registryEntry("Fluid", "org.bukkit.Fluid", "FLUID"),
-//      registryEntry("Frog.Variant", "org.bukkit.entity.Frog", "org.bukkit.entity.Frog.Variant", "FROG_VARIANT"),
-//      registryEntry("GameEvent", "org.bukkit.GameEvent", "GAME_EVENT"),
-//      registryEntry("ItemType", "org.bukkit.inventory.ItemType", "ITEM"),
-//      registryEntry("JukeboxSong", "org.bukkit.JukeboxSong", "JUKEBOX_SONG"),
-//      registryEntry("MapCursor.Type", "org.bukkit.map.MapCursor", "org.bukkit.map.MapCursor.Type", "MAP_DECORATION_TYPE"),
-//      registryEntry("MemoryKey", "org.bukkit.entity.memory.MemoryKey", "org.bukkit.entity.memory.MemoryKey<?>", "MEMORY_MODULE_TYPE"),
-//      registryEntry("MenuType", "org.bukkit.inventory.MenuType", "MENU"),
-//      registryEntry("PotionEffectType", "org.bukkit.potion.PotionEffectType", "MOB_EFFECT"),
-//      registryEntry("Art", "org.bukkit.Art", "PAINTING_VARIANT"),
-//      registryEntry("Particle", "org.bukkit.Particle", "PARTICLE_TYPE"),
-//      registryEntry("Pig.Variant", "org.bukkit.entity.Pig", "org.bukkit.entity.Pig.Variant", "PIG_VARIANT"),
-//      registryEntry("PotionType", "org.bukkit.potion.PotionType", "POTION"),
-//      registryEntry("Sound", "org.bukkit.Sound", "SOUND_EVENT"),
-//      registryEntry("Structure", "org.bukkit.structure.Structure", "STRUCTURE"),
-//      registryEntry("TrimMaterial", "org.bukkit.inventory.meta.trim.TrimMaterial", "TRIM_MATERIAL"),
-//      registryEntry("TrimPattern", "org.bukkit.inventory.meta.trim.TrimPattern", "TRIM_PATTERN"),
-//      registryEntry("Villager.Profession", "org.bukkit.entity.Villager", "org.bukkit.entity.Villager.Profession", "VILLAGER_PROFESSION"),
-//      registryEntry("Villager.Type", "org.bukkit.entity.Villager", "org.bukkit.entity.Villager.Type", "VILLAGER_TYPE"),
-//      registryEntry("Wolf.SoundVariant", "org.bukkit.entity.Wolf", "org.bukkit.entity.Wolf.SoundVariant", "WOLF_SOUND_VARIANT"),
-//      registryEntry("Wolf.Variant", "org.bukkit.entity.Wolf", "org.bukkit.entity.Wolf.Variant", "WOLF_VARIANT")
-//  );
-//  //</editor-fold>
-//
-//  PaperBrigadierArgumentConverter(MessagerWrapper messagerWrapper) {
-//    super(messagerWrapper);
-//  }
-//
 //  @Override
 //  @Nullable
 //  private BrigadierArgumentType handleCustomArgumentAnnotations(String argumentName, String type, SourceVariable variable)
