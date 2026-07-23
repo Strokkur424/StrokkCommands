@@ -33,6 +33,8 @@ import java.util.List;
 @AutoService(BrigadierArgumentConverter.class)
 public final class PaperBrigadierArgumentConverter2 extends BrigadierArgumentConverter {
   private static final CodeClassType ARGUMENT_TYPES = CodeTypes.ofClass("io.papermc.paper.command.brigadier.argument.ArgumentTypes");
+  private static final CodeClassType REGISTRY_KEY = CodeTypes.ofClass("io.papermc.paper.registry.RegistryKey");
+  private static final CodeClassType REGISTRY_ARGUMENT_EXTRACTOR = CodeTypes.ofClass("io.papermc.paper.command.brigadier.argument.RegistryArgumentExtractor");
 
   @Override
   protected void initializeArguments() {
@@ -48,6 +50,8 @@ public final class PaperBrigadierArgumentConverter2 extends BrigadierArgumentCon
       ARGUMENT_TYPES.chainMethod("doubleRange"),
       Expressions.variable("ctx").chainMethod("getArgument", Expressions.string(name))
     ));
+
+    putRegistry("PIG_SOUND_VARIANT", CodeTypes.ofClass("org.bukkit.entity.Pig$SoundVariant"));
   }
 
   private void putSimple(String methodName, String returnTypeFqn, CodeType... extraTypes) {
@@ -59,6 +63,22 @@ public final class PaperBrigadierArgumentConverter2 extends BrigadierArgumentCon
       Expressions.variable("ctx").chainMethod("getArgument", Expressions.string(name), returnType.chainField("class"))
     ), types);
   }
+
+private void putRegistry(String name, CodeClassType type) {
+  putFor((p, argname) -> BrigadierArgumentType.of(
+    ARGUMENT_TYPES.chainMethod("resource", REGISTRY_KEY.chainField(name)),
+    Expressions.variable("ctx").chainMethod("getArgument", Expressions.string(argname), type.chainField("class"))
+  ));
+  putFor((p, argname) -> BrigadierArgumentType.of(
+    ARGUMENT_TYPES.chainMethod("resourceKey", REGISTRY_KEY.chainField(name)),
+    REGISTRY_ARGUMENT_EXTRACTOR.chainMethod(
+      "getTypedKey",
+      Expressions.variable("ctx"),
+      REGISTRY_KEY.chainField(name),
+      Expressions.string(argname)
+    )
+  ));
+}
 
 //  //<editor-fold desc="Registry Entries">
 //  private static final List<RegistryEntry> REGISTRY_ENTRIES = List.of(

@@ -104,7 +104,7 @@ final class PaperClassBuilder extends CommonClassBuilder<PaperCommandInformation
 
     final MethodBuilder builder = super.getRegisterMethodBuilder()
       .addParameters(CodeParameterDefinition.of(PaperClasses.COMMANDS, "commands"))
-      .setCodeBlock(registerExpr);
+      .setCode(registerExpr);
 
     addConstructorParametersTo(builder, f -> true);
     return builder;

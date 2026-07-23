@@ -18,11 +18,24 @@ import dev.denwav.hypo.types.sig.TypeSignature
 import dev.denwav.hypo.types.sig.param.TypeArgument
 import dev.denwav.hypo.types.sig.param.TypeVariable
 import dev.denwav.hypo.types.sig.param.WildcardArgument
+import net.strokkur.jap.code.CodeGenUtil
+import net.strokkur.jap.code.annotations.CodeAnnotation
+import net.strokkur.jap.code.classmodel.CodeClass
+import net.strokkur.jap.code.classmodel.CodeField
+import net.strokkur.jap.code.classmodel.CodeMethod
+import net.strokkur.jap.code.classmodel.builder.ClassBuilder
+import net.strokkur.jap.code.classmodel.builder.MethodBuilder
+import net.strokkur.jap.code.convert.ConvertToClassType
 import net.strokkur.jap.code.convert.ConvertToGenericType
+import net.strokkur.jap.code.expression.Expressions
+import net.strokkur.jap.code.statement.Statements
 import net.strokkur.jap.code.type.CodeClassType
 import net.strokkur.jap.code.type.CodePrimitiveType
 import net.strokkur.jap.code.type.CodeType
 import net.strokkur.jap.code.type.CodeTypes
+import net.strokkur.jap.code.type.preset.JavaTypes
+import net.strokkur.jap.code.util.Modifiers
+import net.strokkur.jap.code.util.StyleConfig
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -38,6 +51,9 @@ abstract class ParsePaperApiJarTask : DefaultTask() {
   @get:Input
   abstract val url: Property<String>
 
+  @get:Input
+  abstract val target: Property<String>
+
   @get:OutputFile
   abstract val apiJar: RegularFileProperty
 
@@ -52,13 +68,145 @@ abstract class ParsePaperApiJarTask : DefaultTask() {
       }
     }
 
-    for (argumentType in ArgumentTypesIterator(apiJar.toPath())) {
+    val createdClass = createClass(apiJar.toPath())
+    val javaSource = CodeGenUtil.createJavaFile(createdClass)
+    println(javaSource)
+  }
+
+  private fun createClass(path: Path): CodeClass {
+    val builder = ClassBuilder(CodeTypes.ofClass(target.get()))
+    builder.addAnnotations(
+      CodeAnnotation.of(
+        ConverterTypes.AUTO_SERVICE,
+        ConverterTypes.BRIGADIER_ARGUMENT_CONVERTER.chainField("class")
+      )
+    )
+    builder.addModifiers(Modifiers.PUBLIC, Modifiers.FINAL)
+    builder.extendsClass(ConverterTypes.BRIGADIER_ARGUMENT_CONVERTER)
+
+    builder.addFields(
+      CodeField.builder(ConverterTypes.CODE_CLASS_TYPE, "ARGUMENT_TYPES")
+        .addModifiers(Modifiers.PRIVATE, Modifiers.STATIC, Modifiers.FINAL)
+        .setInitializer(
+          ConverterTypes.CODE_TYPES.chainMethod("ofClass")
+            .addParameters(Expressions.string(ConverterTypes.ARGUMENT_TYPES.fqn))
+        ),
+      CodeField.builder(ConverterTypes.CODE_CLASS_TYPE, "REGISTRY_KEY")
+        .addModifiers(Modifiers.PRIVATE, Modifiers.STATIC, Modifiers.FINAL)
+        .setInitializer(
+          ConverterTypes.CODE_TYPES.chainMethod("ofClass")
+            .addParameters(Expressions.string(ConverterTypes.REGISTRY_KEY.fqn))
+        ),
+      CodeField.builder(ConverterTypes.CODE_CLASS_TYPE, "REGISTRY_ARGUMENT_EXTRACTOR")
+        .addModifiers(Modifiers.PRIVATE, Modifiers.STATIC, Modifiers.FINAL)
+        .setInitializer(
+          ConverterTypes.CODE_TYPES.chainMethod("ofClass")
+            .addParameters(Expressions.string(ConverterTypes.REGISTRY_ARGUMENT_EXTRACTOR.fqn))
+        ),
+    )
+
+    val initializeBuilder = CodeMethod.builder("initializeArguments")
+      .addModifiers(Modifiers.PROTECTED)
+      .addAnnotations(CodeTypes.ofJavaClass(Override::class.java))
+    initializeBuilder.addCode(
+      Expressions.superExpr().chainMethod("initializeArguments"),
+      Statements.blank()
+    )
+
+    for (argumentType in ArgumentTypesIterator(path)) {
       println("ArgumentType: " + argumentType)
     }
+
     println()
-    for (registryKeyType in RegistryKeyTypeIterator(apiJar.toPath())) {
-      println("RegistryKeyType: " + registryKeyType)
+
+    for (registryKeyType in RegistryKeyTypeIterator(path)) {
+      initializeBuilder.addCode(
+        Expressions.methodInvocation("putRegistry")
+          .addParameters(
+            Expressions.string(registryKeyType.name),
+            ConverterTypes.CODE_TYPES.chainMethod(
+              "ofClass",
+              Expressions.string(registryKeyType.type.identifiableName())
+            )
+          )
+      )
     }
+
+    builder.addMethods(initializeBuilder, createPutRegistryMethod())
+    return builder.build()
+  }
+
+  private fun createPutRegistryMethod(): MethodBuilder {
+    return CodeMethod.builder("putRegistry")
+      .addModifiers(Modifiers.PRIVATE)
+      .addParameter(JavaTypes.STRING, "name")
+      .addParameter(ConverterTypes.CODE_CLASS_TYPE, "type")
+      .setCode(
+        Expressions.methodInvocation("putFor")
+          .addParameters(
+            Expressions.lambdaInline(
+              listOf("p", "argname"), ConverterTypes.BRIGADIER_ARGUMENT_TYPE.chainMethod("of")
+                .addParameters(
+                  Expressions.variable("ARGUMENT_TYPES").chainMethod(
+                    "chainMethod",
+                    Expressions.string("resource"),
+                    Expressions.variable("REGISTRY_KEY").chainMethod("chainField", Expressions.variable("name"))
+                  ),
+                  ConverterTypes.EXPRESSIONS
+                    .chainMethod("variable", Expressions.string("ctx"))
+                    .chainMethod(
+                      "chainMethod",
+                      Expressions.string("getArgument"),
+                      ConverterTypes.EXPRESSIONS.chainMethod("string", Expressions.variable("argname")),
+                      Expressions.variable("type").chainMethod("chainField", Expressions.string("class"))
+                    ).setStyle(StyleConfig.MULTILINE)
+                ).setStyle(StyleConfig.MULTILINE)
+            )
+          ),
+
+        Expressions.methodInvocation("putFor")
+          .addParameters(
+            Expressions.lambdaInline(
+              listOf("p", "argname"), ConverterTypes.BRIGADIER_ARGUMENT_TYPE.chainMethod("of")
+                .addParameters(
+                  Expressions.variable("ARGUMENT_TYPES").chainMethod(
+                    "chainMethod",
+                    Expressions.string("resourceKey"),
+                    Expressions.variable("REGISTRY_KEY").chainMethod("chainField", Expressions.variable("name"))
+                  ),
+                  Expressions.variable("REGISTRY_ARGUMENT_EXTRACTOR").chainMethod(
+                    "chainMethod",
+                    Expressions.string("getTypedKey"),
+                    ConverterTypes.EXPRESSIONS.chainMethod("variable", Expressions.string("ctx")),
+                    Expressions.variable("REGISTRY_KEY").chainMethod("chainField", Expressions.variable("name")),
+                    ConverterTypes.EXPRESSIONS.chainMethod("string", Expressions.variable("argname")),
+                  ).setStyle(StyleConfig.MULTILINE)
+                ).setStyle(StyleConfig.MULTILINE)
+            )
+          ),
+      )
+  }
+}
+
+private enum class ConverterTypes(val fqn: String) : ConvertToClassType {
+  AUTO_SERVICE("com.google.auto.service.AutoService"),
+
+  BRIGADIER_ARGUMENT_CONVERTER("net.strokkur.commands.internal.arguments.BrigadierArgumentConverter"),
+  BRIGADIER_ARGUMENT_TYPE("net.strokkur.commands.internal.arguments.BrigadierArgumentType"),
+
+  CODE_CLASS_TYPE("net.strokkur.jap.code.type.CodeClassType"),
+  CODE_TYPE("net.strokkur.jap.code.type.CodeType"),
+  CODE_TYPES("net.strokkur.jap.code.type.CodeTypes"),
+  JAVA_TYPES("net.strokkur.jap.code.type.preset.JavaTypes"),
+  EXPRESSIONS("net.strokkur.jap.code.expression.Expressions"),
+
+  ARGUMENT_TYPES("io.papermc.paper.command.brigadier.argument.ArgumentTypes"),
+  REGISTRY_KEY("io.papermc.paper.registry.RegistryKey"),
+  REGISTRY_ARGUMENT_EXTRACTOR("io.papermc.paper.command.brigadier.argument.RegistryArgumentExtractor")
+  ;
+
+  override fun toClassType(): CodeClassType? {
+    return CodeTypes.ofClass(fqn)
   }
 }
 

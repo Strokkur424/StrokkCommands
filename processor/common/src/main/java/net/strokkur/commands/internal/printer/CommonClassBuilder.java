@@ -127,7 +127,7 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
     }
 
     createMethodStatements.add(Statements.returnStmt(treeExpr));
-    createMethod.setCodeBlock(createMethodStatements.toArray(ConvertToStatement[]::new));
+    createMethod.setCode(createMethodStatements.toArray(ConvertToStatement[]::new));
 
     // Add the methods to the class
     classBuilder.addMethods(registerMethod, createMethod);

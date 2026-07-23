@@ -88,7 +88,7 @@ class VelocityClassBuilder extends CommonClassBuilder<VelocityCommandInformation
     final MethodBuilder builder = super.getRegisterMethodBuilder()
       .addParameter(VelocityClasses.PROXY_SERVER, "server")
       .addParameter(JavaTypes.OBJECT, "command$plugin")
-      .setCodeBlock(
+      .setCode(
         Statements.variableDeclarationFinal(VelocityClasses.BRIGADIER_COMMAND, "command", VelocityClasses.BRIGADIER_COMMAND.ctor(createInvocation)),
 
         Statements.variableDeclarationFinal(VelocityClasses.COMMAND_META, "meta", Expressions.variable("server")
