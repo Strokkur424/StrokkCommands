@@ -21,7 +21,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import io.papermc.paper.registry.RegistryKey;
 import net.strokkur.testplugin.guice.InjectionCommandBrigadierRef;
 import net.strokkur.testplugin.guice.NestedInjectionCommandBrigadierRef;
 import net.strokkur.testplugin.guice.module.GuiceModule;
@@ -38,8 +37,6 @@ public final class TestPlugin extends JavaPlugin {
 
   @Override
   public void onLoad() {
-    RegistryKey
-
     this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS.newHandler(event -> {
       final Commands commands = event.registrar();
       injector.getInstance(InjectionCommandBrigadierRef.class).register(commands);

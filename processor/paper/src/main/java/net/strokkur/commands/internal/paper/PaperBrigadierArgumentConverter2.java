@@ -64,21 +64,21 @@ public final class PaperBrigadierArgumentConverter2 extends BrigadierArgumentCon
     ), types);
   }
 
-private void putRegistry(String name, CodeClassType type) {
-  putFor((p, argname) -> BrigadierArgumentType.of(
-    ARGUMENT_TYPES.chainMethod("resource", REGISTRY_KEY.chainField(name)),
-    Expressions.variable("ctx").chainMethod("getArgument", Expressions.string(argname), type.chainField("class"))
-  ));
-  putFor((p, argname) -> BrigadierArgumentType.of(
-    ARGUMENT_TYPES.chainMethod("resourceKey", REGISTRY_KEY.chainField(name)),
-    REGISTRY_ARGUMENT_EXTRACTOR.chainMethod(
-      "getTypedKey",
-      Expressions.variable("ctx"),
-      REGISTRY_KEY.chainField(name),
-      Expressions.string(argname)
-    )
-  ));
-}
+  private void putRegistry(String name, CodeClassType type) {
+    putFor((p, argname) -> BrigadierArgumentType.of(
+      ARGUMENT_TYPES.chainMethod("resource", REGISTRY_KEY.chainField(name)),
+      Expressions.variable("ctx").chainMethod("getArgument", Expressions.string(argname), type.chainField("class"))
+    ));
+    putFor((p, argname) -> BrigadierArgumentType.of(
+      ARGUMENT_TYPES.chainMethod("resourceKey", REGISTRY_KEY.chainField(name)),
+      REGISTRY_ARGUMENT_EXTRACTOR.chainMethod(
+        "getTypedKey",
+        Expressions.variable("ctx"),
+        REGISTRY_KEY.chainField(name),
+        Expressions.string(argname)
+      )
+    ));
+  }
 
 //  //<editor-fold desc="Registry Entries">
 //  private static final List<RegistryEntry> REGISTRY_ENTRIES = List.of(
