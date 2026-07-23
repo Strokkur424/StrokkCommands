@@ -1,16 +1,27 @@
 package net.strokkur.build
 
 import dev.denwav.hypo.asm.AsmClassDataProvider
+import dev.denwav.hypo.asm.HypoAsm
 import dev.denwav.hypo.core.HypoContext
 import dev.denwav.hypo.model.ClassProviderRoot
-import dev.denwav.hypo.model.data.ClassData
-import dev.denwav.hypo.model.data.MethodData
+import dev.denwav.hypo.types.PrimitiveType
+import dev.denwav.hypo.types.VoidType
+import dev.denwav.hypo.types.desc.ArrayTypeDescriptor
 import dev.denwav.hypo.types.desc.ClassTypeDescriptor
+import dev.denwav.hypo.types.desc.TypeDescriptor
+import dev.denwav.hypo.types.kind.ClassType
+import dev.denwav.hypo.types.pattern.TypePattern
+import dev.denwav.hypo.types.pattern.TypePatterns
+import dev.denwav.hypo.types.sig.ArrayTypeSignature
 import dev.denwav.hypo.types.sig.ClassTypeSignature
-import dev.denwav.hypo.types.sig.Signature
+import dev.denwav.hypo.types.sig.TypeSignature
 import dev.denwav.hypo.types.sig.param.TypeArgument
+import dev.denwav.hypo.types.sig.param.TypeVariable
+import dev.denwav.hypo.types.sig.param.WildcardArgument
 import net.strokkur.jap.code.convert.ConvertToGenericType
 import net.strokkur.jap.code.type.CodeClassType
+import net.strokkur.jap.code.type.CodePrimitiveType
+import net.strokkur.jap.code.type.CodeType
 import net.strokkur.jap.code.type.CodeTypes
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
@@ -21,7 +32,6 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
 import java.net.URI
 import java.nio.file.Path
-import java.util.function.Predicate
 
 @DisableCachingByDefault
 abstract class ParsePaperApiJarTask : DefaultTask() {
@@ -42,15 +52,17 @@ abstract class ParsePaperApiJarTask : DefaultTask() {
       }
     }
 
-    println("hi")
-    for (argumentType in ArgumentTypesIterator(apiJar.toPath(), { true })) {
+    for (argumentType in ArgumentTypesIterator(apiJar.toPath())) {
       println("ArgumentType: " + argumentType)
     }
-    println("two")
+    println()
+    for (registryKeyType in RegistryKeyTypeIterator(apiJar.toPath())) {
+      println("RegistryKeyType: " + registryKeyType)
+    }
   }
 }
 
-private class ArgumentTypesIterator(path: Path, methodPredicate: Predicate<MethodData>) : Iterable<ArgumentType> {
+private class ArgumentTypesIterator(path: Path) : Iterable<ArgumentType> {
   val argumentTypes: List<ArgumentType>
 
   init {
@@ -58,19 +70,23 @@ private class ArgumentTypesIterator(path: Path, methodPredicate: Predicate<Metho
       .withProvider(AsmClassDataProvider.of(ClassProviderRoot.fromJar(path)))
       .withContextProvider(AsmClassDataProvider.of(ClassProviderRoot.ofJdk()))
       .build()
-//    HydrationManager.createDefault().hydrate(ctx)
+
+    val typeArgument = TypePattern.capture(TypePatterns.isClass())
+    val pattern = TypePatterns.isClassNamed("com/mojang/brigadier/arguments/ArgumentType")
+      .and(TypePatterns.hasTypeArguments(typeArgument));
 
     val data = ctx.provider.findClass("io/papermc/paper/command/brigadier/argument/ArgumentTypes")!!
     argumentTypes = data.methods().stream()
-      .filter(methodPredicate)
-      .filter { (it.returnType() as? ClassTypeDescriptor)?.name == "com.mojang.brigadier.arguments.ArgumentType" }
+      .filter { !it.name().contains("resource") }
+      .filter { it.signature()?.let { pattern.match(it.returnType).matches() } ?: false }
       .map { data ->
-        println(data)
+        val returnType = (typeArgument.getOrNull(pattern.match(data.signature()!!.returnType)) as ClassType).name;
         return@map ArgumentType(
           data.name(),
-          typeToCode(data.returnType().asSignature()),
-          arrayOf()
-//          superTypesOfType((data.returnType().asSignature() as ClassTypeSignature).typeArguments[0].)
+          CodeTypes.ofClass(returnType.replace('/', '.')),
+          data.params()
+            .map { toCodeType(it) }
+            .toTypedArray()
         )
       }
       .toList()
@@ -86,42 +102,93 @@ private class ArgumentTypesIterator(path: Path, methodPredicate: Predicate<Metho
 private class ArgumentType(
   val methodName: String,
   val returnType: CodeClassType,
-  val extraTypes: Array<CodeClassType>
+  val args: Array<CodeType>
 ) {
   override fun toString(): String {
-    return "(${methodName} // ${returnType.fullyQualifiedName()} // ${extraTypes.map { it.name() }})"
+    val argsString = args
+      .map { it.simpleName() }
+      .joinToString(", ")
+    return "${returnType.simpleName} ${methodName}(${argsString})"
   }
 }
 
-fun returnType(method: MethodData) {
-  println(method.name())
-}
+private class RegistryKeyTypeIterator(path: Path) : Iterable<RegistryKeyType> {
+  val types: List<RegistryKeyType>
 
-fun typeToCode(sig: Signature): CodeClassType {
-  if (sig is ClassTypeSignature) {
-    val out: CodeClassType = CodeTypes.ofClass(sig.asReadable());
-    if (sig.typeArguments.isNotEmpty()) {
-      return out.typed(*typeArgsToCode(sig.typeArguments))
+  init {
+    val typeArgument = TypePattern.capture(TypePatterns.isClass())
+    val pattern = TypePatterns.isClassNamed("io/papermc/paper/registry/RegistryKey")
+      .and(TypePatterns.hasTypeArguments(typeArgument));
+
+    types = HypoAsm.use<List<RegistryKeyType>, Exception>(path) { ctx ->
+      val data = ctx.findClass("io/papermc/paper/registry/RegistryKey")!!
+      return@use data.fields()
+        .map {
+          RegistryKeyType(
+            toCodeType(typeArgument[pattern.match(it.signature()!!)] as TypeSignature) as CodeClassType,
+            it.name()
+          )
+        }
+        .toList()
     }
-    return out
   }
 
-  error("Unknown signature type: " + sig.javaClass)
+  override fun iterator(): Iterator<RegistryKeyType> {
+    return types.iterator()
+  }
 }
 
-fun typeArgsToCode(args: List<TypeArgument>): Array<out ConvertToGenericType> {
-  return args
-    .map { arg -> typeToCode(arg as Signature) }
-    .toTypedArray()
+private class RegistryKeyType(
+  val type: CodeClassType,
+  val name: String
+) {
+  override fun toString(): String {
+    return "${type.simpleName()} ${name}"
+  }
 }
 
-fun superTypesOfType(data: ClassData): Array<CodeClassType> {
-  return data.signature()?.superInterfaces
-    ?.filter {
-      it.name !in listOf(
-        "net.kyori.adventure.audience.ForwardingAudience"
-      )
-    }
-    ?.map { typeToCode(it) }
-    ?.toTypedArray() ?: arrayOf()
+fun toCodeType(signature: TypeSignature): CodeType {
+  return when (signature) {
+    PrimitiveType.CHAR -> CodePrimitiveType.CHAR
+    PrimitiveType.BYTE -> CodePrimitiveType.BYTE
+    PrimitiveType.SHORT -> CodePrimitiveType.SHORT
+    PrimitiveType.INT -> CodePrimitiveType.INT
+    PrimitiveType.LONG -> CodePrimitiveType.LONG
+    PrimitiveType.FLOAT -> CodePrimitiveType.FLOAT
+    PrimitiveType.DOUBLE -> CodePrimitiveType.DOUBLE
+    PrimitiveType.BOOLEAN -> CodePrimitiveType.BOOL
+    VoidType.INSTANCE -> CodePrimitiveType.VOID
+    is ArrayTypeSignature -> toCodeType(signature.baseType).toArray()
+    is ClassTypeSignature -> CodeTypes.ofClassTyped(
+      signature.asReadable(), *signature.typeArguments
+        .map { toGenericType(it) }
+        .toTypedArray())
+
+    is TypeVariable -> CodeTypes.generic(signature.name)
+    is TypeVariable.Unbound -> CodeTypes.generic(signature.name)
+  }
+}
+
+fun toCodeType(descriptor: TypeDescriptor): CodeType {
+  return when (descriptor) {
+    PrimitiveType.CHAR -> CodePrimitiveType.CHAR
+    PrimitiveType.BYTE -> CodePrimitiveType.BYTE
+    PrimitiveType.SHORT -> CodePrimitiveType.SHORT
+    PrimitiveType.INT -> CodePrimitiveType.INT
+    PrimitiveType.LONG -> CodePrimitiveType.LONG
+    PrimitiveType.FLOAT -> CodePrimitiveType.FLOAT
+    PrimitiveType.DOUBLE -> CodePrimitiveType.DOUBLE
+    PrimitiveType.BOOLEAN -> CodePrimitiveType.BOOL
+    VoidType.INSTANCE -> CodePrimitiveType.VOID
+    is ArrayTypeDescriptor -> toCodeType(descriptor.baseType).toArray()
+    is ClassTypeDescriptor -> CodeTypes.ofClass(descriptor.asReadable())
+  }
+}
+
+fun toGenericType(arg: TypeArgument): ConvertToGenericType {
+  return when (arg) {
+    WildcardArgument.INSTANCE -> CodeTypes.genericWildcard()
+    is ClassTypeSignature -> CodeTypes.ofClass(arg.asReadable())
+    else -> error("Unhandled type argument type: ${arg.javaClass}")
+  }
 }

@@ -11,7 +11,7 @@ repositories {
 dependencies {
   implementation("com.diffplug.spotless:spotless-plugin-gradle:8.0.0")
   implementation("dev.denwav.hypo:hypo-asm:3.0.0")
-  implementation("dev.denwav.hypo:hypo-asm-hydrate:3.0.0")
+  implementation("dev.denwav.hypo:hypo-asm-hydrate:3.1.0-SNAPSHOT")
   implementation("net.strokkur.japutil:code-gen:0.1.0-SNAPSHOT")
 }
 
