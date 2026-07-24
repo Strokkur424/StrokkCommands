@@ -1,6 +1,6 @@
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
-import net.strokkur.commands.internal.paper.PaperBrigadierArgumentConverter2;
+import net.strokkur.commands.internal.paper.PaperBrigadierArgumentConverter;
 import net.strokkur.commands.internal.paper.PaperPlatformUtils;
 import net.strokkur.commands.internal.paper.PaperPrototypeNodeBuilder;
 import net.strokkur.commands.internal.paper.PaperStrokkCommandsProcessor;
@@ -18,5 +18,5 @@ module net.strokkur.commands.processor.paper {
   provides Processor with PaperStrokkCommandsProcessor;
   provides PlatformUtils with PaperPlatformUtils;
   provides PrototypeNodeBuilder with PaperPrototypeNodeBuilder;
-  provides BrigadierArgumentConverter with PaperBrigadierArgumentConverter2;
+  provides BrigadierArgumentConverter with PaperBrigadierArgumentConverter;
 }

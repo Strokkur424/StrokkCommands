@@ -30,9 +30,9 @@ import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.MultiLiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
-import net.strokkur.commands.internal.exceptions.ConversionException;
 import net.strokkur.commands.internal.exceptions.IllegalCommandClassTypeException;
 import net.strokkur.commands.internal.exceptions.IllegalSubcommandFieldType;
+import net.strokkur.commands.internal.exceptions.ParameterArgumentException;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.attributes.Attributable;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
@@ -369,7 +369,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
     final BrigadierArgumentType argumentType;
     try {
       argumentType = BrigadierArgumentConverter.get().getAsArgumentType(parameter);
-    } catch (ConversionException e) {
+    } catch (ParameterArgumentException e) {
       return new UnparsedCommandParameter(parameter);
     }
 

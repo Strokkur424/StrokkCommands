@@ -24,7 +24,7 @@ import net.strokkur.commands.arguments.LongArg;
 import net.strokkur.commands.arguments.StringArg;
 import net.strokkur.commands.arguments.StringArgType;
 import net.strokkur.commands.internal.StrokkCommandsProcessor;
-import net.strokkur.commands.internal.exceptions.ConversionException;
+import net.strokkur.commands.internal.exceptions.ParameterArgumentException;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.jap.code.convert.ConvertToExpression;
@@ -73,7 +73,7 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
     String argumentName,
     CodeType type,
     SourceParameterLike parameter
-  ) throws ConversionException {
+  ) throws ParameterArgumentException {
     return null;
   }
 
@@ -188,7 +188,7 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
     return BrigadierArgumentType.of(withoutAnnotation, retrieval);
   }
 
-  public final BrigadierArgumentType getAsArgumentType(SourceParameterLike parameter) throws ConversionException {
+  public final BrigadierArgumentType getAsArgumentType(SourceParameterLike parameter) throws ParameterArgumentException {
     final String argumentName = parameter.name();
     final CodeType type = parameter.type().toType();
 
@@ -198,7 +198,7 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
     }
 
     if (!conversionMap.containsKey(type)) {
-      throw new ConversionException("Cannot find Brigadier equivalent for argument of type %s.".formatted(type));
+      throw new ParameterArgumentException("Cannot find Brigadier equivalent for argument of type %s.".formatted(type));
     }
 
     final BrigadierArgumentType out = Optional.ofNullable(conversionMap.get(type)).map(it -> it.apply(parameter, argumentName)).orElse(null);
@@ -206,7 +206,7 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
       return out;
     }
 
-    throw new ConversionException("An unexpected error occurred whilst converting type %s to Brigadier equivalent.".formatted(type));
+    throw new ParameterArgumentException("An unexpected error occurred whilst converting type %s to Brigadier equivalent.".formatted(type));
   }
 
   @Override

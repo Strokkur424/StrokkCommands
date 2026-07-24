@@ -17,8 +17,8 @@
  */
 package net.strokkur.commands.internal.exceptions;
 
-public class ConversionException extends Exception {
-  public ConversionException(String message) {
+public class ParameterArgumentException extends RuntimeException {
+  public ParameterArgumentException(String message) {
     super(message);
   }
 }

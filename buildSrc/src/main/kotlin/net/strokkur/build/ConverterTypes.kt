@@ -7,6 +7,7 @@ import net.strokkur.jap.code.type.CodeTypes
 internal enum class ConverterTypes(val fqn: String) : ConvertToClassType {
   AUTO_SERVICE("com.google.auto.service.AutoService"),
 
+  UNIQUE_PAPER_BRIGADIER_ARGUMENT_CONVERTER("net.strokkur.commands.internal.paper.PaperUniqueBrigadierArgumentConverter"),
   BRIGADIER_ARGUMENT_CONVERTER("net.strokkur.commands.internal.arguments.BrigadierArgumentConverter"),
   BRIGADIER_ARGUMENT_TYPE("net.strokkur.commands.internal.arguments.BrigadierArgumentType"),
 

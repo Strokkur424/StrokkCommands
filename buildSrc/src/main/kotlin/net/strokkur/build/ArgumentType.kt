@@ -20,7 +20,9 @@ internal class ArgumentType(
     val argsString = args
       .map { it.simpleName() }
       .joinToString(", ")
-    return "${returnType.simpleName} ${methodName}(${argsString})"
+    val nameAndArgs = "${methodName}(${argsString})"
+
+    return nameAndArgs + (" ".repeat(32 - nameAndArgs.length)) + returnType.identifiableName()
   }
 }
 
