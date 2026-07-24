@@ -39,8 +39,8 @@ final class PaperTreePostProcessor extends TreePostProcessor {
     // Once an attribute is passed on, it will be removed from the child root in order to help the
     // source file printer a bit.
     root.forEachDepthFirst(node -> {
-      handleExecutor(node);
       handleOperator(node);
+      handleExecutor(node);
       handlePermissions(node);
     });
   }

@@ -1,4 +1,4 @@
-import net.strokkur.build.ParsePaperApiJarTask
+import net.strokkur.build.GeneratePaperArgumentConverterDefinitions
 
 plugins {
   id("commands-publish")
@@ -10,15 +10,13 @@ dependencies {
   annotationProcessor(libs.auto.service)
 }
 
-val parsePaperJar = tasks.register<ParsePaperApiJarTask>("parsePaperJar") {
+val parsePaperJar = tasks.register<GeneratePaperArgumentConverterDefinitions>("parsePaperJar") {
   description = "Downloads and extracts command argument type information from an API JAR."
 
   val ver = "26.2.build.60-beta"
   url = "https://artifactory.papermc.io/artifactory/releases/io/papermc/paper/paper-api/${ver}/paper-api-${ver}.jar"
-  targetDir = layout.buildDirectory.dir("parse-paper")
+  targetDir = layout.buildDirectory.dir("paper-gen")
   target = "net.strokkur.commands.internal.paper.PaperBrigadierArgumentConverter"
-
-  outputs.upToDateWhen { false }
 }
 
 sourceSets.main {
