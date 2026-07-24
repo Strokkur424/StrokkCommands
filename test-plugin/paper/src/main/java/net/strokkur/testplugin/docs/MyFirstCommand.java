@@ -22,7 +22,6 @@ import net.strokkur.commands.Aliases;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.DefaultExecutes;
 import net.strokkur.commands.Executes;
-import net.strokkur.commands.meta.StrokkCommandsDebug;
 import net.strokkur.commands.paper.Description;
 import net.strokkur.commands.paper.Executor;
 import net.strokkur.commands.paper.RequiresOP;
@@ -33,7 +32,6 @@ import org.bukkit.util.Vector;
 @Command("firstcommand")
 @Aliases("fc")
 @Description("My first StrokkCommands-command!")
-@StrokkCommandsDebug(only = MyFirstCommand.class)
 class MyFirstCommand {
 
   @DefaultExecutes

@@ -6,8 +6,10 @@ import net.strokkur.commands.internal.exceptions.ParameterArgumentException;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.paper.arguments.AngleArg;
 import net.strokkur.commands.paper.arguments.CustomArg;
+import net.strokkur.commands.paper.arguments.FinePosArg;
 import net.strokkur.commands.paper.arguments.TimeArg;
 import net.strokkur.jap.code.convert.ConvertToClassType;
+import net.strokkur.jap.code.convert.ConvertToExpression;
 import net.strokkur.jap.code.expression.Expressions;
 import net.strokkur.jap.code.expression.builder.MethodInvocationBuilder;
 import net.strokkur.jap.code.type.CodeClassType;
@@ -18,6 +20,8 @@ import net.strokkur.jap.code.type.preset.JavaTypes;
 import net.strokkur.jap.source.annotation.SourceAnnotation;
 import net.strokkur.jap.source.classmodel.SourceParameterLike;
 import org.jspecify.annotations.Nullable;
+
+import java.lang.annotation.Annotation;
 
 /// This class handles special argument type cases, which would be somewhat of a drag to try and generate
 /// automatically. [PaperBrigadierArgumentConverter] holds the real argument converter that gets used.
@@ -97,12 +101,22 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
 
     putResolver("blockPosition", BLOCK_POSITION_RESOLVER, CodeTypes.ofClass("io.papermc.paper.math.BlockPosition"));
     putResolver("columnBlockPosition", COLUMN_BLOCK_POSITION_RESOLVER, CodeTypes.ofClass("io.papermc.paper.command.brigadier.argument.position.ColumnBlockPosition"));
-    putResolver("columnFinePosition", COLUMN_FINE_POSITION_RESOLVER, CodeTypes.ofClass("io.papermc.paper.command.brigadier.argument.position.ColumnFinePositionResolver"));
+    putResolverValued(
+      "columnFinePosition",
+      COLUMN_FINE_POSITION_RESOLVER,
+      CodeTypes.ofClass("io.papermc.paper.command.brigadier.argument.position.ColumnFinePosition"),
+      FinePosArg.class
+    );
 
     putListResolver("entities", ENTITY_SELECTOR_ARGUMENT_RESOLVER, CodeTypes.ofClass("org.bukkit.entity.Entity"));
     putListToOneResolver("entity", ENTITY_SELECTOR_ARGUMENT_RESOLVER, CodeTypes.ofClass("org.bukkit.entity.Entity"));
 
-    putResolver("finePosition", FINE_POSITION_RESOLVER, CodeTypes.ofClass("io.papermc.paper.math.FinePosition"));
+    putResolverValued(
+      "finePosition",
+      FINE_POSITION_RESOLVER,
+      CodeTypes.ofClass("io.papermc.paper.math.FinePosition"),
+      FinePosArg.class
+    );
 
     putListToOneResolver("player", PLAYER_SELECTOR_ARGUMENT_RESOLVER, CodeTypes.ofClass("org.bukkit.entity.Player"));
     putCollectionResolver("playerProfiles", PLAYER_PROFILE_LIST_RESOLVER, CodeTypes.ofClass("com.destroystokyo.paper.profile.PlayerProfile"));
@@ -144,6 +158,20 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
     ), resolved);
   }
 
+  private void putResolverValued(String methodName, ConvertToClassType unresolved, ConvertToClassType resolved, Class<? extends Annotation> anno) {
+    putSimple(methodName, unresolved.toClassType().identifiableName());
+    putFor((p, name) -> {
+      final ConvertToExpression arg = p.hasAnnotation(anno) ?
+        p.firstAnnotationByType(anno).parameter("value").expression() :
+        null;
+      final MethodInvocationBuilder method = ARGUMENT_TYPES.chainMethod(methodName);
+      return BrigadierArgumentType.of(
+        arg != null ? method.addParameters(arg) : method,
+        resolveExpr(name, unresolved)
+      );
+    }, resolved);
+  }
+
   private void putListResolver(String methodName, ConvertToClassType unresolved, ConvertToClassType resolved) {
     putSimple(methodName, unresolved.toClassType().identifiableName());
 
@@ -157,6 +185,11 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
       ARGUMENT_TYPES.chainMethod(methodName),
       resolveExpr(name, unresolved)
     ), JavaTypes.COLLECTION.typed(resolved));
+    // T[]
+    putFor((p, name) -> BrigadierArgumentType.of(
+      ARGUMENT_TYPES.chainMethod(methodName),
+      resolveExpr(name, unresolved).chainMethod("toArray", resolved.toArray().methodReference("new"))
+    ), resolved.toArray());
   }
 
   private void putListToOneResolver(String methodName, ConvertToClassType unresolved, ConvertToClassType resolved) {
@@ -186,7 +219,12 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
     putFor((p, name) -> BrigadierArgumentType.of(
       ARGUMENT_TYPES.chainMethod(methodName),
       resolveExpr(name, unresolved).chainMethod("stream").chainMethod("findFirst").chainMethod("orElseThrow")
-    ), JavaTypes.LIST.typed(resolved));
+    ), resolved);
+    // T[]
+    putFor((p, name) -> BrigadierArgumentType.of(
+      ARGUMENT_TYPES.chainMethod(methodName),
+      resolveExpr(name, unresolved).chainMethod("toArray", resolved.toArray().methodReference("new"))
+    ), resolved.toArray());
   }
 
   protected void putSimple(String methodName, String returnTypeFqn) {
@@ -209,7 +247,7 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
         Expressions.string(argName),
         type.chainField("class")
       )
-    ));
+    ), type);
     putFor((p, argName) -> BrigadierArgumentType.of(
       ARGUMENT_TYPES.chainMethod("resourceKey", REGISTRY_KEY.chainField(name)),
       REGISTRY_ARGUMENT_EXTRACTOR.chainMethod(
@@ -218,6 +256,6 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
         REGISTRY_KEY.chainField(name),
         Expressions.string(argName)
       )
-    ));
+    ), REGISTRY_KEY.typed(type));
   }
 }
