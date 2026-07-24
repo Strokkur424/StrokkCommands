@@ -6,7 +6,6 @@ import net.strokkur.commands.internal.exceptions.ParameterArgumentException;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.paper.arguments.AngleArg;
 import net.strokkur.commands.paper.arguments.CustomArg;
-import net.strokkur.commands.paper.arguments.FinePosArg;
 import net.strokkur.commands.paper.arguments.TimeArg;
 import net.strokkur.jap.code.convert.ConvertToClassType;
 import net.strokkur.jap.code.convert.ConvertToExpression;
@@ -32,14 +31,6 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
   private static final Classes REGISTRY_ARGUMENT_EXTRACTOR = Classes.create("io.papermc.paper.command.brigadier.argument.RegistryArgumentExtractor");
 
   private static final Classes ANGLE_RESOLVER = Classes.create("io.papermc.paper.command.brigadier.argument.resolvers.AngleResolver");
-  private static final Classes BLOCK_POSITION_RESOLVER = Classes.create("io.papermc.paper.command.brigadier.argument.resolvers.BlockPositionResolver");
-  private static final Classes COLUMN_BLOCK_POSITION_RESOLVER = Classes.create("io.papermc.paper.command.brigadier.argument.resolvers.ColumnBlockPositionResolver");
-  private static final Classes COLUMN_FINE_POSITION_RESOLVER = Classes.create("io.papermc.paper.command.brigadier.argument.resolvers.ColumnFinePositionResolver");
-  private static final Classes ENTITY_SELECTOR_ARGUMENT_RESOLVER = Classes.create("io.papermc.paper.command.brigadier.argument.resolvers.selector.EntitySelectorArgumentResolver");
-  private static final Classes FINE_POSITION_RESOLVER = Classes.create("io.papermc.paper.command.brigadier.argument.resolvers.FinePositionResolver");
-  private static final Classes PLAYER_SELECTOR_ARGUMENT_RESOLVER = Classes.create("io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver");
-  private static final Classes PLAYER_PROFILE_LIST_RESOLVER = Classes.create("io.papermc.paper.command.brigadier.argument.resolvers.PlayerProfileListResolver");
-  private static final Classes ROTATION_RESOLVER = Classes.create("io.papermc.paper.command.brigadier.argument.resolvers.RotationResolver");
   private static final Classes SIGNED_ARGUMENT_RESOLVER = Classes.create("io.papermc.paper.command.brigadier.argument.SignedArgumentResolver");
 
   @Override
@@ -56,6 +47,8 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
       );
     }
 
+    // - time()                java.lang.Integer
+    // - time(int)             java.lang.Integer
     if (parameter.hasAnnotation(TimeArg.class)) {
       if (type != CodePrimitiveType.INT && type.isType(JavaTypes.INTEGER)) {
         throw new ParameterArgumentException("@TimeArg must be of type 'int'");
@@ -74,6 +67,7 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
       );
     }
 
+    // - angle()               io.papermc.paper.command.brigadier.argument.resolvers.AngleResolver
     if (parameter.hasAnnotation(AngleArg.class)) {
       if (type != CodePrimitiveType.FLOAT && type.isType(JavaTypes.FLOAT)) {
         throw new ParameterArgumentException("@AngleArg must be of type 'float'");
@@ -99,31 +93,7 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
   protected void initializeArguments() {
     super.initializeArguments();
 
-    putResolver("blockPosition", BLOCK_POSITION_RESOLVER, CodeTypes.ofClass("io.papermc.paper.math.BlockPosition"));
-    putResolver("columnBlockPosition", COLUMN_BLOCK_POSITION_RESOLVER, CodeTypes.ofClass("io.papermc.paper.command.brigadier.argument.position.ColumnBlockPosition"));
-    putResolverValued(
-      "columnFinePosition",
-      COLUMN_FINE_POSITION_RESOLVER,
-      CodeTypes.ofClass("io.papermc.paper.command.brigadier.argument.position.ColumnFinePosition"),
-      FinePosArg.class
-    );
-
-    putListResolver("entities", ENTITY_SELECTOR_ARGUMENT_RESOLVER, CodeTypes.ofClass("org.bukkit.entity.Entity"));
-    putListToOneResolver("entity", ENTITY_SELECTOR_ARGUMENT_RESOLVER, CodeTypes.ofClass("org.bukkit.entity.Entity"));
-
-    putResolverValued(
-      "finePosition",
-      FINE_POSITION_RESOLVER,
-      CodeTypes.ofClass("io.papermc.paper.math.FinePosition"),
-      FinePosArg.class
-    );
-
-    putListToOneResolver("player", PLAYER_SELECTOR_ARGUMENT_RESOLVER, CodeTypes.ofClass("org.bukkit.entity.Player"));
-    putCollectionResolver("playerProfiles", PLAYER_PROFILE_LIST_RESOLVER, CodeTypes.ofClass("com.destroystokyo.paper.profile.PlayerProfile"));
-    putListResolver("players", PLAYER_SELECTOR_ARGUMENT_RESOLVER, CodeTypes.ofClass("org.bukkit.entity.Player"));
-
-    putResolver("rotation", ROTATION_RESOLVER, CodeTypes.ofClass("io.papermc.paper.math.Rotation"));
-
+    // - signedMessage()       io.papermc.paper.command.brigadier.argument.SignedMessageResolver
     putSimple("signedMessage", SIGNED_ARGUMENT_RESOLVER.toClassType().identifiableName());
     putFor((p, name) -> BrigadierArgumentType.of(
       ARGUMENT_TYPES.chainMethod("signedMessage"),
@@ -150,7 +120,7 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
     );
   }
 
-  private void putResolver(String methodName, ConvertToClassType unresolved, ConvertToClassType resolved) {
+  protected void putResolver(String methodName, ConvertToClassType unresolved, ConvertToClassType resolved) {
     putSimple(methodName, unresolved.toClassType().identifiableName());
     putFor((p, name) -> BrigadierArgumentType.of(
       ARGUMENT_TYPES.chainMethod(methodName),
@@ -158,7 +128,7 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
     ), resolved);
   }
 
-  private void putResolverValued(String methodName, ConvertToClassType unresolved, ConvertToClassType resolved, Class<? extends Annotation> anno) {
+  protected void putResolverValued(String methodName, ConvertToClassType unresolved, ConvertToClassType resolved, Class<? extends Annotation> anno) {
     putSimple(methodName, unresolved.toClassType().identifiableName());
     putFor((p, name) -> {
       final ConvertToExpression arg = p.hasAnnotation(anno) ?
@@ -172,7 +142,7 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
     }, resolved);
   }
 
-  private void putListResolver(String methodName, ConvertToClassType unresolved, ConvertToClassType resolved) {
+  protected void putListResolver(String methodName, ConvertToClassType unresolved, ConvertToClassType resolved) {
     putSimple(methodName, unresolved.toClassType().identifiableName());
 
     // List<T>
@@ -192,7 +162,7 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
     ), resolved.toArray());
   }
 
-  private void putListToOneResolver(String methodName, ConvertToClassType unresolved, ConvertToClassType resolved) {
+  protected void putListToOneResolver(String methodName, ConvertToClassType unresolved, ConvertToClassType resolved) {
     putSimple(methodName, unresolved.toClassType().identifiableName());
 
     // List<T> -> T
@@ -202,7 +172,7 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
     ), resolved);
   }
 
-  private void putCollectionResolver(String methodName, ConvertToClassType unresolved, ConvertToClassType resolved) {
+  protected void putCollectionResolver(String methodName, ConvertToClassType unresolved, ConvertToClassType resolved) {
     putSimple(methodName, unresolved.toClassType().identifiableName());
 
     // Collection<T>

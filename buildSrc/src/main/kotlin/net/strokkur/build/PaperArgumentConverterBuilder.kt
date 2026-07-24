@@ -13,16 +13,18 @@ import net.strokkur.jap.code.expression.Expressions.string
 import net.strokkur.jap.code.statement.Statements
 import net.strokkur.jap.code.type.CodeTypes
 import net.strokkur.jap.code.util.Modifiers
+import net.strokkur.jap.code.util.StyleConfig
 import java.nio.file.Path
 
 internal class PaperArgumentConverterBuilder(
   val target: String,
   val path: Path
 ) {
+  val listToOne = listOf("player", "entity")
+  val finePosValued = listOf("columnFinePosition", "finePosition")
+
   fun isHandledSeparately(type: ArgumentType): Boolean {
-    return type.returnType.name().endsWith("Resolver")
-      || type.returnType.name() == "Integer"
-      || type.args.isNotEmpty()
+    return type.methodName in arrayOf("angle", "signedMessage", "time")
   }
 
   fun createClass(): CodeClass {
@@ -49,6 +51,83 @@ internal class PaperArgumentConverterBuilder(
     for (argumentType in ArgumentTypesIterator(path)) {
       if (isHandledSeparately(argumentType)) {
         unhandled.add(argumentType)
+        continue
+      }
+
+      val resolverType = resolverType(path, argumentType.returnTypeClass)
+      if (resolverType != null) {
+        if (resolverType.rawResolvedType.name() == "List") {
+          val methodName = if (argumentType.methodName in listToOne) "putListToOneResolver" else "putListResolver"
+          initializeArgumentsCode.add(
+            methodInvocation(methodName)
+              .addParameters(
+                string(argumentType.methodName),
+                CODE_TYPES.chainMethod(
+                  "ofClass",
+                  string(argumentType.returnType.identifiableName())
+                ),
+                CODE_TYPES.chainMethod(
+                  "ofClass",
+                  string(resolverType.resolvedType.identifiableName()),
+                )
+              )
+              .setStyle(StyleConfig.MULTILINE)
+          )
+        } else if (resolverType.rawResolvedType.name() == "Collection") {
+          initializeArgumentsCode.add(
+            methodInvocation("putCollectionResolver")
+              .addParameters(
+                string(argumentType.methodName),
+                CODE_TYPES.chainMethod(
+                  "ofClass",
+                  string(argumentType.returnType.identifiableName())
+                ),
+                CODE_TYPES.chainMethod(
+                  "ofClass",
+                  string(resolverType.resolvedType.identifiableName()),
+                )
+              )
+              .setStyle(StyleConfig.MULTILINE)
+          )
+        } else if (argumentType.methodName in finePosValued) {
+          if (argumentType.args.isEmpty()) {
+            // This will be handled by the variant *with* args.
+            continue
+          }
+
+          initializeArgumentsCode.add(
+            methodInvocation("putResolverValued")
+              .addParameters(
+                string(argumentType.methodName),
+                CODE_TYPES.chainMethod(
+                  "ofClass",
+                  string(argumentType.returnType.identifiableName())
+                ),
+                CODE_TYPES.chainMethod(
+                  "ofClass",
+                  string(resolverType.resolvedType.identifiableName()),
+                ),
+                CodeTypes.ofClass("net.strokkur.commands.paper.arguments.FinePosArg").chainField("class")
+              )
+              .setStyle(StyleConfig.MULTILINE)
+          )
+        } else {
+          initializeArgumentsCode.add(
+            methodInvocation("putResolver")
+              .addParameters(
+                string(argumentType.methodName),
+                CODE_TYPES.chainMethod(
+                  "ofClass",
+                  string(argumentType.returnType.identifiableName())
+                ),
+                CODE_TYPES.chainMethod(
+                  "ofClass",
+                  string(resolverType.resolvedType.identifiableName()),
+                )
+              )
+              .setStyle(StyleConfig.MULTILINE)
+          )
+        }
         continue
       }
 

@@ -14,6 +14,7 @@ import java.nio.file.Path
 internal class ArgumentType(
   val methodName: String,
   val returnType: CodeClassType,
+  val returnTypeClass: String,
   val args: Array<CodeType>
 ) {
   override fun toString(): String {
@@ -22,7 +23,7 @@ internal class ArgumentType(
       .joinToString(", ")
     val nameAndArgs = "${methodName}(${argsString})"
 
-    return nameAndArgs + (" ".repeat(32 - nameAndArgs.length)) + returnType.identifiableName()
+    return nameAndArgs + (" ".repeat(22 - nameAndArgs.length)) + returnType.identifiableName()
   }
 }
 
@@ -44,10 +45,11 @@ internal class ArgumentTypesIterator(path: Path) : Iterable<ArgumentType> {
       .filter { !it.name().contains("resource") }
       .filter { it.signature()?.let { pattern.match(it.returnType).matches() } ?: false }
       .map { data ->
-        val returnType = (typeArgument.getOrNull(pattern.match(data.signature()!!.returnType)) as ClassType).name;
+        val returnType = (typeArgument.getOrNull(pattern.match(data.signature()!!.returnType)) as ClassType).name
         return@map ArgumentType(
           data.name(),
           CodeTypes.ofClass(returnType.replace('/', '.')),
+          returnType,
           data.params()
             .map { toCodeType(it) }
             .toTypedArray()
