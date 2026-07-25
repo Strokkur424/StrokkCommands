@@ -138,6 +138,16 @@ internal class PaperArgumentConverterBuilder(
             string(argumentType.returnType.identifiableName())
           )
       )
+      rangeType(path, argumentType.returnTypeClass)?.let { range ->
+        initializeArgumentsCode.add(
+          methodInvocation("putRange")
+            .addParameters(
+              string(argumentType.methodName),
+              string(argumentType.returnType.identifiableName()),
+              string(range.identifiableName())
+            )
+        )
+      }
     }
 
     initializeArgumentsCode.add(Statements.blank())

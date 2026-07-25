@@ -25,10 +25,12 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
 import net.strokkur.commands.Literal;
+import net.strokkur.commands.meta.StrokkCommandsDebug;
 import org.bukkit.command.CommandSender;
 import org.bukkit.inventory.ItemStack;
 
 @Command("does")
+@StrokkCommandsDebug(only = PredicateArgumentsCommand.class)
 class PredicateArgumentsCommand {
 
   @Executes("item")

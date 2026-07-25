@@ -224,6 +224,19 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
     ), returnType);
   }
 
+  protected void putRange(String methodName, String returnTypeFqn, String rangeType) {
+    final CodeClassType returnType = CodeTypes.ofClass(returnTypeFqn);
+    putFor((p, name) -> BrigadierArgumentType.of(
+      methodName,
+      ARGUMENT_TYPES.chainMethod(methodName),
+      Expressions.variable("ctx").chainMethod(
+        "getArgument",
+        Expressions.string(name),
+        returnType.withoutGenerics().chainField("class")
+      ).chainMethod("range")
+    ), CodeTypes.ofClass("com.google.common.collect.Range").typed(CodeTypes.ofClass(rangeType)));
+  }
+
   protected void putRegistry(String name, CodeClassType type) {
     putFor((p, argName) -> BrigadierArgumentType.of(
       name,

@@ -60,6 +60,28 @@ internal fun resolverType(path: Path, className: String): ResolverType? {
   }
 }
 
+internal fun rangeType(path: Path, className: String): CodeClassType? {
+  val typeArgument = TypePattern.capture(TypePatterns.isClass())
+  val pattern = TypePatterns.isClassNamed("io/papermc/paper/command/brigadier/argument/range/RangeProvider")
+    .and(TypePatterns.hasTypeArguments(typeArgument));
+
+  return HypoAsm.use<CodeClassType?, Exception>(path) { ctx ->
+    ctx.findClass(className)
+      ?.signature()
+      ?.superInterfaces
+      ?.filter { pattern.match(it).matches() }
+      ?.map {
+        val firstMatch = typeArgument.getOrNull(pattern.match(it))!!
+        val resolvedType = CodeTypes.ofClass(
+          (typeArgument.getOrNull(pattern.match(it)) as ClassType).name
+            .replace('/', '.')
+        )
+
+        return@map resolvedType
+      }?.getOrNull(0)
+  }
+}
+
 internal fun toCodeType(signature: TypeSignature): CodeType {
   return when (signature) {
     PrimitiveType.CHAR -> CodePrimitiveType.CHAR

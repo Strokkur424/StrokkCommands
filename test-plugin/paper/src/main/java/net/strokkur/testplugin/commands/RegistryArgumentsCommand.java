@@ -21,7 +21,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
-import net.strokkur.commands.meta.StrokkCommandsDebug;
 import net.strokkur.commands.paper.Executor;
 import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
@@ -30,7 +29,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.memory.MemoryKey;
 import org.bukkit.inventory.ItemType;
 
-@StrokkCommandsDebug(only = RegistryArgumentsCommand.class)
 @Command("registryarg")
 class RegistryArgumentsCommand {
 
