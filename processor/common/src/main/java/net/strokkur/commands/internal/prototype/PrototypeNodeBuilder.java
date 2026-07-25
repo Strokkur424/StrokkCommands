@@ -32,6 +32,7 @@ import net.strokkur.commands.internal.intermediate.tree.ArgumentNode;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.printer.PrintedAccessPath;
 import net.strokkur.commands.internal.util.Classes;
+import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.jap.code.classmodel.CodeBlock;
 import net.strokkur.jap.code.convert.ConvertToExpression;
 import net.strokkur.jap.code.convert.ConvertToFieldMethodSource;
@@ -56,7 +57,7 @@ import java.util.Stack;
 
 /// This class is supposed to be re-created each time a new command class is printed.
 /// For this reason, no reset method, or similar, is provided.
-public abstract class PrototypeNodeBuilder {
+public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper {
   private final Stack<RecordArguments> recordStack = new Stack<>();
 
   protected final Set<PrintedAccessPath> requiredPaths = new HashSet<>();
@@ -115,12 +116,14 @@ public abstract class PrototypeNodeBuilder {
     final Executable executable = node.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE);
     if (executable != null) {
       if (prototype.executes == null) {
-        fillLiteralQueue(prototype);
+        debug("Literal queue: [" + String.join(", ", literalQueue) + "]");
+        final Deque<String> stored = new ArrayDeque<>(literalQueue);
         prototype.executes = getExecutesBlock(executable);
         if (!literalQueue.isEmpty()) {
           warnings.add("Literal queue was not empty after code block for path '" + prototype.toCommandString() + "'. You should report this.");
           literalQueue.clear();
         }
+        literalQueue.addAll(stored);
       } else {
         warnings.add("Command with path '" + prototype.toCommandString() + "' has conflicting executes declarations!");
       }
@@ -177,14 +180,20 @@ public abstract class PrototypeNodeBuilder {
     final Optional<PrototypeLiteral> found = prototype.findChild(PrototypeLiteral.class, p -> p.literal.equals(literal));
     final PrototypeNode next;
     if (found.isEmpty()) {
-      next = new PrototypeLiteral(literal, argumentParam);
+      next = new PrototypeLiteral(literal);
       prototype.addChild(next);
     } else {
       next = found.get();
     }
 
+    if (argumentParam) {
+      literalQueue.push(literal);
+    }
     handleAttributes(next, node);
     node.children().forEach(child -> appendTo(next, child));
+    if (argumentParam) {
+      literalQueue.pop();
+    }
   }
 
   //
@@ -241,15 +250,6 @@ public abstract class PrototypeNodeBuilder {
       case MultiLiteralCommandArgument ignored -> Expressions.string(literalQueue.pop());
       default -> throw new IllegalStateException("Unexpected argument type: " + argument.getClass().getName());
     };
-  }
-
-  private void fillLiteralQueue(PrototypeNode node) {
-    if (node instanceof PrototypeLiteral literal && literal.isArgumentParam) {
-      literalQueue.push(literal.literal);
-    }
-    if (node.parent != null) {
-      fillLiteralQueue(node.parent);
-    }
   }
 
   private void scopeAccessStack(CommandNode node, Runnable run) {

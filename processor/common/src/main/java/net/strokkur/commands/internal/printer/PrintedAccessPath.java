@@ -72,7 +72,7 @@ public record PrintedAccessPath(List<ExecuteAccess<?>> access) {
       return Expressions.variable(name());
     }
 
-    return parent().getVariableAccess().chainField(elementName());
+    return parent().getVariableAccess().chainField(elementName().replace(".", ""));
   }
 
   public CodeClassType type() {
