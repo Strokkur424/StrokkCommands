@@ -41,8 +41,8 @@ class InjectionCommand {
   @Executes
   void execute(CommandSender sender) {
     sender.sendRichMessage("<red><plugin></red>'s magic number is <gold><num></gold>",
-        Placeholder.unparsed("plugin", plugin.getName()),
-        Placeholder.unparsed("num", Integer.toString(num))
+      Placeholder.unparsed("plugin", plugin.getName()),
+      Placeholder.unparsed("num", Integer.toString(num))
     );
   }
 }

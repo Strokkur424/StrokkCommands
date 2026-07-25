@@ -58,7 +58,7 @@ final class TestCommand {
 
     targetPlayer.get().sendRichMessage("<aqua>Somebody ran /test run for you!");
     source.sendRichMessage("<green>Ran for <target>",
-        Placeholder.parsed("player", targetPlayer.get().getUsername())
+      Placeholder.parsed("player", targetPlayer.get().getUsername())
     );
   }
 }

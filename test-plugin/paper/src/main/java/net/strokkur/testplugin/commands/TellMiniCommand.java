@@ -35,8 +35,8 @@ class TellMiniCommand {
   @Executes
   void executes(CommandSender sender, @StringArg(GREEDY) String message) {
     Bukkit.broadcast(MiniMessage.miniMessage().deserialize("<dark_gray>[<b><dark_red>BROADCAST</b>] <red><sender></red> »</dark_gray> <message>",
-        Placeholder.component("sender", sender.name()),
-        Placeholder.parsed("message", message)
+      Placeholder.component("sender", sender.name()),
+      Placeholder.parsed("message", message)
     ));
   }
 }

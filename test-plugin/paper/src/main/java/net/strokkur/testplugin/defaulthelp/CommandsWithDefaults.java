@@ -43,14 +43,14 @@ class One {
     final String cmd = String.join(" ", args);
 
     sender.sendRichMessage("""
-            <gray>The command <aqua>/<cmd></aqua> is <red><b>incomplete</red>!
-            
-            The following commands are valid:
-             <b><white>*</b> <c:#4556ff>/command-with-help a lot of literals so yeah <number> <string></c>
-             <b><white>*</b> <c:#4556ff>/command-with-help another lot of literals</c>
-            
-            Thank you for choosing <c:#ffaa00><b>StrokkCommands</c>.""",
-        Placeholder.parsed("cmd", cmd)
+        <gray>The command <aqua>/<cmd></aqua> is <red><b>incomplete</red>!
+        
+        The following commands are valid:
+         <b><white>*</b> <c:#4556ff>/command-with-help a lot of literals so yeah <number> <string></c>
+         <b><white>*</b> <c:#4556ff>/command-with-help another lot of literals</c>
+        
+        Thank you for choosing <c:#ffaa00><b>StrokkCommands</c>.""",
+      Placeholder.parsed("cmd", cmd)
     );
   }
 }

@@ -35,15 +35,15 @@ class InnerCommandNested {
     final MyNestedClass instanceNestedMyNestedClass = instanceNested.myNestedClass;
 
     final LiteralCommandNode<CommandSourceStack> built = Commands.literal("innercommandnested")
-        .then(Commands.literal("nested")
-            .executes(ctx -> {
-              instanceNestedMyNestedClass.execute(
-                  ctx.getSource().getSender()
-              );
-              return 1;
-            })
-        )
-        .build();
+      .then(Commands.literal("nested")
+        .executes(ctx -> {
+          instanceNestedMyNestedClass.execute(
+            ctx.getSource().getSender()
+          );
+          return 1;
+        })
+      )
+      .build();
   }
 
   static class MyNestedClass {

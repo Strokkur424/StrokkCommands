@@ -37,10 +37,10 @@ class MyFirstCommand {
   @DefaultExecutes
   void help(CommandSender sender, String[] args) {
     sender.sendRichMessage("""
-            <blue>Command Help for /<cmd></blue><dark_gray>
-             - <gray><aqua>/<cmd> two three four</aqua> a regular fun command >_<</gray>
-             - <gray><aqua>/<cmd> fling</aqua> yeet yourself!</gray>""",
-        Placeholder.parsed("cmd", args[0])
+        <blue>Command Help for /<cmd></blue><dark_gray>
+         - <gray><aqua>/<cmd> two three four</aqua> a regular fun command >_<</gray>
+         - <gray><aqua>/<cmd> fling</aqua> yeet yourself!</gray>""",
+      Placeholder.parsed("cmd", args[0])
     );
   }
 
@@ -48,8 +48,8 @@ class MyFirstCommand {
   @RequiresOP
   void helpTwo(CommandSender sender, String[] args) {
     sender.sendRichMessage("<aqua>/<cmd></aqua> is incomplete! You probably meant <gold>/<cmd_name> two three four<gold> :^)",
-        Placeholder.parsed("cmd", String.join(" ", args)),
-        Placeholder.parsed("cmd_name", args[0])
+      Placeholder.parsed("cmd", String.join(" ", args)),
+      Placeholder.parsed("cmd_name", args[0])
     );
   }
 

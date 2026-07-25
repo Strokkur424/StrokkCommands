@@ -34,28 +34,28 @@ class LocationArgumentsCommand {
   @Executes("blockpos")
   void executes(CommandSender sender, BlockPosition blockPos) {
     sender.sendRichMessage("<green>Your input is at: <white><pos>",
-        Placeholder.unparsed("pos", "x: %s y: %s z: %s".formatted(blockPos.x(), blockPos.y(), blockPos.z()))
+      Placeholder.unparsed("pos", "x: %s y: %s z: %s".formatted(blockPos.x(), blockPos.y(), blockPos.z()))
     );
   }
 
   @Executes("finepos")
   void executes(CommandSender sender, FinePosition finePos) {
     sender.sendRichMessage("<green>Your input is at: <white><pos>",
-        Placeholder.unparsed("pos", "x: %s y: %s z: %s".formatted(finePos.x(), finePos.y(), finePos.z()))
+      Placeholder.unparsed("pos", "x: %s y: %s z: %s".formatted(finePos.x(), finePos.y(), finePos.z()))
     );
   }
 
   @Executes("finepos center")
   void executesCenter(CommandSender sender, @FinePosArg(true) FinePosition finePos) {
     sender.sendRichMessage("<green>Your input is at: <white><pos>",
-        Placeholder.unparsed("pos", "x: %s y: %s z: %s".formatted(finePos.x(), finePos.y(), finePos.z()))
+      Placeholder.unparsed("pos", "x: %s y: %s z: %s".formatted(finePos.x(), finePos.y(), finePos.z()))
     );
   }
 
   @Executes("world")
   void executes(CommandSender sender, World world) {
     sender.sendRichMessage("<green>You entered: <white><world>",
-        Placeholder.unparsed("world", world.getName())
+      Placeholder.unparsed("world", world.getName())
     );
   }
 

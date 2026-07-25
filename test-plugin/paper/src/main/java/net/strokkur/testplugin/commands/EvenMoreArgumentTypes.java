@@ -39,7 +39,7 @@ class EvenMoreArgumentTypes {
   @Executes("angle")
   void angle(CommandSender sender, @AngleArg float angle) {
     sender.sendRichMessage("You input: <aqua><angle></aqua>!",
-        Placeholder.parsed("angle", Float.toString(angle))
+      Placeholder.parsed("angle", Float.toString(angle))
     );
   }
 
@@ -57,7 +57,7 @@ class EvenMoreArgumentTypes {
     }
 
     sender.sendRichMessage("Axes selected: <directions>",
-        Placeholder.parsed("directions", builder.toString().strip())
+      Placeholder.parsed("directions", builder.toString().strip())
     );
   }
 
@@ -73,23 +73,23 @@ class EvenMoreArgumentTypes {
   @Executes("column-fine")
   void columnFine(CommandSender sender, ColumnFinePosition pos) {
     sender.sendRichMessage("You entered: <red><x></red> <blue><z></blue>!",
-        Placeholder.parsed("x", Double.toString(pos.x())),
-        Placeholder.parsed("x", Double.toString(pos.x()))
+      Placeholder.parsed("x", Double.toString(pos.x())),
+      Placeholder.parsed("x", Double.toString(pos.x()))
     );
   }
 
   @Executes("column-block")
   void columnBlock(CommandSender sender, ColumnBlockPosition pos) {
     sender.sendRichMessage("You entered: <red><x></red> <blue><z></blue>!",
-        Placeholder.parsed("x", Integer.toString(pos.blockX())),
-        Placeholder.parsed("x", Integer.toString(pos.blockZ()))
+      Placeholder.parsed("x", Integer.toString(pos.blockX())),
+      Placeholder.parsed("x", Integer.toString(pos.blockZ()))
     );
   }
 
   @Executes("hex-color")
   void hexColor(CommandSender sender, TextColor color) {
     sender.sendRichMessage("Your color: <t_color>Whatever this is, lol</t_color>",
-        Placeholder.styling("t_color", color)
+      Placeholder.styling("t_color", color)
     );
   }
 }

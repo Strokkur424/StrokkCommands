@@ -45,9 +45,9 @@ class CommandWithSuggestions {
   static SuggestionProvider<CommandSourceStack> mySuggestions() {
     return (ctx, builder) -> {
       Bukkit.getOnlinePlayers().stream()
-          .map(Player::getName)
-          .filter(name -> name.toLowerCase().startsWith(builder.getRemainingLowerCase()))
-          .forEach(builder::suggest);
+        .map(Player::getName)
+        .filter(name -> name.toLowerCase().startsWith(builder.getRemainingLowerCase()))
+        .forEach(builder::suggest);
       return builder.buildFuture();
     };
   }

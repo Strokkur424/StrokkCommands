@@ -35,17 +35,17 @@ class NestedFields {
     instance.firstNesting.secondNesting = new SecondNesting();
 
     final LiteralCommandNode<CommandSourceStack> built = Commands.literal("nestedfields")
-        .then(Commands.literal("first")
-            .then(Commands.literal("second")
-                .executes(ctx -> {
-                  instance.firstNesting.secondNesting.execute(
-                      ctx.getSource().getSender()
-                  );
-                  return 1;
-                })
-            )
+      .then(Commands.literal("first")
+        .then(Commands.literal("second")
+          .executes(ctx -> {
+            instance.firstNesting.secondNesting.execute(
+              ctx.getSource().getSender()
+            );
+            return 1;
+          })
         )
-        .build();
+      )
+      .build();
   }
 
   @Subcommand("first")

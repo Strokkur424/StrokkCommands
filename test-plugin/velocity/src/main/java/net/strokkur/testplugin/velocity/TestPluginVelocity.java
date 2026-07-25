@@ -30,12 +30,12 @@ import org.slf4j.Logger;
 //import net.strokkur.testplugin.velocity.reference.TestCommandBrigadier;
 
 @Plugin(
-    id = "strokkcommands-testplugin",
-    name = "TestPlugin",
-    version = "1.0.0",
-    url = "https://commands.strokkur.net",
-    authors = "Strokkur24",
-    description = "The Velocity test plugin for StrokkCommands (Velocity)"
+  id = "strokkcommands-testplugin",
+  name = "TestPlugin",
+  version = "1.0.0",
+  url = "https://commands.strokkur.net",
+  authors = "Strokkur24",
+  description = "The Velocity test plugin for StrokkCommands (Velocity)"
 )
 public class TestPluginVelocity {
   private final ProxyServer proxy;

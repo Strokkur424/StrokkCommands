@@ -32,18 +32,18 @@ class FieldsWithRecords {
   static {
     // Expectation:
     final LiteralCommandNode<CommandSourceStack> built = Commands.literal("recordfields")
-        .then(Commands.argument("wordArg", StringArgumentType.word())
-            .executes(ctx -> {
-              final SomeRecord executor = new SomeRecord(
-                  StringArgumentType.getString(ctx, "wordArg")
-              );
-              executor.execute(
-                  ctx.getSource().getSender()
-              );
-              return 1;
-            })
-        )
-        .build();
+      .then(Commands.argument("wordArg", StringArgumentType.word())
+        .executes(ctx -> {
+          final SomeRecord executor = new SomeRecord(
+            StringArgumentType.getString(ctx, "wordArg")
+          );
+          executor.execute(
+            ctx.getSource().getSender()
+          );
+          return 1;
+        })
+      )
+      .build();
   }
 
   @Subcommand

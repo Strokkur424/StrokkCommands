@@ -24,8 +24,8 @@ import net.strokkur.jap.source.classmodel.SourceMethod;
 /// @param wrapperMethod method implementing the wrapper
 /// @param wrapperType   the type of wrapper (Command return vs int return)
 public record ExecutorWrapperProvider(
-    SourceMethod wrapperMethod,
-    WrapperType wrapperType
+  SourceMethod wrapperMethod,
+  WrapperType wrapperType
 ) {
 
   /// The method signature of the wrapper

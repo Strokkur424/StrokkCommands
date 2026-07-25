@@ -39,8 +39,8 @@ class SuggestionsTest {
   @Suggestion
   static CompletableFuture<Suggestions> suggest(CommandContext<CommandSource> ctx, SuggestionsBuilder builder) {
     Stream.of("one", "two", "three", "four", "five", "six", "seven")
-        .filter(it -> it.startsWith(builder.getRemainingLowerCase()))
-        .forEach(builder::suggest);
+      .filter(it -> it.startsWith(builder.getRemainingLowerCase()))
+      .forEach(builder::suggest);
     return builder.buildFuture();
   }
 

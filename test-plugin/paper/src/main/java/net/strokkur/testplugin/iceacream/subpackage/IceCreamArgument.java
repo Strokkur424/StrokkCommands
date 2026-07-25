@@ -37,7 +37,7 @@ public class IceCreamArgument implements CustomArgumentType.Converted<IceCreamTy
   private static final List<IceCreamType> TYPES = List.of(IceCreamType.values());
 
   private static final DynamicCommandExceptionType NOT_ICE_CREAM = new DynamicCommandExceptionType(
-      obj -> MessageComponentSerializer.message().serialize(Component.text(obj + " is not a valid ice cream!"))
+    obj -> MessageComponentSerializer.message().serialize(Component.text(obj + " is not a valid ice cream!"))
   );
 
   @Override
@@ -57,9 +57,9 @@ public class IceCreamArgument implements CustomArgumentType.Converted<IceCreamTy
   @Override
   public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
     TYPES.stream()
-        .map(Object::toString)
-        .filter(name -> name.startsWith(builder.getRemainingLowerCase()))
-        .forEach(builder::suggest);
+      .map(Object::toString)
+      .filter(name -> name.startsWith(builder.getRemainingLowerCase()))
+      .forEach(builder::suggest);
     return builder.buildFuture();
   }
 }

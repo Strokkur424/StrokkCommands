@@ -68,8 +68,8 @@ interface SuggestionsRepository {
     @Override
     public CompletableFuture<Suggestions> getSuggestions(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {
       suggestions.stream()
-          .filter(num -> num.startsWith(builder.getRemaining()))
-          .forEach(builder::suggest);
+        .filter(num -> num.startsWith(builder.getRemaining()))
+        .forEach(builder::suggest);
       return builder.buildFuture();
     }
   }

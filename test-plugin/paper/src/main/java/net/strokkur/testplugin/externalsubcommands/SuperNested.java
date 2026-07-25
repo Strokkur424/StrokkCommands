@@ -34,17 +34,17 @@ class SuperNested {
     final NestedClass.UltraNested instanceInnerNonStaticNestedUltraNested = instanceInnerNonStaticNested.new UltraNested();
 
     final LiteralCommandNode<CommandSourceStack> built = Commands.literal("supernested")
-        .then(Commands.literal("nonstatic")
-            .then(Commands.literal("ULTRA-NESTED")
-                .executes(ctx -> {
-                  instanceInnerNonStaticNestedUltraNested.execute(
-                      ctx.getSource().getSender()
-                  );
-                  return 1;
-                })
-            )
+      .then(Commands.literal("nonstatic")
+        .then(Commands.literal("ULTRA-NESTED")
+          .executes(ctx -> {
+            instanceInnerNonStaticNestedUltraNested.execute(
+              ctx.getSource().getSender()
+            );
+            return 1;
+          })
         )
-        .build();
+      )
+      .build();
   }
 
   static class NestedClass {

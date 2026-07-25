@@ -25,10 +25,10 @@ import java.util.stream.Stream;
 public record CombinedRequirementProvider(List<RequirementProvider> providers) implements RequirementProvider {
   public CombinedRequirementProvider(List<RequirementProvider> providers) {
     this.providers = providers.stream()
-        .flatMap(provider -> provider instanceof CombinedRequirementProvider(List<RequirementProvider> otherProviders)
-            ? otherProviders.stream()
-            : Stream.of(provider))
-        .toList();
+      .flatMap(provider -> provider instanceof CombinedRequirementProvider(List<RequirementProvider> otherProviders)
+        ? otherProviders.stream()
+        : Stream.of(provider))
+      .toList();
   }
 
   @Override
