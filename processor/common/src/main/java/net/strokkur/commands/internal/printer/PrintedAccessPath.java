@@ -69,7 +69,7 @@ public record PrintedAccessPath(List<ExecuteAccess<?>> access) {
       out.add(this);
     }
 
-    if (hasParent() && ((isClass() && !isStaticClass()) || isInitializedField())) {
+    if (hasParent() && (isClass() && !isStaticClass() || isInitializedField())) {
       out.addAll(parent().allRequired());
     }
 

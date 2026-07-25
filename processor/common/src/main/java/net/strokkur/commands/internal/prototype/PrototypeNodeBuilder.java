@@ -133,8 +133,9 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
     scopeAccessAndRecordStack(node, () -> {
       if (node instanceof ArgumentNode arg) {
         switch (arg.argument()) {
-          case LiteralCommandArgument(String lit, boolean isArgumentParam) ->
-            appendLiteralTo(prototype, node, lit, isArgumentParam);
+          case LiteralCommandArgument(
+            String lit, boolean isArgumentParam
+          ) -> appendLiteralTo(prototype, node, lit, isArgumentParam);
           case MultiLiteralCommandArgument(Set<String> literals) -> {
             literals.forEach(lit -> appendLiteralTo(prototype, node, lit, true));
           }
