@@ -157,11 +157,11 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
 
   @Override
   public CommandNode visitField(SourceField sourceField, ParsingContext ctx) {
-    ctx.isCurrentlyParsingField = true;
-
     if (!(sourceField.type() instanceof ClassLikeType type)) {
       throw new IllegalSubcommandFieldType(sourceField.type());
     }
+
+    ctx.isCurrentlyParsingField = true;
     final CommandNode nestedNode = type.like().accept(this, ctx);
 
     final CommandNode rootNode = CommandNode.createEmpty();
@@ -177,7 +177,6 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
     PlatformUtils.get().populateNode(sourceField, rootNode);
     applyRequirements(sourceField, rootNode);
 
-    ctx.isCurrentlyParsingField = false;
     return rootNode;
   }
 
@@ -189,6 +188,9 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
     SourceClass sourceClass, ParsingContext ctx,
     Class<A> annotationClass, Function<A, String> toPath
   ) {
+    final boolean nestedField = ctx.isCurrentlyParsingField;
+    ctx.isCurrentlyParsingField = false;
+
     // Parse nested elements first, so that the same CommandNode instances can be reused inside the
     // final node consumers.
     final List<CommandNode> nestedNodes = new ArrayList<>();
@@ -213,9 +215,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
     );
 
     // Apply some attributes to the root node before returning it.
-    if (ctx.isCurrentlyParsingField) {
-      ctx.isCurrentlyParsingField = false;
-    } else {
+    if (!nestedField) {
       rootNode.setAttribute(AttributeKey.ACCESS, ExecuteAccess.of(sourceClass));
     }
     applyExecutorTransform(sourceClass, rootNode);
@@ -229,6 +229,9 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
     SourceRecord record, ParsingContext ctx,
     Class<A> annotationClass, Function<A, String> toPath
   ) {
+    final boolean nestedField = ctx.isCurrentlyParsingField;
+    ctx.isCurrentlyParsingField = false;
+
     // Parse nested elements first, so that the same CommandNode instances can be reused inside the
     // final node consumers.
     final List<CommandNode> nestedNodes = new ArrayList<>();
@@ -258,7 +261,9 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
     );
 
     // Apply some attributes to the root node before returning it.
-    rootNode.setAttribute(AttributeKey.ACCESS, ExecuteAccess.of(record));
+    if (!nestedField) {
+      rootNode.setAttribute(AttributeKey.ACCESS, ExecuteAccess.of(record));
+    }
     rootNode.setAttribute(AttributeKey.RECORD_ARGUMENTS, RecordArguments.of(record, parsedComponents));
     applyExecutorTransform(record, rootNode);
     PlatformUtils.get().populateNode(record, rootNode);

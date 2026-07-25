@@ -53,12 +53,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.Set;
-import java.util.Stack;
 
 /// This class is supposed to be re-created each time a new command class is printed.
 /// For this reason, no reset method, or similar, is provided.
 public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper {
-  private final Stack<RecordArguments> recordStack = new Stack<>();
+  private final Deque<RecordArguments> recordStack = new ArrayDeque<>();
 
   protected final Set<PrintedAccessPath> requiredPaths = new HashSet<>();
   private final Deque<ExecuteAccess<?>> accessStack = new ArrayDeque<>();
@@ -83,7 +82,7 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
   public PrototypeRoot createRoot(CommandNode rootNode) {
     final PrototypeRoot root = new PrototypeRoot(rootNode.name());
 
-    scopeAccessStack(rootNode, () -> {
+    scopeAccessAndRecordStack(rootNode, () -> {
       handleAttributes(root, rootNode);
       for (CommandNode child : rootNode.children()) {
         appendTo(root, child);
@@ -131,10 +130,11 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
   }
 
   private void appendTo(PrototypeNode prototype, CommandNode node) {
-    scopeAccessStack(node, () -> {
+    scopeAccessAndRecordStack(node, () -> {
       if (node instanceof ArgumentNode arg) {
         switch (arg.argument()) {
-          case LiteralCommandArgument(String lit, boolean isArgumentParam) -> appendLiteralTo(prototype, node, lit, isArgumentParam);
+          case LiteralCommandArgument(String lit, boolean isArgumentParam) ->
+            appendLiteralTo(prototype, node, lit, isArgumentParam);
           case MultiLiteralCommandArgument(Set<String> literals) -> {
             literals.forEach(lit -> appendLiteralTo(prototype, node, lit, true));
           }
@@ -206,9 +206,7 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
     if (!recordStack.isEmpty()) {
       final RecordArguments args = recordStack.peek();
       final ConstructorInvocationBuilder builder = args.record().ctor();
-      if (args.parameters().size() > 2) {
-        builder.setStyle(StyleConfig.MULTILINE);
-      }
+      builder.setStyle(StyleConfig.MULTILINE);
 
       args.parameters().stream()
         .map(param -> switch (param) {
@@ -219,7 +217,7 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
       statements.add(createCallStatement(builder, executable));
     } else {
       final PrintedAccessPath path = PrintedAccessPath.of(accessStack.reversed());
-      statements.add(createCallStatement(path.getVariableAccess(), executable));
+      statements.add(createCallStatement(path.getAccess(), executable));
       addRequiredPath(path);
     }
 
@@ -252,19 +250,21 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
     };
   }
 
-  private void scopeAccessStack(CommandNode node, Runnable run) {
+  private void scopeAccessAndRecordStack(CommandNode node, Runnable run) {
     final Optional<ExecuteAccess<?>> access = node.getAttributeOptional(AttributeKey.ACCESS);
+    final Optional<RecordArguments> recordArguments = node.getAttributeOptional(AttributeKey.RECORD_ARGUMENTS);
+
     access.ifPresent(accessStack::push);
+    recordArguments.ifPresent(recordStack::push);
+
     run.run();
+
     access.ifPresent(ignored -> accessStack.pop());
+    recordArguments.ifPresent(ignored -> recordStack.pop());
   }
 
   private void addRequiredPath(PrintedAccessPath path) {
-    if (path.needsCreating()) {
-      requiredPaths.add(path);
-    } else if (path.requiresParent()) {
-      requiredPaths.add(path.requiredParent());
-    }
+    requiredPaths.add(path);
   }
 
   //

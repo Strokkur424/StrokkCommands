@@ -101,7 +101,7 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
     }
 
     final List<PrintedAccessPath> required = nodeBuilder.requiredPaths().stream()
-      .map(PrintedAccessPath::requiredParent)
+      .flatMap(p -> p.allRequired().stream())
       .distinct()
       .sorted(Comparator.comparing(PrintedAccessPath::name))
       .toList();
@@ -119,13 +119,13 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
         createMethodStatements.add(Statements.variableDeclarationFinal(
           path.access().getLast(),
           path.name(),
-          createInstanceConstructor(path.access().getLast().toClassType())
+          path.getInitializer()
         ));
       });
       if (!required.isEmpty()) {
         debug("Required access paths:%s", required.stream()
           .map(p -> "\n- " + p.access().stream()
-            .map(e -> e.getClass().getSimpleName().charAt(0) + "(" + e.name() + ")")
+            .map(Object::toString)
             .collect(Collectors.joining(", "))
           )
           .collect(Collectors.joining())

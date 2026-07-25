@@ -35,6 +35,6 @@ public record FieldAccess(
 
   @Override
   public String toString() {
-    return "F(" + name() + "/" + element.type().toType().simpleName() + ")";
+    return "F" + (element.initializer() != null ? "i(" : "(") + name() + "/" + element.type().toType().simpleName() + ")";
   }
 }

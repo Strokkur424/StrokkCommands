@@ -25,7 +25,7 @@ public record InstanceAccess(
 ) implements ExecuteAccess<SourceClassLike> {
   @Override
   public String name() {
-    return element.classType().simpleName();
+    return element.classType().withoutGenerics().name();
   }
 
   @Override
@@ -35,6 +35,6 @@ public record InstanceAccess(
 
   @Override
   public String toString() {
-    return "I(" + name() + ")";
+    return "I" + (element.isStatic() ? "s" : "") + "(" + name() + ")";
   }
 }

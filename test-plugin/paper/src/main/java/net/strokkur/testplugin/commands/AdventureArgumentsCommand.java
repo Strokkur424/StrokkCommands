@@ -25,7 +25,6 @@ import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
 import net.strokkur.commands.Literal;
 import net.strokkur.commands.arguments.StringArg;
-import net.strokkur.commands.meta.StrokkCommandsDebug;
 import net.strokkur.commands.paper.Executor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -36,7 +35,6 @@ import java.util.concurrent.CompletableFuture;
 import static net.strokkur.commands.arguments.StringArgType.STRING;
 
 @Command("adventure")
-@StrokkCommandsDebug(only = AdventureArgumentsCommand.class)
 class AdventureArgumentsCommand {
 
   @Executes("send message")

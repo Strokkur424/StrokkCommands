@@ -19,15 +19,21 @@ package net.strokkur.commands.internal.printer;
 
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.access.FieldAccess;
+import net.strokkur.commands.internal.intermediate.access.InstanceAccess;
 import net.strokkur.commands.internal.util.Utils;
+import net.strokkur.jap.code.convert.ConvertToExpression;
 import net.strokkur.jap.code.convert.ConvertToFieldMethodSource;
 import net.strokkur.jap.code.expression.Expressions;
 import net.strokkur.jap.code.type.CodeClassType;
+import net.strokkur.jap.source.classmodel.SourceClass;
+import net.strokkur.jap.source.classmodel.SourceClassLike;
 import net.strokkur.jap.source.classmodel.SourceField;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.SequencedCollection;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public record PrintedAccessPath(List<ExecuteAccess<?>> access) {
@@ -39,14 +45,6 @@ public record PrintedAccessPath(List<ExecuteAccess<?>> access) {
     return new PrintedAccessPath(List.copyOf(access));
   }
 
-  public boolean needsCreating() {
-    return !(access.getLast() instanceof FieldAccess(SourceField element)) || element.initializer() == null;
-  }
-
-  public boolean requiresParent() {
-    return access.size() > 1 && !needsCreating();
-  }
-
   public String name() {
     return Utils.getInstanceName(access);
   }
@@ -56,27 +54,63 @@ public record PrintedAccessPath(List<ExecuteAccess<?>> access) {
   }
 
   public PrintedAccessPath parent() {
-    return new PrintedAccessPath(access.subList(0, access.size() - 1));
+    return PrintedAccessPath.of(access.subList(0, access.size() - 1));
   }
 
-  public PrintedAccessPath requiredParent() {
-    if (needsCreating()) {
-      return this;
+  public boolean hasParent() {
+    return access.size() > 1;
+  }
+
+  public Set<PrintedAccessPath> allRequired() {
+    final Set<PrintedAccessPath> out = new HashSet<>();
+    if (!isInitializedField()) {
+      out.add(this);
     }
-    return parent().requiredParent();
+
+    if (hasParent() && ((isClass() && !isStaticClass()) || isInitializedField())) {
+      out.addAll(parent().allRequired());
+    }
+
+    return out;
   }
 
-  public ConvertToFieldMethodSource getVariableAccess() {
-    if (needsCreating()) {
-      // The field with this name
+  public ConvertToExpression getInitializer() {
+    if (access.getLast() instanceof InstanceAccess(SourceClassLike classLike)) {
+      if (classLike.isStatic()) {
+        return classLike.ctor();
+      } else {
+        return classLike.ctor().setSource(parent().getAccess());
+      }
+    }
+    final FieldAccess fa = (FieldAccess) access.getLast();
+    return fa.toClassType().ctor();
+  }
+
+  public ConvertToFieldMethodSource getAccess() {
+    if (!isInitializedField()) {
       return Expressions.variable(name());
     }
-
-    return parent().getVariableAccess().chainField(elementName().replace(".", ""));
+    return parent().getAccess().chainField(elementName());
   }
 
   public CodeClassType type() {
     return access.getLast().toClassType();
+  }
+
+  // Util
+  private boolean isInitializedField() {
+    return access.getLast() instanceof FieldAccess(SourceField fieldElement) &&
+      fieldElement.initializer() != null;
+  }
+
+  public boolean isClass() {
+    return access.getLast() instanceof InstanceAccess(
+      SourceClassLike classElement
+    ) && classElement instanceof SourceClass;
+  }
+
+  public boolean isStaticClass() {
+    return access.getLast() instanceof InstanceAccess(SourceClassLike classElement) && classElement.isStatic();
   }
 
   @Override

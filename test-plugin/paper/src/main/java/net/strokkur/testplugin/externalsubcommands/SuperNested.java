@@ -23,9 +23,11 @@ import io.papermc.paper.command.brigadier.Commands;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
 import net.strokkur.commands.Subcommand;
+import net.strokkur.commands.meta.StrokkCommandsDebug;
 import org.bukkit.command.CommandSender;
 
 @Command("supernested")
+@StrokkCommandsDebug(only = SuperNested.class)
 class SuperNested {
 
   static {
