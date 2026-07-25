@@ -43,7 +43,7 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
         classType.ctor(),
         Expressions.variable("ctx").chainMethod("getArgument",
           Expressions.string(argumentName),
-          classType.chainField("class")
+          ((CodeClassType) parameter.type().toType()).withoutGenerics().chainField("class")
         )
       );
     }

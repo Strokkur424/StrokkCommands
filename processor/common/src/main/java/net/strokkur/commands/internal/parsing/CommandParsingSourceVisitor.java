@@ -55,6 +55,7 @@ import net.strokkur.jap.source.classmodel.SourceAnnotationInterface;
 import net.strokkur.jap.source.classmodel.SourceClass;
 import net.strokkur.jap.source.classmodel.SourceClassLike;
 import net.strokkur.jap.source.classmodel.SourceConstructor;
+import net.strokkur.jap.source.classmodel.SourceEnum;
 import net.strokkur.jap.source.classmodel.SourceField;
 import net.strokkur.jap.source.classmodel.SourceInterface;
 import net.strokkur.jap.source.classmodel.SourceMethod;
@@ -326,7 +327,12 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
 
   @Override
   public CommandNode visitInterface(SourceInterface sourceInterface, ParsingContext ctx) {
-    throw new IllegalStateException("Cannot parse interface");
+    throw new IllegalStateException("Cannot parse interface.");
+  }
+
+  @Override
+  public CommandNode visitEnum(SourceEnum sourceEnum, ParsingContext data) {
+    throw new IllegalStateException("Cannot parse enum.");
   }
 
   @Override
