@@ -21,10 +21,16 @@ import net.strokkur.jap.code.convert.ConvertToExpression;
 import net.strokkur.jap.code.documentation.DiscardingDocumentationRenderer;
 import net.strokkur.jap.code.visitor.source.JavaSourcePrintingVisitor;
 
-public record BrigadierArgumentType(ConvertToExpression initializer, ConvertToExpression retriever) {
+public record BrigadierArgumentType(
+  String argumentTypeIdentifier,
+  ConvertToExpression initializer, ConvertToExpression retriever
+) {
 
-  public static BrigadierArgumentType of(ConvertToExpression initializer, ConvertToExpression retriever) {
-    return new BrigadierArgumentType(initializer, retriever);
+  public static BrigadierArgumentType of(
+    String argumentTypeIdentifier,
+    ConvertToExpression initializer, ConvertToExpression retriever
+  ) {
+    return new BrigadierArgumentType(argumentTypeIdentifier, initializer, retriever);
   }
 
   @Override

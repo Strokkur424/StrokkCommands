@@ -23,7 +23,6 @@ import net.strokkur.commands.arguments.IntArg;
 import net.strokkur.commands.arguments.LongArg;
 import net.strokkur.commands.arguments.StringArg;
 import net.strokkur.commands.arguments.StringArgType;
-import net.strokkur.commands.internal.StrokkCommandsProcessor;
 import net.strokkur.commands.internal.exceptions.ParameterArgumentException;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
@@ -36,7 +35,6 @@ import net.strokkur.jap.code.type.CodeType;
 import net.strokkur.jap.code.type.preset.JavaTypes;
 import net.strokkur.jap.source.annotation.SourceAnnotation;
 import net.strokkur.jap.source.classmodel.SourceParameterLike;
-import net.strokkur.jap.source.util.MessagerWrapper;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
@@ -50,7 +48,6 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
-  private final MessagerWrapper messagerWrapper = StrokkCommandsProcessor.messagerWrapper();
   protected final Map<CodeType, BiFunction<SourceParameterLike, String, BrigadierArgumentType>> conversionMap;
 
   public BrigadierArgumentConverter() {
@@ -104,6 +101,7 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
 
   protected void initializeArguments() {
     putFor((unused, name) -> BrigadierArgumentType.of(
+      "boolean",
       Classes.BOOL_ARGUMENT_TYPE.chainMethod("bool"),
       Classes.BOOL_ARGUMENT_TYPE.chainMethod("getBool")
         .addParameters(Expressions.variable("ctx"))
@@ -111,6 +109,7 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
     ), CodePrimitiveType.BOOL, CodePrimitiveType.BOOL.boxed());
 
     putFor((p, name) -> annotatedOr(p, IntArg.class,
+      "int",
       minMaxValued(
         Classes.INTEGER_ARGUMENT_TYPE.chainMethod("integer"),
         JavaTypes.INTEGER.chainField("MIN_VALUE")
@@ -122,6 +121,7 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
     ), CodePrimitiveType.INT, CodePrimitiveType.INT.boxed());
 
     putFor((p, name) -> annotatedOr(p, LongArg.class,
+      "long",
       minMaxValued(
         Classes.LONG_ARGUMENT_TYPE.chainMethod("longArg"),
         JavaTypes.LONG.chainField("MIN_VALUE")
@@ -133,6 +133,7 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
     ), CodePrimitiveType.LONG, CodePrimitiveType.LONG.boxed());
 
     putFor((p, name) -> annotatedOr(p, FloatArg.class,
+      "float",
       minMaxValued(
         Classes.FLOAT_ARGUMENT_TYPE.chainMethod("floatArg"),
         JavaTypes.FLOAT.chainField("MAX_VALUE").negate()
@@ -144,6 +145,7 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
     ), CodePrimitiveType.FLOAT, CodePrimitiveType.FLOAT.boxed());
 
     putFor((p, name) -> annotatedOr(p, DoubleArg.class,
+      "double",
       minMaxValued(
         Classes.DOUBLE_ARGUMENT_TYPE.chainMethod("doubleArg"),
         JavaTypes.DOUBLE.chainField("MAX_VALUE").negate()
@@ -155,6 +157,7 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
     ), CodePrimitiveType.DOUBLE, CodePrimitiveType.DOUBLE.boxed());
 
     putFor((p, name) -> annotatedOr(p, StringArg.class,
+      "string",
       a -> Classes.STRING_ARGUMENT_TYPE.chainMethod(a.value(StringArg.class).value().getBrigadierType()),
       Classes.STRING_ARGUMENT_TYPE.chainMethod(StringArgType.WORD.getBrigadierType()),
       Classes.STRING_ARGUMENT_TYPE.chainMethod("getString")
@@ -176,21 +179,24 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
   protected final <T extends Annotation> BrigadierArgumentType annotatedOr(
     SourceParameterLike variable,
     Class<T> annotation,
+    String argumentTypeName,
     Function<SourceAnnotation, ConvertToExpression> withAnnotation,
     ConvertToExpression withoutAnnotation,
     ConvertToExpression retrieval
   ) {
     final Classes annotationType = Classes.ofClass(annotation);
     if (variable.hasAnnotation(annotationType)) {
-      return BrigadierArgumentType.of(withAnnotation.apply(variable.firstAnnotationByType(annotationType)), retrieval);
+      return BrigadierArgumentType.of(argumentTypeName, withAnnotation.apply(variable.firstAnnotationByType(annotationType)), retrieval);
     }
 
-    return BrigadierArgumentType.of(withoutAnnotation, retrieval);
+    return BrigadierArgumentType.of(argumentTypeName, withoutAnnotation, retrieval);
   }
 
   public final BrigadierArgumentType getAsArgumentType(SourceParameterLike parameter) throws ParameterArgumentException {
     final String argumentName = parameter.name();
     final CodeType type = parameter.type().toType();
+
+    debug("Parsing parameter: " + parameter);
 
     final BrigadierArgumentType customArg = handleCustomArgumentAnnotations(argumentName, type, parameter);
     if (customArg != null) {
@@ -207,10 +213,5 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
     }
 
     throw new ParameterArgumentException("An unexpected error occurred whilst converting type %s to Brigadier equivalent.".formatted(type));
-  }
-
-  @Override
-  public final MessagerWrapper delegateMessager() {
-    return this.messagerWrapper;
   }
 }

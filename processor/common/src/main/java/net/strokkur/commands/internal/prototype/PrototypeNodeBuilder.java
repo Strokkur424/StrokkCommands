@@ -149,7 +149,7 @@ public abstract class PrototypeNodeBuilder {
               next = found.get();
 
               // Do validation to ensure both argument type and name match, otherwise something went wrong.
-              if (!next.argumentType.equals(req.argumentType())) {
+              if (!next.argumentType.argumentTypeIdentifier().equals(req.argumentType().argumentTypeIdentifier())) {
                 // Different argument type, but same name.
                 errors.add("Argument named " + req.argumentName() + " defined twice with different types. (Path: " + next.toCommandString() + ")");
                 return;
@@ -226,6 +226,10 @@ public abstract class PrototypeNodeBuilder {
         case CommandArgument argument -> getArgumentValueExpr(argument);
         case UnparsedCommandParameter(SourceParameterLike parameter) -> convertUnparsedParameter(parameter);
       }));
+
+    if (executable.parameters().size() > 1) {
+      builder.setStyle(StyleConfig.MULTILINE);
+    }
 
     return builder;
   }

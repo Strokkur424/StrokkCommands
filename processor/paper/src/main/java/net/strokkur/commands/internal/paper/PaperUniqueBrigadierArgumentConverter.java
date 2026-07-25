@@ -39,6 +39,7 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
       final SourceAnnotation customArg = parameter.firstAnnotationByType(CustomArg.class);
       final CodeClassType classType = customArg.parameter("value").classValue();
       return BrigadierArgumentType.of(
+        "custom-arg-" + customArg.type(),
         classType.ctor(),
         Expressions.variable("ctx").chainMethod("getArgument",
           Expressions.string(argumentName),
@@ -57,6 +58,7 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
       final SourceAnnotation timeArg = parameter.firstAnnotationByType(TimeArg.class);
 
       return BrigadierArgumentType.of(
+        "time",
         timeArg.isSet("value") ?
           ARGUMENT_TYPES.chainMethod("time", timeArg.parameter("value").expression()) :
           ARGUMENT_TYPES.chainMethod("time"),
@@ -74,10 +76,11 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
       }
 
       return BrigadierArgumentType.of(
+        "angle",
         ARGUMENT_TYPES.chainMethod("float"),
         Expressions.variable("ctx")
           .chainMethod("getArgument",
-            Expressions.variable("ctx"),
+            Expressions.string(argumentName),
             ANGLE_RESOLVER.chainField("class")
           )
           .chainMethod("resolve",
@@ -96,6 +99,7 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
     // - signedMessage()       io.papermc.paper.command.brigadier.argument.SignedMessageResolver
     putSimple("signedMessage", SIGNED_ARGUMENT_RESOLVER.toClassType().identifiableName());
     putFor((p, name) -> BrigadierArgumentType.of(
+      "signedMessage",
       ARGUMENT_TYPES.chainMethod("signedMessage"),
       Expressions.variable("ctx").chainMethod(
         "getArgument",
@@ -123,6 +127,7 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
   protected void putResolver(String methodName, ConvertToClassType unresolved, ConvertToClassType resolved) {
     putSimple(methodName, unresolved.toClassType().identifiableName());
     putFor((p, name) -> BrigadierArgumentType.of(
+      methodName,
       ARGUMENT_TYPES.chainMethod(methodName),
       resolveExpr(name, unresolved)
     ), resolved);
@@ -136,6 +141,7 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
         null;
       final MethodInvocationBuilder method = ARGUMENT_TYPES.chainMethod(methodName);
       return BrigadierArgumentType.of(
+        methodName,
         arg != null ? method.addParameters(arg) : method,
         resolveExpr(name, unresolved)
       );
@@ -147,16 +153,19 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
 
     // List<T>
     putFor((p, name) -> BrigadierArgumentType.of(
+      methodName,
       ARGUMENT_TYPES.chainMethod(methodName),
       resolveExpr(name, unresolved)
     ), JavaTypes.LIST.typed(resolved));
     // List<T> -> Collection<T>
     putFor((p, name) -> BrigadierArgumentType.of(
+      methodName,
       ARGUMENT_TYPES.chainMethod(methodName),
       resolveExpr(name, unresolved)
     ), JavaTypes.COLLECTION.typed(resolved));
     // T[]
     putFor((p, name) -> BrigadierArgumentType.of(
+      methodName,
       ARGUMENT_TYPES.chainMethod(methodName),
       resolveExpr(name, unresolved).chainMethod("toArray", resolved.toArray().methodReference("new"))
     ), resolved.toArray());
@@ -167,6 +176,7 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
 
     // List<T> -> T
     putFor((p, name) -> BrigadierArgumentType.of(
+      methodName,
       ARGUMENT_TYPES.chainMethod(methodName),
       resolveExpr(name, unresolved).chainMethod("getFirst")
     ), resolved);
@@ -177,21 +187,25 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
 
     // Collection<T>
     putFor((p, name) -> BrigadierArgumentType.of(
+      methodName,
       ARGUMENT_TYPES.chainMethod(methodName),
       resolveExpr(name, unresolved)
     ), JavaTypes.COLLECTION.typed(resolved));
     // Collection<T> -> List<T>
     putFor((p, name) -> BrigadierArgumentType.of(
+      methodName,
       ARGUMENT_TYPES.chainMethod(methodName),
       resolveExpr(name, unresolved).chainMethod("stream").chainMethod("toList")
     ), JavaTypes.LIST.typed(resolved));
     // Collection<T> -> T
     putFor((p, name) -> BrigadierArgumentType.of(
+      methodName,
       ARGUMENT_TYPES.chainMethod(methodName),
       resolveExpr(name, unresolved).chainMethod("stream").chainMethod("findFirst").chainMethod("orElseThrow")
     ), resolved);
     // T[]
     putFor((p, name) -> BrigadierArgumentType.of(
+      methodName,
       ARGUMENT_TYPES.chainMethod(methodName),
       resolveExpr(name, unresolved).chainMethod("toArray", resolved.toArray().methodReference("new"))
     ), resolved.toArray());
@@ -200,25 +214,28 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
   protected void putSimple(String methodName, String returnTypeFqn) {
     final CodeClassType returnType = CodeTypes.ofClass(returnTypeFqn);
     putFor((p, name) -> BrigadierArgumentType.of(
+      methodName,
       ARGUMENT_TYPES.chainMethod(methodName),
       Expressions.variable("ctx").chainMethod(
         "getArgument",
         Expressions.string(name),
-        returnType.chainField("class")
+        returnType.withoutGenerics().chainField("class")
       )
     ), returnType);
   }
 
   protected void putRegistry(String name, CodeClassType type) {
     putFor((p, argName) -> BrigadierArgumentType.of(
+      name,
       ARGUMENT_TYPES.chainMethod("resource", REGISTRY_KEY.chainField(name)),
       Expressions.variable("ctx").chainMethod(
         "getArgument",
         Expressions.string(argName),
-        type.chainField("class")
+        type.withoutGenerics().chainField("class")
       )
     ), type);
     putFor((p, argName) -> BrigadierArgumentType.of(
+      name,
       ARGUMENT_TYPES.chainMethod("resourceKey", REGISTRY_KEY.chainField(name)),
       REGISTRY_ARGUMENT_EXTRACTOR.chainMethod(
         "getTypedKey",

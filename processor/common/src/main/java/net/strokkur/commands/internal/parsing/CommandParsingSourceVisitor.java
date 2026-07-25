@@ -60,7 +60,7 @@ import net.strokkur.jap.source.classmodel.SourceInterface;
 import net.strokkur.jap.source.classmodel.SourceMethod;
 import net.strokkur.jap.source.classmodel.SourceParameterLike;
 import net.strokkur.jap.source.classmodel.SourceRecord;
-import net.strokkur.jap.source.type.LazySourceClassLikeType;
+import net.strokkur.jap.source.type.ClassLikeType;
 import net.strokkur.jap.source.visitor.SourceVisitor;
 
 import java.lang.annotation.Annotation;
@@ -157,12 +157,11 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
   @Override
   public CommandNode visitField(SourceField sourceField, ParsingContext ctx) {
     ctx.isCurrentlyParsingField = true;
-    final CommandNode nestedNode = switch (sourceField.type()) {
-      case SourceClass sourceClass -> sourceClass.accept(this, ctx);
-      case SourceRecord record -> record.accept(this, ctx);
-      case LazySourceClassLikeType lazyType -> lazyType.toClassLike().accept(this, ctx);
-      default -> throw new IllegalSubcommandFieldType(sourceField.type());
-    };
+
+    if (!(sourceField.type() instanceof ClassLikeType type)) {
+      throw new IllegalSubcommandFieldType(sourceField.type());
+    }
+    final CommandNode nestedNode = type.like().accept(this, ctx);
 
     final CommandNode rootNode = CommandNode.createEmpty();
     forEachPathAnnotation(

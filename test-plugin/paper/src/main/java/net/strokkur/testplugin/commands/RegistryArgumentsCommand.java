@@ -21,6 +21,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
+import net.strokkur.commands.meta.StrokkCommandsDebug;
 import net.strokkur.commands.paper.Executor;
 import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
@@ -29,7 +30,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.memory.MemoryKey;
 import org.bukkit.inventory.ItemType;
 
-@SuppressWarnings("UnstableApiUsage")
+@StrokkCommandsDebug(only = RegistryArgumentsCommand.class)
 @Command("registryarg")
 class RegistryArgumentsCommand {
 
@@ -42,23 +43,23 @@ class RegistryArgumentsCommand {
   void execute(CommandSender sender, @Executor Player player, ItemType type, int amount) {
     player.give(type.createItemStack(amount));
     sender.sendRichMessage("<green>Successfully gave <white><player></white> <red><amount>x <type></red>",
-        Placeholder.component("player", player.name()),
-        Placeholder.unparsed("amount", Integer.toString(amount)),
-        Placeholder.component("type", Component.translatable(type))
+      Placeholder.component("player", player.name()),
+      Placeholder.unparsed("amount", Integer.toString(amount)),
+      Placeholder.component("type", Component.translatable(type))
     );
   }
 
   @Executes("cow-variant")
   void execute(CommandSender sender, Cow.Variant cowVariant) {
     sender.sendRichMessage("<green>You selected <white><variant></white>!",
-        Placeholder.unparsed("variant", cowVariant.key().asString())
+      Placeholder.unparsed("variant", cowVariant.key().asString())
     );
   }
 
   @Executes("memory-key")
   void execute(CommandSender sender, MemoryKey<?> memoryKey) {
     sender.sendRichMessage("<green>You selected <white><variant></white>!",
-        Placeholder.unparsed("variant", memoryKey.key().asString())
+      Placeholder.unparsed("variant", memoryKey.key().asString())
     );
   }
 
@@ -67,7 +68,7 @@ class RegistryArgumentsCommand {
   void execute(CommandSender sender, Sound sound) {
     sender.playSound(net.kyori.adventure.sound.Sound.sound(sound, net.kyori.adventure.sound.Sound.Source.AMBIENT, 1.0f, 1.0f));
     sender.sendRichMessage("<aqua>Played <white><sound>",
-        Placeholder.unparsed("sound", sound.key().asString()) // <-- I don't care about the deprecation, shush
+      Placeholder.unparsed("sound", sound.key().asString()) // <-- I don't care about the deprecation, shush
     );
   }
 }

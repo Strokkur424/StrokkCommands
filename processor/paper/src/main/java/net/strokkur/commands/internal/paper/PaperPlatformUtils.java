@@ -18,7 +18,6 @@
 package net.strokkur.commands.internal.paper;
 
 import com.google.auto.service.AutoService;
-import net.strokkur.commands.Executes;
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.exceptions.AnnotationException;
 import net.strokkur.commands.internal.exceptions.UnknownSenderException;
@@ -72,7 +71,7 @@ public final class PaperPlatformUtils implements PlatformUtils {
 
   @Override
   public boolean mayParameterBeArgument(SourceParameterLike param) {
-    return !param.hasAnnotation(Executes.class);
+    return !param.hasAnnotation(Executor.class);
   }
 
   @Override
