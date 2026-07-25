@@ -40,7 +40,9 @@ import net.strokkur.jap.source.annotation.SourceAnnotation;
 import net.strokkur.jap.source.classmodel.SourceAnnotationInterface;
 import net.strokkur.jap.source.classmodel.SourceClass;
 import net.strokkur.jap.source.classmodel.SourceClassLike;
+import net.strokkur.jap.source.classmodel.SourceConstructor;
 import net.strokkur.jap.source.classmodel.SourceRecord;
+import net.strokkur.jap.source.type.SourceGenericType;
 import net.strokkur.jap.source.util.MessagerWrapper;
 import org.jspecify.annotations.Nullable;
 
@@ -141,6 +143,22 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
           sourceClass
         );
         continue;
+      }
+
+      if (sourceClass instanceof SourceClass asClass) {
+        final Optional<SourceConstructor> ctorMaybe = asClass.constructors().stream()
+          .findFirst()
+          .filter(ctor -> ctor.parameters().stream()
+            .anyMatch(p -> p.type() instanceof SourceGenericType));
+
+        final boolean hasGenerics = ctorMaybe.isPresent();
+        if (hasGenerics) {
+          messager().errorSource(
+            "Found a constructor with generic type parameters. This is unsupported behavior.",
+            ctorMaybe.get()
+          );
+          continue;
+        }
       }
 
       try {
