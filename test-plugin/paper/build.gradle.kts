@@ -17,3 +17,9 @@ tasks.runServer {
   minecraftVersion(libs.versions.minecraft.get())
   jvmArgs("-Xmx2G", "-Xms2G", "-Dcom.mojang.eula.agree=true")
 }
+
+sourceSets.register("oldap") {
+  allSource.srcDir("src/oldap")
+  compileClasspath = sourceSets.main.get().compileClasspath
+  compileClasspath += sourceSets.main.get().output
+}
