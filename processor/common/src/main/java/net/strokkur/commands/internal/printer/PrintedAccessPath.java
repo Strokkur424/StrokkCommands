@@ -20,11 +20,13 @@ package net.strokkur.commands.internal.printer;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.access.FieldAccess;
 import net.strokkur.commands.internal.intermediate.access.InstanceAccess;
+import net.strokkur.commands.internal.util.CommandInformation;
 import net.strokkur.commands.internal.util.Utils;
 import net.strokkur.jap.code.convert.ConvertToExpression;
 import net.strokkur.jap.code.convert.ConvertToFieldMethodSource;
 import net.strokkur.jap.code.expression.Expressions;
 import net.strokkur.jap.code.type.CodeClassType;
+import net.strokkur.jap.code.util.Modifiers;
 import net.strokkur.jap.source.classmodel.SourceClass;
 import net.strokkur.jap.source.classmodel.SourceClassLike;
 import net.strokkur.jap.source.classmodel.SourceField;
@@ -74,7 +76,14 @@ public record PrintedAccessPath(List<ExecuteAccess<?>> access) {
     return out;
   }
 
-  public ConvertToExpression getInitializer() {
+  public ConvertToExpression getInitializer(CommandInformation c) {
+    if (!hasParent() && c.constructor() != null) {
+      return c.sourceClass().ctor(c.constructor().parameters().stream()
+        .map(p -> Expressions.variable(p.name()))
+        .toArray(ConvertToExpression[]::new)
+      );
+    }
+
     if (access.getLast() instanceof InstanceAccess(SourceClassLike classLike)) {
       if (classLike.isStatic()) {
         return classLike.ctor();
@@ -100,7 +109,7 @@ public record PrintedAccessPath(List<ExecuteAccess<?>> access) {
   // Util
   private boolean isInitializedField() {
     return access.getLast() instanceof FieldAccess(SourceField fieldElement) &&
-      fieldElement.initializer() != null;
+      (fieldElement.initializer() != null || fieldElement.modifiers().contains(Modifiers.FINAL));
   }
 
   public boolean isClass() {

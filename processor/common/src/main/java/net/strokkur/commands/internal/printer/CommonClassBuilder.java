@@ -119,7 +119,7 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
         createMethodStatements.add(Statements.variableDeclarationFinal(
           path.access().getLast(),
           path.name(),
-          path.getInitializer()
+          path.getInitializer(commandInformation)
         ));
       });
       if (!required.isEmpty()) {
