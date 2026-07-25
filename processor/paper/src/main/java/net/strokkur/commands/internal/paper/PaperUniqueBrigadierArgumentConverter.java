@@ -31,7 +31,7 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
   private static final Classes REGISTRY_ARGUMENT_EXTRACTOR = Classes.create("io.papermc.paper.command.brigadier.argument.RegistryArgumentExtractor");
 
   private static final Classes ANGLE_RESOLVER = Classes.create("io.papermc.paper.command.brigadier.argument.resolvers.AngleResolver");
-  private static final Classes SIGNED_ARGUMENT_RESOLVER = Classes.create("io.papermc.paper.command.brigadier.argument.SignedArgumentResolver");
+  private static final Classes SIGNED_MESSAGE_RESOLVER = Classes.create("io.papermc.paper.command.brigadier.argument.SignedMessageResolver");
 
   @Override
   protected @Nullable BrigadierArgumentType handleCustomArgumentAnnotations(String argumentName, CodeType type, SourceParameterLike parameter) {
@@ -77,7 +77,7 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
 
       return BrigadierArgumentType.of(
         "angle",
-        ARGUMENT_TYPES.chainMethod("float"),
+        ARGUMENT_TYPES.chainMethod("angle"),
         Expressions.variable("ctx")
           .chainMethod("getArgument",
             Expressions.string(argumentName),
@@ -97,14 +97,14 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
     super.initializeArguments();
 
     // - signedMessage()       io.papermc.paper.command.brigadier.argument.SignedMessageResolver
-    putSimple("signedMessage", SIGNED_ARGUMENT_RESOLVER.toClassType().identifiableName());
+    putSimple("signedMessage", SIGNED_MESSAGE_RESOLVER.toClassType().identifiableName());
     putFor((p, name) -> BrigadierArgumentType.of(
       "signedMessage",
       ARGUMENT_TYPES.chainMethod("signedMessage"),
       Expressions.variable("ctx").chainMethod(
         "getArgument",
         Expressions.string(name),
-        SIGNED_ARGUMENT_RESOLVER.chainField("class")
+        SIGNED_MESSAGE_RESOLVER.chainField("class")
       ).chainMethod(
         "resolveSignedMessage",
         Expressions.string(name),

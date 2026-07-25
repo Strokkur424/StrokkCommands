@@ -21,11 +21,9 @@ import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
 import net.strokkur.commands.Literal;
 import net.strokkur.commands.Subcommand;
-import net.strokkur.commands.meta.StrokkCommandsDebug;
 import org.bukkit.command.CommandSender;
 
 @Command("combined")
-@StrokkCommandsDebug(only = LiteralCombining.class)
 class LiteralCombining {
 
   @Executes("sub")
