@@ -209,9 +209,9 @@ public abstract class PrototypeNodeBuilder {
 
       statements.add(createCallStatement(builder, executable));
     } else {
-      final PrintedAccessPath path = PrintedAccessPath.of(accessStack);
+      final PrintedAccessPath path = PrintedAccessPath.of(accessStack.reversed());
       statements.add(createCallStatement(path.getVariableAccess(), executable));
-      requiredPaths.add(path);
+      addRequiredPath(path);
     }
 
     statements.add(Statements.returnStmt(Classes.COMMAND.chainField("SINGLE_SUCCESS")));
@@ -253,6 +253,14 @@ public abstract class PrototypeNodeBuilder {
     access.ifPresent(accessStack::push);
     run.run();
     access.ifPresent(ignored -> accessStack.pop());
+  }
+
+  private void addRequiredPath(PrintedAccessPath path) {
+    if (path.needsCreating()) {
+      requiredPaths.add(path);
+    } else if (path.requiresParent()) {
+      requiredPaths.add(path.requiredParent());
+    }
   }
 
   //

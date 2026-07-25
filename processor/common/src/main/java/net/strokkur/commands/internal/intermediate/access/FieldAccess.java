@@ -32,4 +32,9 @@ public record FieldAccess(
   public CodeClassType toClassType() {
     return (CodeClassType) element.type().toType();
   }
+
+  @Override
+  public String toString() {
+    return "F(" + name() + "/" + element.type().toType().simpleName() + ")";
+  }
 }

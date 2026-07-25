@@ -20,6 +20,7 @@ package net.strokkur.commands.internal;
 import net.strokkur.commands.CustomExecutorWrapper;
 import net.strokkur.commands.CustomRequirement;
 import net.strokkur.commands.CustomSuggestion;
+import net.strokkur.commands.internal.exceptions.IllegalSubcommandFieldType;
 import net.strokkur.commands.internal.exceptions.ProviderAlreadyRegisteredException;
 import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperRegistry;
 import net.strokkur.commands.internal.intermediate.registrable.RegistrableRegistry;
@@ -144,9 +145,14 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
 
       try {
         processElement(sourceClass);
+      } catch (IllegalSubcommandFieldType illegalFieldType) {
+        messager().errorSource("Illegal field type: %s (%s)",
+          illegalFieldType, sourceClass,
+          illegalFieldType.type().toType().fullyQualifiedName(),
+          illegalFieldType.type().getClass().getName()
+        );
       } catch (Exception e) {
-        messager().errorSource("An error occurred: {}", sourceClass, e.getMessage());
-        e.printStackTrace();
+        messager().errorSource("An error occurred", e, sourceClass);
       }
 
       if (debugOnly != null) {
@@ -159,7 +165,7 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
 
   private void processElement(SourceClassLike sourceClass) {
     final C commandInformation = getCommandInformation(sourceClass);
-    final CommandNode commandTree = CommandParsingSourceVisitor.get().visitCommandClass(sourceClass, null);
+    final CommandNode commandTree = CommandParsingSourceVisitor.get().visitCommandClass(sourceClass);
 
     messager().debug("Command Tree:\n%s", commandTree);
 
@@ -178,10 +184,9 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
       final CommonClassBuilder<C> builder = createBuilder(commandTree, commandInformation);
       final CodeClass theClass = builder.createClass();
       codeGen.printJavaFile(theClass);
-      messager().info("Printed: " + theClass.classType().fullyQualifiedName());
+      messager().debug("Printed: " + theClass.classType().fullyQualifiedName());
     } catch (Exception ex) {
-      messager().errorSource("A fatal exception occurred whilst printing source file: {}", sourceClass, ex.getMessage());
-      ex.printStackTrace();
+      messager().errorSource("A fatal exception occurred whilst printing source file", ex, sourceClass);
     }
   }
 

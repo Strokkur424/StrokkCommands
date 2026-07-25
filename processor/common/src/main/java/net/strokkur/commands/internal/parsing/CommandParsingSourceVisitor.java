@@ -60,6 +60,7 @@ import net.strokkur.jap.source.classmodel.SourceInterface;
 import net.strokkur.jap.source.classmodel.SourceMethod;
 import net.strokkur.jap.source.classmodel.SourceParameterLike;
 import net.strokkur.jap.source.classmodel.SourceRecord;
+import net.strokkur.jap.source.type.LazySourceClassLikeType;
 import net.strokkur.jap.source.visitor.SourceVisitor;
 
 import java.lang.annotation.Annotation;
@@ -71,11 +72,15 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, Void>, ForwardingMessagerWrapper {
+public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, CommandParsingSourceVisitor.ParsingContext>, ForwardingMessagerWrapper {
   private static final CommandParsingSourceVisitor INSTANCE = new CommandParsingSourceVisitor();
 
   public static CommandParsingSourceVisitor get() {
     return INSTANCE;
+  }
+
+  private static ParsingContext newCtx() {
+    return new ParsingContext();
   }
 
   //
@@ -83,10 +88,10 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
   //
 
   /// Handles [Command]-annotated classes instead of the standard [Subcommand].
-  public CommandNode visitCommandClass(SourceClassLike classLike, Void unused) {
+  public CommandNode visitCommandClass(SourceClassLike classLike) {
     final CommandNode node = switch (classLike) {
-      case SourceClass sourceClass -> visitClass(sourceClass, unused, Command.class, Command::value);
-      case SourceRecord record -> visitRecord(record, unused, Command.class, Command::value);
+      case SourceClass sourceClass -> visitClass(sourceClass, newCtx(), Command.class, Command::value);
+      case SourceRecord record -> visitRecord(record, newCtx(), Command.class, Command::value);
       default -> throw new IllegalCommandClassTypeException(classLike);
     };
 
@@ -104,17 +109,17 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
   //
 
   @Override
-  public CommandNode visitClass(SourceClass sourceClass, Void unused) {
-    return visitClass(sourceClass, unused, Subcommand.class, Subcommand::value);
+  public CommandNode visitClass(SourceClass sourceClass, ParsingContext ctx) {
+    return visitClass(sourceClass, ctx, Subcommand.class, Subcommand::value);
   }
 
   @Override
-  public CommandNode visitRecord(SourceRecord sourceRecord, Void unused) {
-    return visitRecord(sourceRecord, unused, Subcommand.class, Subcommand::value);
+  public CommandNode visitRecord(SourceRecord sourceRecord, ParsingContext ctx) {
+    return visitRecord(sourceRecord, ctx, Subcommand.class, Subcommand::value);
   }
 
   @Override
-  public CommandNode visitMethod(SourceMethod sourceMethod, Void unused) {
+  public CommandNode visitMethod(SourceMethod sourceMethod, ParsingContext ctx) {
     final List<CommandParameter> arguments = sourceMethod.parameters().stream()
       .map(this::parseParameter)
       .toList();
@@ -150,10 +155,12 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
   }
 
   @Override
-  public CommandNode visitField(SourceField sourceField, Void unused) {
+  public CommandNode visitField(SourceField sourceField, ParsingContext ctx) {
+    ctx.isCurrentlyParsingField = true;
     final CommandNode nestedNode = switch (sourceField.type()) {
-      case SourceClass sourceClass -> sourceClass.accept(this, unused);
-      case SourceRecord record -> record.accept(this, unused);
+      case SourceClass sourceClass -> sourceClass.accept(this, ctx);
+      case SourceRecord record -> record.accept(this, ctx);
+      case LazySourceClassLikeType lazyType -> lazyType.toClassLike().accept(this, ctx);
       default -> throw new IllegalSubcommandFieldType(sourceField.type());
     };
 
@@ -170,7 +177,8 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
     PlatformUtils.get().populateNode(sourceField, rootNode);
     applyRequirements(sourceField, rootNode);
 
-    return nestedNode;
+    ctx.isCurrentlyParsingField = false;
+    return rootNode;
   }
 
   //
@@ -178,7 +186,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
   //
 
   private <A extends Annotation> CommandNode visitClass(
-    SourceClass sourceClass, Void unused,
+    SourceClass sourceClass, ParsingContext ctx,
     Class<A> annotationClass, Function<A, String> toPath
   ) {
     // Parse nested elements first, so that the same CommandNode instances can be reused inside the
@@ -186,15 +194,15 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
     final List<CommandNode> nestedNodes = new ArrayList<>();
     nestedNodes.addAll(sourceClass.methods().stream()
       .filter(method -> method.hasAnnotationInherited(Executes.class) || method.hasAnnotationInherited(DefaultExecutes.class))
-      .map(method -> method.accept(this, unused))
+      .map(method -> method.accept(this, ctx))
       .toList());
     nestedNodes.addAll(sourceClass.fields().stream()
       .filter(field -> field.hasAnnotationInherited(Subcommand.class))
-      .map(field -> field.accept(this, unused))
+      .map(field -> field.accept(this, ctx))
       .toList());
     nestedNodes.addAll(sourceClass.nestedClasses().stream()
       .filter(nested -> nested.hasAnnotationInherited(Subcommand.class))
-      .map(nested -> nested.accept(this, unused))
+      .map(nested -> nested.accept(this, ctx))
       .toList());
 
     final CommandNode rootNode = CommandNode.createEmpty();
@@ -205,7 +213,11 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
     );
 
     // Apply some attributes to the root node before returning it.
-    rootNode.setAttribute(AttributeKey.ACCESS, ExecuteAccess.of(sourceClass));
+    if (ctx.isCurrentlyParsingField) {
+      ctx.isCurrentlyParsingField = false;
+    } else {
+      rootNode.setAttribute(AttributeKey.ACCESS, ExecuteAccess.of(sourceClass));
+    }
     applyExecutorTransform(sourceClass, rootNode);
     PlatformUtils.get().populateNode(sourceClass, rootNode);
     applyRequirements(sourceClass, rootNode);
@@ -214,7 +226,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
   }
 
   private <A extends Annotation> CommandNode visitRecord(
-    SourceRecord record, Void unused,
+    SourceRecord record, ParsingContext ctx,
     Class<A> annotationClass, Function<A, String> toPath
   ) {
     // Parse nested elements first, so that the same CommandNode instances can be reused inside the
@@ -222,11 +234,11 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
     final List<CommandNode> nestedNodes = new ArrayList<>();
     nestedNodes.addAll(record.methods().stream()
       .filter(method -> method.hasAnnotationInherited(Executes.class) || method.hasAnnotationInherited(DefaultExecutes.class))
-      .map(method -> method.accept(this, unused))
+      .map(method -> method.accept(this, ctx))
       .toList());
     nestedNodes.addAll(record.nestedClasses().stream()
       .filter(nested -> nested.hasAnnotationInherited(Subcommand.class))
-      .map(nested -> nested.accept(this, unused))
+      .map(nested -> nested.accept(this, ctx))
       .toList());
 
     final CommandNode rootNode = CommandNode.createEmpty();
@@ -314,17 +326,17 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
   //
 
   @Override
-  public CommandNode visitInterface(SourceInterface sourceInterface, Void unused) {
+  public CommandNode visitInterface(SourceInterface sourceInterface, ParsingContext ctx) {
     throw new IllegalStateException("Cannot parse interface");
   }
 
   @Override
-  public CommandNode visitConstructor(SourceConstructor sourceConstructor, Void unused) {
+  public CommandNode visitConstructor(SourceConstructor sourceConstructor, ParsingContext ctx) {
     throw new IllegalStateException("Cannot parse constructor.");
   }
 
   @Override
-  public CommandNode visitAnnotationInterface(SourceAnnotationInterface sourceAnnotationInterface, Void unused) {
+  public CommandNode visitAnnotationInterface(SourceAnnotationInterface sourceAnnotationInterface, ParsingContext ctx) {
     throw new IllegalStateException("Cannot parse annotation class.");
   }
 
@@ -348,8 +360,6 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
   }
 
   private CommandParameter parseParameter(SourceParameterLike parameter) {
-    debug("| Parsing parameter: " + parameter.name());
-
     if (!PlatformUtils.get().mayParameterBeArgument(parameter)) {
       return new UnparsedCommandParameter(parameter);
     }
@@ -373,7 +383,6 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
       return new UnparsedCommandParameter(parameter);
     }
 
-    debug("  | Successfully found Brigadier type: %s", argumentType);
     final RequiredCommandArgument commandArgument = RequiredCommandArgument.of(argumentType, parameter.name());
     applyRegistrableProvider(commandArgument, parameter, SuggestionsRegistry.get(), AttributeKey.SUGGESTION_PROVIDER, "suggestion");
     return commandArgument;
@@ -398,5 +407,9 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, V
         }
       }
     }
+  }
+
+  public static class ParsingContext {
+    private boolean isCurrentlyParsingField = false;
   }
 }

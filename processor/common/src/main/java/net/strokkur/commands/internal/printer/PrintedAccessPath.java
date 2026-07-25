@@ -28,6 +28,7 @@ import net.strokkur.jap.source.classmodel.SourceField;
 import java.util.List;
 import java.util.Objects;
 import java.util.SequencedCollection;
+import java.util.stream.Collectors;
 
 public record PrintedAccessPath(List<ExecuteAccess<?>> access) {
 
@@ -40,6 +41,10 @@ public record PrintedAccessPath(List<ExecuteAccess<?>> access) {
 
   public boolean needsCreating() {
     return !(access.getLast() instanceof FieldAccess(SourceField element)) || element.initializer() == null;
+  }
+
+  public boolean requiresParent() {
+    return access.size() > 1 && !needsCreating();
   }
 
   public String name() {
@@ -85,5 +90,12 @@ public record PrintedAccessPath(List<ExecuteAccess<?>> access) {
   @Override
   public int hashCode() {
     return Objects.hashCode(name());
+  }
+
+  @Override
+  public String toString() {
+    return access.stream()
+      .map(Object::toString)
+      .collect(Collectors.joining(", ", "[", "]"));
   }
 }

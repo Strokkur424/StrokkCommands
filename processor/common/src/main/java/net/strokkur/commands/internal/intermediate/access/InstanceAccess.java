@@ -32,4 +32,9 @@ public record InstanceAccess(
   public CodeClassType toClassType() {
     return element.toClassType();
   }
+
+  @Override
+  public String toString() {
+    return "I(" + name() + ")";
+  }
 }

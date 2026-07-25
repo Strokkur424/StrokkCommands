@@ -19,8 +19,10 @@ package net.strokkur.testplugin.externalsubcommands;
 
 import net.strokkur.commands.Command;
 import net.strokkur.commands.Subcommand;
+import net.strokkur.commands.meta.StrokkCommandsDebug;
 
 @Command("simplefields")
+@StrokkCommandsDebug(only = SimpleFields.class)
 class SimpleFields {
 
   @Subcommand("hello")

@@ -53,6 +53,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public abstract class CommonClassBuilder<C extends CommandInformation> implements ForwardingMessagerWrapper {
   private final CommandNode rootNode;
@@ -122,6 +123,13 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
         ));
       });
       if (!required.isEmpty()) {
+        debug("Required access paths:%s", required.stream()
+          .map(p -> "\n- " + p.access().stream()
+            .map(e -> e.getClass().getSimpleName().charAt(0) + "(" + e.name() + ")")
+            .collect(Collectors.joining(", "))
+          )
+          .collect(Collectors.joining())
+        );
         createMethodStatements.add(Statements.blank());
       }
     }
