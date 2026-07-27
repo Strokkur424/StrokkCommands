@@ -245,8 +245,8 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
   private ConvertToExpression getArgumentValueExpr(CommandArgument argument) {
     return switch (argument) {
       case RequiredCommandArgument required -> required.argumentType().retriever();
-      case LiteralCommandArgument ignored -> Expressions.string(literalQueue.pop());
-      case MultiLiteralCommandArgument ignored -> Expressions.string(literalQueue.pop());
+      case LiteralCommandArgument ignored -> Expressions.string(literalQueue.removeLast());
+      case MultiLiteralCommandArgument ignored -> Expressions.string(literalQueue.removeLast());
       default -> throw new IllegalStateException("Unexpected argument type: " + argument.getClass().getName());
     };
   }
