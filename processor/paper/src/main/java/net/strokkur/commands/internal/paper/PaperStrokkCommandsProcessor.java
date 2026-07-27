@@ -56,7 +56,7 @@ public final class PaperStrokkCommandsProcessor extends StrokkCommandsProcessor<
       : null;
 
     return new PaperCommandInformation(
-      classLike.firstAnnotationByType(Command.class).value(Command.class).value(),
+      classLike.firstAnnotationValueByType(Command.class).value().split(" ")[0],
       constructor,
       classLike,
       description.map(Description::value).orElse(null),

@@ -55,7 +55,7 @@ public final class VelocityStrokkCommandsProcessor extends StrokkCommandsProcess
       : null;
 
     return new VelocityCommandInformation(
-      classLike.firstAnnotationByType(Command.class).value(Command.class).value(),
+      classLike.firstAnnotationValueByType(Command.class).value().split(" ")[0],
       constructor,
       classLike,
       aliases.map(Aliases::value).orElse(null),
