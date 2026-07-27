@@ -41,8 +41,11 @@ import net.strokkur.jap.source.classmodel.SourceMethodParameter;
 import static net.strokkur.jap.code.documentation.CodeDocumentation.codeBlock;
 import static net.strokkur.jap.code.documentation.CodeDocumentation.combine;
 import static net.strokkur.jap.code.documentation.CodeDocumentation.header;
+import static net.strokkur.jap.code.documentation.CodeDocumentation.inlineCode;
+import static net.strokkur.jap.code.documentation.CodeDocumentation.linebreak;
 import static net.strokkur.jap.code.documentation.CodeDocumentation.methodReference;
 import static net.strokkur.jap.code.documentation.CodeDocumentation.text;
+import static net.strokkur.jap.code.documentation.CodeDocumentation.url;
 
 final class PaperClassBuilder extends CommonClassBuilder<PaperCommandInformation> {
   PaperClassBuilder(CommandNode rootNode, PaperCommandInformation commandInformation) {
@@ -128,6 +131,11 @@ final class PaperClassBuilder extends CommonClassBuilder<PaperCommandInformation
         text(" or "),
         methodReference(CodeMethod.builder("onEnable"), PaperClasses.JAVA_PLUGIN)),
       text("method."),
+      linebreak(),
+      text("You need to call it inside of a lifecycle event. General information can be found on the"),
+      combine(url("PaperMC API docs page", "https://docs.papermc.io/paper/dev/lifecycle/"), text(".")),
+      combine(text("The general use case might look like this (example given inside the "), inlineCode("onEnable"), text(" method):")),
+      linebreak(),
       codeBlock("""
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS.newHandler(event -> {
             final Commands commands = event.registrar();
