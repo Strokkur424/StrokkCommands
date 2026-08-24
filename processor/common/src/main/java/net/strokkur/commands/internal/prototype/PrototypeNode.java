@@ -36,7 +36,9 @@ public abstract class PrototypeNode {
 
   public @Nullable SuggestionProvider suggests = null;
   public @Nullable RequirementProvider requires = null;
+
   public @Nullable CodeBlock executes = null;
+  public @Nullable CodeBlock defaultExecutes = null;
 
   protected abstract InvocationChainBuilder nodeElement();
 
@@ -45,6 +47,16 @@ public abstract class PrototypeNode {
   public void addChild(PrototypeNode node) {
     children.add(node);
     node.parent = this;
+  }
+
+  private @Nullable CodeBlock getDefaultExecutes() {
+    if (this.defaultExecutes != null) {
+      return this.defaultExecutes;
+    }
+    if (this.parent != null) {
+      return this.parent.getDefaultExecutes();
+    }
+    return null;
   }
 
   public InvocationChainBuilder toExpression() {
@@ -57,6 +69,8 @@ public abstract class PrototypeNode {
     }
     if (executes != null) {
       builder.chainMethod("executes", StyleConfig.NEWLINE, Expressions.lambda("ctx", executes));
+    } else if (getDefaultExecutes() instanceof CodeBlock found) {
+      builder.chainMethod("executes", StyleConfig.NEWLINE, Expressions.lambda("ctx", found));
     }
 
     for (PrototypeNode child : children) {

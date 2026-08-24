@@ -72,6 +72,11 @@ public interface Attributable {
     return getAttribute(orElse);
   }
 
+  @Contract("_, _, !null -> !null")
+  default <U, V extends U> @Nullable U getEitherAttributeOr(AttributeKey<U> firstKey, AttributeKey<V> orElse, @Nullable U defaultValue) {
+    return Optional.ofNullable(getEitherAttribute(firstKey, orElse)).orElse(defaultValue);
+  }
+
   default <U, V extends U> boolean hasEitherAttribute(AttributeKey<U> firstKey, AttributeKey<V> orElse) {
     return getEitherAttribute(firstKey, orElse) != null;
   }

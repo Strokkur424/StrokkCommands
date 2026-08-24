@@ -23,6 +23,7 @@ import net.strokkur.commands.internal.arguments.MultiLiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
 import net.strokkur.commands.internal.intermediate.access.ExecuteAccess;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.executable.DefaultExecutable;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
 import net.strokkur.commands.internal.intermediate.executable.UnparsedCommandParameter;
 import net.strokkur.commands.internal.intermediate.record.RecordArguments;
@@ -82,7 +83,7 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
   public PrototypeRoot createRoot(CommandNode rootNode) {
     final PrototypeRoot root = new PrototypeRoot(rootNode.name());
 
-    scopeAccessAndRecordStack(rootNode, () -> {
+    scope(rootNode, () -> {
       handleAttributes(root, rootNode);
       for (CommandNode child : rootNode.children()) {
         appendTo(root, child);
@@ -112,25 +113,23 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
       }
     }
 
-    final Executable executable = node.getEitherAttribute(AttributeKey.EXECUTABLE, AttributeKey.DEFAULT_EXECUTABLE);
+    final Executable executable = node.getAttribute(AttributeKey.EXECUTABLE);
     if (executable != null) {
       if (prototype.executes == null) {
-        debug("Literal queue: [" + String.join(", ", literalQueue) + "]");
-        final Deque<String> stored = new ArrayDeque<>(literalQueue);
-        prototype.executes = getExecutesBlock(executable);
-        if (!literalQueue.isEmpty()) {
-          warnings.add("Literal queue was not empty after code block for path '" + prototype.toCommandString() + "'. You should report this.");
-          literalQueue.clear();
-        }
-        literalQueue.addAll(stored);
+        scopeLiteralQueueAccess(prototype, () -> prototype.executes = getExecutesBlock(executable));
       } else {
         warnings.add("Command with path '" + prototype.toCommandString() + "' has conflicting executes declarations!");
       }
     }
+
+    final DefaultExecutable defaultExecutable = node.getAttribute(AttributeKey.DEFAULT_EXECUTABLE);
+    if (defaultExecutable != null) {
+      scopeLiteralQueueAccess(prototype, () -> prototype.defaultExecutes = getExecutesBlock(defaultExecutable));
+    }
   }
 
   private void appendTo(PrototypeNode prototype, CommandNode node) {
-    scopeAccessAndRecordStack(node, () -> {
+    scope(node, () -> {
       if (node instanceof ArgumentNode arg) {
         switch (arg.argument()) {
           case LiteralCommandArgument(
@@ -251,7 +250,7 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
     };
   }
 
-  private void scopeAccessAndRecordStack(CommandNode node, Runnable run) {
+  private void scope(CommandNode node, Runnable run) {
     final Optional<ExecuteAccess<?>> access = node.getAttributeOptional(AttributeKey.ACCESS);
     final Optional<RecordArguments> recordArguments = node.getAttributeOptional(AttributeKey.RECORD_ARGUMENTS);
 
@@ -262,6 +261,16 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
 
     access.ifPresent(ignored -> accessStack.pop());
     recordArguments.ifPresent(ignored -> recordStack.pop());
+  }
+
+  private void scopeLiteralQueueAccess(PrototypeNode node, Runnable run) {
+    final Deque<String> stored = new ArrayDeque<>(literalQueue);
+    run.run();
+    if (!literalQueue.isEmpty()) {
+      warnings.add("Literal queue was not empty after code block for path '" + node.toCommandString() + "'. You should report this.");
+      literalQueue.clear();
+    }
+    literalQueue.addAll(stored);
   }
 
   private void addRequiredPath(PrintedAccessPath path) {
