@@ -53,7 +53,7 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
   @Override
   protected @Nullable BrigadierArgumentType handleCustomArgumentAnnotations(String argumentName, CodeType type, SourceParameterLike parameter) {
     if (parameter.hasAnnotation(CustomArg.class)) {
-      final SourceAnnotation customArg = parameter.firstAnnotationByType(CustomArg.class);
+      final SourceAnnotation customArg = parameter.getAnnotation(CustomArg.class);
       final CodeClassType classType = customArg.parameter("value").classValue();
       return BrigadierArgumentType.of(
         "custom-arg-" + customArg.type(),
@@ -72,7 +72,7 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
         throw new ParameterArgumentException("@TimeArg must be of type 'int'");
       }
 
-      final SourceAnnotation timeArg = parameter.firstAnnotationByType(TimeArg.class);
+      final SourceAnnotation timeArg = parameter.getAnnotation(TimeArg.class);
 
       return BrigadierArgumentType.of(
         "time",
@@ -154,7 +154,7 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
     putSimple(methodName, unresolved.toClassType().identifiableName());
     putFor((p, name) -> {
       final ConvertToExpression arg = p.hasAnnotation(anno) ?
-        p.firstAnnotationByType(anno).parameter("value").expression() :
+        p.getAnnotation(anno).parameter("value").expression() :
         null;
       final MethodInvocationBuilder method = ARGUMENT_TYPES.chainMethod(methodName);
       return BrigadierArgumentType.of(

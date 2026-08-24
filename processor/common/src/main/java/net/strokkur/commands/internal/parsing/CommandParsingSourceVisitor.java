@@ -23,6 +23,9 @@ import net.strokkur.commands.Executes;
 import net.strokkur.commands.Literal;
 import net.strokkur.commands.Subcommand;
 import net.strokkur.commands.UnsetExecutorWrapper;
+import net.strokkur.commands.container.ManyDefaultExecutes;
+import net.strokkur.commands.container.ManyExecutes;
+import net.strokkur.commands.container.ManySubcommands;
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentType;
@@ -63,6 +66,7 @@ import net.strokkur.jap.source.classmodel.SourceParameterLike;
 import net.strokkur.jap.source.classmodel.SourceRecord;
 import net.strokkur.jap.source.type.ClassLikeType;
 import net.strokkur.jap.source.visitor.SourceVisitor;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -91,8 +95,8 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
   /// Handles [Command]-annotated classes instead of the standard [Subcommand].
   public CommandNode visitCommandClass(SourceClassLike classLike) {
     final CommandNode node = switch (classLike) {
-      case SourceClass sourceClass -> visitClass(sourceClass, newCtx(), Command.class, Command::value);
-      case SourceRecord record -> visitRecord(record, newCtx(), Command.class, Command::value);
+      case SourceClass sourceClass -> visitClass(sourceClass, newCtx(), null, Command.class, Command::value);
+      case SourceRecord record -> visitRecord(record, newCtx(), null, Command.class, Command::value);
       default -> throw new IllegalCommandClassTypeException(classLike);
     };
 
@@ -111,12 +115,12 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
 
   @Override
   public CommandNode visitClass(SourceClass sourceClass, ParsingContext ctx) {
-    return visitClass(sourceClass, ctx, Subcommand.class, Subcommand::value);
+    return visitClass(sourceClass, ctx, ManySubcommands.class, Subcommand.class, Subcommand::value);
   }
 
   @Override
   public CommandNode visitRecord(SourceRecord sourceRecord, ParsingContext ctx) {
-    return visitRecord(sourceRecord, ctx, Subcommand.class, Subcommand::value);
+    return visitRecord(sourceRecord, ctx, ManySubcommands.class, Subcommand.class, Subcommand::value);
   }
 
   @Override
@@ -134,14 +138,14 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
 
     applyExecutesLogic(
       sourceMethod, rootNode,
-      Executes.class, Executes::value,
+      ManyExecutes.class, Executes.class, Executes::value,
       arguments, commandArguments,
       new Executable(executable), AttributeKey.EXECUTABLE
     );
     if (sourceMethod.hasAnnotationInherited(DefaultExecutes.class)) {
       applyExecutesLogic(
         sourceMethod, rootNode,
-        DefaultExecutes.class, DefaultExecutes::value,
+        ManyDefaultExecutes.class, DefaultExecutes.class, DefaultExecutes::value,
         arguments, commandArguments,
         new DefaultExecutable(executable), AttributeKey.DEFAULT_EXECUTABLE
       );
@@ -167,7 +171,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
     final CommandNode rootNode = CommandNode.createEmpty();
     forEachPathAnnotation(
       sourceField, rootNode,
-      Subcommand.class, Subcommand::value,
+      ManySubcommands.class, Subcommand.class, Subcommand::value,
       node -> node.addChild(nestedNode)
     );
 
@@ -186,7 +190,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
 
   private <A extends Annotation> CommandNode visitClass(
     SourceClass sourceClass, ParsingContext ctx,
-    Class<A> annotationClass, Function<A, String> toPath
+    @Nullable Class<? extends Annotation> collectionAnnotation, Class<A> annotationClass, Function<A, String> toPath
   ) {
     final boolean nestedField = ctx.isCurrentlyParsingField;
     ctx.isCurrentlyParsingField = false;
@@ -195,22 +199,24 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
     // final node consumers.
     final List<CommandNode> nestedNodes = new ArrayList<>();
     nestedNodes.addAll(sourceClass.methods().stream()
-      .filter(method -> method.hasAnnotationInherited(Executes.class) || method.hasAnnotationInherited(DefaultExecutes.class))
+      .filter(method -> method.hasAnnotations(ManyExecutes.class, Executes.class)
+        || method.hasAnnotations(ManyDefaultExecutes.class, DefaultExecutes.class)
+      )
       .map(method -> method.accept(this, ctx))
       .toList());
     nestedNodes.addAll(sourceClass.fields().stream()
-      .filter(field -> field.hasAnnotationInherited(Subcommand.class))
+      .filter(field -> field.hasAnnotations(ManySubcommands.class, Subcommand.class))
       .map(field -> field.accept(this, ctx))
       .toList());
     nestedNodes.addAll(sourceClass.nestedClasses().stream()
-      .filter(nested -> nested.hasAnnotationInherited(Subcommand.class))
+      .filter(nested -> nested.hasAnnotations(ManySubcommands.class, Subcommand.class))
       .map(nested -> nested.accept(this, ctx))
       .toList());
 
     final CommandNode rootNode = CommandNode.createEmpty();
     forEachPathAnnotation(
       sourceClass, rootNode,
-      annotationClass, toPath,
+      collectionAnnotation, annotationClass, toPath,
       node -> nestedNodes.forEach(node::addChild)
     );
 
@@ -227,7 +233,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
 
   private <A extends Annotation> CommandNode visitRecord(
     SourceRecord record, ParsingContext ctx,
-    Class<A> annotationClass, Function<A, String> toPath
+    @Nullable Class<? extends Annotation> collectionAnnotation, Class<A> annotationClass, Function<A, String> toPath
   ) {
     final boolean nestedField = ctx.isCurrentlyParsingField;
     ctx.isCurrentlyParsingField = false;
@@ -236,11 +242,12 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
     // final node consumers.
     final List<CommandNode> nestedNodes = new ArrayList<>();
     nestedNodes.addAll(record.methods().stream()
-      .filter(method -> method.hasAnnotationInherited(Executes.class) || method.hasAnnotationInherited(DefaultExecutes.class))
+      .filter(method -> method.hasAnnotations(ManyExecutes.class, Executes.class)
+        || method.hasAnnotations(ManyDefaultExecutes.class, DefaultExecutes.class))
       .map(method -> method.accept(this, ctx))
       .toList());
     nestedNodes.addAll(record.nestedClasses().stream()
-      .filter(nested -> nested.hasAnnotationInherited(Subcommand.class))
+      .filter(nested -> nested.hasAnnotations(ManySubcommands.class, Subcommand.class))
       .map(nested -> nested.accept(this, ctx))
       .toList());
 
@@ -256,7 +263,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
 
     forEachPathAnnotation(
       record, postArgumentsNode,
-      annotationClass, toPath,
+      collectionAnnotation, annotationClass, toPath,
       node -> nestedNodes.forEach(node::addChild)
     );
 
@@ -274,13 +281,13 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
 
   private <A extends Annotation, E extends Executable> void applyExecutesLogic(
     SourceMethod sourceMethod, CommandNode root,
-    Class<A> annotationClass, Function<A, String> toPath,
+    Class<? extends Annotation> collectionAnnotation, Class<A> annotationClass, Function<A, String> toPath,
     List<CommandParameter> arguments, List<CommandArgument> commandArguments,
     E executable, AttributeKey<E> key
   ) {
     forEachPathAnnotation(
       sourceMethod, root,
-      annotationClass, toPath,
+      collectionAnnotation, annotationClass, toPath,
       node -> {
         final CommandNode endNode = node.addArguments(commandArguments);
         endNode.setAttribute(key, executable);
@@ -291,19 +298,18 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
 
   private <A extends Annotation> void forEachPathAnnotation(
     AnnotationsHolder holder, CommandNode root,
-    Class<A> annotationClass, Function<A, String> toPath,
+    @Nullable Class<? extends Annotation> collectionAnnotation, Class<A> annotationClass,
+    Function<A, String> toPath,
     Consumer<CommandNode> endNodeConsumer
   ) {
-    if (!holder.hasAnnotationInherited(annotationClass)) {
+    final List<A> annotations = holder.getAnnotations(collectionAnnotation, annotationClass);
+    if (annotations.isEmpty()) {
       endNodeConsumer.accept(root);
       return;
     }
 
-    holder.annotationsInherited(annotationClass).stream()
-      .map(a -> {
-        final A anno = a.value(annotationClass);
-        return toPath.apply(anno);
-      })
+    annotations.stream()
+      .map(toPath)
       .distinct()
       .map(path -> path.isBlank() ?
         List.<CommandArgument>of() :
@@ -375,7 +381,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
     }
 
     if (parameter.hasAnnotationInherited(Literal.class)) {
-      final Literal literal = parameter.firstAnnotationByType(Literal.class).value(Literal.class);
+      final Literal literal = parameter.getAnnotationValueInherited(Literal.class);
       final String[] declared = literal.value();
       if (declared.length == 0) {
         return LiteralCommandArgument.literal(parameter.name(), true);

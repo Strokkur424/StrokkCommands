@@ -186,7 +186,7 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
   ) {
     final Classes annotationType = Classes.ofClass(annotation);
     if (variable.hasAnnotation(annotationType)) {
-      return BrigadierArgumentType.of(argumentTypeName, withAnnotation.apply(variable.firstAnnotationByType(annotationType)), retrieval);
+      return BrigadierArgumentType.of(argumentTypeName, withAnnotation.apply(variable.getAnnotation(annotationType)), retrieval);
     }
 
     return BrigadierArgumentType.of(argumentTypeName, withoutAnnotation, retrieval);

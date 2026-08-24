@@ -106,7 +106,7 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
 
       final SourceClassLike annotated = sourceMap.parseClassElement((TypeElement) debugAnnotation.get());
       if (annotated.hasAnnotation(StrokkCommandsDebug.class)) {
-        final SourceAnnotation debugAnnotationType = annotated.firstAnnotationByType(StrokkCommandsDebug.class);
+        final SourceAnnotation debugAnnotationType = annotated.getAnnotation(StrokkCommandsDebug.class);
 
         if (debugAnnotationType.isSet("only")) {
           debugOnly = debugAnnotationType.parameter("only").classValue();

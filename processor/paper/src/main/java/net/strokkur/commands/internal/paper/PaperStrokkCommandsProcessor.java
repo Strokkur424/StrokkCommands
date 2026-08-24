@@ -48,15 +48,15 @@ public final class PaperStrokkCommandsProcessor extends StrokkCommandsProcessor<
 
   @Override
   protected PaperCommandInformation getCommandInformation(SourceClassLike classLike) {
-    final Optional<Description> description = classLike.firstAnnotationValueByTypeOptional(Description.class);
-    final Optional<Aliases> aliases = classLike.firstAnnotationValueByTypeOptional(Aliases.class);
+    final Optional<Description> description = classLike.findAnnotationValue(Description.class);
+    final Optional<Aliases> aliases = classLike.findAnnotationValue(Aliases.class);
 
     final SourceConstructor constructor = classLike instanceof SourceClass sourceClass
       ? sourceClass.constructors().stream().findFirst().orElse(null)
       : null;
 
     return new PaperCommandInformation(
-      classLike.firstAnnotationValueByType(Command.class).value().split(" ")[0],
+      classLike.getAnnotationValue(Command.class).value().split(" ")[0],
       constructor,
       classLike,
       description.map(Description::value).orElse(null),

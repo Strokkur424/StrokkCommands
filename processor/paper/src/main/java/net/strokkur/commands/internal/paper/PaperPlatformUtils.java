@@ -52,7 +52,7 @@ public final class PaperPlatformUtils implements PlatformUtils {
 
   @Override
   public void populateNode(AnnotationsHolder holder, CommandNode node) {
-    final List<String> permission = holder.annotationsValuesInherited(Permission.class).stream()
+    final List<String> permission = holder.findAnnotationValue(Permission.class).stream()
       .map(Permission::value)
       .toList();
 

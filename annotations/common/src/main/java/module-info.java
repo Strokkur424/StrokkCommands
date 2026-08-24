@@ -6,5 +6,6 @@ module net.strokkur.commands.common {
 
   exports net.strokkur.commands;
   exports net.strokkur.commands.arguments;
+  exports net.strokkur.commands.container;
   exports net.strokkur.commands.meta;
 }
