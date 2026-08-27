@@ -17,17 +17,23 @@
  */
 package net.strokkur.commands.internal.prototype;
 
-import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
+import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
+import net.strokkur.commands.internal.prototype.requirements.ComparableRequirement;
 import net.strokkur.jap.code.classmodel.CodeBlock;
+import net.strokkur.jap.code.convert.ConvertToExpression;
 import net.strokkur.jap.code.expression.Expressions;
 import net.strokkur.jap.code.expression.builder.InvocationChainBuilder;
 import net.strokkur.jap.code.util.StyleConfig;
+import org.jetbrains.annotations.Unmodifiable;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public abstract class PrototypeNode {
@@ -35,7 +41,7 @@ public abstract class PrototypeNode {
   protected @Nullable PrototypeNode parent = null;
 
   public @Nullable SuggestionProvider suggests = null;
-  public @Nullable RequirementProvider requires = null;
+  private final Map<String, ComparableRequirement> requires = new HashMap<>();
 
   public @Nullable CodeBlock executes = null;
   public @Nullable CodeBlock defaultExecutes = null;
@@ -49,6 +55,19 @@ public abstract class PrototypeNode {
     node.parent = this;
   }
 
+  public boolean addRequirement(ComparableRequirement req) {
+    return requires.put(req.key(), req) == null;
+  }
+
+  public Map<String, ComparableRequirement> requires() {
+    return requires;
+  }
+
+  @Unmodifiable
+  public List<PrototypeNode> children() {
+    return this.children;
+  }
+
   private @Nullable CodeBlock getDefaultExecutes() {
     if (this.defaultExecutes != null) {
       return this.defaultExecutes;
@@ -59,10 +78,21 @@ public abstract class PrototypeNode {
     return null;
   }
 
+  /// Run various pre-process tasks. This is currently only used to move around some requirements
+  /// to upper level, in case multiple ones match together.
+  public void preProcess() {
+    this.children.forEach(PrototypeNode::preProcess);
+    PlatformUtils.get().preProcess(this);
+  }
+
   public InvocationChainBuilder toExpression() {
     final InvocationChainBuilder builder = nodeElement();
-    if (requires != null) {
-      builder.chainMethod("requires", StyleConfig.NEWLINE, requires.toRequirementLambda());
+    if (!requires.isEmpty()) {
+      builder.chainMethod("requires", StyleConfig.NEWLINE, Expressions.lambdaInline("source", requires.values().stream()
+        .map(ConvertToExpression::toExpression)
+        .reduce(ConvertToExpression::and)
+        .orElseThrow()
+      ));
     }
     if (suggests != null) {
       builder.chainMethod("suggests", StyleConfig.NEWLINE, suggests.toSuggestionLambda());
@@ -93,5 +123,14 @@ public abstract class PrototypeNode {
       .map(type::cast)
       .filter(node)
       .findFirst();
+  }
+
+  public void forEachChild(Consumer<PrototypeNode> run) {
+    children.forEach(i -> i.forEachChildAndMyself(run));
+  }
+
+  private void forEachChildAndMyself(Consumer<PrototypeNode> run) {
+    run.accept(this);
+    children.forEach(i -> i.forEachChildAndMyself(run));
   }
 }

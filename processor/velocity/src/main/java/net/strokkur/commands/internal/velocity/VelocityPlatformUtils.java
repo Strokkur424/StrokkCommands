@@ -24,11 +24,13 @@ import net.strokkur.commands.internal.intermediate.executable.CommandParameter;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
 import net.strokkur.commands.internal.intermediate.executable.UnparsedCommandParameter;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
+import net.strokkur.commands.internal.prototype.requirements.PermissionRequirement;
 import net.strokkur.commands.internal.velocity.util.SenderType;
 import net.strokkur.commands.internal.velocity.util.VelocityAttributeKeys;
 import net.strokkur.commands.internal.velocity.util.VelocityClasses;
 import net.strokkur.commands.permission.Permission;
 import net.strokkur.jap.code.convert.ConvertToExpression;
+import net.strokkur.jap.code.expression.Expressions;
 import net.strokkur.jap.code.expression.builder.InvocationChainBuilder;
 import net.strokkur.jap.code.type.CodeClassType;
 import net.strokkur.jap.code.type.CodeType;
@@ -54,7 +56,7 @@ public final class VelocityPlatformUtils implements PlatformUtils {
 
   @Override
   public void populateNode(AnnotationsHolder element, CommandNode node) {
-    element.firstAnnotationInheritedOptional(Permission.class)
+    element.findAnnotationInherited(Permission.class)
       .map(anno -> anno.value(Permission.class))
       .ifPresent(permission -> node.forEachChildElseSelf(n -> n.editAttributeMutable(
         VelocityAttributeKeys.PERMISSIONS,
@@ -87,6 +89,16 @@ public final class VelocityPlatformUtils implements PlatformUtils {
     }
 
     return type;
+  }
+
+  @Override
+  public PermissionRequirement permissionRequirement(Set<String> permissions) {
+    return new PermissionRequirement(permissions) {
+      @Override
+      protected ConvertToExpression permToExpr(String perm) {
+        return Expressions.variable("source").chainMethod("hasPermission", Expressions.string(perm));
+      }
+    };
   }
 
   @Override

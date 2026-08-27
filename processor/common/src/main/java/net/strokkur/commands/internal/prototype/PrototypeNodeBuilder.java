@@ -32,6 +32,7 @@ import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvide
 import net.strokkur.commands.internal.intermediate.tree.ArgumentNode;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.printer.PrintedAccessPath;
+import net.strokkur.commands.internal.prototype.requirements.ComparableRequirement;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.jap.code.classmodel.CodeBlock;
@@ -106,9 +107,7 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
 
     if (node.hasAttribute(AttributeKey.REQUIREMENT_PROVIDER)) {
       final RequirementProvider provider = node.getAttributeNotNull(AttributeKey.REQUIREMENT_PROVIDER);
-      if (prototype.requires == null) {
-        prototype.requires = provider;
-      } else if (!prototype.requires.equals(provider)) {
+      if (!prototype.addRequirement(ComparableRequirement.provided(provider))) {
         warnings.add("Command with path '" + prototype.toCommandString() + "' has duplicate requirement providers!");
       }
     }

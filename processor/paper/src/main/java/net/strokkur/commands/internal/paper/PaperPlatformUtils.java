@@ -28,10 +28,14 @@ import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.paper.util.ExecutorType;
 import net.strokkur.commands.internal.paper.util.PaperAttributeKeys;
 import net.strokkur.commands.internal.paper.util.PaperClasses;
+import net.strokkur.commands.internal.prototype.PrototypeNode;
+import net.strokkur.commands.internal.prototype.requirements.ComparableRequirement;
+import net.strokkur.commands.internal.prototype.requirements.PermissionRequirement;
 import net.strokkur.commands.paper.Executor;
 import net.strokkur.commands.paper.RequiresOP;
 import net.strokkur.commands.permission.Permission;
 import net.strokkur.jap.code.convert.ConvertToExpression;
+import net.strokkur.jap.code.expression.Expressions;
 import net.strokkur.jap.code.expression.builder.InvocationChainBuilder;
 import net.strokkur.jap.code.type.CodeClassType;
 import net.strokkur.jap.source.annotation.AnnotationsHolder;
@@ -39,6 +43,7 @@ import net.strokkur.jap.source.classmodel.SourceParameterLike;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @AutoService(PlatformUtils.class)
 public final class PaperPlatformUtils implements PlatformUtils {
@@ -77,6 +82,37 @@ public final class PaperPlatformUtils implements PlatformUtils {
   @Override
   public CodeClassType platformType() {
     return PaperClasses.COMMAND_SOURCE_STACK.toClassType();
+  }
+
+  @Override
+  public void preProcess(PrototypeNode node) {
+    PlatformUtils.super.preProcess(node);
+
+    // Handle op
+    // - move up if all child nodes have it as well,
+    // - clear from all children nodes if current node has it.
+    if (!node.requires().containsKey("op")) {
+      final boolean allRequireOp = node.children().stream().allMatch(sub -> sub.requires().containsKey("op"));
+      if (allRequireOp) {
+        node.requires().put("op", ComparableRequirement.flag(
+          "op",
+          Expressions.variable("source").chainMethod("getSender").chainMethod("isOp")
+        ));
+      }
+    }
+    if (node.requires().containsKey("op")) {
+      node.forEachChild(sub -> sub.requires().remove("op"));
+    }
+  }
+
+  @Override
+  public PermissionRequirement permissionRequirement(Set<String> permissions) {
+    return new PermissionRequirement(permissions) {
+      @Override
+      protected ConvertToExpression permToExpr(String perm) {
+        return Expressions.variable("source").chainMethod("getSender").chainMethod("hasPermission", Expressions.string(perm));
+      }
+    };
   }
 
   @Override

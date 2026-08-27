@@ -90,6 +90,7 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
 
     final PrototypeNodeBuilder nodeBuilder = PrototypeNodeBuilder.create();
     final PrototypeRoot prototype = nodeBuilder.createRoot(rootNode);
+    prototype.preProcess();
     final ConvertToExpression treeExpr = prototype.toExpression()
       .chainMethod("build", StyleConfig.NEWLINE);
 

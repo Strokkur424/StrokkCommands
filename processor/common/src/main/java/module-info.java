@@ -34,6 +34,7 @@ module net.strokkur.commands.processor.common {
   exports net.strokkur.commands.internal.parsing;
   exports net.strokkur.commands.internal.printer;
   exports net.strokkur.commands.internal.prototype;
+  exports net.strokkur.commands.internal.prototype.requirements;
   exports net.strokkur.commands.internal.util;
   exports net.strokkur.commands.internal.intermediate.executable;
 }

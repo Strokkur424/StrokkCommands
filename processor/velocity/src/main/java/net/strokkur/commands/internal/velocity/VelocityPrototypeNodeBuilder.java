@@ -18,6 +18,7 @@
 package net.strokkur.commands.internal.velocity;
 
 import com.google.auto.service.AutoService;
+import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.intermediate.executable.DefaultExecutable;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
@@ -38,7 +39,6 @@ import net.strokkur.jap.source.classmodel.SourceParameterLike;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Set;
 
 @AutoService(PrototypeNodeBuilder.class)
 public class VelocityPrototypeNodeBuilder extends PrototypeNodeBuilder {
@@ -48,18 +48,7 @@ public class VelocityPrototypeNodeBuilder extends PrototypeNodeBuilder {
     super.handleAttributes(prototype, node);
 
     if (node.hasAttribute(VelocityAttributeKeys.PERMISSIONS)) {
-      final Set<String> permissions = node.getAttributeNotNull(VelocityAttributeKeys.PERMISSIONS);
-      final ConvertToExpression permissionsCheck = permissions.stream()
-        .map(perm -> Expressions.variable("source").chainMethod("hasPermission", Expressions.string(perm)).toExpression())
-        .reduce(ConvertToExpression::or)
-        .orElseThrow();
-
-      if (prototype.requires == null) {
-        prototype.requires = () -> permissionsCheck;
-      } else {
-        final ConvertToExpression and = prototype.requires.requirementExpression().and(permissionsCheck);
-        prototype.requires = () -> and;
-      }
+      prototype.addRequirement(PlatformUtils.get().permissionRequirement(node.getAttributeNotNull(VelocityAttributeKeys.PERMISSIONS)));
     }
   }
 

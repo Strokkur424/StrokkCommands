@@ -18,6 +18,7 @@
 package net.strokkur.commands.internal.paper;
 
 import com.google.auto.service.AutoService;
+import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.intermediate.executable.DefaultExecutable;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
@@ -26,6 +27,7 @@ import net.strokkur.commands.internal.paper.util.PaperAttributeKeys;
 import net.strokkur.commands.internal.paper.util.PaperClasses;
 import net.strokkur.commands.internal.prototype.PrototypeNode;
 import net.strokkur.commands.internal.prototype.PrototypeNodeBuilder;
+import net.strokkur.commands.internal.prototype.requirements.ComparableRequirement;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.paper.Executor;
 import net.strokkur.jap.code.convert.ConvertToExpression;
@@ -35,10 +37,9 @@ import net.strokkur.jap.code.statement.Statements;
 import net.strokkur.jap.code.util.StyleConfig;
 import net.strokkur.jap.source.classmodel.SourceParameterLike;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.Set;
 
 @AutoService(PrototypeNodeBuilder.class)
 public final class PaperPrototypeNodeBuilder extends PrototypeNodeBuilder {
@@ -47,34 +48,18 @@ public final class PaperPrototypeNodeBuilder extends PrototypeNodeBuilder {
   protected void handleAttributes(PrototypeNode prototype, CommandNode node) {
     super.handleAttributes(prototype, node);
 
-    final List<ConvertToExpression> extraRequirements = new ArrayList<>();
-
-    final ExecutorType executorType = node.getAttributeNotNull(PaperAttributeKeys.EXECUTOR_TYPE);
-    if (executorType != ExecutorType.NONE) {
-      extraRequirements.add(Expressions.variable("source").chainMethod("getExecutor").instanceOf(executorType.classType()));
-    }
-
     final boolean operator = node.getAttributeNotNull(PaperAttributeKeys.REQUIRES_OP);
     if (operator) {
-      extraRequirements.add(Expressions.variable("source").chainMethod("getSender").chainMethod("isOp"));
+      prototype.addRequirement(ComparableRequirement.flag(
+        "op",
+        Expressions.variable("source").chainMethod("getSender").chainMethod("isOp")
+      ));
     }
 
-    node.getAttributeNotNull(PaperAttributeKeys.PERMISSIONS).stream()
-      .map(perm -> (ConvertToExpression) Expressions.variable("source").chainMethod("getSender").chainMethod("hasPermission", Expressions.string(perm)))
-      .reduce(ConvertToExpression::or)
-      .ifPresent(extraRequirements::add);
-
-    final Optional<ConvertToExpression> requirement = extraRequirements.stream()
-      .reduce(ConvertToExpression::and);
-
-    requirement.ifPresent(req -> {
-      if (prototype.requires == null) {
-        prototype.requires = () -> req;
-      } else {
-        final ConvertToExpression and = prototype.requires.requirementExpression().and(req);
-        prototype.requires = () -> and;
-      }
-    });
+    final Set<String> perms = node.getAttributeNotNull(PaperAttributeKeys.PERMISSIONS);
+    if (!perms.isEmpty()) {
+      prototype.addRequirement(PlatformUtils.get().permissionRequirement(perms));
+    }
   }
 
   @Override
