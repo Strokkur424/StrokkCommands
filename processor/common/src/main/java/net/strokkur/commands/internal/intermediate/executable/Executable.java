@@ -52,6 +52,10 @@ public class Executable implements Parameterized, AttributableHelper {
     this.returnType = from.returnType;
   }
 
+  public SourceClassLike sourceClass() {
+    return sourceClass;
+  }
+
   public SourceMethod executesMethod() {
     return this.executesMethod;
   }

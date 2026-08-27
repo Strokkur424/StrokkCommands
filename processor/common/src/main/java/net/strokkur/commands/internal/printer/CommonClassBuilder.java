@@ -18,14 +18,18 @@
 package net.strokkur.commands.internal.printer;
 
 import net.strokkur.commands.internal.BuildConstants;
+import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperProvider;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.prototype.PrototypeNodeBuilder;
 import net.strokkur.commands.internal.prototype.PrototypeRoot;
 import net.strokkur.commands.internal.util.CommandInformation;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
+import net.strokkur.jap.code.classmodel.CodeBlock;
 import net.strokkur.jap.code.classmodel.CodeClass;
 import net.strokkur.jap.code.classmodel.CodeField;
 import net.strokkur.jap.code.classmodel.CodeMethod;
+import net.strokkur.jap.code.classmodel.CodeParameterDefinition;
 import net.strokkur.jap.code.classmodel.builder.ClassBuilder;
 import net.strokkur.jap.code.classmodel.builder.MethodBuilder;
 import net.strokkur.jap.code.convert.ConvertToClassType;
@@ -49,6 +53,7 @@ import net.strokkur.jap.source.classmodel.SourceConstructor;
 import net.strokkur.jap.source.classmodel.SourceMethodParameter;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -159,6 +164,13 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
       );
     }
 
+    final boolean genHelperMethod = rootNode.stream().anyMatch(
+      node -> node.getAttribute(AttributeKey.EXECUTOR_WRAPPER) instanceof ExecutorWrapperProvider provider
+        && provider.wrapperType().withMethod());
+    if (genHelperMethod) {
+      classBuilder.addMethods(createReflectionHelper());
+    }
+
     return classBuilder.build();
   }
 
@@ -263,6 +275,34 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
   /// Sets the Javadoc for the register method. Not directly implemented due to platform-dependent differences
   /// in command registration.
   protected abstract void applyRegisterMethodJavadoc(MethodBuilder registerMethod, ConvertToMethod createMethod);
+
+  protected CodeMethod createReflectionHelper() {
+    return CodeMethod.builder("getMethodReflectively")
+      .addModifiers(Modifiers.PRIVATE, Modifiers.STATIC)
+      .setReturnType(CodeTypes.ofJavaClass(Method.class))
+      .addParameter(CodeTypes.ofJavaClass(Class.class).typed(CodeTypes.genericWildcard()), "clazz")
+      .addParameter(JavaTypes.STRING, "name")
+      .addParameters(CodeParameterDefinition.ofVarargs(
+        CodeTypes.ofJavaClass(Class.class).typed(CodeTypes.genericWildcard()),
+        "parameters"
+      ))
+      .setCode(
+        Statements.tryStmt(
+          CodeBlock.of(
+            Statements.returnStmt(Expressions.variable("clazz").chainMethod("getDeclaredMethod",
+              Expressions.variable("name"),
+              Expressions.variable("parameters")
+            ))
+          ),
+          CodeTypes.ofJavaClass(ReflectiveOperationException.class),
+          "ex",
+          CodeBlock.of(
+            JavaTypes.RUNTIME_EXCEPTION.ctor(Expressions.variable("ex")).throwStmt()
+          )
+        )
+      )
+      .toMethod();
+  }
 
   /// Gets the Javadoc for the class file, cannot currently be overridden.
   private CodeDocumentation getClassJavadoc(ConvertToMethod createMethod, ConvertToMethod registerMethod) {

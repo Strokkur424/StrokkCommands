@@ -20,8 +20,8 @@ package net.strokkur.commands.internal.prototype;
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
 import net.strokkur.commands.internal.prototype.requirements.ComparableRequirement;
-import net.strokkur.jap.code.classmodel.CodeBlock;
 import net.strokkur.jap.code.convert.ConvertToExpression;
+import net.strokkur.jap.code.expression.CodeExpression;
 import net.strokkur.jap.code.expression.Expressions;
 import net.strokkur.jap.code.expression.builder.InvocationChainBuilder;
 import net.strokkur.jap.code.util.StyleConfig;
@@ -43,8 +43,8 @@ public abstract class PrototypeNode {
   public @Nullable SuggestionProvider suggests = null;
   private final Map<String, ComparableRequirement> requires = new HashMap<>();
 
-  public @Nullable CodeBlock executes = null;
-  public @Nullable CodeBlock defaultExecutes = null;
+  public @Nullable CodeExpression executes = null;
+  public @Nullable CodeExpression defaultExecutes = null;
 
   protected abstract InvocationChainBuilder nodeElement();
 
@@ -68,7 +68,7 @@ public abstract class PrototypeNode {
     return this.children;
   }
 
-  private @Nullable CodeBlock getDefaultExecutes() {
+  private @Nullable CodeExpression getDefaultExecutes() {
     if (this.defaultExecutes != null) {
       return this.defaultExecutes;
     }
@@ -98,9 +98,9 @@ public abstract class PrototypeNode {
       builder.chainMethod("suggests", StyleConfig.NEWLINE, suggests.toSuggestionLambda());
     }
     if (executes != null) {
-      builder.chainMethod("executes", StyleConfig.NEWLINE, Expressions.lambda("ctx", executes));
-    } else if (getDefaultExecutes() instanceof CodeBlock found) {
-      builder.chainMethod("executes", StyleConfig.NEWLINE, Expressions.lambda("ctx", found));
+      builder.chainMethod("executes", StyleConfig.NEWLINE, executes);
+    } else if (getDefaultExecutes() instanceof CodeExpression found) {
+      builder.chainMethod("executes", StyleConfig.NEWLINE, found);
     }
 
     for (PrototypeNode child : children) {

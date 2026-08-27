@@ -23,6 +23,7 @@ import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 /// Represents a single node in a command tree.
 public interface CommandNode extends Attributable {
@@ -41,6 +42,12 @@ public interface CommandNode extends Attributable {
   /// {@return the children of this node}
   @UnmodifiableView
   List<CommandNode> children();
+
+  default Stream<CommandNode> stream() {
+    final Stream.Builder<CommandNode> builder = Stream.builder();
+    forEach(builder::add);
+    return builder.build();
+  }
 
   /// Executes the action for each node in the tree, starting with this node.
   default void forEach(Consumer<CommandNode> action) {

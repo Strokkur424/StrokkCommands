@@ -67,7 +67,7 @@ public final class TestInstancedWrapperBrigadier {
     final TestInstancedWrapper instance = new TestInstancedWrapper();
 
     return Commands.literal(NAME)
-      .executes(instance.log(ctx -> {
+      .executes(TestInstancedWrapper.log(ctx -> {
         instance.execute(ctx.getSource().getSender());
         return Command.SINGLE_SUCCESS;
       }, getMethodViaReflection(TestInstancedWrapper.class, "execute", CommandSender.class)))
@@ -79,7 +79,7 @@ public final class TestInstancedWrapperBrigadier {
       )
       .then(Commands.literal("argument-imports")
         .then(Commands.argument("num", IntegerArgumentType.integer())
-          .executes(instance.log(ctx -> {
+          .executes(TestInstancedWrapper.log(ctx -> {
             instance.executeWithArgs(
               ctx,
               IntegerArgumentType.getInteger(ctx, "num"),
@@ -90,13 +90,13 @@ public final class TestInstancedWrapperBrigadier {
         )
       )
       .then(Commands.literal("no-args")
-        .executes(instance.log(ctx -> {
+        .executes(TestInstancedWrapper.log(ctx -> {
           instance.noArgs();
           return Command.SINGLE_SUCCESS;
         }, getMethodViaReflection(TestInstancedWrapper.class, "noArgs")))
       )
       .then(Commands.literal("literal")
-        .executes(instance.log(ctx -> {
+        .executes(TestInstancedWrapper.log(ctx -> {
           instance.executeLiteral(ctx.getSource().getSender());
           return Command.SINGLE_SUCCESS;
         }, getMethodViaReflection(TestInstancedWrapper.class, "executeLiteral", CommandSender.class)))

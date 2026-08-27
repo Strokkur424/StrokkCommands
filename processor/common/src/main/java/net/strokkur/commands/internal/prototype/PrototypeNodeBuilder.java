@@ -27,6 +27,7 @@ import net.strokkur.commands.internal.intermediate.executable.DefaultExecutable;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
 import net.strokkur.commands.internal.intermediate.executable.UnparsedCommandParameter;
 import net.strokkur.commands.internal.intermediate.record.RecordArguments;
+import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperProvider;
 import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
 import net.strokkur.commands.internal.intermediate.tree.ArgumentNode;
@@ -39,13 +40,18 @@ import net.strokkur.jap.code.classmodel.CodeBlock;
 import net.strokkur.jap.code.convert.ConvertToExpression;
 import net.strokkur.jap.code.convert.ConvertToFieldMethodSource;
 import net.strokkur.jap.code.convert.ConvertToStatement;
+import net.strokkur.jap.code.expression.CodeExpression;
 import net.strokkur.jap.code.expression.Expressions;
 import net.strokkur.jap.code.expression.builder.ConstructorInvocationBuilder;
 import net.strokkur.jap.code.expression.builder.MethodInvocationBuilder;
 import net.strokkur.jap.code.statement.Statements;
+import net.strokkur.jap.code.type.CodeClassType;
+import net.strokkur.jap.code.type.CodeType;
 import net.strokkur.jap.code.util.StyleConfig;
+import net.strokkur.jap.source.classmodel.SourceMethodParameter;
 import net.strokkur.jap.source.classmodel.SourceParameterLike;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -60,6 +66,7 @@ import java.util.Set;
 /// For this reason, no reset method, or similar, is provided.
 public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper {
   private final Deque<RecordArguments> recordStack = new ArrayDeque<>();
+  private final Deque<@Nullable ExecutorWrapperProvider> executorWrapperStack = new ArrayDeque<>();
 
   protected final Set<PrintedAccessPath> requiredPaths = new HashSet<>();
   private final Deque<ExecuteAccess<?>> accessStack = new ArrayDeque<>();
@@ -115,7 +122,7 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
     final Executable executable = node.getAttribute(AttributeKey.EXECUTABLE);
     if (executable != null) {
       if (prototype.executes == null) {
-        scopeLiteralQueueAccess(prototype, () -> prototype.executes = getExecutesBlock(executable));
+        scopeLiteralQueueAccess(prototype, () -> prototype.executes = getExecutes(executable));
       } else {
         warnings.add("Command with path '" + prototype.toCommandString() + "' has conflicting executes declarations!");
       }
@@ -123,7 +130,7 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
 
     final DefaultExecutable defaultExecutable = node.getAttribute(AttributeKey.DEFAULT_EXECUTABLE);
     if (defaultExecutable != null) {
-      scopeLiteralQueueAccess(prototype, () -> prototype.defaultExecutes = getExecutesBlock(defaultExecutable));
+      scopeLiteralQueueAccess(prototype, () -> prototype.defaultExecutes = getExecutes(defaultExecutable));
     }
   }
 
@@ -199,7 +206,7 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
   // Executes block creation.
   //
 
-  private CodeBlock getExecutesBlock(Executable executable) {
+  private CodeExpression getExecutes(Executable executable) {
     final List<ConvertToStatement> statements = new ArrayList<>(validationStatements(executable));
 
     if (!recordStack.isEmpty()) {
@@ -221,7 +228,34 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
     }
 
     statements.add(Statements.returnStmt(Classes.COMMAND.chainField("SINGLE_SUCCESS")));
-    return CodeBlock.of(statements);
+
+    CodeExpression out = Expressions.lambda("ctx", CodeBlock.of(statements));
+    for (@Nullable ExecutorWrapperProvider wrapper : executorWrapperStack.reversed()) {
+      if (wrapper == null) {
+        break;
+      }
+      out = wrapWithExecutorWrapper(out, executable, wrapper);
+    }
+
+    return out;
+  }
+
+  private CodeExpression wrapWithExecutorWrapper(CodeExpression expr, Executable exec, ExecutorWrapperProvider provider) {
+    final MethodInvocationBuilder builder = provider.wrapperMethod().enclosed().toClassType().chainMethod(provider.wrapperMethod().name());
+    builder.addParameters(expr);
+    if (provider.wrapperType().withMethod()) {
+      final MethodInvocationBuilder ref = Expressions.methodInvocation("getMethodReflectively");
+      ref.addParameters(exec.sourceClass().toClassType().chainField("class"));
+      ref.addParameters(Expressions.string(exec.executesMethod().name()));
+      for (SourceMethodParameter parameter : exec.executesMethod().parameters()) {
+        final CodeType type = parameter.type().toType() instanceof CodeClassType cct ?
+          cct.withoutGenerics() :
+          parameter.type().toType();
+        ref.addParameters(type.chainField("class"));
+      }
+      builder.addParameters(ref);
+    }
+    return builder.toExpression();
   }
 
   private ConvertToStatement createCallStatement(ConvertToFieldMethodSource source, Executable executable) {
@@ -252,14 +286,30 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
   private void scope(CommandNode node, Runnable run) {
     final Optional<ExecuteAccess<?>> access = node.getAttributeOptional(AttributeKey.ACCESS);
     final Optional<RecordArguments> recordArguments = node.getAttributeOptional(AttributeKey.RECORD_ARGUMENTS);
+    final Optional<ExecutorWrapperProvider> executorWrapper = node.getAttributeOptional(AttributeKey.EXECUTOR_WRAPPER);
+    final boolean executorWrapperUnset = node.getAttributeNotNull(AttributeKey.EXECUTOR_WRAPPER_UNSET);
 
     access.ifPresent(accessStack::push);
     recordArguments.ifPresent(recordStack::push);
+
+    final Deque<ExecutorWrapperProvider> storedWrappers;
+    if (executorWrapperUnset) {
+      storedWrappers = new ArrayDeque<>(executorWrapperStack);
+      executorWrapperStack.clear();
+    } else {
+      storedWrappers = null;
+      executorWrapper.ifPresent(executorWrapperStack::push);
+    }
 
     run.run();
 
     access.ifPresent(ignored -> accessStack.pop());
     recordArguments.ifPresent(ignored -> recordStack.pop());
+    if (executorWrapperUnset) {
+      executorWrapperStack.addAll(storedWrappers);
+    } else {
+      executorWrapper.ifPresent(ignored -> executorWrapperStack.pop());
+    }
   }
 
   private void scopeLiteralQueueAccess(PrototypeNode node, Runnable run) {
