@@ -64,10 +64,10 @@ public final class FieldsWithRecordsBrigadier {
     final FieldsWithRecords instance = new FieldsWithRecords();
 
     return Commands.literal(NAME)
-      .then(Commands.argument("wordArg", StringArgumentType.word())
+      .then(Commands.argument("greedy", StringArgumentType.word())
         .executes(ctx -> {
           final FieldsWithRecords.SomeRecord executorClass = new FieldsWithRecords.SomeRecord(
-            StringArgumentType.getString(ctx, "wordArg")
+            StringArgumentType.getString(ctx, "greedy")
           );
           executorClass.execute(ctx.getSource().getSender());
           return Command.SINGLE_SUCCESS;

@@ -251,19 +251,20 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
       .map(nested -> nested.accept(this, ctx))
       .toList());
 
-    final CommandNode rootNode = CommandNode.createEmpty();
     final List<CommandParameter> parsedComponents = record.components().stream()
       .map(this::parseParameter)
       .toList();
 
-    final CommandNode postArgumentsNode = rootNode.addArguments(parsedComponents.stream()
+    final List<CommandArgument> recordArguments = parsedComponents.stream()
       .filter(CommandArgument.class::isInstance)
       .map(CommandArgument.class::cast)
-      .toList());
+      .toList();
 
+    final CommandNode rootNode = CommandNode.createEmpty();
     forEachPathAnnotation(
-      record, postArgumentsNode,
+      record, rootNode,
       collectionAnnotation, annotationClass, toPath,
+      node -> node.addArguments(recordArguments),
       node -> nestedNodes.forEach(node::addChild)
     );
 
@@ -302,9 +303,23 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
     Function<A, String> toPath,
     Consumer<CommandNode> endNodeConsumer
   ) {
+    forEachPathAnnotation(
+      holder, root,
+      collectionAnnotation, annotationClass,
+      toPath, Function.identity(),
+      endNodeConsumer
+    );
+  }
+
+  private <A extends Annotation> void forEachPathAnnotation(
+    AnnotationsHolder holder, CommandNode root,
+    @Nullable Class<? extends Annotation> collectionAnnotation, Class<A> annotationClass,
+    Function<A, String> toPath, Function<CommandNode, CommandNode> postProcess,
+    Consumer<CommandNode> endNodeConsumer
+  ) {
     final List<A> annotations = holder.getAnnotations(collectionAnnotation, annotationClass);
     if (annotations.isEmpty()) {
-      endNodeConsumer.accept(root);
+      endNodeConsumer.accept(postProcess.apply(root));
       return;
     }
 
@@ -318,7 +333,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
           .toList())
       .forEach(args -> {
         final CommandNode endNode = args.isEmpty() ? root : root.addArguments(args);
-        endNodeConsumer.accept(endNode);
+        endNodeConsumer.accept(postProcess.apply(endNode));
       });
   }
 

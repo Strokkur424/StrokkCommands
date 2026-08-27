@@ -24,6 +24,8 @@ import io.papermc.paper.command.brigadier.Commands;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
 import net.strokkur.commands.Subcommand;
+import net.strokkur.commands.arguments.StringArg;
+import net.strokkur.commands.arguments.StringArgType;
 import org.bukkit.command.CommandSender;
 
 @Command("recordfields")
@@ -32,10 +34,10 @@ class FieldsWithRecords {
   static {
     // Expectation:
     final LiteralCommandNode<CommandSourceStack> built = Commands.literal("recordfields")
-      .then(Commands.argument("wordArg", StringArgumentType.word())
+      .then(Commands.argument("greedy", StringArgumentType.greedyString())
         .executes(ctx -> {
           final SomeRecord executor = new SomeRecord(
-            StringArgumentType.getString(ctx, "wordArg")
+            StringArgumentType.getString(ctx, "greedy")
           );
           executor.execute(
             ctx.getSource().getSender()
@@ -49,11 +51,11 @@ class FieldsWithRecords {
   @Subcommand
   SomeRecord someRecord;
 
-  record SomeRecord(String wordArg) {
+  record SomeRecord(@StringArg(StringArgType.GREEDY) String greedy) {
 
     @Executes
     void execute(CommandSender sender) {
-      sender.sendMessage(wordArg);
+      sender.sendMessage(greedy);
     }
   }
 }

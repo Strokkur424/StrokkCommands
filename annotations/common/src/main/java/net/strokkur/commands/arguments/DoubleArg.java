@@ -37,7 +37,7 @@ import java.lang.annotation.Target;
 /// void executes(CommandSender sender, @DoubleArg(min = 0, max = 10) double value);
 /// ```
 @Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.PARAMETER)
+@Target({ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
 public @interface DoubleArg {
   /// {@return the lowest possible input value. Inclusive}
   double min() default Double.MIN_VALUE;
