@@ -70,7 +70,7 @@ public final class PaperPlatformUtils implements PlatformUtils {
     }
 
     if (holder.hasAnnotationInherited(RequiresOP.class)) {
-      node.forEachChildElseSelf(n -> n.setAttribute(PaperAttributeKeys.REQUIRES_OP, true));
+      node.setAttribute(PaperAttributeKeys.REQUIRES_OP, true);
     }
   }
 
@@ -91,7 +91,7 @@ public final class PaperPlatformUtils implements PlatformUtils {
     // Handle op
     // - move up if all child nodes have it as well,
     // - clear from all children nodes if current node has it.
-    if (!node.requires().containsKey("op")) {
+    if (!node.requires().containsKey("op") && !node.children().isEmpty()) {
       final boolean allRequireOp = node.children().stream().allMatch(sub -> sub.requires().containsKey("op"));
       if (allRequireOp) {
         node.requires().put("op", ComparableRequirement.flag(
