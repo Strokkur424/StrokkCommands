@@ -51,7 +51,6 @@ import net.strokkur.jap.code.util.StyleConfig;
 import net.strokkur.jap.source.classmodel.SourceMethodParameter;
 import net.strokkur.jap.source.classmodel.SourceParameterLike;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -66,7 +65,7 @@ import java.util.Set;
 /// For this reason, no reset method, or similar, is provided.
 public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper {
   private final Deque<RecordArguments> recordStack = new ArrayDeque<>();
-  private final Deque<@Nullable ExecutorWrapperProvider> executorWrapperStack = new ArrayDeque<>();
+  private final Deque<ExecutorWrapperProvider> executorWrapperStack = new ArrayDeque<>();
 
   protected final Set<PrintedAccessPath> requiredPaths = new HashSet<>();
   private final Deque<ExecuteAccess<?>> accessStack = new ArrayDeque<>();
@@ -230,10 +229,7 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
     statements.add(Statements.returnStmt(Classes.COMMAND.chainField("SINGLE_SUCCESS")));
 
     CodeExpression out = Expressions.lambda("ctx", CodeBlock.of(statements));
-    for (@Nullable ExecutorWrapperProvider wrapper : executorWrapperStack.reversed()) {
-      if (wrapper == null) {
-        break;
-      }
+    for (ExecutorWrapperProvider wrapper : executorWrapperStack.reversed()) {
       out = wrapWithExecutorWrapper(out, executable, wrapper);
     }
 

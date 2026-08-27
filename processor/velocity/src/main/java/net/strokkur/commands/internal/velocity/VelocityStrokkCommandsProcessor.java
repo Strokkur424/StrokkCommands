@@ -47,15 +47,14 @@ public final class VelocityStrokkCommandsProcessor extends StrokkCommandsProcess
 
   @Override
   protected VelocityCommandInformation getCommandInformation(SourceClassLike classLike) {
-    final Optional<Aliases> aliases = classLike.firstAnnotationByTypeOptional(Aliases.class)
-      .map(anno -> anno.value(Aliases.class));
+    final Optional<Aliases> aliases = classLike.findAnnotationValue(Aliases.class);
 
     final SourceConstructor constructor = classLike instanceof SourceClass sourceClass
       ? sourceClass.constructors().stream().findFirst().orElse(null)
       : null;
 
     return new VelocityCommandInformation(
-      classLike.firstAnnotationValueByType(Command.class).value().split(" ")[0],
+      classLike.getAnnotationValue(Command.class).value().split(" ")[0],
       constructor,
       classLike,
       aliases.map(Aliases::value).orElse(null),
