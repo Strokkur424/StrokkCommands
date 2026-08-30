@@ -25,11 +25,7 @@ import net.strokkur.commands.internal.prototype.PrototypeNodeBuilder;
 import net.strokkur.commands.internal.prototype.PrototypeRoot;
 import net.strokkur.commands.internal.util.CommandInformation;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
-import net.strokkur.jap.code.classmodel.CodeBlock;
-import net.strokkur.jap.code.classmodel.CodeClass;
-import net.strokkur.jap.code.classmodel.CodeField;
-import net.strokkur.jap.code.classmodel.CodeMethod;
-import net.strokkur.jap.code.classmodel.CodeParameterDefinition;
+import net.strokkur.jap.code.classmodel.*;
 import net.strokkur.jap.code.classmodel.builder.ClassBuilder;
 import net.strokkur.jap.code.classmodel.builder.MethodBuilder;
 import net.strokkur.jap.code.convert.ConvertToClassType;
@@ -78,16 +74,19 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
   public CodeClass createClass() {
     // Create skeletons for create and register methods for use in Javadocs.
     final MethodBuilder createMethod = getCreateMethodBuilder();
+    final MethodBuilder createMethodWithName = getCreateMethodBuilderWithName();
     final MethodBuilder registerMethod = getRegisterMethodBuilder();
 
     final List<ConvertToStatement> createMethodStatements = new ArrayList<>();
 
     applyCreateMethodJavadoc(createMethod, registerMethod);
+    applyCreateMethodJavadoc(createMethodWithName, registerMethod);
     applyRegisterMethodJavadoc(registerMethod, createMethod);
 
     // Start building up the actual class
     final ClassBuilder classBuilder = CodeClass.builder(selfType);
     classBuilder.setDocumentation(getClassJavadoc(createMethod, registerMethod));
+    classBuilder.setDocumentation(getClassJavadoc(createMethodWithName, registerMethod));
     classBuilder.addModifiers(Modifiers.PUBLIC, Modifiers.FINAL);
     classBuilder.addAnnotations(JSpecifyTypes.NULL_MARKED);
 
@@ -141,10 +140,19 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
     }
 
     createMethodStatements.add(Statements.returnStmt(treeExpr));
-    createMethod.setCode(createMethodStatements.toArray(ConvertToStatement[]::new));
+
+    createMethod.setCode(
+      Statements.returnStmt(
+        Expressions.methodInvocation(
+          "create"
+        ).addParameters(Expressions.variable("NAME"))
+      )
+    );
+
+    createMethodWithName.setCode(createMethodStatements.toArray(ConvertToStatement[]::new));
 
     // Add the methods to the class
-    classBuilder.addMethods(registerMethod, createMethod);
+    classBuilder.addMethods(registerMethod, createMethod, createMethodWithName);
 
     // If the class is not injectable, the ctor should be private
     if (!commandInformation.useInjection()) {
@@ -223,7 +231,6 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
   @MustBeInvokedByOverriders
   protected MethodBuilder getCreateMethodBuilder() {
     final MethodBuilder builder = CodeMethod.builder("create");
-    builder.addParameter(CodeTypes.ofJavaClass(String.class), "commandName");
     builder.addModifiers(Modifiers.PUBLIC);
     if (!commandInformation.useInjection()) {
       builder.addModifiers(Modifiers.STATIC);
@@ -234,6 +241,25 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
 
     return builder;
   }
+
+  /// Creates the builder for the create method.
+  ///
+  /// @apiNote this method should always be overridden. Overriders should implement the create method logic now.
+  @MustBeInvokedByOverriders
+  protected MethodBuilder getCreateMethodBuilderWithName() {
+    final MethodBuilder builder = CodeMethod.builder("create");
+    builder.addModifiers(Modifiers.PUBLIC);
+    builder.addParameter(CodeTypes.ofJavaClass(String.class), "commandName");
+    if (!commandInformation.useInjection()) {
+      builder.addModifiers(Modifiers.STATIC);
+    }
+
+    // Propagate constructor parameters
+    addConstructorParametersTo(builder, f -> true);
+
+    return builder;
+  }
+
 
   /// Creates the builder for the register method.
   ///

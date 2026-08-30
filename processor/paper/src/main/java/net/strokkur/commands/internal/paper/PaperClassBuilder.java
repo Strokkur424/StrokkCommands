@@ -84,11 +84,15 @@ final class PaperClassBuilder extends CommonClassBuilder<PaperCommandInformation
   }
 
   @Override
+  protected MethodBuilder getCreateMethodBuilderWithName() {
+    return super.getCreateMethodBuilderWithName()
+      .setReturnType(Classes.LITERAL_COMMAND_NODE.typed(PaperClasses.COMMAND_SOURCE_STACK));
+  }
+
+  @Override
   protected MethodBuilder getRegisterMethodBuilder() {
     final MethodInvocationBuilder createInvocation = new MethodInvocationBuilder()
       .setName("create");
-
-    createInvocation.addParameters(Expressions.variable("NAME"));
 
     if (!commandInformation.useInjection()) {
       if (commandInformation.constructor() instanceof SourceConstructor sourceCtor) {

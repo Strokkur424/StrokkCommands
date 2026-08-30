@@ -49,6 +49,12 @@ class VelocityClassBuilder extends CommonClassBuilder<VelocityCommandInformation
   }
 
   @Override
+  protected MethodBuilder getCreateMethodBuilderWithName() {
+    return super.getCreateMethodBuilderWithName()
+      .setReturnType(Classes.LITERAL_COMMAND_NODE.typed(VelocityClasses.COMMAND_SOURCE));
+  }
+
+  @Override
   protected void populateStaticFields(ClassBuilder builder) {
     super.populateStaticFields(builder);
 
@@ -69,8 +75,6 @@ class VelocityClassBuilder extends CommonClassBuilder<VelocityCommandInformation
   protected MethodBuilder getRegisterMethodBuilder() {
     final MethodInvocationBuilder createInvocation = new MethodInvocationBuilder()
       .setName("create");
-
-    createInvocation.addParameters(Expressions.variable("NAME"));
 
     if (!commandInformation.useInjection()) {
       if (commandInformation.constructor() instanceof SourceConstructor sourceCtor) {

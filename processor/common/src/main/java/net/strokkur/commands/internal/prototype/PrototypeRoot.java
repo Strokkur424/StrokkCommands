@@ -30,7 +30,7 @@ public final class PrototypeRoot extends PrototypeNode {
 
   @Override
   protected InvocationChainBuilder nodeElement() {
-    return PlatformUtils.get().literalBuilder(Expressions.variable("commandName"));
+    return PlatformUtils.get().literalBuilder(Expressions.variable("NAME"));
   }
 
   @Override
