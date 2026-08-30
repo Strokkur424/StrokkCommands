@@ -136,6 +136,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
 
     final AdvancedNodeExtender<Executes> executesExtender = new AdvancedNodeExtender<>(Executes.class, Executes::value)
       .withPluralAnnotationsClass(ManyExecutes.class)
+      .withAlwaysRunHooks(false)
       .withFirstPathNodeConsumer(node -> {
         applyExecutorTransform(sourceMethod, node);
         PlatformUtils.get().populateNode(sourceMethod, node);
@@ -152,7 +153,6 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
 
     final AdvancedNodeExtender<DefaultExecutes> defaultExecutesExtender = executesExtender
       .withAnnotationClass(DefaultExecutes.class, DefaultExecutes::value)
-      .withSkipIfNoAnnotation(true)
       .withPluralAnnotationsClass(ManyDefaultExecutes.class)
       .withPostProcess(node -> {
         final CommandNode endNode = node.addArguments(commandArguments);
