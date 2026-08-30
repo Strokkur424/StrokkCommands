@@ -81,10 +81,8 @@ not required and just increases your plugin jar's file size for very little reas
 
 <a href="https://www.star-history.com/?repos=Strokkur424%2FStrokkCommands&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=Strokkur424/StrokkCommands&type=date&theme=dark&legend=top-left&sealed_token=kg0OpP777wufPXFbdOXkD4PYbvxgGT-FwTropivkgG0yAwHIjzEKVS2KgqbBBMLW5IurxFmZVlHvR2QjHMd4Ol1OB3Z2eSM5P-Rcuu0oFn3OHT2yz8_XLk1yXeO-XeRqoo3Zmc4TAVTyseWlPRhhJameKgz6YtAVrBmR7vBD9fswYgp01NyIEmcIu365" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=Strokkur424/StrokkCommands&type=date&legend=top-left&sealed_token=kg0OpP777wufPXFbdOXkD4PYbvxgGT-FwTropivkgG0yAwHIjzEKVS2KgqbBBMLW5IurxFmZVlHvR2QjHMd4Ol1OB3Z2eSM5P-Rcuu0oFn3OHT2yz8_XLk1yXeO-XeRqoo3Zmc4TAVTyseWlPRhhJameKgz6YtAVrBmR7vBD9fswYgp01NyIEmcIu365" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Strokkur424/StrokkCommands&type=date&legend=top-left&sealed_token=kg0OpP777wufPXFbdOXkD4PYbvxgGT-FwTropivkgG0yAwHIjzEKVS2KgqbBBMLW5IurxFmZVlHvR2QjHMd4Ol1OB3Z2eSM5P-Rcuu0oFn3OHT2yz8_XLk1yXeO-XeRqoo3Zmc4TAVTyseWlPRhhJameKgz6YtAVrBmR7vBD9fswYgp01NyIEmcIu365" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=Strokkur424/StrokkCommands&type=date&theme=dark&legend=top-left&sealed_token=JeY6m5vfbSm6wKNQ3Pr557lUTO9qoDC1SKkwJ5o9yhVBvKbIk0d8FTL5NYVvK499ZAdl5BOePYbKKeKxmcH2IjYLO4MfG28WCiwkD98FjgWW17kgoPY8Zw" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=Strokkur424/StrokkCommands&type=date&legend=top-left&sealed_token=JeY6m5vfbSm6wKNQ3Pr557lUTO9qoDC1SKkwJ5o9yhVBvKbIk0d8FTL5NYVvK499ZAdl5BOePYbKKeKxmcH2IjYLO4MfG28WCiwkD98FjgWW17kgoPY8Zw" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Strokkur424/StrokkCommands&type=date&legend=top-left&sealed_token=JeY6m5vfbSm6wKNQ3Pr557lUTO9qoDC1SKkwJ5o9yhVBvKbIk0d8FTL5NYVvK499ZAdl5BOePYbKKeKxmcH2IjYLO4MfG28WCiwkD98FjgWW17kgoPY8Zw" />
  </picture>
 </a>
-
-<img width="1832" height="1404" alt="star-history-2026721" src="https://github.com/user-attachments/assets/053dd234-ca72-4e35-ae66-8601b3edb2c5" />
