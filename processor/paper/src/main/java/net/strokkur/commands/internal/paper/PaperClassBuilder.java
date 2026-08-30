@@ -38,14 +38,7 @@ import net.strokkur.jap.code.util.Modifiers;
 import net.strokkur.jap.source.classmodel.SourceConstructor;
 import net.strokkur.jap.source.classmodel.SourceMethodParameter;
 
-import static net.strokkur.jap.code.documentation.CodeDocumentation.codeBlock;
-import static net.strokkur.jap.code.documentation.CodeDocumentation.combine;
-import static net.strokkur.jap.code.documentation.CodeDocumentation.header;
-import static net.strokkur.jap.code.documentation.CodeDocumentation.inlineCode;
-import static net.strokkur.jap.code.documentation.CodeDocumentation.linebreak;
-import static net.strokkur.jap.code.documentation.CodeDocumentation.methodReference;
-import static net.strokkur.jap.code.documentation.CodeDocumentation.text;
-import static net.strokkur.jap.code.documentation.CodeDocumentation.url;
+import static net.strokkur.jap.code.documentation.CodeDocumentation.*;
 
 final class PaperClassBuilder extends CommonClassBuilder<PaperCommandInformation> {
   PaperClassBuilder(CommandNode rootNode, PaperCommandInformation commandInformation) {
@@ -87,6 +80,8 @@ final class PaperClassBuilder extends CommonClassBuilder<PaperCommandInformation
   protected MethodBuilder getRegisterMethodBuilder() {
     final MethodInvocationBuilder createInvocation = new MethodInvocationBuilder()
       .setName("create");
+
+    createInvocation.addParameters(Expressions.variable("NAME"));
 
     if (!commandInformation.useInjection()) {
       if (commandInformation.constructor() instanceof SourceConstructor sourceCtor) {

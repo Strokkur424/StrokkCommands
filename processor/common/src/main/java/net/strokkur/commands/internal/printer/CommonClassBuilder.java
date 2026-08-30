@@ -223,6 +223,7 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
   @MustBeInvokedByOverriders
   protected MethodBuilder getCreateMethodBuilder() {
     final MethodBuilder builder = CodeMethod.builder("create");
+    builder.addParameter(CodeTypes.ofJavaClass(String.class), "commandName");
     builder.addModifiers(Modifiers.PUBLIC);
     if (!commandInformation.useInjection()) {
       builder.addModifiers(Modifiers.STATIC);

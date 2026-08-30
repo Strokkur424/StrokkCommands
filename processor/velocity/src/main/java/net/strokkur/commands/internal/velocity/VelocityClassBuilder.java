@@ -70,6 +70,8 @@ class VelocityClassBuilder extends CommonClassBuilder<VelocityCommandInformation
     final MethodInvocationBuilder createInvocation = new MethodInvocationBuilder()
       .setName("create");
 
+    createInvocation.addParameters(Expressions.variable("NAME"));
+
     if (!commandInformation.useInjection()) {
       if (commandInformation.constructor() instanceof SourceConstructor sourceCtor) {
         for (SourceMethodParameter parameter : sourceCtor.parameters()) {
@@ -79,7 +81,6 @@ class VelocityClassBuilder extends CommonClassBuilder<VelocityCommandInformation
           } else {
             variableName = parameter.name();
           }
-
           createInvocation.addParameters(Expressions.variable(variableName));
         }
       }
