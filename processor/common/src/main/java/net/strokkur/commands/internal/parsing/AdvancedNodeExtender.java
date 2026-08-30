@@ -32,6 +32,7 @@ class AdvancedNodeExtender<A extends Annotation> {
   private final Class<A> annotationClass;
   private final Function<A, String> annotationToPathString;
   private @Nullable Class<? extends Annotation> pluralAnnotationsClass = null;
+  private boolean skipIfNoAnnotation = false;
 
   private Consumer<CommandNode> firstPathNodeConsumer = AdvancedNodeExtender::nullConsumer;
   private Consumer<CommandNode> postProcessNode = AdvancedNodeExtender::nullConsumer;
@@ -45,6 +46,10 @@ class AdvancedNodeExtender<A extends Annotation> {
   public void accept(AnnotationsHolder source, CommandNode root) {
     final List<A> annotations = source.getAnnotations(pluralAnnotationsClass, annotationClass);
     if (annotations.isEmpty()) {
+      if (!skipIfNoAnnotation) {
+        firstPathNodeConsumer.accept(root);
+        postProcessNode.accept(endPathNodeFunction.apply(root));
+      }
       return;
     }
 
@@ -77,6 +82,7 @@ class AdvancedNodeExtender<A extends Annotation> {
     with.firstPathNodeConsumer = this.firstPathNodeConsumer;
     with.postProcessNode = this.postProcessNode;
     with.endPathNodeFunction = this.endPathNodeFunction;
+    with.skipIfNoAnnotation = this.skipIfNoAnnotation;
     return with;
   }
 
@@ -97,6 +103,11 @@ class AdvancedNodeExtender<A extends Annotation> {
 
   public AdvancedNodeExtender<A> withEndPathNodeTransform(Function<CommandNode, CommandNode> endPathNodeFunction) {
     this.endPathNodeFunction = endPathNodeFunction;
+    return this;
+  }
+
+  public AdvancedNodeExtender<A> withSkipIfNoAnnotation(boolean skipIfNoAnnotation) {
+    this.skipIfNoAnnotation = skipIfNoAnnotation;
     return this;
   }
 

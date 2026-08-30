@@ -152,6 +152,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
 
     final AdvancedNodeExtender<DefaultExecutes> defaultExecutesExtender = executesExtender
       .withAnnotationClass(DefaultExecutes.class, DefaultExecutes::value)
+      .withSkipIfNoAnnotation(true)
       .withPluralAnnotationsClass(ManyDefaultExecutes.class)
       .withPostProcess(node -> {
         final CommandNode endNode = node.addArguments(commandArguments);
