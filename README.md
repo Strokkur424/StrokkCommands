@@ -26,21 +26,23 @@ public static LiteralCommandNode<CommandSourceStack> create() {
     .then(Commands.argument("pos1", ArgumentTypes.blockPosition())
       .then(Commands.argument("pos2", ArgumentTypes.blockPosition())
         .then(Commands.argument("state", ArgumentTypes.blockState())
-          .executes(ctx -> {
-            // fill blocks with default perTick value
-            return Command.SINGLE_SUCCESS;
-          })
-
+          .executes(ctx -> runLogic(ctx, 1000))
           .then(Commands.argument("perTick", IntegerArgumentType.integer())
-            .executes(ctx -> {
-              // fill blocks with specified perTick value
-              return Command.SINGLE_SUCCESS;
-            })
+            .executes(ctx -> runLogic(ctx, IntegerArgumentType.getInteger(ctx, "perTick")))
           )
         )
       )
     )
     .build();
+}
+
+private static int runLogic(CommandContext<CommandSourceStack> ctx, int perTickValue) {
+  BlockPosition pos1 = ctx.getArgument("pos1", BlockPositionResolver.class).resolve(ctx.getSource());
+  BlockPosition pos2 = ctx.getArgument("pos2", BlockPositionResolver.class).resolve(ctx.getSource());
+  BlockState state = ctx.getArgument("state", BlockState.class);
+
+  // fill blocks with either specified or default perTick value
+  return Command.SINGLE_SUCCESS;
 }
 ```
 
@@ -52,13 +54,9 @@ declared using annotations (and the abuse of some Java language features):
 record FillBlockCommand(BlockPosition pos1, BlockPosition pos2, BlockState state) {
 
   @Executes
-  void execute(CommandSender sender) {
-    execute(sender, 1000);
-  }
-
-  @Executes
-  void execute(CommandSender sender, int perTick) {
-    // fill blocks with specified perTick value
+  void execute(OptionalInt perTick) {
+    int perTickValue = perTick.orElse(1000);
+    // fill blocks with either specified or default perTick value
   }
 }
 ```

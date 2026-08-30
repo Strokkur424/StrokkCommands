@@ -24,14 +24,12 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.CustomSuggestion;
 import net.strokkur.commands.Executes;
-import net.strokkur.commands.meta.StrokkCommandsDebug;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.concurrent.CompletableFuture;
 
 @Command("withsuggestions")
 @NullMarked
-@StrokkCommandsDebug(only = CommandWithSuggestions.class)
 class CommandWithSuggestions {
 
   @CustomSuggestion

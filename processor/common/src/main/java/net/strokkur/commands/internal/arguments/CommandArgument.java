@@ -17,8 +17,38 @@
  */
 package net.strokkur.commands.internal.arguments;
 
+import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.intermediate.executable.CommandParameter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public non-sealed interface CommandArgument extends CommandParameter {
   String argumentName();
+
+  boolean isOptional();
+
+  /// Filters a list of [CommandParameter] into one with only [CommandArgument] instances.
+  static List<CommandArgument> argsFromParameters(List<CommandParameter> in) {
+    return in.stream()
+      .filter(CommandArgument.class::isInstance)
+      .map(CommandArgument.class::cast)
+      .toList();
+  }
+
+  /// Splits up a list of command arguments based on the placement of isOptional argument types.
+  ///
+  /// @return a list of possible command argument paths, where each argument should be present
+  static List<List<CommandArgument>> splitOptionals(List<CommandArgument> source) {
+    final List<List<CommandArgument>> out = new ArrayList<>();
+
+    for (int i = 0; i < source.size(); i++) {
+      if (source.get(i).isOptional() || PlatformUtils.get().isArgumentOptional(source.get(i))) {
+        out.add(source.subList(0, i));
+      }
+    }
+
+    out.add(source);
+    return out;
+  }
 }

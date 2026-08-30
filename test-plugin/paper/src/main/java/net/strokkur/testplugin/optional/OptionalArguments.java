@@ -15,29 +15,39 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.testplugin.docs;
+package net.strokkur.testplugin.optional;
 
-import io.papermc.paper.math.BlockPosition;
+import com.mojang.brigadier.context.CommandContext;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
-import org.bukkit.block.BlockState;
-import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
+import java.util.Optional;
 import java.util.OptionalInt;
 
-@SuppressWarnings("UnstableApiUsage")
-@Command("fillblock")
-record FillBlockCommand(BlockPosition pos1, BlockPosition pos2, BlockState state) {
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+@Command("optional-args")
+class OptionalArguments {
 
   @Executes
-  void execute(CommandSender sender, OptionalInt perTick) {
-    sender.sendRichMessage("You attempted to fill all blocks between <pos1> and <pos2> with <type> (placing <per_tick> blocks per tick.)",
-      Placeholder.unparsed("pos1", "%d %d %d".formatted(pos1.blockX(), pos1.blockY(), pos1.blockZ())),
-      Placeholder.unparsed("pos2", "%d %d %d".formatted(pos2.blockX(), pos2.blockY(), pos2.blockZ())),
-      Placeholder.component("type", Component.translatable(state.getType())),
-      Placeholder.component("per_tick", Component.text(perTick.orElse(1000)))
+  void giveItem(
+    CommandContext<CommandSourceStack> ctx,
+    ItemStack item,
+    Optional<Player> target,
+    OptionalInt amount
+  ) {
+    final Player targetPlayer = target.orElseGet(() -> (Player) ctx.getSource().getExecutor());
+    final int targetAmount = amount.orElse(1);
+    item.setAmount(targetAmount);
+    targetPlayer.give(item);
+    ctx.getSource().getSender().sendRichMessage("<green>Successfully gave <white><target> <count> <item></white>!",
+      Placeholder.component("target", targetPlayer.displayName()),
+      Placeholder.component("count", Component.text(targetAmount)),
+      Placeholder.component("item", item.effectiveName())
     );
   }
 }

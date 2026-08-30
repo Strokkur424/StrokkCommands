@@ -26,6 +26,7 @@ public class PaperAttributeKeys {
   public static final AttributeKey<ExecutorType> EXECUTOR_TYPE = AttributeKey.create("executor_type", ExecutorType.NONE);
   public static final AttributeKey<Boolean> REQUIRES_OP = AttributeKey.create("requires_op", false);
   public static final AttributeKey<Set<String>> PERMISSIONS = AttributeKey.createDynamic("permission", HashSet::new);
+  public static final AttributeKey<Boolean> DEFAULTS_TO_EXECUTOR = AttributeKey.create("defaults_to_executor", false);
 
   private PaperAttributeKeys() throws IllegalAccessError {
     throw new IllegalAccessError("This class cannot be instantiated");

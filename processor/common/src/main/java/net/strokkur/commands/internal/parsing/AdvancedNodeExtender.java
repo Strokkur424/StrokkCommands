@@ -59,7 +59,7 @@ class AdvancedNodeExtender<A extends Annotation> {
       .map(path -> path.isBlank() ?
         List.<LiteralCommandArgument>of() :
         Arrays.stream(path.strip().split(" "))
-          .map(lit -> LiteralCommandArgument.literal(lit, false))
+          .map(lit -> LiteralCommandArgument.literal(lit, false, false))
           .toList())
       .forEach(args -> {
         if (args.isEmpty()) {

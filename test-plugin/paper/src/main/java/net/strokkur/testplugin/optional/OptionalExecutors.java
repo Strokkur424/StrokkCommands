@@ -15,20 +15,19 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.arguments;
+package net.strokkur.testplugin.optional;
 
-import org.jetbrains.annotations.Unmodifiable;
+import net.strokkur.commands.Command;
+import net.strokkur.commands.Executes;
+import net.strokkur.commands.paper.DefaultToExecutor;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
-import java.util.Set;
+@Command("optional-executors")
+class OptionalExecutors {
 
-public record MultiLiteralCommandArgument(@Unmodifiable Set<String> literals, boolean isOptional) implements CommandArgument {
-
-  public static MultiLiteralCommandArgument multiLiteral(Set<String> literals, boolean isOptional) {
-    return new MultiLiteralCommandArgument(Set.copyOf(literals), isOptional);
-  }
-
-  @Override
-  public String argumentName() {
-    throw new IllegalStateException("#argumentName is not implemented for the MultiLiteralCommandArgument.");
+  @Executes
+  void give(ItemStack is, @DefaultToExecutor Player player) {
+    player.give(is);
   }
 }

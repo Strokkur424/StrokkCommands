@@ -32,6 +32,14 @@ public final class PrototypeArgument extends PrototypeNode {
   }
 
   @Override
+  public boolean isArgumentPresent(String name) {
+    if (this.name.equals(name)) {
+      return true;
+    }
+    return super.isArgumentPresent(name);
+  }
+
+  @Override
   protected InvocationChainBuilder nodeElement() {
     return PlatformUtils.get().argumentBuilder(Expressions.string(name), argumentType.initializer());
   }

@@ -44,10 +44,10 @@ import java.util.Set;
 @AutoService(PlatformUtils.class)
 public final class VelocityPlatformUtils implements PlatformUtils {
   @Override
-  public void populateExecutesNode(Executable executable, CommandNode node, List<CommandParameter> parameters) {
+  public void populateExecutesNode(Executable executable, CommandNode rootNode, CommandNode endNode, List<CommandParameter> parameters) {
     final SenderType type = this.getSenderType(parameters);
     executable.setAttribute(VelocityAttributeKeys.SENDER_TYPE, type);
-    node.setAttribute(VelocityAttributeKeys.SENDER_TYPE, type);
+    endNode.setAttribute(VelocityAttributeKeys.SENDER_TYPE, type);
   }
 
   @Override

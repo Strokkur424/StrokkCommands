@@ -47,6 +47,7 @@ import net.strokkur.jap.code.expression.builder.MethodInvocationBuilder;
 import net.strokkur.jap.code.statement.Statements;
 import net.strokkur.jap.code.type.CodeClassType;
 import net.strokkur.jap.code.type.CodeType;
+import net.strokkur.jap.code.type.CodeTypes;
 import net.strokkur.jap.code.util.StyleConfig;
 import net.strokkur.jap.source.classmodel.SourceMethodParameter;
 import net.strokkur.jap.source.classmodel.SourceParameterLike;
@@ -121,7 +122,7 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
     final Executable executable = node.getAttribute(AttributeKey.EXECUTABLE);
     if (executable != null) {
       if (prototype.executes == null) {
-        scopeLiteralQueueAccess(prototype, () -> prototype.executes = getExecutes(executable));
+        scopeLiteralQueueAccess(prototype, () -> prototype.executes = getExecutes(prototype, executable));
       } else {
         warnings.add("Command with path '" + prototype.toCommandString() + "' has conflicting executes declarations!");
       }
@@ -129,7 +130,7 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
 
     final DefaultExecutable defaultExecutable = node.getAttribute(AttributeKey.DEFAULT_EXECUTABLE);
     if (defaultExecutable != null) {
-      scopeLiteralQueueAccess(prototype, () -> prototype.defaultExecutes = getExecutes(defaultExecutable));
+      scopeLiteralQueueAccess(prototype, () -> prototype.defaultExecutes = getExecutes(prototype, defaultExecutable));
     }
   }
 
@@ -137,10 +138,10 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
     scope(node, () -> {
       if (node instanceof ArgumentNode arg) {
         switch (arg.argument()) {
-          case LiteralCommandArgument(
-            String lit, boolean isArgumentParam
-          ) -> appendLiteralTo(prototype, node, lit, isArgumentParam);
-          case MultiLiteralCommandArgument(Set<String> literals) -> {
+          case LiteralCommandArgument(String lit, boolean isArgumentParam, boolean ignored) -> {
+            appendLiteralTo(prototype, node, lit, isArgumentParam);
+          }
+          case MultiLiteralCommandArgument(Set<String> literals, boolean ignored) -> {
             literals.forEach(lit -> appendLiteralTo(prototype, node, lit, true));
           }
           case RequiredCommandArgument req -> {
@@ -205,7 +206,7 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
   // Executes block creation.
   //
 
-  private CodeExpression getExecutes(Executable executable) {
+  private CodeExpression getExecutes(PrototypeNode node, Executable executable) {
     final List<ConvertToStatement> statements = new ArrayList<>(validationStatements(executable));
 
     if (!recordStack.isEmpty()) {
@@ -215,14 +216,14 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
 
       args.parameters().stream()
         .map(param -> switch (param) {
-          case CommandArgument arg -> getArgumentValueExpr(arg);
+          case CommandArgument arg -> getArgumentValueExpr(node, arg);
           case UnparsedCommandParameter(SourceParameterLike parameter) -> convertUnparsedParameter(parameter);
         }).forEach(builder::addParameters);
 
-      statements.add(createCallStatement(builder, executable));
+      statements.add(createCallStatement(node, builder, executable));
     } else {
       final PrintedAccessPath path = PrintedAccessPath.of(accessStack.reversed());
-      statements.add(createCallStatement(path.getAccess(), executable));
+      statements.add(createCallStatement(node, path.getAccess(), executable));
       addRequiredPath(path);
     }
 
@@ -254,12 +255,12 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
     return builder.toExpression();
   }
 
-  private ConvertToStatement createCallStatement(ConvertToFieldMethodSource source, Executable executable) {
+  private ConvertToStatement createCallStatement(PrototypeNode node, ConvertToFieldMethodSource source, Executable executable) {
     final MethodInvocationBuilder builder = source.chainMethod(executable.executesMethod().name());
 
     executable.parameters()
       .forEach(arg -> builder.addParameters(switch (arg) {
-        case CommandArgument argument -> getArgumentValueExpr(argument);
+        case CommandArgument argument -> getArgumentValueExpr(node, argument);
         case UnparsedCommandParameter(SourceParameterLike parameter) -> convertUnparsedParameter(parameter);
       }));
 
@@ -270,11 +271,42 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
     return builder;
   }
 
-  private ConvertToExpression getArgumentValueExpr(CommandArgument argument) {
+  private ConvertToExpression yieldLiteralArgumentExpr(CommandArgument arg) {
+    if (arg.isOptional()) {
+      if (literalQueue.isEmpty()) {
+        return CodeTypes.ofJavaClass(Optional.class).chainMethod("empty");
+      } else {
+        return CodeTypes.ofJavaClass(Optional.class).chainMethod("of")
+          .addParameters(Expressions.string(literalQueue.removeLast()));
+      }
+    } else {
+      if (literalQueue.isEmpty()) {
+        return Expressions.nullExpr();
+      } else {
+        return Expressions.string(literalQueue.removeLast());
+      }
+    }
+  }
+
+  protected ConvertToExpression expressionFromRequiredArgument(PrototypeNode node, RequiredCommandArgument req) {
+    final boolean isPresent = node.isArgumentPresent(req.argumentName());
+    if (req.argumentType().isOptional()) {
+      final MethodInvocationBuilder builder = req.parameterType().withoutGenerics()
+        .chainMethod(isPresent ? "of" : "empty");
+      if (isPresent) {
+        builder.addParameters(req.argumentType().retriever());
+      }
+      return builder;
+    } else {
+      return isPresent ? req.argumentType().retriever() : Expressions.nullExpr();
+    }
+  }
+
+  private ConvertToExpression getArgumentValueExpr(PrototypeNode node, CommandArgument argument) {
     return switch (argument) {
-      case RequiredCommandArgument required -> required.argumentType().retriever();
-      case LiteralCommandArgument ignored -> Expressions.string(literalQueue.removeLast());
-      case MultiLiteralCommandArgument ignored -> Expressions.string(literalQueue.removeLast());
+      case RequiredCommandArgument required -> expressionFromRequiredArgument(node, required);
+      case LiteralCommandArgument lit -> yieldLiteralArgumentExpr(lit);
+      case MultiLiteralCommandArgument multiLit -> yieldLiteralArgumentExpr(multiLit);
       default -> throw new IllegalStateException("Unexpected argument type: " + argument.getClass().getName());
     };
   }

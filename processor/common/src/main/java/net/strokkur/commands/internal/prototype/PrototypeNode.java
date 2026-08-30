@@ -25,6 +25,7 @@ import net.strokkur.jap.code.expression.CodeExpression;
 import net.strokkur.jap.code.expression.Expressions;
 import net.strokkur.jap.code.expression.builder.InvocationChainBuilder;
 import net.strokkur.jap.code.util.StyleConfig;
+import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.Unmodifiable;
 import org.jspecify.annotations.Nullable;
 
@@ -76,6 +77,14 @@ public abstract class PrototypeNode {
       return this.parent.getDefaultExecutes();
     }
     return null;
+  }
+
+  @MustBeInvokedByOverriders
+  public boolean isArgumentPresent(String name) {
+    if (this.parent == null) {
+      return false;
+    }
+    return this.parent.isArgumentPresent(name);
   }
 
   /// Run various pre-process tasks. This is currently only used to move around some requirements
