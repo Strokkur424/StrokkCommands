@@ -381,6 +381,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
         if (found) {
           this.infoSource("Multiple %s providers has been declared", element, name);
         } else {
+          info("Found suggestion provider!");
           attributable.setAttribute(key, provider.get());
           found = true;
         }

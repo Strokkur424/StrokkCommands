@@ -18,57 +18,34 @@
 package net.strokkur.testplugin.suggestions;
 
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.strokkur.commands.Command;
+import net.strokkur.commands.CustomSuggestion;
 import net.strokkur.commands.Executes;
-import net.strokkur.commands.arguments.IntArg;
-import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
+import net.strokkur.commands.meta.StrokkCommandsDebug;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.concurrent.CompletableFuture;
 
 @Command("withsuggestions")
 @NullMarked
+@StrokkCommandsDebug(only = CommandWithSuggestions.class)
 class CommandWithSuggestions {
 
+  @CustomSuggestion
+  private @interface MySuggestions {}
+
+  @MySuggestions
   static CompletableFuture<Suggestions> mySuggestions(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {
     builder.suggest("abc");
     builder.suggest("xyz");
     return builder.buildFuture();
   }
 
-  static SuggestionProvider<CommandSourceStack> mySuggestions() {
-    return (ctx, builder) -> {
-      Bukkit.getOnlinePlayers().stream()
-        .map(Player::getName)
-        .filter(name -> name.toLowerCase().startsWith(builder.getRemainingLowerCase()))
-        .forEach(builder::suggest);
-      return builder.buildFuture();
-    };
-  }
-
-  @Executes("field")
-  void executesField(CommandSender sender, String value) {
-    // ...
-  }
-
-  @Executes("methodRef")
-  void executesMethodRef(CommandSender sender, String value) {
-    // ...
-  }
-
-  @Executes("method")
-  void executesMethod(CommandSender sender, String value) {
-    // ...
-  }
-
-  @Executes("class")
-  void executesClass(CommandSender sender, @IntArg(min = 1, max = 64) int value) {
+  @Executes("static-impl")
+  void executesField(@MySuggestions String value) {
     // ...
   }
 }
