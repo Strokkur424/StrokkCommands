@@ -47,6 +47,7 @@ import net.strokkur.jap.code.expression.builder.MethodInvocationBuilder;
 import net.strokkur.jap.code.statement.Statements;
 import net.strokkur.jap.code.type.CodeClassType;
 import net.strokkur.jap.code.type.CodeType;
+import net.strokkur.jap.code.type.CodeTypes;
 import net.strokkur.jap.code.util.StyleConfig;
 import net.strokkur.jap.source.classmodel.SourceMethodParameter;
 import net.strokkur.jap.source.classmodel.SourceParameterLike;
@@ -137,10 +138,10 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
     scope(node, () -> {
       if (node instanceof ArgumentNode arg) {
         switch (arg.argument()) {
-          case LiteralCommandArgument(
-            String lit, boolean isArgumentParam
-          ) -> appendLiteralTo(prototype, node, lit, isArgumentParam);
-          case MultiLiteralCommandArgument(Set<String> literals) -> {
+          case LiteralCommandArgument(String lit, boolean isArgumentParam, boolean ignored) -> {
+            appendLiteralTo(prototype, node, lit, isArgumentParam);
+          }
+          case MultiLiteralCommandArgument(Set<String> literals, boolean ignored) -> {
             literals.forEach(lit -> appendLiteralTo(prototype, node, lit, true));
           }
           case RequiredCommandArgument req -> {
@@ -270,11 +271,28 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
     return builder;
   }
 
+  private ConvertToExpression yieldLiteralArgumentExpr(CommandArgument arg) {
+    if (arg.isOptional()) {
+      if (literalQueue.isEmpty()) {
+        return CodeTypes.ofJavaClass(Optional.class).chainMethod("empty");
+      } else {
+        return CodeTypes.ofJavaClass(Optional.class).chainMethod("of")
+          .addParameters(Expressions.string(literalQueue.removeLast()));
+      }
+    } else {
+      if (literalQueue.isEmpty()) {
+        return Expressions.nullExpr();
+      } else {
+        return Expressions.string(literalQueue.removeLast());
+      }
+    }
+  }
+
   private ConvertToExpression getArgumentValueExpr(PrototypeNode node, CommandArgument argument) {
     return switch (argument) {
       case RequiredCommandArgument required -> {
         final boolean isPresent = node.isArgumentPresent(required.argumentName());
-        if (required.argumentType().optional()) {
+        if (required.argumentType().isOptional()) {
           final MethodInvocationBuilder builder = required.parameterType().withoutGenerics()
             .chainMethod(isPresent ? "of" : "empty");
           if (isPresent) {
@@ -285,8 +303,8 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
           yield isPresent ? required.argumentType().retriever() : Expressions.nullExpr();
         }
       }
-      case LiteralCommandArgument ignored -> Expressions.string(literalQueue.removeLast());
-      case MultiLiteralCommandArgument ignored -> Expressions.string(literalQueue.removeLast());
+      case LiteralCommandArgument lit -> yieldLiteralArgumentExpr(lit);
+      case MultiLiteralCommandArgument multiLit -> yieldLiteralArgumentExpr(multiLit);
       default -> throw new IllegalStateException("Unexpected argument type: " + argument.getClass().getName());
     };
   }

@@ -25,6 +25,8 @@ import java.util.List;
 public non-sealed interface CommandArgument extends CommandParameter {
   String argumentName();
 
+  boolean isOptional();
+
   /// Filters a list of [CommandParameter] into one with only [CommandArgument] instances.
   static List<CommandArgument> argsFromParameters(List<CommandParameter> in) {
     return in.stream()
@@ -33,14 +35,14 @@ public non-sealed interface CommandArgument extends CommandParameter {
       .toList();
   }
 
-  /// Splits up a list of command arguments based on the placement of optional argument types.
+  /// Splits up a list of command arguments based on the placement of isOptional argument types.
   ///
   /// @return a list of possible command argument paths, where each argument should be present
   static List<List<CommandArgument>> splitOptionals(List<CommandArgument> source) {
     final List<List<CommandArgument>> out = new ArrayList<>();
 
     for (int i = 0; i < source.size(); i++) {
-      if (source.get(i) instanceof RequiredCommandArgument req && req.argumentType().optional()) {
+      if (source.get(i).isOptional()) {
         out.add(source.subList(0, i));
       }
     }

@@ -26,6 +26,7 @@ import net.strokkur.testplugin.guice.NestedInjectionCommandBrigadierRef;
 import net.strokkur.testplugin.guice.module.GuiceModule;
 import net.strokkur.testplugin.optional.MixedOptionalArgumentsBrigadier;
 import net.strokkur.testplugin.optional.OptionalArgumentsBrigadier;
+import net.strokkur.testplugin.optional.OptionalLiteralsBrigadier;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class TestPlugin extends JavaPlugin {
@@ -46,6 +47,7 @@ public final class TestPlugin extends JavaPlugin {
 
       MixedOptionalArgumentsBrigadier.register(commands);
       OptionalArgumentsBrigadier.register(commands);
+      OptionalLiteralsBrigadier.register(commands);
     }));
 
 //      OneBrigadier.register(commands);

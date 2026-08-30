@@ -21,10 +21,10 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.Set;
 
-public record MultiLiteralCommandArgument(@Unmodifiable Set<String> literals) implements CommandArgument {
+public record MultiLiteralCommandArgument(@Unmodifiable Set<String> literals, boolean isOptional) implements CommandArgument {
 
-  public static MultiLiteralCommandArgument multiLiteral(Set<String> literals) {
-    return new MultiLiteralCommandArgument(Set.copyOf(literals));
+  public static MultiLiteralCommandArgument multiLiteral(Set<String> literals, boolean isOptional) {
+    return new MultiLiteralCommandArgument(Set.copyOf(literals), isOptional);
   }
 
   @Override

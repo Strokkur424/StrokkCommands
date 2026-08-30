@@ -38,6 +38,11 @@ public class RequiredCommandArgument implements CommandArgument, AttributableHel
     this.param = param;
   }
 
+  @Override
+  public boolean isOptional() {
+    return argumentType.isOptional();
+  }
+
   public BrigadierArgumentType argumentType() {
     return argumentType;
   }

@@ -52,6 +52,7 @@ import net.strokkur.commands.internal.intermediate.registrable.RequirementRegist
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionsRegistry;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
+import net.strokkur.jap.code.type.CodeTypes;
 import net.strokkur.jap.source.annotation.AnnotationsHolder;
 import net.strokkur.jap.source.annotation.SourceAnnotation;
 import net.strokkur.jap.source.classmodel.SourceAnnotationInterface;
@@ -281,8 +282,8 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
       .filter(CommandArgument.class::isInstance)
       .map(CommandArgument.class::cast)
       .toList();
-    if (recordArguments.stream().anyMatch(arg -> arg instanceof RequiredCommandArgument req && req.argumentType().optional())) {
-      warnSource("Record components do not support optional argument types; they will be treated as required ones instead.", record);
+    if (recordArguments.stream().anyMatch(arg -> arg instanceof RequiredCommandArgument req && req.argumentType().isOptional())) {
+      warnSource("Record components do not support isOptional argument types; they will be treated as required ones instead.", record);
     }
 
     final AdvancedNodeExtender<A> recordExtender = new AdvancedNodeExtender<>(annotationClass, toPath)
@@ -366,12 +367,13 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
     if (parameter.hasAnnotationInherited(Literal.class)) {
       final Literal literal = parameter.getAnnotationValueInherited(Literal.class);
       final String[] declared = literal.value();
+      final boolean optional = parameter.type().withoutGenerics().isType(CodeTypes.ofJavaClass(Optional.class));
       if (declared.length == 0) {
-        return LiteralCommandArgument.literal(parameter.name(), true);
+        return LiteralCommandArgument.literal(parameter.name(), true, optional);
       } else if (declared.length == 1) {
-        return LiteralCommandArgument.literal(declared[0], true);
+        return LiteralCommandArgument.literal(declared[0], true, optional);
       } else {
-        return MultiLiteralCommandArgument.multiLiteral(Set.of(declared));
+        return MultiLiteralCommandArgument.multiLiteral(Set.of(declared), optional);
       }
     }
 

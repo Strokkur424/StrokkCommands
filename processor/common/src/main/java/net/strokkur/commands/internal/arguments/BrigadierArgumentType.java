@@ -24,7 +24,7 @@ import net.strokkur.jap.code.visitor.source.JavaSourcePrintingVisitor;
 public record BrigadierArgumentType(
   String argumentTypeIdentifier,
   ConvertToExpression initializer, ConvertToExpression retriever,
-  boolean optional
+  boolean isOptional
 ) {
 
   public static BrigadierArgumentType of(
