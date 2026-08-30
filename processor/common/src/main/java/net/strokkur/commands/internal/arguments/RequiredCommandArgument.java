@@ -18,22 +18,24 @@
 package net.strokkur.commands.internal.arguments;
 
 import net.strokkur.commands.internal.intermediate.attributes.AttributableHelper;
+import net.strokkur.jap.code.type.CodeType;
+import net.strokkur.jap.source.classmodel.SourceParameterLike;
 
 import java.util.Map;
 import java.util.TreeMap;
 
 public class RequiredCommandArgument implements CommandArgument, AttributableHelper {
   private final BrigadierArgumentType argumentType;
-  private final String name;
+  private final SourceParameterLike param;
   private final Map<String, Object> attributeMap = new TreeMap<>();
 
-  public static RequiredCommandArgument of(BrigadierArgumentType argumentType, String name) {
-    return new RequiredCommandArgument(argumentType, name);
+  public static RequiredCommandArgument of(BrigadierArgumentType argumentType, SourceParameterLike param) {
+    return new RequiredCommandArgument(argumentType, param);
   }
 
-  private RequiredCommandArgument(BrigadierArgumentType argumentType, String name) {
+  private RequiredCommandArgument(BrigadierArgumentType argumentType, SourceParameterLike param) {
     this.argumentType = argumentType;
-    this.name = name;
+    this.param = param;
   }
 
   public BrigadierArgumentType argumentType() {
@@ -42,11 +44,20 @@ public class RequiredCommandArgument implements CommandArgument, AttributableHel
 
   @Override
   public String argumentName() {
-    return name;
+    return param.name();
+  }
+
+  public CodeType parameterType() {
+    return param.type().toType();
   }
 
   @Override
   public Map<String, Object> attributeMap() {
     return this.attributeMap;
+  }
+
+  @Override
+  public String toString() {
+    return "RequiredArg(%s)".formatted(argumentType);
   }
 }

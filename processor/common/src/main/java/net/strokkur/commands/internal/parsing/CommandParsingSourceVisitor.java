@@ -74,6 +74,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, CommandParsingSourceVisitor.ParsingContext>, ForwardingMessagerWrapper {
   private static final CommandParsingSourceVisitor INSTANCE = new CommandParsingSourceVisitor();
@@ -126,10 +127,22 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
     final List<CommandParameter> arguments = sourceMethod.parameters().stream()
       .map(this::parseParameter)
       .toList();
-    final List<CommandArgument> commandArguments = arguments.stream()
-      .filter(CommandArgument.class::isInstance)
-      .map(CommandArgument.class::cast)
-      .toList();
+    final List<CommandArgument> commandArguments = CommandArgument.argsFromParameters(arguments);
+    final List<List<CommandArgument>> splitOptionals = CommandArgument.splitOptionals(commandArguments);
+    debug("Command parameters: [%s]", arguments.stream()
+      .map(Object::toString)
+      .collect(Collectors.joining(", "))
+    );
+    debug("Command arguments: [%s]", commandArguments.stream()
+      .map(Object::toString)
+      .collect(Collectors.joining(", "))
+    );
+    debug("Split optionals: (%s)%s", splitOptionals.size(), splitOptionals.stream()
+      .map(split -> "\n* [" + split.stream()
+        .map(Object::toString)
+        .collect(Collectors.joining(", ")) + "]")
+      .collect(Collectors.joining())
+    );
 
     final CommandNode rootNode = CommandNode.createEmpty();
     final Executable executable = new Executable(sourceMethod.enclosed(), sourceMethod, arguments);
@@ -143,10 +156,12 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
         applyRequirements(sourceMethod, node);
       })
       .withPostProcess(node -> {
-        final CommandNode endNode = node.addArguments(commandArguments);
-        final Executable executableObj = new Executable(executable);
-        endNode.setAttribute(AttributeKey.EXECUTABLE, executableObj);
-        PlatformUtils.get().populateExecutesNode(executableObj, endNode, arguments);
+        for (List<CommandArgument> argumentPath : splitOptionals) {
+          final CommandNode endNode = node.addArguments(argumentPath);
+          final Executable executableObj = new Executable(executable);
+          endNode.setAttribute(AttributeKey.EXECUTABLE, executableObj);
+          PlatformUtils.get().populateExecutesNode(executableObj, endNode, arguments);
+        }
       });
 
     executesExtender.accept(sourceMethod, rootNode);
@@ -155,10 +170,12 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
       .withAnnotationClass(DefaultExecutes.class, DefaultExecutes::value)
       .withPluralAnnotationsClass(ManyDefaultExecutes.class)
       .withPostProcess(node -> {
-        final CommandNode endNode = node.addArguments(commandArguments);
-        final DefaultExecutable executableObj = new DefaultExecutable(executable);
-        endNode.setAttribute(AttributeKey.DEFAULT_EXECUTABLE, executableObj);
-        PlatformUtils.get().populateExecutesNode(executableObj, endNode, arguments);
+        for (List<CommandArgument> argumentPath : splitOptionals) {
+          final CommandNode endNode = node.addArguments(argumentPath);
+          final DefaultExecutable executableObj = new DefaultExecutable(executable);
+          endNode.setAttribute(AttributeKey.DEFAULT_EXECUTABLE, executableObj);
+          PlatformUtils.get().populateExecutesNode(executableObj, endNode, arguments);
+        }
       });
 
     defaultExecutesExtender.accept(sourceMethod, rootNode);
@@ -264,6 +281,9 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
       .filter(CommandArgument.class::isInstance)
       .map(CommandArgument.class::cast)
       .toList();
+    if (recordArguments.stream().anyMatch(arg -> arg instanceof RequiredCommandArgument req && req.argumentType().optional())) {
+      warnSource("Record components do not support optional argument types; they will be treated as required ones instead.", record);
+    }
 
     final AdvancedNodeExtender<A> recordExtender = new AdvancedNodeExtender<>(annotationClass, toPath)
       .withPluralAnnotationsClass(collectionAnnotation)
@@ -362,7 +382,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
       return new UnparsedCommandParameter(parameter);
     }
 
-    final RequiredCommandArgument commandArgument = RequiredCommandArgument.of(argumentType, parameter.name());
+    final RequiredCommandArgument commandArgument = RequiredCommandArgument.of(argumentType, parameter);
     applyRegistrableProvider(commandArgument, parameter, SuggestionsRegistry.get(), AttributeKey.SUGGESTION_PROVIDER, "suggestion");
     return commandArgument;
   }
@@ -381,7 +401,6 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
         if (found) {
           this.infoSource("Multiple %s providers has been declared", element, name);
         } else {
-          info("Found suggestion provider!");
           attributable.setAttribute(key, provider.get());
           found = true;
         }

@@ -30,8 +30,10 @@ import net.strokkur.jap.code.convert.ConvertToExpression;
 import net.strokkur.jap.code.convert.ConvertToType;
 import net.strokkur.jap.code.expression.Expressions;
 import net.strokkur.jap.code.expression.builder.MethodInvocationBuilder;
+import net.strokkur.jap.code.type.CodeClassType;
 import net.strokkur.jap.code.type.CodePrimitiveType;
 import net.strokkur.jap.code.type.CodeType;
+import net.strokkur.jap.code.type.CodeTypes;
 import net.strokkur.jap.code.type.preset.JavaTypes;
 import net.strokkur.jap.source.annotation.SourceAnnotation;
 import net.strokkur.jap.source.classmodel.SourceParameterLike;
@@ -43,6 +45,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
+import java.util.OptionalLong;
 import java.util.ServiceLoader;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -192,26 +197,54 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
     return BrigadierArgumentType.of(argumentTypeName, withoutAnnotation, retrieval);
   }
 
+  protected final boolean isOptional(CodeType type) {
+    return type.withoutGenerics().isType(CodeTypes.ofJavaClass(Optional.class))
+      || type.isType(CodeTypes.ofJavaClass(OptionalInt.class))
+      || type.isType(CodeTypes.ofJavaClass(OptionalLong.class))
+      || type.isType(CodeTypes.ofJavaClass(OptionalDouble.class));
+  }
+
+  protected final CodeType typeToCheck(CodeType type) {
+    if (type.withoutGenerics().isType(CodeTypes.ofJavaClass(Optional.class))) {
+      return ((CodeClassType) type).genericTypes().getFirst().enclosure().encloses();
+    } else if (type.isType(CodeTypes.ofJavaClass(OptionalInt.class))) {
+      return CodePrimitiveType.INT;
+    } else if (type.isType(CodeTypes.ofJavaClass(OptionalLong.class))) {
+      return CodePrimitiveType.LONG;
+    } else if (type.isType(CodeTypes.ofJavaClass(OptionalDouble.class))) {
+      return CodePrimitiveType.DOUBLE;
+    } else {
+      return type;
+    }
+  }
+
   public final BrigadierArgumentType getAsArgumentType(SourceParameterLike parameter) throws ParameterArgumentException {
     final String argumentName = parameter.name();
     final CodeType type = parameter.type().toType();
 
-    debug("Parsing parameter: " + parameter);
+    final boolean isOptional = isOptional(type);
+    final CodeType typeToCheck;
+    try {
+      typeToCheck = typeToCheck(type);
+    } catch (RuntimeException e) {
+      throw new ParameterArgumentException("Cannot have an `Optional` parameter type without a valid type argument.");
+    }
 
-    final BrigadierArgumentType customArg = handleCustomArgumentAnnotations(argumentName, type, parameter);
+    debug("Parsing parameter: %s (effective type: %s)", parameter, typeToCheck);
+    final BrigadierArgumentType customArg = handleCustomArgumentAnnotations(argumentName, typeToCheck, parameter);
     if (customArg != null) {
-      return customArg;
+      return customArg.withOptional(isOptional);
     }
 
-    if (!conversionMap.containsKey(type)) {
-      throw new ParameterArgumentException("Cannot find Brigadier equivalent for argument of type %s.".formatted(type));
+    if (!conversionMap.containsKey(typeToCheck)) {
+      throw new ParameterArgumentException("Cannot find Brigadier equivalent for argument of type %s.".formatted(typeToCheck));
     }
 
-    final BrigadierArgumentType out = Optional.ofNullable(conversionMap.get(type)).map(it -> it.apply(parameter, argumentName)).orElse(null);
+    final BrigadierArgumentType out = Optional.ofNullable(conversionMap.get(typeToCheck)).map(it -> it.apply(parameter, argumentName)).orElse(null);
     if (out != null) {
-      return out;
+      return out.withOptional(isOptional);
     }
 
-    throw new ParameterArgumentException("An unexpected error occurred whilst converting type %s to Brigadier equivalent.".formatted(type));
+    throw new ParameterArgumentException("An unexpected error occurred whilst converting type %s to Brigadier equivalent.".formatted(typeToCheck));
   }
 }

@@ -21,4 +21,8 @@ import net.strokkur.jap.source.classmodel.SourceParameterLike;
 
 /// A catch-all [CommandParameter] that is not a proper command argument.
 public record UnparsedCommandParameter(SourceParameterLike parameter) implements CommandParameter {
+  @Override
+  public String toString() {
+    return "UnusedArg(%s)".formatted(parameter);
+  }
 }

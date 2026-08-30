@@ -23,14 +23,27 @@ import net.strokkur.jap.code.visitor.source.JavaSourcePrintingVisitor;
 
 public record BrigadierArgumentType(
   String argumentTypeIdentifier,
-  ConvertToExpression initializer, ConvertToExpression retriever
+  ConvertToExpression initializer, ConvertToExpression retriever,
+  boolean optional
 ) {
 
   public static BrigadierArgumentType of(
     String argumentTypeIdentifier,
     ConvertToExpression initializer, ConvertToExpression retriever
   ) {
-    return new BrigadierArgumentType(argumentTypeIdentifier, initializer, retriever);
+    return of(argumentTypeIdentifier, initializer, retriever, false);
+  }
+
+  public static BrigadierArgumentType of(
+    String argumentTypeIdentifier,
+    ConvertToExpression initializer, ConvertToExpression retriever,
+    boolean optional
+  ) {
+    return new BrigadierArgumentType(argumentTypeIdentifier, initializer, retriever, optional);
+  }
+
+  public BrigadierArgumentType withOptional(boolean optional) {
+    return new BrigadierArgumentType(argumentTypeIdentifier, initializer, retriever, optional);
   }
 
   @Override
