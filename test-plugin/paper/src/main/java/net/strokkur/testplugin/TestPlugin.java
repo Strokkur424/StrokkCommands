@@ -31,7 +31,7 @@ public final class TestPlugin extends JavaPlugin {
 
   public TestPlugin() {
     this.injector = Guice.createInjector(
-        new GuiceModule(this)
+      new GuiceModule(this)
     );
   }
 

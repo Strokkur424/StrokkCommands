@@ -51,16 +51,16 @@ public class GameModePreset {
 
     if (target.getGameMode() == mode) {
       sender.sendRichMessage("<red><target_name> game mode is already set to <mode>!",
-          Placeholder.unparsed("target_name", targetNameUpper),
-          Placeholder.component("mode", Component.translatable(mode))
+        Placeholder.unparsed("target_name", targetNameUpper),
+        Placeholder.component("mode", Component.translatable(mode))
       );
       return;
     }
 
     target.setGameMode(mode);
     sender.sendRichMessage("<green>Successfully set <target_name> game mode to <mode>!",
-        Placeholder.unparsed("target_name", targetName),
-        Placeholder.component("mode", Component.translatable(mode))
+      Placeholder.unparsed("target_name", targetName),
+      Placeholder.component("mode", Component.translatable(mode))
     );
   }
 }

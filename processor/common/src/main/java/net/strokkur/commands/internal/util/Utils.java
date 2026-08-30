@@ -27,7 +27,7 @@ public interface Utils {
     final StringBuilder builder = new StringBuilder("instance");
     for (int i = 1, executeAccessStackSize = stack.size(); i < executeAccessStackSize; i++) {
       final ExecuteAccess<?> access = stack.get(i);
-      final String name = access.getElement().getName();
+      final String name = access.name();
       builder.append(name.substring(0, 1).toUpperCase()).append(name.substring(1));
     }
 

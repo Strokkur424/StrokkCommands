@@ -17,15 +17,15 @@
  */
 package net.strokkur.commands.internal.intermediate.registrable;
 
-import net.strokkur.commands.internal.abstraction.SourceMethod;
+import net.strokkur.jap.source.classmodel.SourceMethod;
 
 /// Holds information about an executor wrapper.
 ///
 /// @param wrapperMethod method implementing the wrapper
 /// @param wrapperType   the type of wrapper (Command return vs int return)
 public record ExecutorWrapperProvider(
-    SourceMethod wrapperMethod,
-    WrapperType wrapperType
+  SourceMethod wrapperMethod,
+  WrapperType wrapperType
 ) {
 
   /// The method signature of the wrapper

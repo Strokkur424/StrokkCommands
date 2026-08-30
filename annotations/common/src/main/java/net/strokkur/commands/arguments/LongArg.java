@@ -37,7 +37,7 @@ import java.lang.annotation.Target;
 /// void executes(CommandSender sender, @LongArg(min = 0, max = 10) long value);
 /// ```
 @Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.PARAMETER)
+@Target({ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
 public @interface LongArg {
   /// {@return the lowest possible input value. Inclusive}
   long max() default Long.MAX_VALUE;

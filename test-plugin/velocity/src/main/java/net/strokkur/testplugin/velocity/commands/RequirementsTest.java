@@ -24,7 +24,7 @@ import net.strokkur.commands.CustomRequirement;
 import net.strokkur.commands.Executes;
 
 @Command("requirements-test")
-@MyRequirement
+@RequirementsTest.MyRequirement
 class RequirementsTest {
 
   @Executes
@@ -36,8 +36,9 @@ class RequirementsTest {
   static boolean require(CommandSource source) {
     return source instanceof Player player && player.getUsername().equals("Strokkur24");
   }
+
+  @CustomRequirement
+  @interface MyRequirement {}
 }
 
-@CustomRequirement
-@interface MyRequirement {}
 

@@ -17,24 +17,23 @@
  */
 package net.strokkur.commands.internal.paper;
 
+import com.google.auto.service.AutoService;
 import net.strokkur.commands.Aliases;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.UseInjection;
-import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.StrokkCommandsProcessor;
-import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.abstraction.SourceConstructor;
-import net.strokkur.commands.internal.abstraction.SourceMethod;
-import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
-import net.strokkur.commands.internal.intermediate.CommonTreePostProcessor;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.paper.util.PaperCommandInformation;
-import net.strokkur.commands.internal.printer.CommonCommandTreePrinter;
-import net.strokkur.commands.internal.util.MessagerWrapper;
+import net.strokkur.commands.internal.printer.CommonClassBuilder;
 import net.strokkur.commands.paper.Description;
+import net.strokkur.jap.source.classmodel.SourceClass;
+import net.strokkur.jap.source.classmodel.SourceClassLike;
+import net.strokkur.jap.source.classmodel.SourceConstructor;
 
+import javax.annotation.processing.Processor;
 import java.util.Optional;
 
+@AutoService(Processor.class)
 public final class PaperStrokkCommandsProcessor extends StrokkCommandsProcessor<Command, PaperCommandInformation> {
 
   @Override
@@ -43,49 +42,26 @@ public final class PaperStrokkCommandsProcessor extends StrokkCommandsProcessor<
   }
 
   @Override
-  protected String getCommandName(Command annotation) {
-    return annotation.value();
+  protected CommonClassBuilder<PaperCommandInformation> createBuilder(CommandNode node, PaperCommandInformation commandInformation) {
+    return new PaperClassBuilder(node, commandInformation);
   }
 
   @Override
-  protected PlatformUtils getPlatformUtils() {
-    return new PaperPlatformUtils();
-  }
+  protected PaperCommandInformation getCommandInformation(SourceClassLike classLike) {
+    final Optional<Description> description = classLike.findAnnotationValue(Description.class);
+    final Optional<Aliases> aliases = classLike.findAnnotationValue(Aliases.class);
 
-  @Override
-  protected BrigadierArgumentConverter getConverter(MessagerWrapper messager) {
-    return new PaperBrigadierArgumentConverter(messager);
-  }
-
-  @Override
-  protected CommonTreePostProcessor createPostProcessor(MessagerWrapper messager) {
-    return new PaperTreePostProcessor(messager);
-  }
-
-  @Override
-  protected CommonCommandTreePrinter<PaperCommandInformation> createPrinter(CommandNode node, PaperCommandInformation commandInformation) {
-    return new PaperCommandTreePrinter(0, null, node, commandInformation, processingEnv, getPlatformUtils());
-  }
-
-  @Override
-  protected PaperCommandInformation getCommandInformation(SourceClass sourceClass) {
-    final Optional<Description> description = sourceClass.getAnnotationOptional(Description.class);
-    final Optional<Aliases> aliases = sourceClass.getAnnotationOptional(Aliases.class);
-
-    final SourceConstructor constructor = sourceClass.isRecord() ?
-        null :
-        sourceClass.getNestedMethods(SourceMethod::isConstructor)
-            .stream()
-            .findFirst()
-            .map(SourceConstructor.class::cast)
-            .orElse(null);
+    final SourceConstructor constructor = classLike instanceof SourceClass sourceClass
+      ? sourceClass.constructors().stream().findFirst().orElse(null)
+      : null;
 
     return new PaperCommandInformation(
-        constructor,
-        sourceClass,
-        description.map(Description::value).orElse(null),
-        aliases.map(Aliases::value).orElse(null),
-        sourceClass.hasAnnotationInherited(UseInjection.class)
+      classLike.getAnnotationValue(Command.class).value().split(" ")[0],
+      constructor,
+      classLike,
+      description.map(Description::value).orElse(null),
+      aliases.map(Aliases::value).orElse(null),
+      classLike.hasAnnotationInherited(UseInjection.class)
     );
   }
 }

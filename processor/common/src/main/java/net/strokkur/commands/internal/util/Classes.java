@@ -17,30 +17,38 @@
  */
 package net.strokkur.commands.internal.util;
 
-public interface Classes {
-  // Java types
-  String LIST = "java.util.List";
-  String COLLECTIONS = "java.util.Collections";
-  String ARRAYS = "java.util.Arrays";
-  String LIST_STRING = LIST + "<java.lang.String>";
-  String PREDICATE = "java.util.function.Predicate";
-  String COMPLETABLE_FUTURE = "java.util.concurrent.CompletableFuture";
-  String METHOD = "java.lang.reflect.Method";
+import net.strokkur.jap.code.convert.ConvertToClassType;
+import net.strokkur.jap.code.type.CodeTypes;
 
+public interface Classes extends ConvertToClassType {
   // Brigadier types
-  String COMMAND = "com.mojang.brigadier.Command";
-  String COMMAND_DISPATCHER = "com.mojang.brigadier.CommandDispatcher";
-  String LITERAL_COMMAND_NODE = "com.mojang.brigadier.tree.LiteralCommandNode";
-  String LITERAL_ARGUMENT_BUILDER = "com.mojang.brigadier.builder.LiteralArgumentBuilder";
-  String SIMPLE_COMMAND_EXCEPTION_TYPE = "com.mojang.brigadier.exceptions.SimpleCommandExceptionType";
-  String LITERAL_MESSAGE = "com.mojang.brigadier.LiteralMessage";
-  String COMMAND_CONTEXT = "com.mojang.brigadier.context.CommandContext";
-  String SUGGESTIONS = "com.mojang.brigadier.suggestion.Suggestions";
-  String SUGGESTION_PROVIDER = "com.mojang.brigadier.suggestion.SuggestionProvider";
-  String SUGGESTIONS_BUILDER = "com.mojang.brigadier.suggestion.SuggestionsBuilder";
+  Classes COMMAND = create("com.mojang.brigadier.Command");
+  Classes COMMAND_DISPATCHER = create("com.mojang.brigadier.CommandDispatcher");
+  Classes LITERAL_COMMAND_NODE = create("com.mojang.brigadier.tree.LiteralCommandNode");
+  Classes LITERAL_ARGUMENT_BUILDER = create("com.mojang.brigadier.builder.LiteralArgumentBuilder");
+  Classes SIMPLE_COMMAND_EXCEPTION_TYPE = create("com.mojang.brigadier.exceptions.SimpleCommandExceptionType");
+  Classes LITERAL_MESSAGE = create("com.mojang.brigadier.LiteralMessage");
+  Classes COMMAND_CONTEXT = create("com.mojang.brigadier.context.CommandContext");
+  Classes SUGGESTIONS = create("com.mojang.brigadier.suggestion.Suggestions");
+  Classes SUGGESTION_PROVIDER = create("com.mojang.brigadier.suggestion.SuggestionProvider");
+  Classes SUGGESTIONS_BUILDER = create("com.mojang.brigadier.suggestion.SuggestionsBuilder");
+
+  Classes BOOL_ARGUMENT_TYPE = create("com.mojang.brigadier.arguments.BoolArgumentType");
+  Classes INTEGER_ARGUMENT_TYPE = create("com.mojang.brigadier.arguments.IntegerArgumentType");
+  Classes LONG_ARGUMENT_TYPE = create("com.mojang.brigadier.arguments.LongArgumentType");
+  Classes FLOAT_ARGUMENT_TYPE = create("com.mojang.brigadier.arguments.FloatArgumentType");
+  Classes DOUBLE_ARGUMENT_TYPE = create("com.mojang.brigadier.arguments.DoubleArgumentType");
+  Classes STRING_ARGUMENT_TYPE = create("com.mojang.brigadier.arguments.StringArgumentType");
 
   // Other
-  String NULL_MARKED = "org.jspecify.annotations.NullMarked";
-  String NULLABLE = "org.jspecify.annotations.Nullable";
-  String INJECT = "jakarta.inject.Inject";
+  Classes NULL_MARKED = create("org.jspecify.annotations.NullMarked");
+  Classes NULLABLE = create("org.jspecify.annotations.Nullable");
+
+  static Classes create(String fqn) {
+    return () -> CodeTypes.ofClass(fqn);
+  }
+
+  static Classes ofClass(Class<?> classType) {
+    return () -> CodeTypes.ofClass(classType.getName());
+  }
 }

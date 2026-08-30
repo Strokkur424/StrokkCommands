@@ -17,38 +17,30 @@
  */
 package net.strokkur.commands.internal.arguments;
 
-import org.jspecify.annotations.Nullable;
+import net.strokkur.jap.code.convert.ConvertToExpression;
+import net.strokkur.jap.code.documentation.DiscardingDocumentationRenderer;
+import net.strokkur.jap.code.visitor.source.JavaSourcePrintingVisitor;
 
-import java.util.Objects;
-import java.util.Set;
+public record BrigadierArgumentType(
+  String argumentTypeIdentifier,
+  ConvertToExpression initializer, ConvertToExpression retriever
+) {
 
-public record BrigadierArgumentType(String initializer, String retriever, Set<String> imports) {
-
-  public static BrigadierArgumentType of(String initializer, String retriever) {
-    return new BrigadierArgumentType(initializer, retriever, Set.of());
-  }
-
-  public static BrigadierArgumentType of(String initializer, String retriever, String singleImport) {
-    return new BrigadierArgumentType(initializer, retriever, Set.of(singleImport));
-  }
-
-  public static BrigadierArgumentType of(String initializer, String retriever, Set<String> imports) {
-    return new BrigadierArgumentType(initializer, retriever, imports);
+  public static BrigadierArgumentType of(
+    String argumentTypeIdentifier,
+    ConvertToExpression initializer, ConvertToExpression retriever
+  ) {
+    return new BrigadierArgumentType(argumentTypeIdentifier, initializer, retriever);
   }
 
   @Override
-  public boolean equals(@Nullable Object o) {
-    if (!(o instanceof BrigadierArgumentType(String initializer1, String retriever1, Set<String> imports1))) {
-      return false;
-    }
+  public String toString() {
+    final JavaSourcePrintingVisitor visitor = new JavaSourcePrintingVisitor(DiscardingDocumentationRenderer::new, "", "");
+    final String rawInitializer = initializer().toExpression().accept(visitor).toString();
+    final String rawRetriever = retriever().toExpression().accept(visitor).toString();
+    final String initializer = rawInitializer.replace("\n", " ");
+    final String retriever = rawRetriever.replace("\n", " ");
 
-    return Objects.equals(retriever(), retriever1)
-        && Objects.equals(initializer(), initializer1)
-        && Objects.equals(imports(), imports1);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(initializer(), retriever(), imports());
+    return "[" + initializer + ", " + retriever + "]";
   }
 }

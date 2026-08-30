@@ -37,7 +37,7 @@ import java.lang.annotation.Target;
 /// void executes(CommandSender sender, @IntArg(min = 0, max = 10) int value);
 /// ```
 @Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.PARAMETER)
+@Target({ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
 public @interface IntArg {
   /// {@return the lowest possible input value. Inclusive}
   int min() default Integer.MIN_VALUE;

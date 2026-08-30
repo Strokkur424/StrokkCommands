@@ -17,23 +17,28 @@
  */
 package net.strokkur.commands.internal.paper.util;
 
+import net.strokkur.jap.code.convert.ConvertToClassType;
+import org.jspecify.annotations.Nullable;
+
+import java.util.Objects;
+
 public enum ExecutorType {
   NONE,
-  ENTITY("source.getExecutor() != null"),
-  PLAYER("source.getExecutor() instanceof Player");
+  ENTITY(PaperClasses.ENTITY),
+  PLAYER(PaperClasses.PLAYER);
 
-  private final String predicate;
+  private final @Nullable ConvertToClassType classType;
 
   ExecutorType() {
-    this("true");
+    this.classType = null;
   }
 
-  ExecutorType(String predicate) {
-    this.predicate = predicate;
+  ExecutorType(ConvertToClassType classType) {
+    this.classType = classType;
   }
 
-  public String getPredicate() {
-    return predicate;
+  public ConvertToClassType classType() {
+    return Objects.requireNonNull(classType);
   }
 
   /**

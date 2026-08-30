@@ -27,12 +27,23 @@ public interface AttributableHelper extends Attributable {
 
   @Override
   default <T> @Nullable T getAttribute(AttributeKey<T> key) {
+    //noinspection unchecked
     return (T) attributeMap().getOrDefault(key.key(), key.defaultValue());
+  }
+
+  @Override
+  default void transferAllAttributes(Attributable other) {
+    attributeMap().forEach(other::setAttributeRaw);
   }
 
   @Override
   default <T> void setAttribute(AttributeKey<T> key, T value) {
     attributeMap().put(key.key(), value);
+  }
+
+  @Override
+  default void setAttributeRaw(String key, Object value) {
+    attributeMap().put(key, value);
   }
 
   @Override

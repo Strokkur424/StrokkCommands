@@ -12,7 +12,7 @@ plugins {
 rootProject.name = "StrokkCommands"
 
 fun importProjectsIn(folder: File) {
-  val name = folder.name;
+  val name = folder.name
   rootDir.resolve(name).listFiles { it.isDirectory }?.forEach {
     include(":${name}-${it.name}")
     project(":${name}-${it.name}").projectDir = it

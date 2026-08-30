@@ -17,12 +17,16 @@
  */
 package net.strokkur.commands.internal.intermediate.registrable;
 
-import net.strokkur.commands.internal.abstraction.SourceClass;
-
-import java.util.List;
+import net.strokkur.jap.code.convert.ConvertToExpression;
+import net.strokkur.jap.code.expression.CodeExpression;
+import net.strokkur.jap.code.expression.Expressions;
 
 public interface RequirementProvider {
-  String getRequirementString();
 
-  List<SourceClass> getSourceClasses();
+  ConvertToExpression requirementExpression();
+
+  /// Convert this provider's [#requirementExpression()] into a lambda form.
+  default CodeExpression toRequirementLambda() {
+    return Expressions.lambdaInline("source", requirementExpression());
+  }
 }

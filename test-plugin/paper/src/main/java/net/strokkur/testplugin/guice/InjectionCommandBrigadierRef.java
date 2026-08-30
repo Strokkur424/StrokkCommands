@@ -34,9 +34,9 @@ public final class InjectionCommandBrigadierRef {
 
   public LiteralArgumentBuilder<CommandSourceStack> create() {
     return Commands.literal("injection-test")
-        .executes(ctx -> {
-          this.instance.execute(ctx.getSource().getSender());
-          return Command.SINGLE_SUCCESS;
-        });
+      .executes(ctx -> {
+        this.instance.execute(ctx.getSource().getSender());
+        return Command.SINGLE_SUCCESS;
+      });
   }
 }

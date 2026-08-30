@@ -17,18 +17,14 @@
  */
 package net.strokkur.commands.internal.arguments;
 
-import net.strokkur.commands.internal.abstraction.SourceElement;
+public record LiteralCommandArgument(String literal, boolean isArgumentParam) implements CommandArgument {
 
-public interface LiteralCommandArgument extends CommandArgument {
-
-  static LiteralCommandArgument literal(String literal, SourceElement element) {
-    return new LiteralCommandArgumentImpl(literal, element);
+  public static LiteralCommandArgument literal(String literal, boolean isArgumentParam) {
+    return new LiteralCommandArgument(literal, isArgumentParam);
   }
 
-  String literal();
-
   @Override
-  default String argumentName() {
+  public String argumentName() {
     return literal();
   }
 }

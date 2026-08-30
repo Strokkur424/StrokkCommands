@@ -48,7 +48,7 @@ import java.lang.annotation.Target;
 /// }
 /// ```
 @Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.PARAMETER)
+@Target({ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
 public @interface Literal {
   /// {@return the literal path(s) to insert at the argument position}
   String[] value() default {};

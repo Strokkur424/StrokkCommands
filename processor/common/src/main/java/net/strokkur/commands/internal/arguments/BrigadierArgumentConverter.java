@@ -23,111 +23,180 @@ import net.strokkur.commands.arguments.IntArg;
 import net.strokkur.commands.arguments.LongArg;
 import net.strokkur.commands.arguments.StringArg;
 import net.strokkur.commands.arguments.StringArgType;
-import net.strokkur.commands.internal.abstraction.SourceVariable;
-import net.strokkur.commands.internal.exceptions.ConversionException;
+import net.strokkur.commands.internal.exceptions.ParameterArgumentException;
+import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
-import net.strokkur.commands.internal.util.MessagerWrapper;
+import net.strokkur.jap.code.convert.ConvertToExpression;
+import net.strokkur.jap.code.convert.ConvertToType;
+import net.strokkur.jap.code.expression.Expressions;
+import net.strokkur.jap.code.expression.builder.MethodInvocationBuilder;
+import net.strokkur.jap.code.type.CodePrimitiveType;
+import net.strokkur.jap.code.type.CodeType;
+import net.strokkur.jap.code.type.preset.JavaTypes;
+import net.strokkur.jap.source.annotation.SourceAnnotation;
+import net.strokkur.jap.source.classmodel.SourceParameterLike;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.ServiceLoader;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
-  private final MessagerWrapper messagerWrapper;
-  protected final Map<String, BiFunction<SourceVariable, String, BrigadierArgumentType>> conversionMap;
+  protected final Map<CodeType, BiFunction<SourceParameterLike, String, BrigadierArgumentType>> conversionMap;
 
-  public BrigadierArgumentConverter(MessagerWrapper messagerWrapper) {
-    this.messagerWrapper = messagerWrapper;
-    this.conversionMap = new TreeMap<>();
+  public BrigadierArgumentConverter() {
+    this.conversionMap = new HashMap<>();
     initializeArguments();
   }
 
+  public static BrigadierArgumentConverter get() {
+    class Holder {
+      @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+      static final Optional<BrigadierArgumentConverter> INSTANCE = ServiceLoader.load(
+        BrigadierArgumentConverter.class, BrigadierArgumentConverter.class.getClassLoader()
+      ).findFirst();
+    }
+
+    return Holder.INSTANCE.orElseThrow(() -> new RuntimeException("No instance of BrigadierArgumentConverter found."));
+  }
+
   protected @Nullable BrigadierArgumentType handleCustomArgumentAnnotations(
-      String argumentName,
-      String type,
-      SourceVariable parameter
-  ) throws ConversionException {
+    String argumentName,
+    CodeType type,
+    SourceParameterLike parameter
+  ) throws ParameterArgumentException {
     return null;
+  }
+
+  private Function<SourceAnnotation, ConvertToExpression> minMaxValued(
+    MethodInvocationBuilder builder,
+    ConvertToExpression defaultMin
+  ) {
+    return a -> {
+      final ConvertToExpression minExpr = a.isSet("min")
+        ? a.parameter("min").expression()
+        : defaultMin;
+
+      if (a.isSet("max")) {
+        return builder
+          .addParameters(
+            minExpr,
+            a.parameter("max").expression()
+          );
+      }
+
+      if (a.isSet("min")) {
+        return builder.addParameters(minExpr);
+      }
+
+      return builder;
+    };
   }
 
   protected void initializeArguments() {
     putFor((unused, name) -> BrigadierArgumentType.of(
-        "BoolArgumentType.bool()",
-        "BoolArgumentType.getBool(ctx, \"%s\")".formatted(name),
-        "com.mojang.brigadier.arguments.BoolArgumentType"
-    ), "boolean", "java.lang.Boolean");
+      "boolean",
+      Classes.BOOL_ARGUMENT_TYPE.chainMethod("bool"),
+      Classes.BOOL_ARGUMENT_TYPE.chainMethod("getBool")
+        .addParameters(Expressions.variable("ctx"))
+        .addParameters(Expressions.string(name))
+    ), CodePrimitiveType.BOOL, CodePrimitiveType.BOOL.boxed());
 
     putFor((p, name) -> annotatedOr(p, IntArg.class,
-        a -> "IntegerArgumentType.integer(%s, %s)".formatted(a.min(), a.max()),
-        "IntegerArgumentType.integer()", "IntegerArgumentType.getInteger(ctx, \"%s\")".formatted(name),
-        "com.mojang.brigadier.arguments.IntegerArgumentType"
-    ), "int", "java.lang.Integer");
+      "int",
+      minMaxValued(
+        Classes.INTEGER_ARGUMENT_TYPE.chainMethod("integer"),
+        JavaTypes.INTEGER.chainField("MIN_VALUE")
+      ),
+      Classes.INTEGER_ARGUMENT_TYPE.chainMethod("integer"),
+      Classes.INTEGER_ARGUMENT_TYPE.chainMethod("getInteger")
+        .addParameters(Expressions.variable("ctx"))
+        .addParameters(Expressions.string(name))
+    ), CodePrimitiveType.INT, CodePrimitiveType.INT.boxed());
 
     putFor((p, name) -> annotatedOr(p, LongArg.class,
-        a -> "LongArgumentType.longArg(%s, %s)".formatted(a.min(), a.max()),
-        "LongArgumentType.longArg()", "LongArgumentType.getLong(ctx, \"%s\")".formatted(name),
-        "com.mojang.brigadier.arguments.LongArgumentType"
-    ), "long", "java.lang.Long");
+      "long",
+      minMaxValued(
+        Classes.LONG_ARGUMENT_TYPE.chainMethod("longArg"),
+        JavaTypes.LONG.chainField("MIN_VALUE")
+      ),
+      Classes.LONG_ARGUMENT_TYPE.chainMethod("longArg"),
+      Classes.LONG_ARGUMENT_TYPE.chainMethod("getLong")
+        .addParameters(Expressions.variable("ctx"))
+        .addParameters(Expressions.string(name))
+    ), CodePrimitiveType.LONG, CodePrimitiveType.LONG.boxed());
 
     putFor((p, name) -> annotatedOr(p, FloatArg.class,
-        a -> "FloatArgumentType.floatArg(%sf, %sf)".formatted(a.min(), a.max()),
-        "FloatArgumentType.floatArg()",
-        "FloatArgumentType.getFloat(ctx, \"%s\")".formatted(name),
-        "com.mojang.brigadier.arguments.FloatArgumentType"
-    ), "float", "java.lang.Float");
+      "float",
+      minMaxValued(
+        Classes.FLOAT_ARGUMENT_TYPE.chainMethod("floatArg"),
+        JavaTypes.FLOAT.chainField("MAX_VALUE").negate()
+      ),
+      Classes.FLOAT_ARGUMENT_TYPE.chainMethod("floatArg"),
+      Classes.FLOAT_ARGUMENT_TYPE.chainMethod("getFloat")
+        .addParameters(Expressions.variable("ctx"))
+        .addParameters(Expressions.string(name))
+    ), CodePrimitiveType.FLOAT, CodePrimitiveType.FLOAT.boxed());
 
     putFor((p, name) -> annotatedOr(p, DoubleArg.class,
-        a -> "DoubleArgumentType.doubleArg(%s, %s)".formatted(a.min(), a.max()),
-        "DoubleArgumentType.doubleArg()", "DoubleArgumentType.getDouble(ctx, \"%s\")".formatted(name),
-        "com.mojang.brigadier.arguments.DoubleArgumentType"
-    ), "double", "java.lang.Double");
+      "double",
+      minMaxValued(
+        Classes.DOUBLE_ARGUMENT_TYPE.chainMethod("doubleArg"),
+        JavaTypes.DOUBLE.chainField("MAX_VALUE").negate()
+      ),
+      Classes.DOUBLE_ARGUMENT_TYPE.chainMethod("doubleArg"),
+      Classes.DOUBLE_ARGUMENT_TYPE.chainMethod("getDouble")
+        .addParameters(Expressions.variable("ctx"))
+        .addParameters(Expressions.string(name))
+    ), CodePrimitiveType.DOUBLE, CodePrimitiveType.DOUBLE.boxed());
 
     putFor((p, name) -> annotatedOr(p, StringArg.class,
-        a -> "StringArgumentType.%s()".formatted(a.value().getBrigadierType()),
-        "StringArgumentType.%s()".formatted(StringArgType.WORD.getBrigadierType()),
-        "StringArgumentType.getString(ctx, \"%s\")".formatted(name),
-        "com.mojang.brigadier.arguments.StringArgumentType"
-    ), "java.lang.String");
+      "string",
+      a -> Classes.STRING_ARGUMENT_TYPE.chainMethod(a.value(StringArg.class).value().getBrigadierType()),
+      Classes.STRING_ARGUMENT_TYPE.chainMethod(StringArgType.WORD.getBrigadierType()),
+      Classes.STRING_ARGUMENT_TYPE.chainMethod("getString")
+        .addParameters(Expressions.variable("ctx"))
+        .addParameters(Expressions.string(name))
+    ), JavaTypes.STRING);
   }
 
-  protected final void putFor(BiFunction<SourceVariable, String, BrigadierArgumentType> value, String... keys) {
-    for (String key : keys) {
-      conversionMap.put(key, value);
+  protected final void putFor(BiFunction<SourceParameterLike, String, BrigadierArgumentType> value, List<? extends ConvertToType> types) {
+    for (ConvertToType key : types) {
+      conversionMap.put(key.toType(), value);
     }
   }
 
-  protected final <T extends Annotation> BrigadierArgumentType annotatedOr(
-      SourceVariable variable,
-      Class<T> annotation,
-      Function<T, String> withAnnotation,
-      String withoutAnnotation,
-      String retrieval,
-      String singleImport
-  ) {
-    return annotatedOr(variable, annotation, withAnnotation, withoutAnnotation, retrieval, Set.of(singleImport));
+  protected final void putFor(BiFunction<SourceParameterLike, String, BrigadierArgumentType> value, ConvertToType... types) {
+    putFor(value, Arrays.asList(types));
   }
 
   protected final <T extends Annotation> BrigadierArgumentType annotatedOr(
-      SourceVariable variable,
-      Class<T> annotation,
-      Function<T, String> withAnnotation,
-      String withoutAnnotation,
-      String retrieval,
-      Set<String> imports
+    SourceParameterLike variable,
+    Class<T> annotation,
+    String argumentTypeName,
+    Function<SourceAnnotation, ConvertToExpression> withAnnotation,
+    ConvertToExpression withoutAnnotation,
+    ConvertToExpression retrieval
   ) {
-    return variable.getAnnotationOptional(annotation)
-        .map(annotated -> BrigadierArgumentType.of(withAnnotation.apply(annotated), retrieval, imports))
-        .orElseGet(() -> BrigadierArgumentType.of(withoutAnnotation, retrieval, imports));
+    final Classes annotationType = Classes.ofClass(annotation);
+    if (variable.hasAnnotation(annotationType)) {
+      return BrigadierArgumentType.of(argumentTypeName, withAnnotation.apply(variable.getAnnotation(annotationType)), retrieval);
+    }
+
+    return BrigadierArgumentType.of(argumentTypeName, withoutAnnotation, retrieval);
   }
 
-  public final BrigadierArgumentType getAsArgumentType(SourceVariable parameter) throws ConversionException {
-    final String argumentName = parameter.getName();
-    final String type = parameter.getType().getFullyQualifiedAndTypedName();
+  public final BrigadierArgumentType getAsArgumentType(SourceParameterLike parameter) throws ParameterArgumentException {
+    final String argumentName = parameter.name();
+    final CodeType type = parameter.type().toType();
+
+    debug("Parsing parameter: " + parameter);
 
     final BrigadierArgumentType customArg = handleCustomArgumentAnnotations(argumentName, type, parameter);
     if (customArg != null) {
@@ -135,7 +204,7 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
     }
 
     if (!conversionMap.containsKey(type)) {
-      throw new ConversionException("Cannot find Brigadier equivalent for argument of type %s.".formatted(type));
+      throw new ParameterArgumentException("Cannot find Brigadier equivalent for argument of type %s.".formatted(type));
     }
 
     final BrigadierArgumentType out = Optional.ofNullable(conversionMap.get(type)).map(it -> it.apply(parameter, argumentName)).orElse(null);
@@ -143,11 +212,6 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
       return out;
     }
 
-    throw new ConversionException("An unexpected error occurred whilst converting type %s to Brigadier equivalent.".formatted(type));
-  }
-
-  @Override
-  public final MessagerWrapper delegateMessager() {
-    return this.messagerWrapper;
+    throw new ParameterArgumentException("An unexpected error occurred whilst converting type %s to Brigadier equivalent.".formatted(type));
   }
 }

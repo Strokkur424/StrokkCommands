@@ -17,27 +17,28 @@
  */
 package net.strokkur.commands.internal.velocity.util;
 
+import net.strokkur.jap.code.convert.ConvertToExpression;
+import net.strokkur.jap.code.expression.CodeExpression;
+import net.strokkur.jap.code.expression.Expressions;
+
 public enum SenderType {
-  NORMAL(VelocityClasses.COMMAND_SOURCE),
-  CONSOLE(VelocityClasses.CONSOLE_COMMAND_SOURCE, "source instanceof ConsoleCommandSource"),
-  PLAYER(VelocityClasses.PLAYER, "source instanceof Player");
-  private final String className;
-  private final String predicate;
+  NORMAL(VelocityClasses.COMMAND_SOURCE, Expressions.bool(true)),
+  CONSOLE(VelocityClasses.CONSOLE_COMMAND_SOURCE, Expressions.variable("source").instanceOf(VelocityClasses.CONSOLE_COMMAND_SOURCE)),
+  PLAYER(VelocityClasses.PLAYER, Expressions.variable("source").instanceOf(VelocityClasses.PLAYER));
 
-  SenderType(String className) {
-    this(className, "true");
+  private final VelocityClasses classType;
+  private final CodeExpression predicate;
+
+  SenderType(VelocityClasses classType, ConvertToExpression predicate) {
+    this.classType = classType;
+    this.predicate = predicate.toExpression();
   }
 
-  SenderType(String className, String predicate) {
-    this.className = className;
-    this.predicate = predicate;
+  public VelocityClasses getClassType() {
+    return classType;
   }
 
-  public String getPredicate() {
+  public CodeExpression getPredicate() {
     return predicate;
-  }
-
-  public String getClassName() {
-    return className;
   }
 }

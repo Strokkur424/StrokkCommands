@@ -45,7 +45,7 @@ class SmartParamsCommand {
   @Executes("source")
   void wholeSourceStack(CommandSourceStack source) {
     source.getSender().sendRichMessage("Hey! You are currently at <red>%s <green>%s <blue>%s</red>!".formatted(
-        source.getLocation().getBlockX(), source.getLocation().getBlockY(), source.getLocation().getBlockZ()
+      source.getLocation().getBlockX(), source.getLocation().getBlockY(), source.getLocation().getBlockZ()
     ));
   }
 
@@ -53,9 +53,9 @@ class SmartParamsCommand {
   void allOfEm(CommandContext<CommandSourceStack> ctx, CommandSourceStack source, CommandSender sender) {
     sender.sendRichMessage("<gold>Your entire command input: <u>" + ctx.getInput());
     sender.sendRichMessage("<gold>This command was executed as <executor>",
-        Placeholder.component("executor", source.getExecutor() == null
-            ? Component.text("null")
-            : source.getExecutor().name())
+      Placeholder.component("executor", source.getExecutor() == null
+        ? Component.text("null")
+        : source.getExecutor().name())
     );
   }
 
@@ -63,10 +63,10 @@ class SmartParamsCommand {
   @Executes("between-arg")
   void betweenArg(String wordArg, CommandSender sender, @Executor Player executor, int value, String[] allArgs) {
     sender.sendRichMessage("<executor> ran <gold>/<cmd></gold> with <aqua><word></aqua> and <green><value></green>",
-        Placeholder.component("executor", executor.displayName()),
-        Placeholder.unparsed("cmd", allArgs[0]),
-        Placeholder.unparsed("word", wordArg),
-        Placeholder.component("value", Component.text(value))
+      Placeholder.component("executor", executor.displayName()),
+      Placeholder.unparsed("cmd", allArgs[0]),
+      Placeholder.unparsed("word", wordArg),
+      Placeholder.component("value", Component.text(value))
     );
   }
 

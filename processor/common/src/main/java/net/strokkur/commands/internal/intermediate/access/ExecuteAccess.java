@@ -17,23 +17,29 @@
  */
 package net.strokkur.commands.internal.intermediate.access;
 
-import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.abstraction.SourceElement;
-import net.strokkur.commands.internal.abstraction.SourceField;
+import net.strokkur.jap.code.convert.ConvertToClassType;
+import net.strokkur.jap.source.classmodel.SourceClassLike;
+import net.strokkur.jap.source.classmodel.SourceElement;
+import net.strokkur.jap.source.classmodel.SourceField;
+import net.strokkur.jap.source.classmodel.SourceRecord;
 
-public sealed interface ExecuteAccess<E extends SourceElement> permits ExecuteAccessImpl, FieldAccess, InstanceAccess {
+public sealed interface ExecuteAccess<E extends SourceElement>
+  extends ConvertToClassType
+  permits FieldAccess, InstanceAccess {
 
   static FieldAccess of(SourceField field) {
-    return new FieldAccessImpl(field);
+    return new FieldAccess(field);
   }
 
-  static InstanceAccess of(SourceClass type) {
-    return new InstanceAccessImpl(type);
+  static InstanceAccess of(SourceClassLike type) {
+    return new InstanceAccess(type);
   }
 
-  E getElement();
+  E element();
 
-  String getSourceName();
+  String name();
 
-  boolean isRecord();
+  default boolean isRecord() {
+    return element() instanceof SourceRecord;
+  }
 }

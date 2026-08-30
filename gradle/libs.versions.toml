@@ -1,15 +1,19 @@
 [versions]
+source-map = "0.1.0"
+
 publishdata = "1.4.0"
 spotless = "8.0.0"
 run = "3.0.2"
 blossom = "2.1.0"
 shadow = "9.3.1"
 
-paper = "1.21.10-R0.1-SNAPSHOT"
-velocity = "3.4.0-SNAPSHOT"
+paper = "1.21.11-R0.1-SNAPSHOT"
+velocity = "3.5.0-SNAPSHOT"
 minecraft = "1.21.10"
 brigadier = "1.4.0"
 guice = "7.0.0"
+gson = "2.14.0"
+auto-service = "1.1.1"
 
 fabric-loader = "0.17.2"
 fabric-loom = "1.11-SNAPSHOT"
@@ -22,7 +26,11 @@ jakarta-inject = "2.0.1"
 jspecify = "1.0.0"
 jetbrains-annotations = "24.0.0"
 
+junit = "6.0.3"
+
 [libraries]
+source-map = { module = "net.strokkur.japutil:source-map", version.ref = "source-map" }
+
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
 velocity-api = { module = "com.velocitypowered:velocity-api", version.ref = "velocity" }
 brigadier = { module = "net.strokkur:brigadier", version.ref = "brigadier" }
@@ -30,11 +38,19 @@ jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrains-annotations" }
 jakarta-inject = { module = "jakarta.inject:jakarta.inject-api", version.ref = "jakarta-inject" }
 guice = { module = "com.google.inject:guice", version.ref = "guice" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+auto-service-annotations = { module = "com.google.auto.service:auto-service-annotations", version.ref = "auto-service" }
+auto-service = { module = "com.google.auto.service:auto-service", version.ref = "auto-service" }
 
 # Modded
 minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
 fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric-loader" }
 fabric-api = { module = "net.fabricmc.fabric-api:fabric-api", version.ref = "fabric" }
+
+# Junit
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform = { module = "org.junit.platform:junit-platform-launcher" }
 
 [plugins]
 publishdata = { id = "de.chojo.publishdata", version.ref = "publishdata" }

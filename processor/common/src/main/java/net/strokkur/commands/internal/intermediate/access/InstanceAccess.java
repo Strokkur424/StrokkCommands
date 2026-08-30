@@ -17,17 +17,24 @@
  */
 package net.strokkur.commands.internal.intermediate.access;
 
-import net.strokkur.commands.internal.abstraction.SourceClass;
+import net.strokkur.jap.code.type.CodeClassType;
+import net.strokkur.jap.source.classmodel.SourceClassLike;
 
-public sealed interface InstanceAccess extends ExecuteAccess<SourceClass> permits InstanceAccessImpl {
-
+public record InstanceAccess(
+  SourceClassLike element
+) implements ExecuteAccess<SourceClassLike> {
   @Override
-  default String getSourceName() {
-    return getElement().getSourceName();
+  public String name() {
+    return element.classType().withoutGenerics().name();
   }
 
   @Override
-  default boolean isRecord() {
-    return getElement().isRecord();
+  public CodeClassType toClassType() {
+    return element.toClassType();
+  }
+
+  @Override
+  public String toString() {
+    return "I" + (element.isStatic() ? "s" : "") + "(" + name() + ")";
   }
 }

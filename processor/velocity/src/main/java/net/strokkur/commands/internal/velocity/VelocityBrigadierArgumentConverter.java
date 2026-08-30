@@ -17,23 +17,10 @@
  */
 package net.strokkur.commands.internal.velocity;
 
-import net.strokkur.commands.internal.abstraction.SourceVariable;
+import com.google.auto.service.AutoService;
 import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
-import net.strokkur.commands.internal.arguments.BrigadierArgumentType;
-import net.strokkur.commands.internal.exceptions.ConversionException;
-import net.strokkur.commands.internal.util.MessagerWrapper;
-import org.jspecify.annotations.Nullable;
 
-final class VelocityBrigadierArgumentConverter extends BrigadierArgumentConverter {
-  VelocityBrigadierArgumentConverter(MessagerWrapper messagerWrapper) {
-    super(messagerWrapper);
-  }
-
-  /// We do not support custom arguments for Velocity... yet!
-  @Override
-  protected @Nullable BrigadierArgumentType handleCustomArgumentAnnotations(
-      String argumentName, String type, SourceVariable parameter
-  ) throws ConversionException {
-    return null;
-  }
+@AutoService(BrigadierArgumentConverter.class)
+public final class VelocityBrigadierArgumentConverter extends BrigadierArgumentConverter {
+  // We do not support custom arguments for Velocity... yet!
 }

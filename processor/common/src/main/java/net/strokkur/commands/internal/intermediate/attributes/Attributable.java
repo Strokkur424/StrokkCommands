@@ -46,6 +46,8 @@ public interface Attributable {
 
   <T> void setAttribute(AttributeKey<T> key, T value);
 
+  void setAttributeRaw(String key, Object value);
+
   void removeAttribute(AttributeKey<?> key);
 
   boolean hasAttribute(AttributeKey<?> key);
@@ -53,6 +55,8 @@ public interface Attributable {
   default <V> void transferAttribute(AttributeKey<V> key, Attributable other) {
     ifAttributeExists(key, v -> other.setAttribute(key, v));
   }
+
+  void transferAllAttributes(Attributable other);
 
   default <V> void ifAttributeExists(AttributeKey<V> key, Consumer<V> action) {
     final V value = getAttribute(key);
@@ -66,6 +70,11 @@ public interface Attributable {
       return getAttributeNotNull(firstKey);
     }
     return getAttribute(orElse);
+  }
+
+  @Contract("_, _, !null -> !null")
+  default <U, V extends U> @Nullable U getEitherAttributeOr(AttributeKey<U> firstKey, AttributeKey<V> orElse, @Nullable U defaultValue) {
+    return Optional.ofNullable(getEitherAttribute(firstKey, orElse)).orElse(defaultValue);
   }
 
   default <U, V extends U> boolean hasEitherAttribute(AttributeKey<U> firstKey, AttributeKey<V> orElse) {
@@ -90,5 +99,9 @@ public interface Attributable {
 
   default <T> T getAttributeNotNull(AttributeKey<T> key) {
     return Objects.requireNonNull(getAttribute(key), "Attribute key " + key + " is null");
+  }
+
+  default <T> Optional<T> getAttributeOptional(AttributeKey<T> key) {
+    return Optional.ofNullable(getAttribute(key));
   }
 }

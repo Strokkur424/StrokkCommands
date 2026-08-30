@@ -19,62 +19,63 @@ package net.strokkur.commands.internal.intermediate.registrable;
 
 import net.strokkur.commands.DefaultExecutes;
 import net.strokkur.commands.Executes;
-import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.abstraction.SourceElement;
-import net.strokkur.commands.internal.abstraction.SourceMethod;
-import net.strokkur.commands.internal.abstraction.SourceParameter;
 import net.strokkur.commands.internal.exceptions.ProviderAlreadyRegisteredException;
 import net.strokkur.commands.internal.util.Classes;
-import net.strokkur.commands.internal.util.MessagerWrapper;
+import net.strokkur.jap.code.type.preset.JavaTypes;
+import net.strokkur.jap.source.classmodel.SourceAnnotationInterface;
+import net.strokkur.jap.source.classmodel.SourceElement;
+import net.strokkur.jap.source.classmodel.SourceMethod;
+import net.strokkur.jap.source.classmodel.SourceMethodParameter;
 
 import java.util.List;
 
 public class ExecutorWrapperRegistry extends RegistrableRegistry<ExecutorWrapperProvider> {
-  public ExecutorWrapperRegistry(String platformType) {
-    super(platformType);
+  private static final ExecutorWrapperRegistry INSTANCE = new ExecutorWrapperRegistry();
+
+  public static ExecutorWrapperRegistry get() {
+    return INSTANCE;
   }
 
   /// - `Command<S> wrapper(Command<S>)`
   /// - `Command<S> wrapper(Command<S>, Method)`
   @Override
   public boolean tryRegisterProvider(
-      MessagerWrapper messager,
-      SourceClass annotationClass,
-      SourceElement sourceElement
+    SourceAnnotationInterface annotationClass,
+    SourceElement sourceElement
   ) throws ProviderAlreadyRegisteredException {
     if (!(sourceElement instanceof SourceMethod sourceMethod)
-        || sourceMethod.hasAnnotationInherited(Executes.class)
-        || sourceMethod.hasAnnotationInherited(DefaultExecutes.class)) {
+      || sourceMethod.hasAnnotationInherited(Executes.class)
+      || sourceMethod.hasAnnotationInherited(DefaultExecutes.class)) {
       return false;
     }
 
-    if (!sourceMethod.getReturnType().getFullyQualifiedAndTypedName().equals(Classes.COMMAND + "<" + this.getPlatformType() + ">")) {
-      messager.warnSource("Incorrect return type for executor wrapper.", sourceMethod);
+    if (!getTypedCommandType().equals(sourceMethod.returnType().toType())) {
+      warnSource("Incorrect return type for executor wrapper.", sourceMethod);
       return false;
     }
 
-    final List<SourceParameter> params = sourceMethod.getParameters();
+    final List<SourceMethodParameter> params = sourceMethod.parameters();
     if (params.size() == 1 || params.size() == 2) {
-      if (!params.getFirst().getType().getFullyQualifiedAndTypedName().equals(Classes.COMMAND + "<" + this.getPlatformType() + ">")) {
-        messager.warnSource(
-            "Incorrect parameter type. Expected %s<%s> but got: %s".formatted(
-                Classes.COMMAND,
-                this.getPlatformType(),
-                params.getFirst().getType().getFullyQualifiedAndTypedName()
-            ),
-            params.getFirst()
+      if (!getTypedCommandType().equals(params.getFirst().type().toType())) {
+        warnSource(
+          "Incorrect parameter type. Expected %s<%s> but got: %s".formatted(
+            Classes.COMMAND,
+            this.getPlatformType(),
+            params.getFirst().type().toType().fullyQualifiedName()
+          ),
+          params.getFirst()
         );
         return false;
       }
 
       if (params.size() == 2) {
-        if (!params.get(1).getType().getFullyQualifiedAndTypedName().equals(Classes.METHOD)) {
-          messager.warnSource(
-              "Incorrect parameter type. Expected %s but got: %s".formatted(
-                  Classes.METHOD,
-                  params.get(1).getType().getFullyQualifiedAndTypedName()
-              ),
-              params.get(1)
+        if (!JavaTypes.METHOD.toClassType().equals(params.get(1).type().toType())) {
+          warnSource(
+            "Incorrect parameter type. Expected %s but got: %s".formatted(
+              JavaTypes.METHOD.toType().fullyQualifiedName(),
+              params.get(1).type().toType().fullyQualifiedName()
+            ),
+            params.get(1)
           );
           return false;
         }
@@ -87,7 +88,7 @@ public class ExecutorWrapperRegistry extends RegistrableRegistry<ExecutorWrapper
       return true;
     }
 
-    messager.warnSource("Incorrect number of parameters provided. Expected 1 or 2, but got: " + params.size(), sourceMethod);
+    warnSource("Incorrect number of parameters provided. Expected 1 or 2, but got: " + params.size(), sourceMethod);
     return false;
   }
 }

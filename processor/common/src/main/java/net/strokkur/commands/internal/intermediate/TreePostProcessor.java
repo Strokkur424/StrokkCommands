@@ -17,9 +17,32 @@
  */
 package net.strokkur.commands.internal.intermediate;
 
+import net.strokkur.commands.internal.StrokkCommandsProcessor;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
+import net.strokkur.jap.source.util.MessagerWrapper;
 
-public sealed interface TreePostProcessor extends ForwardingMessagerWrapper permits CommonTreePostProcessor {
-  void cleanupPath(CommandNode root);
+import java.util.Optional;
+import java.util.ServiceLoader;
+
+public abstract class TreePostProcessor implements ForwardingMessagerWrapper {
+  private final MessagerWrapper delegateMessager = StrokkCommandsProcessor.messagerWrapper();
+
+  public static TreePostProcessor get() {
+    class Holder {
+      @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+      static final Optional<TreePostProcessor> INSTANCE = ServiceLoader.load(
+        TreePostProcessor.class, TreePostProcessor.class.getClassLoader()
+      ).findFirst();
+    }
+
+    return Holder.INSTANCE.orElseThrow(() -> new RuntimeException("No instance of TreePostProcessor found."));
+  }
+
+  public abstract void cleanupPath(CommandNode root);
+
+  @Override
+  public final MessagerWrapper delegateMessager() {
+    return delegateMessager;
+  }
 }

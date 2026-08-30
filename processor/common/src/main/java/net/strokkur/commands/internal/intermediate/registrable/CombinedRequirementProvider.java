@@ -17,39 +17,25 @@
  */
 package net.strokkur.commands.internal.intermediate.registrable;
 
-import net.strokkur.commands.internal.abstraction.SourceClass;
+import net.strokkur.jap.code.convert.ConvertToExpression;
 
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Stream;
 
 public record CombinedRequirementProvider(List<RequirementProvider> providers) implements RequirementProvider {
   public CombinedRequirementProvider(List<RequirementProvider> providers) {
     this.providers = providers.stream()
-        .flatMap(provider -> provider instanceof CombinedRequirementProvider(List<RequirementProvider> otherProviders)
-            ? otherProviders.stream()
-            : Stream.of(provider))
-        .toList();
+      .flatMap(provider -> provider instanceof CombinedRequirementProvider(List<RequirementProvider> otherProviders)
+        ? otherProviders.stream()
+        : Stream.of(provider))
+      .toList();
   }
 
   @Override
-  public String getRequirementString() {
-    if (providers.size() == 1) {
-      return providers.getFirst().getRequirementString();
-    }
-
-    return '(' + String.join(" || ", this.providers.stream()
-        .map(RequirementProvider::getRequirementString)
-        .toList()) + ')';
-  }
-
-  @Override
-  public List<SourceClass> getSourceClasses() {
-    final List<SourceClass> classes = new LinkedList<>();
-    for (RequirementProvider provider : providers) {
-      classes.addAll(provider.getSourceClasses());
-    }
-    return Collections.unmodifiableList(classes);
+  public ConvertToExpression requirementExpression() {
+    return providers.stream()
+      .map(RequirementProvider::requirementExpression)
+      .reduce(ConvertToExpression::or)
+      .orElseThrow();
   }
 }

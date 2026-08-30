@@ -17,9 +17,11 @@
  */
 package net.strokkur.testplugin.velocity.docs;
 
+import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
+import net.strokkur.commands.Literal;
 import net.strokkur.commands.permission.Permission;
 
 @Command("test")
@@ -27,13 +29,13 @@ class CommandTest {
 
   @Executes("print")
   @Permission("test.command.print")
-  void print(Player player, int num) {
-    player.sendRichMessage("<green>" + num);
+  void print(CommandSource source, int num) {
+    source.sendRichMessage("<green>" + num);
   }
 
   @Executes("yell")
   @Permission("test.command.yell")
-  void yell(Player player, String message) {
+  void yell(Player player, @Literal String whatisit, String message) {
     player.sendRichMessage("<red>" + message.toUpperCase());
   }
 }

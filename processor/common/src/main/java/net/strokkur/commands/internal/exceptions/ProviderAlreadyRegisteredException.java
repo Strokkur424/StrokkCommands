@@ -17,17 +17,17 @@
  */
 package net.strokkur.commands.internal.exceptions;
 
-import net.strokkur.commands.internal.abstraction.SourceClass;
+import net.strokkur.jap.source.classmodel.SourceAnnotationInterface;
 
 public class ProviderAlreadyRegisteredException extends Exception {
-  private final SourceClass annotationClass;
+  private final SourceAnnotationInterface annotationClass;
 
-  public ProviderAlreadyRegisteredException(SourceClass annotation) {
-    super("The annotation @" + annotation.getSourceName() + " already has a registered provider!");
+  public ProviderAlreadyRegisteredException(SourceAnnotationInterface annotation) {
+    super("The annotation @" + annotation.classType().fullyQualifiedName() + " already has a registered provider!");
     this.annotationClass = annotation;
   }
 
-  public SourceClass getAnnotationClass() {
+  public SourceAnnotationInterface getAnnotationClass() {
     return annotationClass;
   }
 }

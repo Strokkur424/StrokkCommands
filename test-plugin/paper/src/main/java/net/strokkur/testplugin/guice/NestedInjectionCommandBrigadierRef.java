@@ -40,37 +40,37 @@ public final class NestedInjectionCommandBrigadierRef {
     final NestedInjectionCommand.SomeCommonClass instanceSecondField = this.instance.secondField;
 
     return Commands.literal("nested-injection-test")
+      .executes(ctx -> {
+        this.instance.run();
+        return Command.SINGLE_SUCCESS;
+      })
+
+      .then(Commands.literal("first")
         .executes(ctx -> {
-          this.instance.run();
+          instanceFirstField.run(ctx.getSource().getSender());
           return Command.SINGLE_SUCCESS;
         })
+      )
 
-        .then(Commands.literal("first")
-            .executes(ctx -> {
-              instanceFirstField.run(ctx.getSource().getSender());
-              return Command.SINGLE_SUCCESS;
-            })
-        )
+      .then(Commands.literal("second")
+        .executes(ctx -> {
+          instanceSecondField.run(ctx.getSource().getSender());
+          return Command.SINGLE_SUCCESS;
+        })
+      )
 
-        .then(Commands.literal("second")
-            .executes(ctx -> {
-              instanceSecondField.run(ctx.getSource().getSender());
-              return Command.SINGLE_SUCCESS;
-            })
-        )
+      .then(Commands.literal("inner-static")
+        .executes(ctx -> {
+          instanceInnerStatic.run();
+          return Command.SINGLE_SUCCESS;
+        })
+      )
 
-        .then(Commands.literal("inner-static")
-            .executes(ctx -> {
-              instanceInnerStatic.run();
-              return Command.SINGLE_SUCCESS;
-            })
-        )
-
-        .then(Commands.literal("inner-non-static")
-            .executes(ctx -> {
-              instanceInnerNonStatic.run();
-              return Command.SINGLE_SUCCESS;
-            })
-        );
+      .then(Commands.literal("inner-non-static")
+        .executes(ctx -> {
+          instanceInnerNonStatic.run();
+          return Command.SINGLE_SUCCESS;
+        })
+      );
   }
 }

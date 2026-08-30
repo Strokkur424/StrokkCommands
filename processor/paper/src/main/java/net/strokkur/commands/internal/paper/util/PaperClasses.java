@@ -17,17 +17,26 @@
  */
 package net.strokkur.commands.internal.paper.util;
 
-import net.strokkur.commands.internal.util.Classes;
+import net.strokkur.jap.code.convert.ConvertToClassType;
+import net.strokkur.jap.code.type.CodeTypes;
 
-public interface PaperClasses extends Classes {
+public interface PaperClasses extends ConvertToClassType {
   // Paper types
-  String COMMAND_SENDER = "org.bukkit.command.CommandSender";
-  String PLAYER = "org.bukkit.entity.Player";
-  String ENTITY = "org.bukkit.entity.Entity";
-  String COMPONENT = "net.kyori.adventure.text.Component";
+  PaperClasses COMMAND_SENDER = create("org.bukkit.command.CommandSender");
+  PaperClasses PLAYER = create("org.bukkit.entity.Player");
+  PaperClasses ENTITY = create("org.bukkit.entity.Entity");
+  PaperClasses JAVA_PLUGIN = create("org.bukkit.plugin.java.JavaPlugin");
+  PaperClasses COMPONENT = create("net.kyori.adventure.text.Component");
+
+  PaperClasses BOOTSTRAP_CONTEXT = create("io.papermc.paper.plugin.bootstrap.BootstrapContext");
+  PaperClasses PLUGIN_BOOTSTRAP = create("io.papermc.paper.plugin.bootstrap.PluginBootstrap");
 
   // Brigadier related
-  String COMMAND_SOURCE_STACK = "io.papermc.paper.command.brigadier.CommandSourceStack";
-  String COMMANDS = "io.papermc.paper.command.brigadier.Commands";
-  String MESSAGE_COMPONENT_SERIALIZER = "io.papermc.paper.command.brigadier.MessageComponentSerializer";
+  PaperClasses COMMAND_SOURCE_STACK = create("io.papermc.paper.command.brigadier.CommandSourceStack");
+  PaperClasses COMMANDS = create("io.papermc.paper.command.brigadier.Commands");
+  PaperClasses MESSAGE_COMPONENT_SERIALIZER = create("io.papermc.paper.command.brigadier.MessageComponentSerializer");
+
+  static PaperClasses create(String fqn) {
+    return () -> CodeTypes.ofClass(fqn);
+  }
 }

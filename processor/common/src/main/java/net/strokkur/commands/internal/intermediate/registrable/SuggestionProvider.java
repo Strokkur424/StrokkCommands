@@ -17,10 +17,16 @@
  */
 package net.strokkur.commands.internal.intermediate.registrable;
 
-import net.strokkur.commands.internal.abstraction.SourceClass;
+import net.strokkur.jap.code.convert.ConvertToExpression;
+import net.strokkur.jap.code.expression.CodeExpression;
+import net.strokkur.jap.code.expression.Expressions;
 
 public interface SuggestionProvider {
-  String getSuggestionString();
 
-  SourceClass getSourceClass();
+  ConvertToExpression suggestionExpression();
+
+  /// Convert this provider's [#suggestionExpression()] into a lambda form.
+  default CodeExpression toSuggestionLambda() {
+    return Expressions.lambdaInline("source", suggestionExpression());
+  }
 }

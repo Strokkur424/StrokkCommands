@@ -17,7 +17,10 @@
  */
 package net.strokkur.commands;
 
+import net.strokkur.commands.container.ManyDefaultExecutes;
+
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -62,7 +65,8 @@ import java.util.List;
 /// If multiple [DefaultExecutes]-annotated methods are present, the **deeper one** in the tree takes precedence.
 /// If multiple [DefaultExecutes]-annotated methods are present on the same path, the first declared one takes precedence.
 @Retention(RetentionPolicy.SOURCE)
-@Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
+@Target({ElementType.METHOD})
+@Repeatable(ManyDefaultExecutes.class)
 public @interface DefaultExecutes {
   /// A literal path to prepend to the method.
   ///

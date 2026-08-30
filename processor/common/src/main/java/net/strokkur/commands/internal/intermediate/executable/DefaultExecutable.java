@@ -17,41 +17,63 @@
  */
 package net.strokkur.commands.internal.intermediate.executable;
 
-import net.strokkur.commands.internal.abstraction.SourceVariable;
-import net.strokkur.commands.internal.intermediate.attributes.Attributable;
-import net.strokkur.commands.internal.util.Classes;
+import net.strokkur.commands.internal.intermediate.attributes.AttributableHelper;
+import net.strokkur.jap.code.convert.ConvertToExpression;
+import net.strokkur.jap.code.expression.CodeExpression;
+import net.strokkur.jap.code.expression.Expressions;
+import net.strokkur.jap.code.type.CodeType;
+import net.strokkur.jap.code.type.preset.JavaTypes;
+import net.strokkur.jap.source.type.SourceType;
 import org.jspecify.annotations.Nullable;
 
-import java.util.Set;
+import java.util.Objects;
 
-public interface DefaultExecutable extends Executable, Attributable {
+public class DefaultExecutable extends Executable implements AttributableHelper {
 
-  enum Type {
-    NONE(null, Set.of()),
-    ARRAY("ctx.getInput().split(\" \")", Set.of()),
-    LIST("Collections.unmodifiableList(Arrays.asList(ctx.getInput().split(\" \")))", Set.of(Classes.COLLECTIONS, Classes.ARRAYS));
+  public DefaultExecutable(Executable executable) {
+    super(executable);
+  }
 
-    private final @Nullable String getter;
-    private final Set<String> imports;
+  @Override
+  public int hashCode() {
+    return Objects.hash(
+      sourceClass,
+      executesMethod()
+    );
+  }
 
-    Type(@Nullable String getter, Set<String> imports) {
-      this.getter = getter;
-      this.imports = imports;
+  @Override
+  public boolean equals(Object obj) {
+    if (obj instanceof DefaultExecutable other) {
+      return Objects.equals(sourceClass, other.sourceClass)
+        && Objects.equals(executesMethod(), other.executesMethod());
+    }
+    return false;
+  }
+
+  public enum Type {
+    NONE(null),
+    ARRAY(Expressions.variable("ctx").chainMethod("getInput").chainMethod("split", Expressions.string(" "))),
+    LIST(JavaTypes.COLLECTIONS.chainMethod("unmodifiableList")
+      .addParameters(JavaTypes.ARRAYS.chainMethod("asList", ARRAY.getter()))
+    );
+
+    private final @Nullable CodeExpression getter;
+
+    Type(@Nullable ConvertToExpression getter) {
+      this.getter = getter != null ? getter.toExpression() : null;
     }
 
-    public @Nullable String getGetter() {
-      return this.getter;
+    public CodeExpression getter() {
+      return Objects.requireNonNull(this.getter);
     }
 
-    public Set<String> getImports() {
-      return this.imports;
-    }
-
-    public static DefaultExecutable.Type getType(SourceVariable variable) {
-      if (variable.getType().getFullyQualifiedAndTypedName().equals(Classes.LIST_STRING)) {
+    public static DefaultExecutable.Type getType(SourceType type) {
+      final CodeType codeType = type.toType();
+      if (JavaTypes.LIST.typed(JavaTypes.STRING).equals(codeType)) {
         return LIST;
       }
-      if (variable.getType().getFullyQualifiedName().equals("java.lang.String[]")) {
+      if (JavaTypes.STRING.toArray().equals(codeType)) {
         return ARRAY;
       }
       return NONE;

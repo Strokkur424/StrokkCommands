@@ -17,12 +17,8 @@
  */
 package net.strokkur.commands.internal.arguments;
 
-import net.strokkur.commands.internal.abstraction.SourceElement;
-import net.strokkur.commands.internal.intermediate.executable.ParameterType;
+import net.strokkur.commands.internal.intermediate.executable.CommandParameter;
 
-public non-sealed interface CommandArgument extends ParameterType {
-
+public non-sealed interface CommandArgument extends CommandParameter {
   String argumentName();
-
-  SourceElement element();
 }

@@ -17,61 +17,102 @@
  */
 package net.strokkur.commands.internal.velocity;
 
+import com.google.auto.service.AutoService;
 import net.strokkur.commands.internal.PlatformUtils;
-import net.strokkur.commands.internal.abstraction.AnnotationsHolder;
-import net.strokkur.commands.internal.abstraction.SourceVariable;
 import net.strokkur.commands.internal.exceptions.AnnotationException;
+import net.strokkur.commands.internal.intermediate.executable.CommandParameter;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
-import net.strokkur.commands.internal.intermediate.executable.ParameterType;
-import net.strokkur.commands.internal.intermediate.executable.SourceParameterType;
+import net.strokkur.commands.internal.intermediate.executable.UnparsedCommandParameter;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
+import net.strokkur.commands.internal.prototype.requirements.PermissionRequirement;
 import net.strokkur.commands.internal.velocity.util.SenderType;
 import net.strokkur.commands.internal.velocity.util.VelocityAttributeKeys;
 import net.strokkur.commands.internal.velocity.util.VelocityClasses;
 import net.strokkur.commands.permission.Permission;
+import net.strokkur.jap.code.convert.ConvertToExpression;
+import net.strokkur.jap.code.expression.Expressions;
+import net.strokkur.jap.code.expression.builder.InvocationChainBuilder;
+import net.strokkur.jap.code.type.CodeClassType;
+import net.strokkur.jap.code.type.CodeType;
+import net.strokkur.jap.source.annotation.AnnotationsHolder;
+import net.strokkur.jap.source.classmodel.SourceParameterLike;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-final class VelocityPlatformUtils implements PlatformUtils {
+@AutoService(PlatformUtils.class)
+public final class VelocityPlatformUtils implements PlatformUtils {
   @Override
-  public void populateExecutesNode(Executable executable, CommandNode node, List<ParameterType> parameters) {
+  public void populateExecutesNode(Executable executable, CommandNode node, List<CommandParameter> parameters) {
     final SenderType type = this.getSenderType(parameters);
     executable.setAttribute(VelocityAttributeKeys.SENDER_TYPE, type);
     node.setAttribute(VelocityAttributeKeys.SENDER_TYPE, type);
   }
 
   @Override
-  public String platformType() {
-    return VelocityClasses.COMMAND_SOURCE;
+  public CodeClassType platformType() {
+    return VelocityClasses.COMMAND_SOURCE.toClassType();
   }
 
   @Override
-  public void populateNode(CommandNode node, AnnotationsHolder element) {
-    element.getAnnotationOptional(Permission.class).ifPresent(
-        permission -> node.editAttributeMutable(VelocityAttributeKeys.PERMISSIONS, s -> s.add(permission.value()), () -> Set.of(permission.value()))
-    );
+  public void populateNode(AnnotationsHolder element, CommandNode node) {
+    element.findAnnotationInherited(Permission.class)
+      .map(anno -> anno.value(Permission.class))
+      .ifPresent(permission -> node.forEachChildElseSelf(n -> n.editAttributeMutable(
+        VelocityAttributeKeys.PERMISSIONS,
+        s -> s.add(permission.value()),
+        () -> new HashSet<>(Set.of(permission.value()))
+      )));
   }
 
-  private SenderType getSenderType(List<ParameterType> parameters) throws AnnotationException {
+  private SenderType getSenderType(List<CommandParameter> parameters) throws AnnotationException {
     SenderType type = SenderType.NORMAL;
-    for (ParameterType parameter : parameters) {
-      if (!(parameter instanceof SourceParameterType(SourceVariable sourceParam))) {
+    for (CommandParameter parameter : parameters) {
+      if (!(parameter instanceof UnparsedCommandParameter(SourceParameterLike sourceParam))) {
         continue;
       }
+      final CodeType adapted = sourceParam.type().toType();
 
-      final SenderType thisType = switch (sourceParam.getType().getFullyQualifiedName()) {
-        case VelocityClasses.PLAYER -> SenderType.PLAYER;
-        case VelocityClasses.CONSOLE_COMMAND_SOURCE -> SenderType.CONSOLE;
-        default -> type;
-      };
+      final SenderType thisType;
+      if (adapted.equals(VelocityClasses.PLAYER.toType())) {
+        thisType = SenderType.PLAYER;
+      } else if (adapted.equals(VelocityClasses.CONSOLE_COMMAND_SOURCE.toType())) {
+        thisType = SenderType.CONSOLE;
+      } else {
+        thisType = type;
+      }
 
       if (type != SenderType.NORMAL && thisType != type) {
-        throw new AnnotationException("Cannot satisfy both a player and a console source.");
+        throw new AnnotationException("Cannot satisfy both a player and a console source.", sourceParam);
       }
       type = thisType;
     }
 
     return type;
+  }
+
+  @Override
+  public PermissionRequirement permissionRequirement(Set<String> permissions) {
+    return new PermissionRequirement(permissions) {
+      @Override
+      protected ConvertToExpression permToExpr(String perm) {
+        return Expressions.variable("source").chainMethod("hasPermission", Expressions.string(perm));
+      }
+    };
+  }
+
+  @Override
+  public InvocationChainBuilder literalBuilder(ConvertToExpression name) {
+    return VelocityClasses.BRIGADIER_COMMAND
+      .chainBuilder()
+      .chainMethod("literalArgumentBuilder", name);
+  }
+
+  @Override
+  public InvocationChainBuilder argumentBuilder(ConvertToExpression name, ConvertToExpression argument) {
+    return VelocityClasses.BRIGADIER_COMMAND
+      .chainBuilder()
+      .chainMethod("requiredArgumentBuilder", name, argument);
   }
 }

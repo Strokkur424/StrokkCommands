@@ -62,7 +62,7 @@ public class BetterSubCommands {
 
       target.setHealth(0d);
       sender.sendRichMessage("<red>Successfully killed <target>",
-          Placeholder.component("target", target.displayName())
+        Placeholder.component("target", target.displayName())
       );
     }
   }

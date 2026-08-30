@@ -47,7 +47,7 @@ import java.lang.annotation.Target;
 /// void executes(CommandSender sender, @StringArg(GREEDY) String message);
 /// ```
 @Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.PARAMETER)
+@Target({ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
 public @interface StringArg {
   /// {@return the [StringArgType] value}
   /// Defaults to [StringArgType#WORD].

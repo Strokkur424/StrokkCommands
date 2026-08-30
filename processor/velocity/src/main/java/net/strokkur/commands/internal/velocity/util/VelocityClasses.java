@@ -17,16 +17,21 @@
  */
 package net.strokkur.commands.internal.velocity.util;
 
-import net.strokkur.commands.internal.util.Classes;
+import net.strokkur.jap.code.convert.ConvertToClassType;
+import net.strokkur.jap.code.type.CodeTypes;
 
-public interface VelocityClasses extends Classes {
-  String COMMAND_SOURCE = "com.velocitypowered.api.command.CommandSource";
-  String PLAYER = "com.velocitypowered.api.proxy.Player";
-  String CONSOLE_COMMAND_SOURCE = "com.velocitypowered.api.proxy.ConsoleCommandSource";
+public interface VelocityClasses extends ConvertToClassType {
+  VelocityClasses COMMAND_SOURCE = create("com.velocitypowered.api.command.CommandSource");
+  VelocityClasses PLAYER = create("com.velocitypowered.api.proxy.Player");
+  VelocityClasses CONSOLE_COMMAND_SOURCE = create("com.velocitypowered.api.proxy.ConsoleCommandSource");
 
-  String BRIGADIER_COMMAND = "com.velocitypowered.api.command.BrigadierCommand";
-  String COMMAND_META = "com.velocitypowered.api.command.CommandMeta";
+  VelocityClasses BRIGADIER_COMMAND = create("com.velocitypowered.api.command.BrigadierCommand");
+  VelocityClasses COMMAND_META = create("com.velocitypowered.api.command.CommandMeta");
 
-  String PROXY_INITIALIZE_EVENT = "com.velocitypowered.api.event.proxy.ProxyInitializeEvent";
-  String PROXY_SERVER = "com.velocitypowered.api.proxy.ProxyServer";
+  VelocityClasses PROXY_INITIALIZE_EVENT = create("com.velocitypowered.api.event.proxy.ProxyInitializeEvent");
+  VelocityClasses PROXY_SERVER = create("com.velocitypowered.api.proxy.ProxyServer");
+
+  static VelocityClasses create(String fqn) {
+    return () -> CodeTypes.ofClass(fqn);
+  }
 }

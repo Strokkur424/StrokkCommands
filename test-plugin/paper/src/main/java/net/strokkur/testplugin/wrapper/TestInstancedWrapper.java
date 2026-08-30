@@ -38,7 +38,7 @@ class TestInstancedWrapper {
   private static final Logger LOGGER = LoggerFactory.getLogger(TestInstancedWrapper.class);
 
   @LogWrapper
-  Command<CommandSourceStack> log(Command<CommandSourceStack> command, Method method) {
+  static Command<CommandSourceStack> log(Command<CommandSourceStack> command, Method method) {
     LOGGER.info("Called handler: {}", method.getName());
     return command;
   }

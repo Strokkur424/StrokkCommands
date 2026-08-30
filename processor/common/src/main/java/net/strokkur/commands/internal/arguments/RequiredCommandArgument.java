@@ -17,8 +17,36 @@
  */
 package net.strokkur.commands.internal.arguments;
 
-import net.strokkur.commands.internal.intermediate.attributes.Attributable;
+import net.strokkur.commands.internal.intermediate.attributes.AttributableHelper;
 
-public interface RequiredCommandArgument extends CommandArgument, Attributable {
-  BrigadierArgumentType argumentType();
+import java.util.Map;
+import java.util.TreeMap;
+
+public class RequiredCommandArgument implements CommandArgument, AttributableHelper {
+  private final BrigadierArgumentType argumentType;
+  private final String name;
+  private final Map<String, Object> attributeMap = new TreeMap<>();
+
+  public static RequiredCommandArgument of(BrigadierArgumentType argumentType, String name) {
+    return new RequiredCommandArgument(argumentType, name);
+  }
+
+  private RequiredCommandArgument(BrigadierArgumentType argumentType, String name) {
+    this.argumentType = argumentType;
+    this.name = name;
+  }
+
+  public BrigadierArgumentType argumentType() {
+    return argumentType;
+  }
+
+  @Override
+  public String argumentName() {
+    return name;
+  }
+
+  @Override
+  public Map<String, Object> attributeMap() {
+    return this.attributeMap;
+  }
 }

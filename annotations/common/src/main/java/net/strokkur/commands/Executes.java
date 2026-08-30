@@ -17,7 +17,10 @@
  */
 package net.strokkur.commands;
 
+import net.strokkur.commands.container.ManyExecutes;
+
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -36,6 +39,7 @@ import java.lang.annotation.Target;
 /// ```
 @Retention(RetentionPolicy.SOURCE)
 @Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
+@Repeatable(ManyExecutes.class)
 public @interface Executes {
   /// A literal path to prepend to the method.
   ///

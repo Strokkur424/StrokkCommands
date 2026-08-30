@@ -17,18 +17,24 @@
  */
 package net.strokkur.commands.internal.intermediate.access;
 
-import net.strokkur.commands.internal.abstraction.SourceField;
-import net.strokkur.commands.internal.abstraction.SourceRecord;
+import net.strokkur.jap.code.type.CodeClassType;
+import net.strokkur.jap.source.classmodel.SourceField;
 
-public sealed interface FieldAccess extends ExecuteAccess<SourceField> permits FieldAccessImpl {
-
+public record FieldAccess(
+  SourceField element
+) implements ExecuteAccess<SourceField> {
   @Override
-  default String getSourceName() {
-    return getElement().getType().getSourceName();
+  public String name() {
+    return element.name();
   }
 
   @Override
-  default boolean isRecord() {
-    return getElement().getType() instanceof SourceRecord;
+  public CodeClassType toClassType() {
+    return (CodeClassType) element.type().toType();
+  }
+
+  @Override
+  public String toString() {
+    return "F" + (element.initializer() != null ? "i(" : "(") + name() + "/" + element.type().toType().simpleName() + ")";
   }
 }

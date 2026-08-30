@@ -17,15 +17,16 @@
  */
 package net.strokkur.commands.internal.velocity.util;
 
-import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.abstraction.SourceConstructor;
 import net.strokkur.commands.internal.util.CommandInformation;
+import net.strokkur.jap.source.classmodel.SourceClassLike;
+import net.strokkur.jap.source.classmodel.SourceConstructor;
 import org.jspecify.annotations.Nullable;
 
 public record VelocityCommandInformation(
-    @Nullable SourceConstructor constructor,
-    SourceClass sourceClass,
-    String @Nullable [] aliases,
-    boolean useInjection
+  String name,
+  @Nullable SourceConstructor constructor,
+  SourceClassLike sourceClass,
+  String @Nullable [] aliases,
+  boolean useInjection
 ) implements CommandInformation {
 }

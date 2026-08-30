@@ -17,16 +17,18 @@
  */
 package net.strokkur.commands.internal.util;
 
-import net.strokkur.commands.internal.abstraction.SourceClass;
-import net.strokkur.commands.internal.abstraction.SourceConstructor;
+import net.strokkur.jap.source.classmodel.SourceClassLike;
+import net.strokkur.jap.source.classmodel.SourceConstructor;
 import org.jspecify.annotations.Nullable;
 
 public interface CommandInformation {
 
+  String name();
+
   @Nullable
   SourceConstructor constructor();
 
-  SourceClass sourceClass();
+  SourceClassLike sourceClass();
 
   String @Nullable [] aliases();
 

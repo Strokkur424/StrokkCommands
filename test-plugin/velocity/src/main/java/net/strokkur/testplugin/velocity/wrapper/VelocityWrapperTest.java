@@ -28,14 +28,14 @@ import java.time.Duration;
 @VelocityWrapperTest.Timing
 @net.strokkur.commands.Command("wrapper")
 class VelocityWrapperTest {
-  private final Logger logger;
+  private static Logger logger;
 
   VelocityWrapperTest(Logger logger) {
-    this.logger = logger;
+    VelocityWrapperTest.logger = logger;
   }
 
   @Timing
-  Command<CommandSource> wrap(Command<CommandSource> command) {
+  static Command<CommandSource> wrap(Command<CommandSource> command) {
     return ctx -> {
       final long ns = System.nanoTime();
       try {
