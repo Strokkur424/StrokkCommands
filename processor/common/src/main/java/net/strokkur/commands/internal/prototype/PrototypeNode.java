@@ -80,7 +80,7 @@ public abstract class PrototypeNode {
   }
 
   @MustBeInvokedByOverriders
-  boolean isArgumentPresent(String name) {
+  public boolean isArgumentPresent(String name) {
     if (this.parent == null) {
       return false;
     }

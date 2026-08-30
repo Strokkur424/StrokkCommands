@@ -52,6 +52,10 @@ public class RequiredCommandArgument implements CommandArgument, AttributableHel
     return param.name();
   }
 
+  public SourceParameterLike parameter() {
+    return param;
+  }
+
   public CodeType parameterType() {
     return param.type().toType();
   }

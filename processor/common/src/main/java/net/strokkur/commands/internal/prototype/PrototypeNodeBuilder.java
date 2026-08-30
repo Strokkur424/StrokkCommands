@@ -288,21 +288,23 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
     }
   }
 
+  protected ConvertToExpression expressionFromRequiredArgument(PrototypeNode node, RequiredCommandArgument req) {
+    final boolean isPresent = node.isArgumentPresent(req.argumentName());
+    if (req.argumentType().isOptional()) {
+      final MethodInvocationBuilder builder = req.parameterType().withoutGenerics()
+        .chainMethod(isPresent ? "of" : "empty");
+      if (isPresent) {
+        builder.addParameters(req.argumentType().retriever());
+      }
+      return builder;
+    } else {
+      return isPresent ? req.argumentType().retriever() : Expressions.nullExpr();
+    }
+  }
+
   private ConvertToExpression getArgumentValueExpr(PrototypeNode node, CommandArgument argument) {
     return switch (argument) {
-      case RequiredCommandArgument required -> {
-        final boolean isPresent = node.isArgumentPresent(required.argumentName());
-        if (required.argumentType().isOptional()) {
-          final MethodInvocationBuilder builder = required.parameterType().withoutGenerics()
-            .chainMethod(isPresent ? "of" : "empty");
-          if (isPresent) {
-            builder.addParameters(required.argumentType().retriever());
-          }
-          yield builder;
-        } else {
-          yield isPresent ? required.argumentType().retriever() : Expressions.nullExpr();
-        }
-      }
+      case RequiredCommandArgument required -> expressionFromRequiredArgument(node, required);
       case LiteralCommandArgument lit -> yieldLiteralArgumentExpr(lit);
       case MultiLiteralCommandArgument multiLit -> yieldLiteralArgumentExpr(multiLit);
       default -> throw new IllegalStateException("Unexpected argument type: " + argument.getClass().getName());

@@ -19,11 +19,13 @@ package net.strokkur.commands.internal.paper;
 
 import com.google.auto.service.AutoService;
 import net.strokkur.commands.internal.PlatformUtils;
+import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
 import net.strokkur.commands.internal.exceptions.AnnotationException;
 import net.strokkur.commands.internal.exceptions.UnknownSenderException;
 import net.strokkur.commands.internal.intermediate.executable.CommandParameter;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
 import net.strokkur.commands.internal.intermediate.executable.UnparsedCommandParameter;
+import net.strokkur.commands.internal.intermediate.tree.ArgumentNode;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.paper.util.ExecutorType;
 import net.strokkur.commands.internal.paper.util.PaperAttributeKeys;
@@ -31,6 +33,7 @@ import net.strokkur.commands.internal.paper.util.PaperClasses;
 import net.strokkur.commands.internal.prototype.PrototypeNode;
 import net.strokkur.commands.internal.prototype.requirements.ComparableRequirement;
 import net.strokkur.commands.internal.prototype.requirements.PermissionRequirement;
+import net.strokkur.commands.paper.DefaultToExecutor;
 import net.strokkur.commands.paper.Executor;
 import net.strokkur.commands.paper.RequiresOP;
 import net.strokkur.commands.permission.Permission;
@@ -49,10 +52,10 @@ import java.util.Set;
 public final class PaperPlatformUtils implements PlatformUtils {
 
   @Override
-  public void populateExecutesNode(Executable executable, CommandNode node, List<CommandParameter> parameters) throws UnknownSenderException {
-    final ExecutorType type = getExecutorType(parameters);
+  public void populateExecutesNode(Executable executable, CommandNode rootNode, CommandNode endNode, List<CommandParameter> parameters) throws UnknownSenderException {
+    final ExecutorType type = getExecutorType(rootNode, parameters);
     executable.setAttribute(PaperAttributeKeys.EXECUTOR_TYPE, type);
-    node.setAttribute(PaperAttributeKeys.EXECUTOR_TYPE, type);
+    endNode.setAttribute(PaperAttributeKeys.EXECUTOR_TYPE, type);
   }
 
   @Override
@@ -77,6 +80,18 @@ public final class PaperPlatformUtils implements PlatformUtils {
   @Override
   public boolean mayParameterBeArgument(SourceParameterLike param) {
     return !param.hasAnnotation(Executor.class);
+  }
+
+  @Override
+  public void processCommandArgument(RequiredCommandArgument commandArgument, SourceParameterLike parameter) {
+    if (parameter.hasAnnotation(DefaultToExecutor.class)) {
+      commandArgument.setAttribute(PaperAttributeKeys.DEFAULTS_TO_EXECUTOR, true);
+    }
+  }
+
+  @Override
+  public boolean isArgumentOptional(CommandParameter param) {
+    return param instanceof RequiredCommandArgument req && req.getAttributeNotNull(PaperAttributeKeys.DEFAULTS_TO_EXECUTOR);
   }
 
   @Override
@@ -131,14 +146,28 @@ public final class PaperPlatformUtils implements PlatformUtils {
   // Utils
   //
 
-  private ExecutorType getExecutorType(List<CommandParameter> parameters) throws AnnotationException {
+  private ExecutorType getExecutorType(CommandNode rootNode, List<CommandParameter> parameters) throws AnnotationException {
     ExecutorType type = ExecutorType.NONE;
     for (CommandParameter parameter : parameters) {
-      if (!(parameter instanceof UnparsedCommandParameter(SourceParameterLike param))) {
+      final SourceParameterLike param;
+      if (parameter instanceof UnparsedCommandParameter(SourceParameterLike p)) {
+        param = p;
+      } else if (parameter instanceof RequiredCommandArgument req) {
+        param = req.parameter();
+      } else {
         continue;
       }
 
-      if (!param.hasAnnotationInherited(Executor.class)) {
+      if (param.hasAnnotation(DefaultToExecutor.class)) {
+        if (rootNode.stream().anyMatch(node -> node instanceof ArgumentNode arg &&
+          arg.argument() instanceof RequiredCommandArgument req &&
+          req.parameter().equals(param))) {
+          // This argument exists on this command node path; the executor default is not used
+          continue;
+        }
+      }
+
+      if (!param.hasAnnotationInherited(Executor.class) && !param.hasAnnotation(DefaultToExecutor.class)) {
         continue;
       }
 

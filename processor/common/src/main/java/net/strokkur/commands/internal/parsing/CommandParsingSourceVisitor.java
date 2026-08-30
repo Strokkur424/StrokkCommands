@@ -161,7 +161,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
           final CommandNode endNode = node.addArguments(argumentPath);
           final Executable executableObj = new Executable(executable);
           endNode.setAttribute(AttributeKey.EXECUTABLE, executableObj);
-          PlatformUtils.get().populateExecutesNode(executableObj, endNode, arguments);
+          PlatformUtils.get().populateExecutesNode(executableObj, node, endNode, arguments);
         }
       });
 
@@ -175,7 +175,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
           final CommandNode endNode = node.addArguments(argumentPath);
           final DefaultExecutable executableObj = new DefaultExecutable(executable);
           endNode.setAttribute(AttributeKey.DEFAULT_EXECUTABLE, executableObj);
-          PlatformUtils.get().populateExecutesNode(executableObj, endNode, arguments);
+          PlatformUtils.get().populateExecutesNode(executableObj, node, endNode, arguments);
         }
       });
 
@@ -386,6 +386,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
 
     final RequiredCommandArgument commandArgument = RequiredCommandArgument.of(argumentType, parameter);
     applyRegistrableProvider(commandArgument, parameter, SuggestionsRegistry.get(), AttributeKey.SUGGESTION_PROVIDER, "suggestion");
+    PlatformUtils.get().processCommandArgument(commandArgument, parameter);
     return commandArgument;
   }
 

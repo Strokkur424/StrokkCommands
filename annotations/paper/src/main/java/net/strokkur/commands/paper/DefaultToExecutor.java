@@ -17,29 +17,29 @@
  */
 package net.strokkur.commands.paper;
 
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/// Declares that a parameter should not be interpreted as an argument type but
-/// as the required command executor.
-///
-/// This annotation **can only be applied to** the second parameter of a method and requires
-/// the type to be **either a [Player] or an [Entity]**.
-///
-/// The executor is the entity, for which the command was executed. This can be a different object from
-/// the [CommandSender] if the command was ran with `/execute as` or a different `redirect`/`fork` method.
+/// Marks a parameter with a type compatible for [`@Executor`][Executor]
+/// as **optional** (same behavior as a parameter typed `Optional<?>`) and defaults to using the command's
+/// **executor**, if the command was run without providing an explicit value.
 ///
 /// Example usage:
-/// ```java
-/// @Executes
-/// void executes(CommandSender sender, @Executor Player player);
 /// ```
+/// @Executes("give-item")
+/// void giveItem(CommandSender sender, @DefaultToExecutor Player target) {
+///   target.give(constructItem());
+///   sender.sendPlainMessage(target.getName() + " was given the item!");
+/// }
+/// ```
+///
+/// This would allow a player to execute `/<cmd> give-item` to give the item to himself
+/// or `/<cmd> give-item <player>` to give the item to someone else.
+///
+/// @see Executor
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.PARAMETER)
-public @interface Executor {}
+public @interface DefaultToExecutor {
+}

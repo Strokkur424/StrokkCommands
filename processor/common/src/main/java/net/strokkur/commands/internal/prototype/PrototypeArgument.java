@@ -32,7 +32,7 @@ public final class PrototypeArgument extends PrototypeNode {
   }
 
   @Override
-  boolean isArgumentPresent(String name) {
+  public boolean isArgumentPresent(String name) {
     if (this.name.equals(name)) {
       return true;
     }

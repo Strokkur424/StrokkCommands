@@ -1,5 +1,5 @@
 [versions]
-source-map = "0.1.1-local"
+source-map = "0.1.1"
 
 publishdata = "1.4.0"
 spotless = "8.0.0"

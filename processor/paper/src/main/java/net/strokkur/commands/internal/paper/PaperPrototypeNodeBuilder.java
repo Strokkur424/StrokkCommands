@@ -19,6 +19,7 @@ package net.strokkur.commands.internal.paper;
 
 import com.google.auto.service.AutoService;
 import net.strokkur.commands.internal.PlatformUtils;
+import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
 import net.strokkur.commands.internal.intermediate.executable.DefaultExecutable;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
@@ -83,6 +84,19 @@ public final class PaperPrototypeNodeBuilder extends PrototypeNodeBuilder {
     }
 
     return List.of();
+  }
+
+  @Override
+  protected ConvertToExpression expressionFromRequiredArgument(PrototypeNode node, RequiredCommandArgument req) {
+    if (req.getAttributeNotNull(PaperAttributeKeys.DEFAULTS_TO_EXECUTOR)) {
+      if (node.isArgumentPresent(req.argumentName())) {
+        return req.argumentType().retriever();
+      } else {
+        return Expressions.variable("executor");
+      }
+    }
+
+    return super.expressionFromRequiredArgument(node, req);
   }
 
   @Override

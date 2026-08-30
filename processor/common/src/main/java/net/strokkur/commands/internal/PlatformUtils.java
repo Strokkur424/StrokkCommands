@@ -17,6 +17,7 @@
  */
 package net.strokkur.commands.internal;
 
+import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
 import net.strokkur.commands.internal.exceptions.UnknownSenderException;
 import net.strokkur.commands.internal.intermediate.executable.CommandParameter;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
@@ -50,12 +51,20 @@ public interface PlatformUtils {
     return Holder.INSTANCE.orElseThrow(() -> new RuntimeException("No PlatformUtils provider registered."));
   }
 
-  default void populateExecutesNode(Executable executable, CommandNode node, List<CommandParameter> parameters) throws UnknownSenderException {
+  default void populateExecutesNode(Executable executable, CommandNode rootNode, CommandNode endNode, List<CommandParameter> parameters) throws UnknownSenderException {
     // noop
   }
 
   default boolean mayParameterBeArgument(SourceParameterLike param) {
     return true;
+  }
+
+  default void processCommandArgument(RequiredCommandArgument commandArgument, SourceParameterLike parameter) {
+    // noop
+  }
+
+  default boolean isArgumentOptional(CommandParameter param) {
+    return false;
   }
 
   CodeClassType platformType();

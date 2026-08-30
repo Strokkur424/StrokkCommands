@@ -17,10 +17,10 @@ checkstyle {
 }
 
 repositories {
-  mavenLocal()
   mavenCentral()
   maven("https://repo.papermc.io/repository/maven-public/")
   maven("https://eldonexus.de/repository/maven-releases/")
+  mavenLocal()
 }
 
 java {

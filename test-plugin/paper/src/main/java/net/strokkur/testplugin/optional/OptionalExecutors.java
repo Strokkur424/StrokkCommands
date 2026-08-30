@@ -15,20 +15,19 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.paper.util;
+package net.strokkur.testplugin.optional;
 
-import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.Command;
+import net.strokkur.commands.Executes;
+import net.strokkur.commands.paper.DefaultToExecutor;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
-import java.util.HashSet;
-import java.util.Set;
+@Command("optional-executors")
+class OptionalExecutors {
 
-public class PaperAttributeKeys {
-  public static final AttributeKey<ExecutorType> EXECUTOR_TYPE = AttributeKey.create("executor_type", ExecutorType.NONE);
-  public static final AttributeKey<Boolean> REQUIRES_OP = AttributeKey.create("requires_op", false);
-  public static final AttributeKey<Set<String>> PERMISSIONS = AttributeKey.createDynamic("permission", HashSet::new);
-  public static final AttributeKey<Boolean> DEFAULTS_TO_EXECUTOR = AttributeKey.create("defaults_to_executor", false);
-
-  private PaperAttributeKeys() throws IllegalAccessError {
-    throw new IllegalAccessError("This class cannot be instantiated");
+  @Executes
+  void give(ItemStack is, @DefaultToExecutor Player player) {
+    player.give(is);
   }
 }

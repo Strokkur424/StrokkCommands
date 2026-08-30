@@ -17,6 +17,7 @@
  */
 package net.strokkur.commands.internal.arguments;
 
+import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.intermediate.executable.CommandParameter;
 
 import java.util.ArrayList;
@@ -42,7 +43,7 @@ public non-sealed interface CommandArgument extends CommandParameter {
     final List<List<CommandArgument>> out = new ArrayList<>();
 
     for (int i = 0; i < source.size(); i++) {
-      if (source.get(i).isOptional()) {
+      if (source.get(i).isOptional() || PlatformUtils.get().isArgumentOptional(source.get(i))) {
         out.add(source.subList(0, i));
       }
     }
