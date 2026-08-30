@@ -82,6 +82,10 @@ public interface PlatformUtils {
   /// Pre-processes a prototype node before it gets printed.
   @MustBeInvokedByOverriders
   default void preProcess(PrototypeNode node) {
+    if (node.children().isEmpty()) {
+      return;
+    }
+
     // Handle permissions   --   NOTE: not all implementations must have permissions, however this is still safe
     // - if this node has permissions, first reduce all child nodes by those permissions
     // - if any child node has no permissions set, then there's nothing we should change; exit.

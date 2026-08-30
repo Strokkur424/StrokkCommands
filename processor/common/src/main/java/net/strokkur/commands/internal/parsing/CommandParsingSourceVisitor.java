@@ -70,11 +70,9 @@ import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, CommandParsingSourceVisitor.ParsingContext>, ForwardingMessagerWrapper {
@@ -136,26 +134,33 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
     final CommandNode rootNode = CommandNode.createEmpty();
     final Executable executable = new Executable(sourceMethod.enclosed(), sourceMethod, arguments);
 
-    applyExecutesLogic(
-      sourceMethod, rootNode,
-      ManyExecutes.class, Executes.class, Executes::value,
-      arguments, commandArguments,
-      new Executable(executable), AttributeKey.EXECUTABLE
-    );
-    if (sourceMethod.hasAnnotationInherited(DefaultExecutes.class)) {
-      applyExecutesLogic(
-        sourceMethod, rootNode,
-        ManyDefaultExecutes.class, DefaultExecutes.class, DefaultExecutes::value,
-        arguments, commandArguments,
-        new DefaultExecutable(executable), AttributeKey.DEFAULT_EXECUTABLE
-      );
-    }
+    final AdvancedNodeExtender<Executes> executesExtender = new AdvancedNodeExtender<>(Executes.class, Executes::value)
+      .withPluralAnnotationsClass(ManyExecutes.class)
+      .withFirstPathNodeConsumer(node -> {
+        applyExecutorTransform(sourceMethod, node);
+        PlatformUtils.get().populateNode(sourceMethod, node);
+        applyRequirements(sourceMethod, node);
+      })
+      .withPostProcess(node -> {
+        final CommandNode endNode = node.addArguments(commandArguments);
+        final Executable executableObj = new Executable(executable);
+        endNode.setAttribute(AttributeKey.EXECUTABLE, executableObj);
+        PlatformUtils.get().populateExecutesNode(executableObj, endNode, arguments);
+      });
 
-    // Apply attributes
-    applyExecutorTransform(sourceMethod, rootNode);
-    PlatformUtils.get().populateNode(sourceMethod, rootNode);
-    applyRequirements(sourceMethod, rootNode);
+    executesExtender.accept(sourceMethod, rootNode);
 
+    final AdvancedNodeExtender<DefaultExecutes> defaultExecutesExtender = executesExtender
+      .withAnnotationClass(DefaultExecutes.class, DefaultExecutes::value)
+      .withPluralAnnotationsClass(ManyDefaultExecutes.class)
+      .withPostProcess(node -> {
+        final CommandNode endNode = node.addArguments(commandArguments);
+        final DefaultExecutable executableObj = new DefaultExecutable(executable);
+        endNode.setAttribute(AttributeKey.DEFAULT_EXECUTABLE, executableObj);
+        PlatformUtils.get().populateExecutesNode(executableObj, endNode, arguments);
+      });
+
+    defaultExecutesExtender.accept(sourceMethod, rootNode);
     return rootNode;
   }
 
@@ -168,19 +173,18 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
     ctx.isCurrentlyParsingField = true;
     final CommandNode nestedNode = type.like().accept(this, ctx);
 
+    final AdvancedNodeExtender<Subcommand> fieldExtender = new AdvancedNodeExtender<>(Subcommand.class, Subcommand::value)
+      .withPluralAnnotationsClass(ManySubcommands.class)
+      .withFirstPathNodeConsumer(node -> {
+        node.setAttribute(AttributeKey.ACCESS, ExecuteAccess.of(sourceField));
+        applyExecutorTransform(sourceField, node);
+        PlatformUtils.get().populateNode(sourceField, node);
+        applyRequirements(sourceField, node);
+      })
+      .withPostProcess(node -> node.addChild(nestedNode));
+
     final CommandNode rootNode = CommandNode.createEmpty();
-    forEachPathAnnotation(
-      sourceField, rootNode,
-      ManySubcommands.class, Subcommand.class, Subcommand::value,
-      node -> node.addChild(nestedNode)
-    );
-
-    // Apply attribute modifiers
-    rootNode.setAttribute(AttributeKey.ACCESS, ExecuteAccess.of(sourceField));
-    applyExecutorTransform(sourceField, rootNode);
-    PlatformUtils.get().populateNode(sourceField, rootNode);
-    applyRequirements(sourceField, rootNode);
-
+    fieldExtender.accept(sourceField, rootNode);
     return rootNode;
   }
 
@@ -213,21 +217,21 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
       .map(nested -> nested.accept(this, ctx))
       .toList());
 
-    final CommandNode rootNode = CommandNode.createEmpty();
-    forEachPathAnnotation(
-      sourceClass, rootNode,
-      collectionAnnotation, annotationClass, toPath,
-      node -> nestedNodes.forEach(node::addChild)
-    );
+    final AdvancedNodeExtender<A> classExtender = new AdvancedNodeExtender<>(annotationClass, toPath)
+      .withPluralAnnotationsClass(collectionAnnotation)
+      .withFirstPathNodeConsumer(node -> {
+        applyExecutorTransform(sourceClass, node);
+        PlatformUtils.get().populateNode(sourceClass, node);
+        applyRequirements(sourceClass, node);
+      })
+      .withPostProcess(node -> nestedNodes.forEach(node::addChild));
 
-    // Apply some attributes to the root node before returning it.
+    final CommandNode rootNode = CommandNode.createEmpty();
     if (!nestedField) {
       rootNode.setAttribute(AttributeKey.ACCESS, ExecuteAccess.of(sourceClass));
     }
-    applyExecutorTransform(sourceClass, rootNode);
-    PlatformUtils.get().populateNode(sourceClass, rootNode);
-    applyRequirements(sourceClass, rootNode);
 
+    classExtender.accept(sourceClass, rootNode);
     return rootNode;
   }
 
@@ -260,81 +264,24 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
       .map(CommandArgument.class::cast)
       .toList();
 
-    final CommandNode rootNode = CommandNode.createEmpty();
-    forEachPathAnnotation(
-      record, rootNode,
-      collectionAnnotation, annotationClass, toPath,
-      node -> node.addArguments(recordArguments),
-      node -> nestedNodes.forEach(node::addChild)
-    );
+    final AdvancedNodeExtender<A> recordExtender = new AdvancedNodeExtender<>(annotationClass, toPath)
+      .withPluralAnnotationsClass(collectionAnnotation)
+      .withFirstPathNodeConsumer(node -> {
+        applyExecutorTransform(record, node);
+        PlatformUtils.get().populateNode(record, node);
+        applyRequirements(record, node);
+      })
+      .withEndPathNodeTransform(node -> node.addArguments(recordArguments))
+      .withPostProcess(node -> nestedNodes.forEach(node::addChild));
 
-    // Apply some attributes to the root node before returning it.
+    final CommandNode rootNode = CommandNode.createEmpty();
     if (!nestedField) {
       rootNode.setAttribute(AttributeKey.ACCESS, ExecuteAccess.of(record));
     }
     rootNode.setAttribute(AttributeKey.RECORD_ARGUMENTS, RecordArguments.of(record, parsedComponents));
-    applyExecutorTransform(record, rootNode);
-    PlatformUtils.get().populateNode(record, rootNode);
-    applyRequirements(record, rootNode);
 
+    recordExtender.accept(record, rootNode);
     return rootNode;
-  }
-
-  private <A extends Annotation, E extends Executable> void applyExecutesLogic(
-    SourceMethod sourceMethod, CommandNode root,
-    Class<? extends Annotation> collectionAnnotation, Class<A> annotationClass, Function<A, String> toPath,
-    List<CommandParameter> arguments, List<CommandArgument> commandArguments,
-    E executable, AttributeKey<E> key
-  ) {
-    forEachPathAnnotation(
-      sourceMethod, root,
-      collectionAnnotation, annotationClass, toPath,
-      node -> {
-        final CommandNode endNode = node.addArguments(commandArguments);
-        endNode.setAttribute(key, executable);
-        PlatformUtils.get().populateExecutesNode(executable, endNode, arguments);
-      }
-    );
-  }
-
-  private <A extends Annotation> void forEachPathAnnotation(
-    AnnotationsHolder holder, CommandNode root,
-    @Nullable Class<? extends Annotation> collectionAnnotation, Class<A> annotationClass,
-    Function<A, String> toPath,
-    Consumer<CommandNode> endNodeConsumer
-  ) {
-    forEachPathAnnotation(
-      holder, root,
-      collectionAnnotation, annotationClass,
-      toPath, Function.identity(),
-      endNodeConsumer
-    );
-  }
-
-  private <A extends Annotation> void forEachPathAnnotation(
-    AnnotationsHolder holder, CommandNode root,
-    @Nullable Class<? extends Annotation> collectionAnnotation, Class<A> annotationClass,
-    Function<A, String> toPath, Function<CommandNode, CommandNode> postProcess,
-    Consumer<CommandNode> endNodeConsumer
-  ) {
-    final List<A> annotations = holder.getAnnotations(collectionAnnotation, annotationClass);
-    if (annotations.isEmpty()) {
-      endNodeConsumer.accept(postProcess.apply(root));
-      return;
-    }
-
-    annotations.stream()
-      .map(toPath)
-      .distinct()
-      .map(path -> path.isBlank() ?
-        List.<CommandArgument>of() :
-        Arrays.stream(path.strip().split(" "))
-          .map(lit -> LiteralCommandArgument.literal(lit, false))
-          .toList())
-      .forEach(args -> {
-        final CommandNode endNode = args.isEmpty() ? root : root.addArguments(args);
-        endNodeConsumer.accept(postProcess.apply(endNode));
-      });
   }
 
   private void applyRequirements(AnnotationsHolder holder, CommandNode node) {

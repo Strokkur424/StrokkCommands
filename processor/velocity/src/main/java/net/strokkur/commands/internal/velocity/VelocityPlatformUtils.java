@@ -37,6 +37,7 @@ import net.strokkur.jap.code.type.CodeType;
 import net.strokkur.jap.source.annotation.AnnotationsHolder;
 import net.strokkur.jap.source.classmodel.SourceParameterLike;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -61,7 +62,7 @@ public final class VelocityPlatformUtils implements PlatformUtils {
       .ifPresent(permission -> node.forEachChildElseSelf(n -> n.editAttributeMutable(
         VelocityAttributeKeys.PERMISSIONS,
         s -> s.add(permission.value()),
-        () -> Set.of(permission.value())
+        () -> new HashSet<>(Set.of(permission.value()))
       )));
   }
 
