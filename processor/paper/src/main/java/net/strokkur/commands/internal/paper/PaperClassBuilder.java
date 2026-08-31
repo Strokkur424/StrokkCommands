@@ -21,7 +21,6 @@ import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.paper.util.PaperClasses;
 import net.strokkur.commands.internal.paper.util.PaperCommandInformation;
 import net.strokkur.commands.internal.printer.CommonClassBuilder;
-import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.jap.code.classmodel.CodeField;
 import net.strokkur.jap.code.classmodel.CodeMethod;
 import net.strokkur.jap.code.classmodel.CodeParameterDefinition;
@@ -75,12 +74,6 @@ final class PaperClassBuilder extends CommonClassBuilder<PaperCommandInformation
         .addModifiers(Modifiers.PUBLIC, Modifiers.STATIC, Modifiers.FINAL)
         .setInitializer(aliases)
     );
-  }
-
-  @Override
-  protected MethodBuilder getCreateMethodBuilder() {
-    return super.getCreateMethodBuilder()
-      .setReturnType(Classes.LITERAL_COMMAND_NODE.typed(PaperClasses.COMMAND_SOURCE_STACK));
   }
 
   @Override

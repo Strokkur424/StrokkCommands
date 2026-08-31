@@ -19,7 +19,6 @@ package net.strokkur.commands.internal.velocity;
 
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.printer.CommonClassBuilder;
-import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.velocity.util.VelocityClasses;
 import net.strokkur.commands.internal.velocity.util.VelocityCommandInformation;
 import net.strokkur.jap.code.classmodel.CodeField;
@@ -40,12 +39,6 @@ import net.strokkur.jap.source.classmodel.SourceParameterLike;
 class VelocityClassBuilder extends CommonClassBuilder<VelocityCommandInformation> {
   VelocityClassBuilder(CommandNode rootNode, VelocityCommandInformation commandInformation) {
     super(rootNode, commandInformation);
-  }
-
-  @Override
-  protected MethodBuilder getCreateMethodBuilder() {
-    return super.getCreateMethodBuilder()
-      .setReturnType(Classes.LITERAL_COMMAND_NODE.typed(VelocityClasses.COMMAND_SOURCE));
   }
 
   @Override
