@@ -25,10 +25,17 @@ import net.strokkur.commands.internal.prototype.PrototypeNodeBuilder;
 import net.strokkur.commands.internal.prototype.PrototypeRoot;
 import net.strokkur.commands.internal.util.CommandInformation;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
-import net.strokkur.jap.code.classmodel.*;
+import net.strokkur.jap.code.classmodel.CodeBlock;
+import net.strokkur.jap.code.classmodel.CodeClass;
+import net.strokkur.jap.code.classmodel.CodeField;
+import net.strokkur.jap.code.classmodel.CodeMethod;
+import net.strokkur.jap.code.classmodel.CodeParameterDefinition;
 import net.strokkur.jap.code.classmodel.builder.ClassBuilder;
 import net.strokkur.jap.code.classmodel.builder.MethodBuilder;
-import net.strokkur.jap.code.convert.*;
+import net.strokkur.jap.code.convert.ConvertToClassType;
+import net.strokkur.jap.code.convert.ConvertToExpression;
+import net.strokkur.jap.code.convert.ConvertToMethod;
+import net.strokkur.jap.code.convert.ConvertToStatement;
 import net.strokkur.jap.code.documentation.CodeDocumentation;
 import net.strokkur.jap.code.expression.CodeExpression;
 import net.strokkur.jap.code.expression.Expressions;
@@ -224,7 +231,7 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
   }
 
   protected List<CodeVariableExpression> getConstructorParameters(Predicate<SourceMethodParameter> filter) {
-    List<CodeVariableExpression> list = new ArrayList<>();
+    final List<CodeVariableExpression> list = new ArrayList<>();
     if (!commandInformation.useInjection() && commandInformation.constructor() instanceof SourceConstructor ctor) {
       // for (SourceTypeAnnotation typeAnnotation : ctor.getTypeAnnotations()) {
       //   builder.addGeneric(CodeType.generic(typeAnnotation.getName(), typeAnnotation.getDefinitionString()));
