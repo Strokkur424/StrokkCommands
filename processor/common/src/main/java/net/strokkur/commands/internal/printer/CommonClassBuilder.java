@@ -18,11 +18,13 @@
 package net.strokkur.commands.internal.printer;
 
 import net.strokkur.commands.internal.BuildConstants;
+import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperProvider;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.prototype.PrototypeNodeBuilder;
 import net.strokkur.commands.internal.prototype.PrototypeRoot;
+import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.util.CommandInformation;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.jap.code.classmodel.CodeBlock;
@@ -32,16 +34,12 @@ import net.strokkur.jap.code.classmodel.CodeMethod;
 import net.strokkur.jap.code.classmodel.CodeParameterDefinition;
 import net.strokkur.jap.code.classmodel.builder.ClassBuilder;
 import net.strokkur.jap.code.classmodel.builder.MethodBuilder;
-import net.strokkur.jap.code.convert.ConvertToClassType;
 import net.strokkur.jap.code.convert.ConvertToExpression;
 import net.strokkur.jap.code.convert.ConvertToMethod;
 import net.strokkur.jap.code.convert.ConvertToStatement;
 import net.strokkur.jap.code.documentation.CodeDocumentation;
 import net.strokkur.jap.code.expression.CodeExpression;
 import net.strokkur.jap.code.expression.Expressions;
-import net.strokkur.jap.code.expression.builder.ConstructorInvocationBuilder;
-import net.strokkur.jap.code.expression.builder.MethodLikeInvocationBuilder;
-import net.strokkur.jap.code.expression.simple.CodeVariableExpression;
 import net.strokkur.jap.code.statement.Statements;
 import net.strokkur.jap.code.type.CodeClassType;
 import net.strokkur.jap.code.type.CodeTypes;
@@ -79,7 +77,7 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
   public CodeClass createClass() {
     // Create skeletons for create and register methods for use in Javadocs.
     final MethodBuilder createMethod = getCreateMethodBuilder();
-    final MethodBuilder createMethodWithName = getCreateMethodBuilderWithName();
+    final MethodBuilder createMethodWithName = getCreateMethodBuilder(CodeParameterDefinition.of(JavaTypes.STRING, "name"));
     final MethodBuilder registerMethod = getRegisterMethodBuilder();
 
     final List<ConvertToStatement> createMethodStatements = new ArrayList<>();
@@ -90,8 +88,7 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
 
     // Start building up the actual class
     final ClassBuilder classBuilder = CodeClass.builder(selfType);
-    classBuilder.setDocumentation(getClassJavadoc(createMethod, registerMethod));
-    classBuilder.setDocumentation(getClassJavadoc(createMethodWithName, registerMethod));
+    classBuilder.setDocumentation(getClassJavadoc(createMethod, createMethodWithName, registerMethod));
     classBuilder.addModifiers(Modifiers.PUBLIC, Modifiers.FINAL);
     classBuilder.addAnnotations(JSpecifyTypes.NULL_MARKED);
 
@@ -145,16 +142,18 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
     }
 
     createMethodStatements.add(Statements.returnStmt(treeExpr));
-
-    createMethod.setCode(
-      Statements.returnStmt(
-        Expressions.methodInvocation(
-          "create"
-        ).addParameters(Expressions.variable("NAME")).addParameters(getConstructorParameters(f -> true).toArray(new CodeVariableExpression[0]))
-      )
-    );
-
     createMethodWithName.setCode(createMethodStatements.toArray(ConvertToStatement[]::new));
+    final CodeMethod builtCreateMethod = createMethodWithName.toMethod();
+
+    createMethod.setCode(Statements.returnStmt(
+      Expressions.methodInvocation("create")
+        .addParameters(Expressions.variable("NAME"))
+        .addParameters(builtCreateMethod.parameters().stream()
+          .skip(1)
+          .map(def -> Expressions.variable(def.name()))
+          .toArray(CodeExpression[]::new)
+        )
+    ));
 
     // Add the methods to the class
     classBuilder.addMethods(registerMethod, createMethod, createMethodWithName);
@@ -187,35 +186,6 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
     return classBuilder.build();
   }
 
-  private void addSourceConstructorParameters(MethodLikeInvocationBuilder<?> builder) {
-    if (commandInformation.useInjection()) {
-      // Don't add constructor parameters
-      return;
-    }
-
-    if (commandInformation.constructor() instanceof SourceConstructor sourceCtor) {
-      builder.addParameters(sourceCtor.parameters().stream()
-        .map(p -> Expressions.variable(p.name()))
-        .toArray(CodeExpression[]::new)
-      );
-    }
-  }
-
-  protected ConvertToExpression createInstanceConstructor(ConvertToClassType classType) {
-    final ConstructorInvocationBuilder ctor = classType.ctor();
-    if (sourceType.equals(classType)) {
-      addSourceConstructorParameters(ctor);
-    }
-    return ctor;
-  }
-
-  /// The transmutation logic for the top-level constructor call, intended
-  /// for using existing instances (i.e., a Server instance) multiple times
-  /// to save on duplicate parameters in the create/register methods.
-  protected ConvertToExpression transmuteConstructorParameter(SourceMethodParameter parameter) {
-    return Expressions.variable(parameter.name());
-  }
-
   protected void addConstructorParametersTo(MethodBuilder builder, Predicate<SourceMethodParameter> filter) {
     if (!commandInformation.useInjection() && commandInformation.constructor() instanceof SourceConstructor ctor) {
       // for (SourceTypeAnnotation typeAnnotation : ctor.getTypeAnnotations()) {
@@ -230,56 +200,25 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
     }
   }
 
-  protected List<CodeVariableExpression> getConstructorParameters(Predicate<SourceMethodParameter> filter) {
-    final List<CodeVariableExpression> list = new ArrayList<>();
-    if (!commandInformation.useInjection() && commandInformation.constructor() instanceof SourceConstructor ctor) {
-      // for (SourceTypeAnnotation typeAnnotation : ctor.getTypeAnnotations()) {
-      //   builder.addGeneric(CodeType.generic(typeAnnotation.getName(), typeAnnotation.getDefinitionString()));
-      // }
-
-      for (SourceMethodParameter parameter : ctor.parameters()) {
-        if (filter.test(parameter)) {
-          list.add(Expressions.variable(parameter.name()));
-        }
-      }
-    }
-    return list;
-  }
-
   /// Creates the builder for the create method.
   ///
   /// @apiNote this method should always be overridden. Overriders should implement the create method logic now.
   @MustBeInvokedByOverriders
-  protected MethodBuilder getCreateMethodBuilder() {
+  protected MethodBuilder getCreateMethodBuilder(CodeParameterDefinition... additionalParameters) {
     final MethodBuilder builder = CodeMethod.builder("create");
     builder.addModifiers(Modifiers.PUBLIC);
     if (!commandInformation.useInjection()) {
       builder.addModifiers(Modifiers.STATIC);
     }
-    // Propagate constructor parameters
-    addConstructorParametersTo(builder, f -> true);
+    builder.setReturnType(Classes.LITERAL_COMMAND_NODE.typed(PlatformUtils.get().platformType()));
 
-    return builder;
-  }
-
-  /// Creates the builder for the create method.
-  ///
-  /// @apiNote this method should always be overridden. Overriders should implement the create method logic now.
-  @MustBeInvokedByOverriders
-  protected MethodBuilder getCreateMethodBuilderWithName() {
-    final MethodBuilder builder = CodeMethod.builder("create");
-    builder.addModifiers(Modifiers.PUBLIC);
-    builder.addParameter(CodeTypes.ofJavaClass(String.class), "commandName");
-    if (!commandInformation.useInjection()) {
-      builder.addModifiers(Modifiers.STATIC);
-    }
+    builder.addParameters(additionalParameters);
 
     // Propagate constructor parameters
     addConstructorParametersTo(builder, f -> true);
 
     return builder;
   }
-
 
   /// Creates the builder for the register method.
   ///
@@ -352,7 +291,7 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
   }
 
   /// Gets the Javadoc for the class file, cannot currently be overridden.
-  private CodeDocumentation getClassJavadoc(ConvertToMethod createMethod, ConvertToMethod registerMethod) {
+  private CodeDocumentation getClassJavadoc(ConvertToMethod createMethod, ConvertToMethod createMethodWithName, ConvertToMethod registerMethod) {
     return CodeDocumentation.combineLines(
       CodeDocumentation.text("A class holding the Brigadier source tree generated from"),
       CodeDocumentation.combine(
@@ -364,6 +303,7 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
       CodeDocumentation.author("Strokkur24 - StrokkCommands"),
       CodeDocumentation.version(BuildConstants.VERSION),
       CodeDocumentation.see(createMethod, "creating the command"),
+      CodeDocumentation.see(createMethodWithName, "creating the command with a custom name"),
       CodeDocumentation.see(registerMethod, "registering the command")
     );
   }
