@@ -28,15 +28,13 @@ import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.jap.code.classmodel.*;
 import net.strokkur.jap.code.classmodel.builder.ClassBuilder;
 import net.strokkur.jap.code.classmodel.builder.MethodBuilder;
-import net.strokkur.jap.code.convert.ConvertToClassType;
-import net.strokkur.jap.code.convert.ConvertToExpression;
-import net.strokkur.jap.code.convert.ConvertToMethod;
-import net.strokkur.jap.code.convert.ConvertToStatement;
+import net.strokkur.jap.code.convert.*;
 import net.strokkur.jap.code.documentation.CodeDocumentation;
 import net.strokkur.jap.code.expression.CodeExpression;
 import net.strokkur.jap.code.expression.Expressions;
 import net.strokkur.jap.code.expression.builder.ConstructorInvocationBuilder;
 import net.strokkur.jap.code.expression.builder.MethodLikeInvocationBuilder;
+import net.strokkur.jap.code.expression.simple.CodeVariableExpression;
 import net.strokkur.jap.code.statement.Statements;
 import net.strokkur.jap.code.type.CodeClassType;
 import net.strokkur.jap.code.type.CodeTypes;
@@ -145,7 +143,7 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
       Statements.returnStmt(
         Expressions.methodInvocation(
           "create"
-        ).addParameters(Expressions.variable("NAME"))
+        ).addParameters(Expressions.variable("NAME")).addParameters(getConstructorParameters(f -> true).toArray(new CodeVariableExpression[0]))
       )
     );
 
@@ -225,6 +223,22 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
     }
   }
 
+  protected List<CodeVariableExpression> getConstructorParameters(Predicate<SourceMethodParameter> filter) {
+    List<CodeVariableExpression> list = new ArrayList<>();
+    if (!commandInformation.useInjection() && commandInformation.constructor() instanceof SourceConstructor ctor) {
+      // for (SourceTypeAnnotation typeAnnotation : ctor.getTypeAnnotations()) {
+      //   builder.addGeneric(CodeType.generic(typeAnnotation.getName(), typeAnnotation.getDefinitionString()));
+      // }
+
+      for (SourceMethodParameter parameter : ctor.parameters()) {
+        if (filter.test(parameter)) {
+          list.add(Expressions.variable(parameter.name()));
+        }
+      }
+    }
+    return list;
+  }
+
   /// Creates the builder for the create method.
   ///
   /// @apiNote this method should always be overridden. Overriders should implement the create method logic now.
@@ -235,7 +249,6 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
     if (!commandInformation.useInjection()) {
       builder.addModifiers(Modifiers.STATIC);
     }
-
     // Propagate constructor parameters
     addConstructorParametersTo(builder, f -> true);
 
