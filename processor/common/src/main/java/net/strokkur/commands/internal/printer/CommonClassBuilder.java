@@ -77,18 +77,18 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
   public CodeClass createClass() {
     // Create skeletons for create and register methods for use in Javadocs.
     final MethodBuilder createMethod = getCreateMethodBuilder();
-    final MethodBuilder createMethodWithName = getCreateMethodBuilder(CodeParameterDefinition.of(JavaTypes.STRING, "name"));
+    final MethodBuilder createMethodNamed = getCreateMethodBuilder(CodeParameterDefinition.of(JavaTypes.STRING, "name"));
     final MethodBuilder registerMethod = getRegisterMethodBuilder();
 
     final List<ConvertToStatement> createMethodStatements = new ArrayList<>();
 
     applyCreateMethodJavadoc(createMethod, registerMethod);
-    applyCreateMethodJavadoc(createMethodWithName, registerMethod);
+    applyCreateMethodJavadoc(createMethodNamed, registerMethod);
     applyRegisterMethodJavadoc(registerMethod, createMethod);
 
     // Start building up the actual class
     final ClassBuilder classBuilder = CodeClass.builder(selfType);
-    classBuilder.setDocumentation(getClassJavadoc(createMethod, createMethodWithName, registerMethod));
+    classBuilder.setDocumentation(getClassJavadoc(createMethod, createMethodNamed, registerMethod));
     classBuilder.addModifiers(Modifiers.PUBLIC, Modifiers.FINAL);
     classBuilder.addAnnotations(JSpecifyTypes.NULL_MARKED);
 
@@ -142,13 +142,13 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
     }
 
     createMethodStatements.add(Statements.returnStmt(treeExpr));
-    createMethodWithName.setCode(createMethodStatements.toArray(ConvertToStatement[]::new));
-    final CodeMethod builtCreateMethod = createMethodWithName.toMethod();
+    createMethodNamed.setCode(createMethodStatements.toArray(ConvertToStatement[]::new));
+    final CodeMethod createMethodNamedBuilt = createMethodNamed.toMethod();
 
     createMethod.setCode(Statements.returnStmt(
       Expressions.methodInvocation("create")
         .addParameters(Expressions.variable("NAME"))
-        .addParameters(builtCreateMethod.parameters().stream()
+        .addParameters(createMethodNamedBuilt.parameters().stream()
           .skip(1)
           .map(def -> Expressions.variable(def.name()))
           .toArray(CodeExpression[]::new)
@@ -156,7 +156,7 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
     ));
 
     // Add the methods to the class
-    classBuilder.addMethods(registerMethod, createMethod, createMethodWithName);
+    classBuilder.addMethods(registerMethod, createMethod, createMethodNamedBuilt);
 
     // If the class is not injectable, the ctor should be private
     if (!commandInformation.useInjection()) {
@@ -291,7 +291,7 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
   }
 
   /// Gets the Javadoc for the class file, cannot currently be overridden.
-  private CodeDocumentation getClassJavadoc(ConvertToMethod createMethod, ConvertToMethod createMethodWithName, ConvertToMethod registerMethod) {
+  private CodeDocumentation getClassJavadoc(ConvertToMethod createMethod, ConvertToMethod createMethodNamed, ConvertToMethod registerMethod) {
     return CodeDocumentation.combineLines(
       CodeDocumentation.text("A class holding the Brigadier source tree generated from"),
       CodeDocumentation.combine(
@@ -303,7 +303,7 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
       CodeDocumentation.author("Strokkur24 - StrokkCommands"),
       CodeDocumentation.version(BuildConstants.VERSION),
       CodeDocumentation.see(createMethod, "creating the command"),
-      CodeDocumentation.see(createMethodWithName, "creating the command with a custom name"),
+      CodeDocumentation.see(createMethodNamed, "creating the command with a custom name"),
       CodeDocumentation.see(registerMethod, "registering the command")
     );
   }
