@@ -27,6 +27,7 @@ public interface Classes extends ConvertToClassType {
   Classes LITERAL_COMMAND_NODE = create("com.mojang.brigadier.tree.LiteralCommandNode");
   Classes LITERAL_ARGUMENT_BUILDER = create("com.mojang.brigadier.builder.LiteralArgumentBuilder");
   Classes SIMPLE_COMMAND_EXCEPTION_TYPE = create("com.mojang.brigadier.exceptions.SimpleCommandExceptionType");
+  Classes COMMAND_SYNTAX_EXCEPTION = create("com.mojang.brigadier.exceptions.CommandSyntaxException");
   Classes LITERAL_MESSAGE = create("com.mojang.brigadier.LiteralMessage");
   Classes COMMAND_CONTEXT = create("com.mojang.brigadier.context.CommandContext");
   Classes SUGGESTIONS = create("com.mojang.brigadier.suggestion.Suggestions");

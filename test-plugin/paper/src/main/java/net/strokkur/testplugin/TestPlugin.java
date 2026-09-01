@@ -21,6 +21,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import net.strokkur.testplugin.enumarg.GiveMaterialCommandBrigadier;
+import net.strokkur.testplugin.enumarg.SomeEnumsCommandBrigadier;
 import net.strokkur.testplugin.guice.InjectionCommandBrigadierRef;
 import net.strokkur.testplugin.guice.NestedInjectionCommandBrigadierRef;
 import net.strokkur.testplugin.guice.module.GuiceModule;
@@ -50,6 +52,9 @@ public final class TestPlugin extends JavaPlugin {
       OptionalArgumentsBrigadier.register(commands);
       OptionalLiteralsBrigadier.register(commands);
       OptionalExecutorsBrigadier.register(commands);
+
+      SomeEnumsCommandBrigadier.register(commands);
+      GiveMaterialCommandBrigadier.register(commands);
     }));
 
 //      OneBrigadier.register(commands);

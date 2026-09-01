@@ -49,6 +49,7 @@ import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperRe
 import net.strokkur.commands.internal.intermediate.registrable.RegistrableRegistry;
 import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
 import net.strokkur.commands.internal.intermediate.registrable.RequirementRegistry;
+import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
 import net.strokkur.commands.internal.intermediate.registrable.SuggestionsRegistry;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
@@ -385,6 +386,9 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
     }
 
     final RequiredCommandArgument commandArgument = RequiredCommandArgument.of(argumentType, parameter);
+    if (argumentType.defaultSuggestionProvider() instanceof SuggestionProvider notNull) {
+      commandArgument.setAttribute(AttributeKey.SUGGESTION_PROVIDER, notNull);
+    }
     applyRegistrableProvider(commandArgument, parameter, SuggestionsRegistry.get(), AttributeKey.SUGGESTION_PROVIDER, "suggestion");
     PlatformUtils.get().processCommandArgument(commandArgument, parameter);
     return commandArgument;

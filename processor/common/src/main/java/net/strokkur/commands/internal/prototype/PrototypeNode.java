@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public abstract class PrototypeNode {
   protected final List<PrototypeNode> children = new ArrayList<>();
@@ -67,6 +68,14 @@ public abstract class PrototypeNode {
   @Unmodifiable
   public List<PrototypeNode> children() {
     return this.children;
+  }
+
+  /// Creates a stream that contains this and all child nodes from this prototype node.
+  /// The iteration order is undefined.
+  public Stream<PrototypeNode> stream() {
+    final Stream.Builder<PrototypeNode> builder = Stream.builder();
+    forEachChildAndMyself(builder::add);
+    return builder.build();
   }
 
   private @Nullable CodeExpression getDefaultExecutes() {
@@ -104,7 +113,7 @@ public abstract class PrototypeNode {
       ));
     }
     if (suggests != null) {
-      builder.chainMethod("suggests", StyleConfig.NEWLINE, suggests.toSuggestionLambda());
+      builder.chainMethod("suggests", StyleConfig.NEWLINE, suggests.suggestionExpression());
     }
     if (executes != null) {
       builder.chainMethod("executes", StyleConfig.NEWLINE, executes);
