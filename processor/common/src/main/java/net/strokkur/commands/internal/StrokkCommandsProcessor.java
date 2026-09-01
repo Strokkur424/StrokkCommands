@@ -63,9 +63,14 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
   implements SourceMapProcessor {
 
   private static @Nullable MessagerWrapper MESSAGER = null;
+  private static @Nullable SourceMapUtil SOURCE_MAP_UTIL = null;
 
   public static MessagerWrapper messagerWrapper() {
     return Objects.requireNonNull(MESSAGER);
+  }
+
+  public static SourceMapUtil sourceMapUtil() {
+    return Objects.requireNonNull(SOURCE_MAP_UTIL);
   }
 
   protected abstract Class<A> targetAnnotationClass();
@@ -92,7 +97,7 @@ public abstract class StrokkCommandsProcessor<A extends Annotation, C extends Co
 
   @Override
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-    final SourceMapUtil sourceMap = new SourceMapUtil(this);
+    final SourceMapUtil sourceMap = SOURCE_MAP_UTIL = new SourceMapUtil(this);
 
     fillRegistry(CustomSuggestion.class, SuggestionsRegistry.get(), roundEnv);
     fillRegistry(CustomRequirement.class, RequirementRegistry.get(), roundEnv);

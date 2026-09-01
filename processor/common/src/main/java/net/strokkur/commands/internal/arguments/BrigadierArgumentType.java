@@ -17,14 +17,19 @@
  */
 package net.strokkur.commands.internal.arguments;
 
+import net.strokkur.commands.internal.intermediate.registrable.EnumSuggestionProvider;
+import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
+import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.jap.code.convert.ConvertToExpression;
 import net.strokkur.jap.code.documentation.DiscardingDocumentationRenderer;
+import net.strokkur.jap.code.type.CodeClassType;
 import net.strokkur.jap.code.visitor.source.JavaSourcePrintingVisitor;
+import org.jspecify.annotations.Nullable;
 
 public record BrigadierArgumentType(
   String argumentTypeIdentifier,
   ConvertToExpression initializer, ConvertToExpression retriever,
-  boolean isOptional
+  @Nullable SuggestionProvider defaultSuggestionProvider, boolean isOptional
 ) {
 
   public static BrigadierArgumentType of(
@@ -39,11 +44,25 @@ public record BrigadierArgumentType(
     ConvertToExpression initializer, ConvertToExpression retriever,
     boolean optional
   ) {
-    return new BrigadierArgumentType(argumentTypeIdentifier, initializer, retriever, optional);
+    return new BrigadierArgumentType(argumentTypeIdentifier, initializer, retriever, null, optional);
+  }
+
+  public static BrigadierArgumentType ofEnum(
+    String argumentTypeIdentifier,
+    CodeClassType type, boolean optional
+  ) {
+    final EnumSuggestionProvider provider =new EnumSuggestionProvider(type);
+    return new BrigadierArgumentType(
+      argumentTypeIdentifier,
+      Classes.STRING_ARGUMENT_TYPE.chainMethod("word"),
+      provider.createRetrieveExpr(argumentTypeIdentifier),
+      provider,
+      optional
+    );
   }
 
   public BrigadierArgumentType withOptional(boolean optional) {
-    return new BrigadierArgumentType(argumentTypeIdentifier, initializer, retriever, optional);
+    return new BrigadierArgumentType(argumentTypeIdentifier, initializer, retriever, defaultSuggestionProvider, optional);
   }
 
   @Override

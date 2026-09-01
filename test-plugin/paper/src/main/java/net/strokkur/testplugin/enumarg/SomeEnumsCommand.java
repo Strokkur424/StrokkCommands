@@ -15,10 +15,32 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.registrable;
+package net.strokkur.testplugin.enumarg;
 
-import net.strokkur.jap.code.convert.ConvertToExpression;
+import net.strokkur.commands.Command;
+import net.strokkur.commands.Executes;
+import net.strokkur.commands.paper.DefaultToExecutor;
+import org.bukkit.Axis;
+import org.bukkit.Effect;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventPriority;
 
-public interface SuggestionProvider {
-  ConvertToExpression suggestionExpression();
+@Command("enums")
+class SomeEnumsCommand {
+
+  @Executes("material")
+  void material(Material material) {
+    // ...
+  }
+
+  @Executes("multiple")
+  void multiple(Axis axis, EventPriority priority) {
+    // ...
+  }
+
+  @Executes("mixed")
+  void mixed(Effect effect, @DefaultToExecutor Player target) {
+    target.playEffect(target.getLocation(), effect, null);
+  }
 }

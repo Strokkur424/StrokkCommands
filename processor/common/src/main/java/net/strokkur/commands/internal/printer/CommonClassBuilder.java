@@ -20,6 +20,7 @@ package net.strokkur.commands.internal.printer;
 import net.strokkur.commands.internal.BuildConstants;
 import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
+import net.strokkur.commands.internal.intermediate.registrable.EnumSuggestionProvider;
 import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperProvider;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.prototype.PrototypeNodeBuilder;
@@ -43,6 +44,8 @@ import net.strokkur.jap.code.expression.Expressions;
 import net.strokkur.jap.code.statement.Statements;
 import net.strokkur.jap.code.type.CodeClassType;
 import net.strokkur.jap.code.type.CodeTypes;
+import net.strokkur.jap.code.type.generic.CodeGenericTypeDefinition;
+import net.strokkur.jap.code.type.generic.GenericEnclosure;
 import net.strokkur.jap.code.type.preset.JSpecifyTypes;
 import net.strokkur.jap.code.type.preset.JakartaInjectTypes;
 import net.strokkur.jap.code.type.preset.JavaTypes;
@@ -56,6 +59,9 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -141,6 +147,19 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
       }
     }
 
+    final List<EnumSuggestionProvider> enumArguments = prototype.stream()
+      .map(node -> node.suggests)
+      .filter(EnumSuggestionProvider.class::isInstance)
+      .map(EnumSuggestionProvider.class::cast)
+      .distinct()
+      .toList();
+    if (!enumArguments.isEmpty()) {
+      for (EnumSuggestionProvider enumArgument : enumArguments) {
+        createMethodStatements.add(enumArgument.createVariableStmt());
+      }
+      createMethodStatements.add(Statements.blank());
+    }
+
     createMethodStatements.add(Statements.returnStmt(treeExpr));
     createMethodNamed.setCode(createMethodStatements.toArray(ConvertToStatement[]::new));
     final CodeMethod createMethodNamedBuilt = createMethodNamed.toMethod();
@@ -157,6 +176,9 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
 
     // Add the methods to the class
     classBuilder.addMethods(registerMethod, createMethod, createMethodNamedBuilt);
+    if (!enumArguments.isEmpty()) {
+      classBuilder.addMethods(createEnumMapHelper(), createEnumSuggestsHelper(), createEnumRetrieveHelper());
+    }
 
     // If the class is not injectable, the ctor should be private
     if (!commandInformation.useInjection()) {
@@ -261,6 +283,93 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
   /// Sets the Javadoc for the register method. Not directly implemented due to platform-dependent differences
   /// in command registration.
   protected abstract void applyRegisterMethodJavadoc(MethodBuilder registerMethod, ConvertToMethod createMethod);
+
+  protected CodeMethod createEnumMapHelper() {
+    return CodeMethod.builder("createEnumValuesMap")
+      .addModifiers(Modifiers.PRIVATE, Modifiers.STATIC)
+      .addGenerics(CodeGenericTypeDefinition.of("E", GenericEnclosure.withExtends(CodeTypes.ofJavaClass(Enum.class))))
+      .setReturnType(CodeTypes.ofJavaClass(Map.class).typed(
+        JavaTypes.STRING,
+        CodeTypes.generic("E")
+      ))
+      .addParameter(CodeTypes.generic("E").toArray(), "values")
+      .setCode(
+        Statements.returnStmt(JavaTypes.ARRAYS.chainMethod("stream", Expressions.variable("values"))
+          .chainMethod("collect", StyleConfig.NEWLINE, CodeTypes.ofJavaClass(Collectors.class).chainMethod("toMap", StyleConfig.MULTILINE,
+            Expressions.lambdaInline("e", Expressions.variable("e")
+              .chainMethod("name")
+              .chainMethod("toLowerCase", CodeTypes.ofJavaClass(Locale.class).chainField("ROOT"))
+            ),
+            CodeTypes.ofJavaClass(Function.class).chainMethod("identity")
+          )))
+      )
+      .toMethod();
+  }
+
+  protected CodeMethod createEnumSuggestsHelper() {
+    return CodeMethod.builder("getEnumSuggestions")
+      .addModifiers(Modifiers.PRIVATE, Modifiers.STATIC)
+      .addGenerics(CodeGenericTypeDefinition.of("E", GenericEnclosure.withExtends(CodeTypes.ofJavaClass(Enum.class))))
+      .setReturnType(Classes.SUGGESTION_PROVIDER.typed(PlatformUtils.get().platformType()))
+      .addParameter(
+        CodeTypes.ofJavaClass(Map.class).typed(
+          JavaTypes.STRING,
+          CodeTypes.generic("E")
+        ),
+        "typesMap"
+      )
+      .setCode(
+        Statements.returnStmt(
+          Expressions.lambda(List.of("ctx", "builder"),
+            Expressions.variable("typesMap").chainMethod("keySet").chainMethod("stream")
+              .chainMethod("filter", StyleConfig.NEWLINE, Expressions.lambdaInline("n",
+                Expressions.variable("n")
+                  .chainMethod("toLowerCase")
+                  .chainMethod("contains", Expressions.variable("builder").chainMethod("getRemainingLowerCase"))
+              ))
+              .chainMethod("forEach", StyleConfig.NEWLINE, Expressions.variable("builder").methodReference("suggest")),
+            Statements.returnStmt(Expressions.variable("builder").chainMethod("buildFuture"))
+          )
+        )
+      )
+      .toMethod();
+  }
+
+  protected CodeMethod createEnumRetrieveHelper() {
+    final ConvertToExpression exceptionCreation = Classes.SIMPLE_COMMAND_EXCEPTION_TYPE.ctor(
+      Classes.LITERAL_MESSAGE.ctor(
+        Expressions.string("Invalid input: ").concat(Expressions.variable("rawValue"))
+      ).setStyle(StyleConfig.MULTILINE)
+    ).chainMethod("create");
+
+    return CodeMethod.builder("getEnumValue")
+      .addModifiers(Modifiers.PRIVATE, Modifiers.STATIC)
+      .addGenerics(CodeGenericTypeDefinition.of("E", GenericEnclosure.withExtends(CodeTypes.ofJavaClass(Enum.class))))
+      .addThrowsExceptions(Classes.COMMAND_SYNTAX_EXCEPTION)
+      .setReturnType(CodeTypes.generic("E"))
+      .addParameter(
+        CodeTypes.ofJavaClass(Map.class).typed(
+          JavaTypes.STRING,
+          CodeTypes.generic("E")
+        ),
+        "typesMap"
+      )
+      .addParameter(JavaTypes.STRING, "rawValue")
+      .setCode(
+        Statements.variableDeclarationFinal(
+          CodeTypes.generic("E"),
+          "value",
+          Expressions.variable("typesMap").chainMethod("get", Expressions.variable("rawValue"))
+        ),
+        Statements.ifStmt(
+          Expressions.variable("value").eq(Expressions.nullExpr()),
+          exceptionCreation.throwStmt()
+        ),
+        Statements.blank(),
+        Statements.returnStmt(Expressions.variable("value"))
+      )
+      .toMethod();
+  }
 
   protected CodeMethod createReflectionHelper() {
     return CodeMethod.builder("getMethodReflectively")

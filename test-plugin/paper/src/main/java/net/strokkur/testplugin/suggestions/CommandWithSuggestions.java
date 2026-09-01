@@ -18,6 +18,7 @@
 package net.strokkur.testplugin.suggestions;
 
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -35,6 +36,9 @@ class CommandWithSuggestions {
   @CustomSuggestion
   private @interface MySuggestions {}
 
+  @CustomSuggestion
+  private @interface MySuggestions$2 {}
+
   @MySuggestions
   static CompletableFuture<Suggestions> mySuggestions(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {
     builder.suggest("abc");
@@ -42,8 +46,13 @@ class CommandWithSuggestions {
     return builder.buildFuture();
   }
 
+  @MySuggestions$2
+  static SuggestionProvider<CommandSourceStack> mySuggestions$2() {
+    return CommandWithSuggestions::mySuggestions;
+  }
+
   @Executes("static-impl")
-  void executesField(@MySuggestions String value) {
+  void executesField(@MySuggestions String value, @MySuggestions$2 String value$2) {
     // ...
   }
 }

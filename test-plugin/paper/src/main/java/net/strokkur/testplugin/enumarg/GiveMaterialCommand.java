@@ -15,10 +15,23 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
-package net.strokkur.commands.internal.intermediate.registrable;
+package net.strokkur.testplugin.enumarg;
 
-import net.strokkur.jap.code.convert.ConvertToExpression;
+import net.strokkur.commands.Command;
+import net.strokkur.commands.Executes;
+import net.strokkur.commands.paper.DefaultToExecutor;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
-public interface SuggestionProvider {
-  ConvertToExpression suggestionExpression();
+import java.util.OptionalInt;
+
+@Command("give-material")
+class GiveMaterialCommand {
+
+  @Executes
+  void give(Material material, OptionalInt amount, @DefaultToExecutor Player player) {
+    final ItemStack is = ItemStack.of(material, amount.orElse(1));
+    player.give(is);
+  }
 }

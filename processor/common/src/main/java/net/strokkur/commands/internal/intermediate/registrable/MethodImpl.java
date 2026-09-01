@@ -18,7 +18,6 @@
 package net.strokkur.commands.internal.intermediate.registrable;
 
 import net.strokkur.jap.code.convert.ConvertToExpression;
-import net.strokkur.jap.code.expression.CodeExpression;
 import net.strokkur.jap.code.expression.Expressions;
 import net.strokkur.jap.source.classmodel.SourceMethod;
 
@@ -39,14 +38,5 @@ record MethodImpl(SourceMethod sourceMethod, boolean inline) implements Suggesti
     }
     return sourceMethod.enclosed().chainMethod(sourceMethod.name())
       .chainMethod("test", Expressions.variable("source"));
-  }
-
-  @Override
-  public CodeExpression toSuggestionLambda() {
-    if (inline) {
-      // We actually don't want this to turn into a lambda.
-      return suggestionExpression().toExpression();
-    }
-    return SuggestionProvider.super.toSuggestionLambda();
   }
 }

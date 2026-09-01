@@ -23,6 +23,7 @@ import net.strokkur.commands.arguments.IntArg;
 import net.strokkur.commands.arguments.LongArg;
 import net.strokkur.commands.arguments.StringArg;
 import net.strokkur.commands.arguments.StringArgType;
+import net.strokkur.commands.internal.StrokkCommandsProcessor;
 import net.strokkur.commands.internal.exceptions.ParameterArgumentException;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
@@ -36,6 +37,7 @@ import net.strokkur.jap.code.type.CodeType;
 import net.strokkur.jap.code.type.CodeTypes;
 import net.strokkur.jap.code.type.preset.JavaTypes;
 import net.strokkur.jap.source.annotation.SourceAnnotation;
+import net.strokkur.jap.source.classmodel.SourceEnum;
 import net.strokkur.jap.source.classmodel.SourceParameterLike;
 import org.jspecify.annotations.Nullable;
 
@@ -237,6 +239,15 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
     }
 
     if (!conversionMap.containsKey(typeToCheck)) {
+      // Type is not a custom argument, nor is it present in the conversion map. But we might still be able
+      // to use it, if it is an enum.
+      if (typeToCheck instanceof CodeClassType classType) {
+        if (StrokkCommandsProcessor.sourceMapUtil().mapClassType(classType) instanceof SourceEnum) {
+          // It is indeed an enum.
+          return BrigadierArgumentType.ofEnum(argumentName, classType, isOptional);
+        }
+      }
+
       throw new ParameterArgumentException("Cannot find Brigadier equivalent for argument of type %s.".formatted(typeToCheck));
     }
 
