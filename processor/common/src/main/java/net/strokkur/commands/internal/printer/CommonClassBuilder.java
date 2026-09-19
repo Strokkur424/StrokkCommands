@@ -76,7 +76,7 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
     this.rootNode = rootNode;
     this.commandInformation = commandInformation;
     this.sourceType = commandInformation.sourceClass().classType();
-    this.selfType = CodeTypes.ofClass(sourceType.fullyQualifiedName() + "Brigadier");
+    this.selfType = CodeTypes.of(sourceType.fullyQualifiedName() + "Brigadier");
   }
 
   /// Creates the actual class, which will be printed to a file.
@@ -205,7 +205,7 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
       classBuilder.addMethods(createReflectionHelper());
     }
 
-    return classBuilder.build();
+    return classBuilder.toClass();
   }
 
   protected void addConstructorParametersTo(MethodBuilder builder, Predicate<SourceMethodParameter> filter) {
@@ -287,20 +287,20 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
   protected CodeMethod createEnumMapHelper() {
     return CodeMethod.builder("createEnumValuesMap")
       .addModifiers(Modifiers.PRIVATE, Modifiers.STATIC)
-      .addGenerics(CodeGenericTypeDefinition.of("E", GenericEnclosure.withExtends(CodeTypes.ofJavaClass(Enum.class))))
-      .setReturnType(CodeTypes.ofJavaClass(Map.class).typed(
+      .addGenerics(CodeGenericTypeDefinition.of("E", GenericEnclosure.withExtends(CodeTypes.of(Enum.class))))
+      .setReturnType(CodeTypes.of(Map.class).typed(
         JavaTypes.STRING,
         CodeTypes.generic("E")
       ))
       .addParameter(CodeTypes.generic("E").toArray(), "values")
       .setCode(
         Statements.returnStmt(JavaTypes.ARRAYS.chainMethod("stream", Expressions.variable("values"))
-          .chainMethod("collect", StyleConfig.NEWLINE, CodeTypes.ofJavaClass(Collectors.class).chainMethod("toMap", StyleConfig.MULTILINE,
+          .chainMethod("collect", StyleConfig.NEWLINE, CodeTypes.of(Collectors.class).chainMethod("toMap", StyleConfig.MULTILINE,
             Expressions.lambdaInline("e", Expressions.variable("e")
               .chainMethod("name")
-              .chainMethod("toLowerCase", CodeTypes.ofJavaClass(Locale.class).chainField("ROOT"))
+              .chainMethod("toLowerCase", CodeTypes.of(Locale.class).chainField("ROOT"))
             ),
-            CodeTypes.ofJavaClass(Function.class).chainMethod("identity")
+            CodeTypes.of(Function.class).chainMethod("identity")
           )))
       )
       .toMethod();
@@ -309,10 +309,10 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
   protected CodeMethod createEnumSuggestsHelper() {
     return CodeMethod.builder("getEnumSuggestions")
       .addModifiers(Modifiers.PRIVATE, Modifiers.STATIC)
-      .addGenerics(CodeGenericTypeDefinition.of("E", GenericEnclosure.withExtends(CodeTypes.ofJavaClass(Enum.class))))
+      .addGenerics(CodeGenericTypeDefinition.of("E", GenericEnclosure.withExtends(CodeTypes.of(Enum.class))))
       .setReturnType(Classes.SUGGESTION_PROVIDER.typed(PlatformUtils.get().platformType()))
       .addParameter(
-        CodeTypes.ofJavaClass(Map.class).typed(
+        CodeTypes.of(Map.class).typed(
           JavaTypes.STRING,
           CodeTypes.generic("E")
         ),
@@ -344,11 +344,11 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
 
     return CodeMethod.builder("getEnumValue")
       .addModifiers(Modifiers.PRIVATE, Modifiers.STATIC)
-      .addGenerics(CodeGenericTypeDefinition.of("E", GenericEnclosure.withExtends(CodeTypes.ofJavaClass(Enum.class))))
+      .addGenerics(CodeGenericTypeDefinition.of("E", GenericEnclosure.withExtends(CodeTypes.of(Enum.class))))
       .addThrowsExceptions(Classes.COMMAND_SYNTAX_EXCEPTION)
       .setReturnType(CodeTypes.generic("E"))
       .addParameter(
-        CodeTypes.ofJavaClass(Map.class).typed(
+        CodeTypes.of(Map.class).typed(
           JavaTypes.STRING,
           CodeTypes.generic("E")
         ),
@@ -374,11 +374,11 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
   protected CodeMethod createReflectionHelper() {
     return CodeMethod.builder("getMethodReflectively")
       .addModifiers(Modifiers.PRIVATE, Modifiers.STATIC)
-      .setReturnType(CodeTypes.ofJavaClass(Method.class))
-      .addParameter(CodeTypes.ofJavaClass(Class.class).typed(CodeTypes.genericWildcard()), "clazz")
+      .setReturnType(CodeTypes.of(Method.class))
+      .addParameter(CodeTypes.of(Class.class).typed(CodeTypes.genericWildcard()), "clazz")
       .addParameter(JavaTypes.STRING, "name")
       .addParameters(CodeParameterDefinition.ofVarargs(
-        CodeTypes.ofJavaClass(Class.class).typed(CodeTypes.genericWildcard()),
+        CodeTypes.of(Class.class).typed(CodeTypes.genericWildcard()),
         "parameters"
       ))
       .setCode(
@@ -389,7 +389,7 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
               Expressions.variable("parameters")
             ))
           ),
-          CodeTypes.ofJavaClass(ReflectiveOperationException.class),
+          CodeTypes.of(ReflectiveOperationException.class),
           "ex",
           CodeBlock.of(
             JavaTypes.RUNTIME_EXCEPTION.ctor(Expressions.variable("ex")).throwStmt()

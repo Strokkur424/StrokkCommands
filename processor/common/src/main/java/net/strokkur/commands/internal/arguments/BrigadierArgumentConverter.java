@@ -200,20 +200,20 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
   }
 
   protected final boolean isOptional(CodeType type) {
-    return type.withoutGenerics().isType(CodeTypes.ofJavaClass(Optional.class))
-      || type.isType(CodeTypes.ofJavaClass(OptionalInt.class))
-      || type.isType(CodeTypes.ofJavaClass(OptionalLong.class))
-      || type.isType(CodeTypes.ofJavaClass(OptionalDouble.class));
+    return type.withoutGenerics().isType(CodeTypes.of(Optional.class))
+      || type.isType(CodeTypes.of(OptionalInt.class))
+      || type.isType(CodeTypes.of(OptionalLong.class))
+      || type.isType(CodeTypes.of(OptionalDouble.class));
   }
 
   protected final CodeType typeToCheck(CodeType type) {
-    if (type.withoutGenerics().isType(CodeTypes.ofJavaClass(Optional.class))) {
+    if (type.withoutGenerics().isType(CodeTypes.of(Optional.class))) {
       return ((CodeClassType) type).genericTypes().getFirst().enclosure().encloses();
-    } else if (type.isType(CodeTypes.ofJavaClass(OptionalInt.class))) {
+    } else if (type.isType(CodeTypes.of(OptionalInt.class))) {
       return CodePrimitiveType.INT;
-    } else if (type.isType(CodeTypes.ofJavaClass(OptionalLong.class))) {
+    } else if (type.isType(CodeTypes.of(OptionalLong.class))) {
       return CodePrimitiveType.LONG;
-    } else if (type.isType(CodeTypes.ofJavaClass(OptionalDouble.class))) {
+    } else if (type.isType(CodeTypes.of(OptionalDouble.class))) {
       return CodePrimitiveType.DOUBLE;
     } else {
       return type;

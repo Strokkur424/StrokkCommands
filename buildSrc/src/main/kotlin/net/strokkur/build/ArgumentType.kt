@@ -48,7 +48,7 @@ internal class ArgumentTypesIterator(path: Path) : Iterable<ArgumentType> {
         val returnType = (typeArgument.getOrNull(pattern.match(data.signature()!!.returnType)) as ClassType).name
         return@map ArgumentType(
           data.name(),
-          CodeTypes.ofClass(returnType.replace('/', '.')),
+          CodeTypes.of(returnType.replace('/', '.')),
           returnType,
           data.params()
             .map { toCodeType(it) }

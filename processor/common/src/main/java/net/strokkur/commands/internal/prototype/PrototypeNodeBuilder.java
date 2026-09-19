@@ -274,9 +274,9 @@ public abstract class PrototypeNodeBuilder implements ForwardingMessagerWrapper 
   private ConvertToExpression yieldLiteralArgumentExpr(CommandArgument arg) {
     if (arg.isOptional()) {
       if (literalQueue.isEmpty()) {
-        return CodeTypes.ofJavaClass(Optional.class).chainMethod("empty");
+        return CodeTypes.of(Optional.class).chainMethod("empty");
       } else {
-        return CodeTypes.ofJavaClass(Optional.class).chainMethod("of")
+        return CodeTypes.of(Optional.class).chainMethod("of")
           .addParameters(Expressions.string(literalQueue.removeLast()));
       }
     } else {

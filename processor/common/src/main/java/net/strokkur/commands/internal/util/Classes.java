@@ -46,10 +46,10 @@ public interface Classes extends ConvertToClassType {
   Classes NULLABLE = create("org.jspecify.annotations.Nullable");
 
   static Classes create(String fqn) {
-    return () -> CodeTypes.ofClass(fqn);
+    return () -> CodeTypes.of(fqn);
   }
 
   static Classes ofClass(Class<?> classType) {
-    return () -> CodeTypes.ofClass(classType.getName());
+    return () -> CodeTypes.of(classType.getName());
   }
 }

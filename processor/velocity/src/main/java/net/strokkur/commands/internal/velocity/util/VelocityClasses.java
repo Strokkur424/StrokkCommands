@@ -32,6 +32,6 @@ public interface VelocityClasses extends ConvertToClassType {
   VelocityClasses PROXY_SERVER = create("com.velocitypowered.api.proxy.ProxyServer");
 
   static VelocityClasses create(String fqn) {
-    return () -> CodeTypes.ofClass(fqn);
+    return () -> CodeTypes.of(fqn);
   }
 }

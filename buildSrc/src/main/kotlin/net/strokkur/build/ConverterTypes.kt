@@ -22,6 +22,6 @@ internal enum class ConverterTypes(val fqn: String) : ConvertToClassType {
   REGISTRY_ARGUMENT_EXTRACTOR("io.papermc.paper.command.brigadier.argument.RegistryArgumentExtractor");
 
   override fun toClassType(): CodeClassType? {
-    return CodeTypes.ofClass(fqn)
+    return CodeTypes.of(fqn)
   }
 }

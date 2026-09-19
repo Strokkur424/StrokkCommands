@@ -368,7 +368,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
     if (parameter.hasAnnotationInherited(Literal.class)) {
       final Literal literal = parameter.getAnnotationValueInherited(Literal.class);
       final String[] declared = literal.value();
-      final boolean optional = parameter.type().withoutGenerics().isType(CodeTypes.ofJavaClass(Optional.class));
+      final boolean optional = parameter.type().withoutGenerics().isType(CodeTypes.of(Optional.class));
       if (declared.length == 0) {
         return LiteralCommandArgument.literal(parameter.name(), true, optional);
       } else if (declared.length == 1) {

@@ -37,6 +37,6 @@ public interface PaperClasses extends ConvertToClassType {
   PaperClasses MESSAGE_COMPONENT_SERIALIZER = create("io.papermc.paper.command.brigadier.MessageComponentSerializer");
 
   static PaperClasses create(String fqn) {
-    return () -> CodeTypes.ofClass(fqn);
+    return () -> CodeTypes.of(fqn);
   }
 }

@@ -28,7 +28,7 @@ internal class PaperArgumentConverterBuilder(
   }
 
   fun createClass(): CodeClass {
-    val builder = ClassBuilder(CodeTypes.ofClass(target))
+    val builder = ClassBuilder(CodeTypes.of(target))
     builder.addAnnotations(
       CodeAnnotation.of(
         AUTO_SERVICE,
@@ -40,7 +40,7 @@ internal class PaperArgumentConverterBuilder(
 
     val initializeBuilder = CodeMethod.builder("initializeArguments")
       .addModifiers(Modifiers.PROTECTED)
-      .addAnnotations(CodeTypes.ofJavaClass(Override::class.java))
+      .addAnnotations(CodeTypes.of(Override::class.java))
 
     val initializeArgumentsCode: MutableList<ConvertToStatement> = mutableListOf(
       Expressions.superExpr().chainMethod("initializeArguments"),
@@ -63,11 +63,11 @@ internal class PaperArgumentConverterBuilder(
               .addParameters(
                 string(argumentType.methodName),
                 CODE_TYPES.chainMethod(
-                  "ofClass",
+                  "of",
                   string(argumentType.returnType.identifiableName())
                 ),
                 CODE_TYPES.chainMethod(
-                  "ofClass",
+                  "of",
                   string(resolverType.resolvedType.identifiableName()),
                 )
               )
@@ -79,11 +79,11 @@ internal class PaperArgumentConverterBuilder(
               .addParameters(
                 string(argumentType.methodName),
                 CODE_TYPES.chainMethod(
-                  "ofClass",
+                  "of",
                   string(argumentType.returnType.identifiableName())
                 ),
                 CODE_TYPES.chainMethod(
-                  "ofClass",
+                  "of",
                   string(resolverType.resolvedType.identifiableName()),
                 )
               )
@@ -100,14 +100,14 @@ internal class PaperArgumentConverterBuilder(
               .addParameters(
                 string(argumentType.methodName),
                 CODE_TYPES.chainMethod(
-                  "ofClass",
+                  "of",
                   string(argumentType.returnType.identifiableName())
                 ),
                 CODE_TYPES.chainMethod(
-                  "ofClass",
+                  "of",
                   string(resolverType.resolvedType.identifiableName()),
                 ),
-                CodeTypes.ofClass("net.strokkur.commands.paper.arguments.FinePosArg").chainField("class")
+                CodeTypes.of("net.strokkur.commands.paper.arguments.FinePosArg").chainField("class")
               )
               .setStyle(StyleConfig.MULTILINE)
           )
@@ -117,11 +117,11 @@ internal class PaperArgumentConverterBuilder(
               .addParameters(
                 string(argumentType.methodName),
                 CODE_TYPES.chainMethod(
-                  "ofClass",
+                  "of",
                   string(argumentType.returnType.identifiableName())
                 ),
                 CODE_TYPES.chainMethod(
-                  "ofClass",
+                  "of",
                   string(resolverType.resolvedType.identifiableName()),
                 )
               )
@@ -157,12 +157,12 @@ internal class PaperArgumentConverterBuilder(
       val typeName = registryKeyType.type.identifiableName()
       if (typeName.endsWith("<?>")) {
         type = CODE_TYPES.chainMethod(
-          "ofClass",
+          "of",
           string(typeName.substring(0, typeName.length - 3))
         ).chainMethod("typed", CODE_TYPES.chainMethod("genericWildcard"))
       } else {
         type = CODE_TYPES.chainMethod(
-          "ofClass",
+          "of",
           string(typeName)
         )
       }

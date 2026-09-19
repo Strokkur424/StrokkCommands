@@ -127,7 +127,7 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
         Expressions.string(name),
         Expressions.variable("ctx")
       )
-    ), JavaTypes.COMPLETABLE_FUTURE.typed(CodeTypes.ofClass("net.kyori.adventure.chat.SignedMessage")));
+    ), JavaTypes.COMPLETABLE_FUTURE.typed(CodeTypes.of("net.kyori.adventure.chat.SignedMessage")));
   }
 
   private MethodInvocationBuilder resolveExpr(String name, ConvertToClassType unresolved) {
@@ -229,7 +229,7 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
   }
 
   protected void putSimple(String methodName, String returnTypeFqn) {
-    final CodeClassType returnType = CodeTypes.ofClass(returnTypeFqn);
+    final CodeClassType returnType = CodeTypes.of(returnTypeFqn);
     putFor((p, name) -> BrigadierArgumentType.of(
       methodName,
       ARGUMENT_TYPES.chainMethod(methodName),
@@ -242,7 +242,7 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
   }
 
   protected void putRange(String methodName, String returnTypeFqn, String rangeType) {
-    final CodeClassType returnType = CodeTypes.ofClass(returnTypeFqn);
+    final CodeClassType returnType = CodeTypes.of(returnTypeFqn);
     putFor((p, name) -> BrigadierArgumentType.of(
       methodName,
       ARGUMENT_TYPES.chainMethod(methodName),
@@ -251,7 +251,7 @@ public abstract class PaperUniqueBrigadierArgumentConverter extends BrigadierArg
         Expressions.string(name),
         returnType.withoutGenerics().chainField("class")
       ).chainMethod("range")
-    ), CodeTypes.ofClass("com.google.common.collect.Range").typed(CodeTypes.ofClass(rangeType)));
+    ), CodeTypes.of("com.google.common.collect.Range").typed(CodeTypes.of(rangeType)));
   }
 
   protected void putRegistry(String name, CodeClassType type) {

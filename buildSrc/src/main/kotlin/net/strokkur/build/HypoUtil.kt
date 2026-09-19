@@ -41,7 +41,7 @@ internal fun resolverType(path: Path, className: String): ResolverType? {
       ?.filter { pattern.match(it).matches() }
       ?.map {
         val firstMatch = typeArgument.getOrNull(pattern.match(it))!!
-        val rawResolvedType = CodeTypes.ofClass(
+        val rawResolvedType = CodeTypes.of(
           (typeArgument.getOrNull(pattern.match(it)) as ClassType).name
             .replace('/', '.')
         )
@@ -50,7 +50,7 @@ internal fun resolverType(path: Path, className: String): ResolverType? {
         if (pat.match(firstMatch).matches()) {
           val resolvedType = (typeArgument.getOrNull(pat.match(firstMatch)) as ClassType).name;
           return@map ResolverType(
-            CodeTypes.ofClass(resolvedType.replace('/', '.')),
+            CodeTypes.of(resolvedType.replace('/', '.')),
             rawResolvedType
           )
         }
@@ -72,7 +72,7 @@ internal fun rangeType(path: Path, className: String): CodeClassType? {
       ?.filter { pattern.match(it).matches() }
       ?.map {
         val firstMatch = typeArgument.getOrNull(pattern.match(it))!!
-        val resolvedType = CodeTypes.ofClass(
+        val resolvedType = CodeTypes.of(
           (typeArgument.getOrNull(pattern.match(it)) as ClassType).name
             .replace('/', '.')
         )
@@ -94,7 +94,7 @@ internal fun toCodeType(signature: TypeSignature): CodeType {
     PrimitiveType.BOOLEAN -> CodePrimitiveType.BOOL
     VoidType.INSTANCE -> CodePrimitiveType.VOID
     is ArrayTypeSignature -> toCodeType(signature.baseType).toArray()
-    is ClassTypeSignature -> CodeTypes.ofClassTyped(
+    is ClassTypeSignature -> CodeTypes.ofTyped(
       signature.asReadable(), *signature.typeArguments
         .map { toGenericType(it) }
         .toTypedArray())
@@ -116,14 +116,14 @@ internal fun toCodeType(descriptor: TypeDescriptor): CodeType {
     PrimitiveType.BOOLEAN -> CodePrimitiveType.BOOL
     VoidType.INSTANCE -> CodePrimitiveType.VOID
     is ArrayTypeDescriptor -> toCodeType(descriptor.baseType).toArray()
-    is ClassTypeDescriptor -> CodeTypes.ofClass(descriptor.asReadable())
+    is ClassTypeDescriptor -> CodeTypes.of(descriptor.asReadable())
   }
 }
 
 internal fun toGenericType(arg: TypeArgument): ConvertToGenericType {
   return when (arg) {
     WildcardArgument.INSTANCE -> CodeTypes.genericWildcard()
-    is ClassTypeSignature -> CodeTypes.ofClass(arg.asReadable())
+    is ClassTypeSignature -> CodeTypes.of(arg.asReadable())
     else -> error("Unhandled type argument type: ${arg.javaClass}")
   }
 }

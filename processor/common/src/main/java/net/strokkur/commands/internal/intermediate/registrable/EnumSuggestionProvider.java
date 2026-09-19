@@ -38,7 +38,7 @@ public record EnumSuggestionProvider(
 
   public ConvertToStatement createVariableStmt() {
     return Statements.variableDeclarationFinal(
-      CodeTypes.ofJavaClass(Map.class).typed(JavaTypes.STRING, enumType),
+      CodeTypes.of(Map.class).typed(JavaTypes.STRING, enumType),
       variableName(),
       Expressions.methodInvocation("createEnumValuesMap").addParameters(enumType.chainMethod("values"))
     );
