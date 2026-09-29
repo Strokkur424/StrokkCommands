@@ -222,7 +222,7 @@ public class BrigadierArgumentConverter implements ForwardingMessagerWrapper {
 
   public final BrigadierArgumentType getAsArgumentType(SourceParameterLike parameter) throws ParameterArgumentException {
     final String argumentName = parameter.name();
-    final CodeType type = parameter.type().toType();
+    final CodeType type = parameter.type().toType().withoutAnnotations();
 
     final boolean isOptional = isOptional(type);
     final CodeType typeToCheck;

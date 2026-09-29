@@ -17,12 +17,12 @@
  */
 package net.strokkur.commands.internal.intermediate.registrable;
 
+import net.strokkur.jap.code.type.CodePrimitiveType;
 import net.strokkur.jap.code.type.preset.JavaTypes;
 import net.strokkur.jap.source.classmodel.SourceClass;
 import net.strokkur.jap.source.classmodel.SourceField;
 import net.strokkur.jap.source.classmodel.SourceMethod;
 import net.strokkur.jap.source.classmodel.SourceMethodParameter;
-import net.strokkur.jap.source.type.SourcePrimitiveType;
 
 import java.util.List;
 
@@ -36,7 +36,7 @@ public class RequirementRegistry extends FunctionalInterfaceRegistry<Requirement
   @Override
   protected boolean inlineMethodPredicate(SourceMethod source) {
     final List<SourceMethodParameter> params = source.parameters();
-    return SourcePrimitiveType.BOOL.equals(source.returnType())
+    return source.returnType().isType(CodePrimitiveType.BOOL)
       && params.size() == 1
       && getPlatformType().equals(params.getFirst().type().toType());
   }

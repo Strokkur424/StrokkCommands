@@ -21,13 +21,14 @@ import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
 
 @Command("simpledi")
 class SimpleDICommand {
   private final JavaPlugin plugin;
   private final int magicValue;
 
-  SimpleDICommand(JavaPlugin plugin, int magicValue) {
+  SimpleDICommand(JavaPlugin plugin, int magicValue, @Nullable String dname) {
     this.plugin = plugin;
     this.magicValue = magicValue;
   }

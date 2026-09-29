@@ -35,6 +35,7 @@ import net.strokkur.jap.code.classmodel.CodeMethod;
 import net.strokkur.jap.code.classmodel.CodeParameterDefinition;
 import net.strokkur.jap.code.classmodel.builder.ClassBuilder;
 import net.strokkur.jap.code.classmodel.builder.MethodBuilder;
+import net.strokkur.jap.code.convert.ConvertToAnnotation;
 import net.strokkur.jap.code.convert.ConvertToExpression;
 import net.strokkur.jap.code.convert.ConvertToMethod;
 import net.strokkur.jap.code.convert.ConvertToStatement;
@@ -51,6 +52,7 @@ import net.strokkur.jap.code.type.preset.JakartaInjectTypes;
 import net.strokkur.jap.code.type.preset.JavaTypes;
 import net.strokkur.jap.code.util.Modifiers;
 import net.strokkur.jap.code.util.StyleConfig;
+import net.strokkur.jap.source.annotation.SourceAnnotation;
 import net.strokkur.jap.source.classmodel.SourceConstructor;
 import net.strokkur.jap.source.classmodel.SourceMethodParameter;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
@@ -216,7 +218,16 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
 
       for (SourceMethodParameter parameter : ctor.parameters()) {
         if (filter.test(parameter)) {
-          builder.addParameter(parameter.type(), parameter.name());
+          builder.addParameter(parameter.type(), parameter.name(), parameter.annotations().stream()
+            .map(SourceAnnotation::toAnnotation)
+            // Very temporary solution. JetBrains' annotations are applies to both the parameter
+            // *and* the type. In source, this is the same annotation, but to the compiler, they
+            // are distinct. So for JetBrains' annotations, we have to filter these out manually.
+            // TODO(jap-util): filter non-repeatable annotations present on both param and type.
+            .filter(anno -> anno.type().isType(CodeTypes.of("org.jetbrains.annotations.Nullable")))
+            .filter(anno -> anno.type().isType(CodeTypes.of("org.jetbrains.annotations.NotNull")))
+            .toArray(ConvertToAnnotation[]::new)
+          );
         }
       }
     }

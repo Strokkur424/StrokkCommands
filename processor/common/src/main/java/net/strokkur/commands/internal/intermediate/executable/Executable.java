@@ -19,6 +19,7 @@ package net.strokkur.commands.internal.intermediate.executable;
 
 import net.strokkur.commands.internal.exceptions.IllegalReturnTypeException;
 import net.strokkur.commands.internal.intermediate.attributes.AttributableHelper;
+import net.strokkur.jap.code.type.CodePrimitiveType;
 import net.strokkur.jap.source.classmodel.SourceClassLike;
 import net.strokkur.jap.source.classmodel.SourceMethod;
 import net.strokkur.jap.source.type.SourcePrimitiveType;
@@ -87,7 +88,7 @@ public class Executable implements Parameterized, AttributableHelper {
       if (type == SourcePrimitiveType.VOID) {
         return VOID;
       }
-      if (type == SourcePrimitiveType.INT) {
+      if (type.isType(CodePrimitiveType.INT)) {
         return INT;
       }
       throw new IllegalReturnTypeException(type);

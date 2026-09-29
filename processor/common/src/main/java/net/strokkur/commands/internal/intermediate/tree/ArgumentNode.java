@@ -23,6 +23,7 @@ import net.strokkur.commands.internal.arguments.MultiLiteralCommandArgument;
 import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
 import net.strokkur.commands.internal.intermediate.attributes.AttributeKey;
 import net.strokkur.jap.code.documentation.DiscardingDocumentationRenderer;
+import net.strokkur.jap.code.visitor.imports.GatheredImports;
 import net.strokkur.jap.code.visitor.source.JavaSourcePrintingVisitor;
 
 public class ArgumentNode extends AbstractCommandNode {
@@ -41,7 +42,12 @@ public class ArgumentNode extends AbstractCommandNode {
       case MultiLiteralCommandArgument multi -> '[' + String.join("|", multi.literals()) + ']';
       case LiteralCommandArgument lit -> lit.literal();
       case RequiredCommandArgument req -> {
-        final JavaSourcePrintingVisitor visitor = new JavaSourcePrintingVisitor(DiscardingDocumentationRenderer::new, "", "");
+        final JavaSourcePrintingVisitor visitor = new JavaSourcePrintingVisitor(
+          DiscardingDocumentationRenderer::new,
+          GatheredImports.all(),
+          "",
+          ""
+        );
         final String rawInitializer = req.argumentType().initializer().toExpression().accept(visitor).toString();
         final String initializer = rawInitializer.replace("\n", " ");
         yield req.argumentName() + " (" + initializer + ')';

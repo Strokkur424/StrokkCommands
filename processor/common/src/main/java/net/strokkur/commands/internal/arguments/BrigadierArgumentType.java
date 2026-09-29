@@ -23,6 +23,7 @@ import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.jap.code.convert.ConvertToExpression;
 import net.strokkur.jap.code.documentation.DiscardingDocumentationRenderer;
 import net.strokkur.jap.code.type.CodeClassType;
+import net.strokkur.jap.code.visitor.imports.GatheredImports;
 import net.strokkur.jap.code.visitor.source.JavaSourcePrintingVisitor;
 import org.jspecify.annotations.Nullable;
 
@@ -67,7 +68,11 @@ public record BrigadierArgumentType(
 
   @Override
   public String toString() {
-    final JavaSourcePrintingVisitor visitor = new JavaSourcePrintingVisitor(DiscardingDocumentationRenderer::new, "", "");
+    final JavaSourcePrintingVisitor visitor = new JavaSourcePrintingVisitor(
+      DiscardingDocumentationRenderer::new,
+      GatheredImports.all(),
+      "", ""
+    );
     final String rawInitializer = initializer().toExpression().accept(visitor).toString();
     final String rawRetriever = retriever().toExpression().accept(visitor).toString();
     final String initializer = rawInitializer.replace("\n", " ");
