@@ -33,20 +33,25 @@ public final class VelocityBrigadierArgumentConverter extends BrigadierArgumentC
 
   @Override
   protected @Nullable BrigadierArgumentType handleCustomArgumentAnnotations(
-      String argumentName, CodeType type, SourceParameterLike parameter) {
+    String argumentName, CodeType type, SourceParameterLike parameter) {
     if (parameter.hasAnnotation(CustomArg.class)) {
       final SourceAnnotation customArg = parameter.getAnnotation(CustomArg.class);
       final CodeClassType classType = customArg.parameter("value").classValue();
-      return BrigadierArgumentType.of(
-          "custom-arg-" + customArg.type(),
-          classType.ctor(),
-          Expressions.variable("ctx")
-              .chainMethod(
-                  "getArgument",
-                  Expressions.string(argumentName),
-                  ((CodeClassType) parameter.type().toType())
-                      .withoutGenerics()
-                      .chainField("class")));
+      return new BrigadierArgumentType(
+        "custom-arg-" + customArg.type(),
+        classType.ctor(),
+        Expressions.variable("ctx")
+          .chainMethod(
+            "getArgument",
+            Expressions.string(argumentName),
+            ((CodeClassType) parameter.type().toType())
+              .withoutGenerics()
+              .chainField("class")),
+        () -> Expressions.lambdaInline("(ctx, b)",
+          classType.ctor()
+            .chainMethod("listSuggestions",
+              Expressions.variable("ctx"),
+              Expressions.variable("b"))), false);
     }
 
     return null;
