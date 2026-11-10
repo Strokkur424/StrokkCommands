@@ -51,7 +51,7 @@ public class TestPluginVelocity {
   void onProxyInitialize(ProxyInitializeEvent event) {
     final Injector injector = Guice.createInjector(new InjectionModule());
 //    injector.getInstance(TestCommandBrigadier.class).register(this.proxy, this);
-    net.strokkur.testplugin.velocity.iceacream.IceCreamCommandBrigadier.register(this.proxy, this);
+    net.strokkur.testplugin.velocity.commands.PlayerArgTestBrigadier.register(proxy, this);
   }
 
   private class InjectionModule extends AbstractModule {

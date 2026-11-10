@@ -17,11 +17,15 @@
  */
 package net.strokkur.commands.internal.velocity;
 
+import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.printer.CommonClassBuilder;
+import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.velocity.util.VelocityClasses;
 import net.strokkur.commands.internal.velocity.util.VelocityCommandInformation;
 import net.strokkur.jap.code.classmodel.CodeField;
+import net.strokkur.jap.code.classmodel.CodeMethod;
+import net.strokkur.jap.code.classmodel.CodeParameterDefinition;
 import net.strokkur.jap.code.classmodel.builder.ClassBuilder;
 import net.strokkur.jap.code.classmodel.builder.MethodBuilder;
 import net.strokkur.jap.code.convert.ConvertToMethod;
@@ -63,12 +67,14 @@ class VelocityClassBuilder extends CommonClassBuilder<VelocityCommandInformation
     final MethodInvocationBuilder createInvocation = new MethodInvocationBuilder()
       .setName("create");
 
+    boolean serverAdded = false;
     if (!commandInformation.useInjection()) {
       if (commandInformation.constructor() instanceof SourceConstructor sourceCtor) {
         for (SourceMethodParameter parameter : sourceCtor.parameters()) {
           final String variableName;
           if (isProxyServer(parameter)) {
             variableName = "server";
+            serverAdded = true;
           } else {
             variableName = parameter.name();
           }
@@ -76,6 +82,9 @@ class VelocityClassBuilder extends CommonClassBuilder<VelocityCommandInformation
           createInvocation.addParameters(Expressions.variable(variableName));
         }
       }
+    }
+    if (!serverAdded) {
+      createInvocation.addParameters(Expressions.variable("server"));
     }
 
     final MethodBuilder builder = super.getRegisterMethodBuilder()
@@ -132,5 +141,24 @@ class VelocityClassBuilder extends CommonClassBuilder<VelocityCommandInformation
           %s.register(this.proxy, this);
         }""".formatted(selfType.name()))
     ));
+  }
+
+  @Override
+  protected MethodBuilder getCreateMethodBuilder(CodeParameterDefinition... additionalParameters) {
+    final MethodBuilder builder = CodeMethod.builder("create");
+    builder.addModifiers(Modifiers.PUBLIC);
+    if (!commandInformation.useInjection()) {
+      builder.addModifiers(Modifiers.STATIC);
+    }
+    builder.setReturnType(Classes.LITERAL_COMMAND_NODE.typed(PlatformUtils.get().platformType()));
+
+    builder.addParameters(additionalParameters);
+
+    // Propagate constructor parameters
+    addConstructorParametersTo(builder, param -> !param.type().isType(VelocityClasses.PROXY_SERVER));
+
+    builder.addParameter(VelocityClasses.PROXY_SERVER, "server");
+
+    return builder;
   }
 }
