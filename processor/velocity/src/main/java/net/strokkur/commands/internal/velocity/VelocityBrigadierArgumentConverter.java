@@ -26,6 +26,7 @@ import net.strokkur.commands.internal.velocity.util.VelocityClasses;
 import net.strokkur.commands.velocity.arguments.CustomArg;
 import net.strokkur.jap.code.convert.ConvertToExpression;
 import net.strokkur.jap.code.expression.Expressions;
+import net.strokkur.jap.code.expression.builder.MethodInvocationBuilder;
 import net.strokkur.jap.code.statement.Statements;
 import net.strokkur.jap.code.type.CodeClassType;
 import net.strokkur.jap.code.type.CodeType;
@@ -66,8 +67,30 @@ public final class VelocityBrigadierArgumentConverter extends BrigadierArgumentC
         "player-arg-target",
         Classes.STRING_ARGUMENT_TYPE
           .chainMethod("word"),
-        this.retrievePlayer(argumentName),
-        this.playerSuggestionProvider(),
+        this.retrieve("getPlayer", argumentName, "player"),
+        this.buildSuggestionProvider(
+          Expressions.variable("server")
+            .chainMethod("getAllPlayers"),
+          Expressions.variable("suggestion")
+            .chainMethod("getUsername")
+        ),
+        false
+      );
+    }
+
+    if (parameter.type().isType(VelocityClasses.REGISTERED_SERVER)) {
+      return new BrigadierArgumentType(
+        "server-arg-target",
+        Classes.STRING_ARGUMENT_TYPE
+          .chainMethod("word"),
+        this.retrieve("getServer", argumentName, "server"),
+        this.buildSuggestionProvider(
+          Expressions.variable("server")
+            .chainMethod("getAllServers"),
+          Expressions.variable("suggestion")
+            .chainMethod("getServerInfo")
+            .chainMethod("getName")
+        ),
         false
       );
     }
@@ -75,9 +98,13 @@ public final class VelocityBrigadierArgumentConverter extends BrigadierArgumentC
     return null;
   }
 
-  private ConvertToExpression retrievePlayer(String argumentName) {
+  private ConvertToExpression retrieve(
+    String getMethod,
+    String argumentName,
+    String invalidWhat
+  ) {
     return Expressions.variable("server")
-      .chainMethod("getPlayer",
+      .chainMethod(getMethod,
         Expressions.variable("ctx")
           .chainMethod("getArgument",
             Expressions.string(argumentName), JavaTypes.STRING.withoutGenerics().chainField("class")))
@@ -85,27 +112,26 @@ public final class VelocityBrigadierArgumentConverter extends BrigadierArgumentC
         Expressions.lambdaInline(
           Classes.SIMPLE_COMMAND_EXCEPTION_TYPE
             .ctor(Classes.LITERAL_MESSAGE.ctor(
-              Expressions.string("Invalid player provided")
+              Expressions.string("Invalid " + invalidWhat + " provided!")
             )).chainMethod("create"))).setStyle(StyleConfig.MULTILINE);
   }
 
-  private SuggestionProvider playerSuggestionProvider() {
+  private SuggestionProvider buildSuggestionProvider(
+    MethodInvocationBuilder filterStart,
+    MethodInvocationBuilder suggest
+  ) {
     return () -> Expressions.lambda("(ctx, b)",
-      Expressions.variable("server")
-        .chainMethod("getAllPlayers")
+      filterStart
         .chainMethod("stream")
         .chainMethod("filter",
-          Expressions.lambdaInline("(p)",
-            Expressions.variable("p")
-              .chainMethod("getUsername")
+          Expressions.lambdaInline("(suggestion)",
+            suggest
               .chainMethod("toLowerCase")
               .chainMethod("startsWith", Expressions.variable("b")
                 .chainMethod("getRemainingLowerCase")))).setStyle(StyleConfig.MULTILINE)
         .chainMethod("forEach", Expressions.lambdaInline("(suggestion)",
           Expressions.variable("b")
-            .chainMethod("suggest",
-              Expressions.variable("suggestion")
-                .chainMethod("getUsername")))),
+            .chainMethod("suggest", suggest))),
       Statements.returnStmt(
         Expressions.variable("b")
           .chainMethod("buildFuture")

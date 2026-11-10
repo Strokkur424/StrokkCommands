@@ -24,6 +24,7 @@ public interface VelocityClasses extends ConvertToClassType {
   VelocityClasses COMMAND_SOURCE = create("com.velocitypowered.api.command.CommandSource");
   VelocityClasses PLAYER = create("com.velocitypowered.api.proxy.Player");
   VelocityClasses CONSOLE_COMMAND_SOURCE = create("com.velocitypowered.api.proxy.ConsoleCommandSource");
+  VelocityClasses REGISTERED_SERVER = create("com.velocitypowered.api.proxy.server.RegisteredServer");
 
   VelocityClasses BRIGADIER_COMMAND = create("com.velocitypowered.api.command.BrigadierCommand");
   VelocityClasses COMMAND_META = create("com.velocitypowered.api.command.CommandMeta");
