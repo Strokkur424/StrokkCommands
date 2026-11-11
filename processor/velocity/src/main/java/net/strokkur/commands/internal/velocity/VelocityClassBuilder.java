@@ -23,6 +23,7 @@ import net.strokkur.commands.internal.printer.CommonClassBuilder;
 import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.velocity.util.VelocityClasses;
 import net.strokkur.commands.internal.velocity.util.VelocityCommandInformation;
+import net.strokkur.commands.velocity.arguments.CustomArg;
 import net.strokkur.jap.code.classmodel.CodeField;
 import net.strokkur.jap.code.classmodel.CodeMethod;
 import net.strokkur.jap.code.classmodel.CodeParameterDefinition;
@@ -33,10 +34,13 @@ import net.strokkur.jap.code.documentation.CodeDocumentation;
 import net.strokkur.jap.code.expression.Expressions;
 import net.strokkur.jap.code.expression.builder.MethodInvocationBuilder;
 import net.strokkur.jap.code.statement.Statements;
+import net.strokkur.jap.code.type.CodeClassType;
 import net.strokkur.jap.code.type.preset.JavaTypes;
 import net.strokkur.jap.code.util.Modifiers;
 import net.strokkur.jap.code.util.StyleConfig;
+import net.strokkur.jap.source.annotation.SourceAnnotation;
 import net.strokkur.jap.source.classmodel.SourceConstructor;
+import net.strokkur.jap.source.classmodel.SourceMethod;
 import net.strokkur.jap.source.classmodel.SourceMethodParameter;
 import net.strokkur.jap.source.classmodel.SourceParameterLike;
 
@@ -158,6 +162,20 @@ class VelocityClassBuilder extends CommonClassBuilder<VelocityCommandInformation
     addConstructorParametersTo(builder, param -> !param.type().isType(VelocityClasses.PROXY_SERVER));
 
     builder.addParameter(VelocityClasses.PROXY_SERVER, "server");
+
+    // todo: probably not the proper way to create variables, but as of right now
+    //       works
+    for (SourceMethod m : commandInformation.sourceClass().methods()) {
+      for (SourceMethodParameter param : m.parameters()) {
+        if (param.hasAnnotation(CustomArg.class)) {
+          final SourceAnnotation customArg = param.getAnnotation(CustomArg.class);
+          final CodeClassType classType = customArg.parameter("value").classValue();
+          builder.addCode(
+            Statements.variableDeclarationFinal(classType, "custom_arg_" + classType.simpleName(), classType.ctor())
+          );
+        }
+      }
+    }
 
     return builder;
   }

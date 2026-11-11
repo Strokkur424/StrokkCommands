@@ -47,7 +47,7 @@ public final class VelocityBrigadierArgumentConverter extends BrigadierArgumentC
       final CodeClassType classType = customArg.parameter("value").classValue();
       return new BrigadierArgumentType(
         "custom-arg-" + customArg.type(),
-        classType.ctor(),
+        Expressions.variable("custom_arg_" + classType.simpleName()),
         Expressions.variable("ctx")
           .chainMethod(
             "getArgument",
@@ -56,7 +56,7 @@ public final class VelocityBrigadierArgumentConverter extends BrigadierArgumentC
               .withoutGenerics()
               .chainField("class")),
         () -> Expressions.lambdaInline("(ctx, b)",
-          classType.ctor()
+          Expressions.variable("custom_arg_" + classType.simpleName())
             .chainMethod("listSuggestions",
               Expressions.variable("ctx"),
               Expressions.variable("b"))), false);

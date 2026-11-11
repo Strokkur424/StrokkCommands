@@ -163,7 +163,7 @@ public abstract class CommonClassBuilder<C extends CommandInformation> implement
     }
 
     createMethodStatements.add(Statements.returnStmt(treeExpr));
-    createMethodNamed.setCode(createMethodStatements.toArray(ConvertToStatement[]::new));
+    createMethodNamed.addCode(createMethodStatements.toArray(ConvertToStatement[]::new));
     final CodeMethod createMethodNamedBuilt = createMethodNamed.toMethod();
 
     createMethod.setCode(Statements.returnStmt(
