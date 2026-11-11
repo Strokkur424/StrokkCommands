@@ -19,6 +19,17 @@ package net.strokkur.commands.velocity.arguments;
 
 import com.mojang.brigadier.arguments.ArgumentType;
 
+/// Declares that an executes method parameter should use
+/// the here declared custom argument type for the argument.
+///
+/// Example usage:
+/// ```java
+/// @Executes
+/// void executes(CommandSender sender, @CustomArg(MyCustomArgument.class) CustomType custom);
+/// ```
+///
+/// The value **must** implement [ArgumentType].
 public @interface CustomArg {
+  /// {@return the [ArgumentType] to map to the annotated parameter}
   Class<? extends ArgumentType<?>> value();
 }

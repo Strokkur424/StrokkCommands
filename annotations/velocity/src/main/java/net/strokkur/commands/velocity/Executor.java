@@ -22,6 +22,20 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/// Declares that a parameter should not be interpreted as an argument type but
+/// as the required command executor.
+///
+/// This annotation **can only be applied to** the second parameter of a method and requires
+/// the type to be **a [com.velocitypowered.api.proxy.Player]**.
+///
+/// The executor is the entity, for which the command was executed. This can be a different object from
+/// the [com.velocitypowered.api.command.CommandSource] if the command was ran with `/execute as` or a different `redirect`/`fork` method.
+///
+/// Example usage:
+/// ```java
+/// @Executes
+/// void executes(CommandSource source, @Executor Player player);
+/// ```
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
 public @interface Executor {
