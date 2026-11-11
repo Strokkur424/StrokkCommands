@@ -45,24 +45,34 @@ public final class VelocityBrigadierArgumentConverter extends BrigadierArgumentC
     if (parameter.hasAnnotation(CustomArg.class)) {
       final SourceAnnotation customArg = parameter.getAnnotation(CustomArg.class);
       final CodeClassType classType = customArg.parameter("value").classValue();
+      final boolean optional = isOptional(parameter.type().toType());
+      final ConvertToExpression retriever = optional ?
+      ((CodeClassType) typeToCheck(parameter.type().toType()))
+        .withoutGenerics()
+        .chainField("class") :
+        ((CodeClassType) parameter.type().toType())
+          .withoutGenerics()
+          .chainField("class");
       return new BrigadierArgumentType(
         "custom-arg-" + customArg.type(),
         Expressions.variable("custom_arg_" + classType.simpleName()),
         Expressions.variable("ctx")
-          .chainMethod(
-            "getArgument",
-            Expressions.string(argumentName),
-            ((CodeClassType) parameter.type().toType())
-              .withoutGenerics()
-              .chainField("class")),
+          .chainMethod("getArgument", Expressions.string(argumentName), retriever),
         () -> Expressions.lambdaInline("(ctx, b)",
           Expressions.variable("custom_arg_" + classType.simpleName())
             .chainMethod("listSuggestions",
               Expressions.variable("ctx"),
-              Expressions.variable("b"))), false);
+              Expressions.variable("b"))),
+        optional);
     }
 
-    if (parameter.type().isType(VelocityClasses.PLAYER)) {
+    boolean optional = false;
+    CodeType checkOn = parameter.type().toType();
+    if (isOptional(checkOn)) {
+      optional = true;
+      checkOn = typeToCheck(checkOn);
+    }
+    if (checkOn.isType(VelocityClasses.PLAYER)) {
       return new BrigadierArgumentType(
         "player-arg-target",
         Classes.STRING_ARGUMENT_TYPE
@@ -74,11 +84,11 @@ public final class VelocityBrigadierArgumentConverter extends BrigadierArgumentC
           Expressions.variable("suggestion")
             .chainMethod("getUsername")
         ),
-        false
+        optional
       );
     }
 
-    if (parameter.type().isType(VelocityClasses.REGISTERED_SERVER)) {
+    if (checkOn.isType(VelocityClasses.REGISTERED_SERVER)) {
       return new BrigadierArgumentType(
         "server-arg-target",
         Classes.STRING_ARGUMENT_TYPE
@@ -91,7 +101,7 @@ public final class VelocityBrigadierArgumentConverter extends BrigadierArgumentC
             .chainMethod("getServerInfo")
             .chainMethod("getName")
         ),
-        false
+        optional
       );
     }
 
