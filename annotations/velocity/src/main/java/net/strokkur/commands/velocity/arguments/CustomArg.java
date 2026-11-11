@@ -25,7 +25,7 @@ import com.mojang.brigadier.arguments.ArgumentType;
 /// Example usage:
 /// ```java
 /// @Executes
-/// void executes(CommandSender sender, @CustomArg(MyCustomArgument.class) CustomType custom);
+/// void executes(CommandSource source, @CustomArg(MyCustomArgument.class) CustomType custom);
 /// ```
 ///
 /// The value **must** implement [ArgumentType].
