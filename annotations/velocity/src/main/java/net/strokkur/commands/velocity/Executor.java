@@ -36,7 +36,7 @@ import java.lang.annotation.Target;
 /// @Executes
 /// void executes(CommandSource source, @Executor Player player);
 /// ```
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.PARAMETER)
 public @interface Executor {
 }

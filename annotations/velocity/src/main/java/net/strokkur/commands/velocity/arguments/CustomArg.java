@@ -18,6 +18,10 @@
 package net.strokkur.commands.velocity.arguments;
 
 import com.mojang.brigadier.arguments.ArgumentType;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /// Declares that an executes method parameter should use
 /// the here declared custom argument type for the argument.
@@ -29,6 +33,8 @@ import com.mojang.brigadier.arguments.ArgumentType;
 /// ```
 ///
 /// The value **must** implement [ArgumentType].
+@Retention(RetentionPolicy.SOURCE)
+@Target(ElementType.PARAMETER)
 public @interface CustomArg {
   /// {@return the [ArgumentType] to map to the annotated parameter}
   Class<? extends ArgumentType<?>> value();
