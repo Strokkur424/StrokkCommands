@@ -17,11 +17,16 @@
  */
 package net.strokkur.commands.internal.velocity;
 
+import net.strokkur.commands.internal.PlatformUtils;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.printer.CommonClassBuilder;
+import net.strokkur.commands.internal.util.Classes;
 import net.strokkur.commands.internal.velocity.util.VelocityClasses;
 import net.strokkur.commands.internal.velocity.util.VelocityCommandInformation;
+import net.strokkur.commands.velocity.arguments.CustomArg;
 import net.strokkur.jap.code.classmodel.CodeField;
+import net.strokkur.jap.code.classmodel.CodeMethod;
+import net.strokkur.jap.code.classmodel.CodeParameterDefinition;
 import net.strokkur.jap.code.classmodel.builder.ClassBuilder;
 import net.strokkur.jap.code.classmodel.builder.MethodBuilder;
 import net.strokkur.jap.code.convert.ConvertToMethod;
@@ -29,10 +34,13 @@ import net.strokkur.jap.code.documentation.CodeDocumentation;
 import net.strokkur.jap.code.expression.Expressions;
 import net.strokkur.jap.code.expression.builder.MethodInvocationBuilder;
 import net.strokkur.jap.code.statement.Statements;
+import net.strokkur.jap.code.type.CodeClassType;
 import net.strokkur.jap.code.type.preset.JavaTypes;
 import net.strokkur.jap.code.util.Modifiers;
 import net.strokkur.jap.code.util.StyleConfig;
+import net.strokkur.jap.source.annotation.SourceAnnotation;
 import net.strokkur.jap.source.classmodel.SourceConstructor;
+import net.strokkur.jap.source.classmodel.SourceMethod;
 import net.strokkur.jap.source.classmodel.SourceMethodParameter;
 import net.strokkur.jap.source.classmodel.SourceParameterLike;
 
@@ -63,12 +71,14 @@ class VelocityClassBuilder extends CommonClassBuilder<VelocityCommandInformation
     final MethodInvocationBuilder createInvocation = new MethodInvocationBuilder()
       .setName("create");
 
+    boolean serverAdded = false;
     if (!commandInformation.useInjection()) {
       if (commandInformation.constructor() instanceof SourceConstructor sourceCtor) {
         for (SourceMethodParameter parameter : sourceCtor.parameters()) {
           final String variableName;
           if (isProxyServer(parameter)) {
             variableName = "server";
+            serverAdded = true;
           } else {
             variableName = parameter.name();
           }
@@ -76,6 +86,9 @@ class VelocityClassBuilder extends CommonClassBuilder<VelocityCommandInformation
           createInvocation.addParameters(Expressions.variable(variableName));
         }
       }
+    }
+    if (!serverAdded) {
+      createInvocation.addParameters(Expressions.variable("server"));
     }
 
     final MethodBuilder builder = super.getRegisterMethodBuilder()
@@ -132,5 +145,38 @@ class VelocityClassBuilder extends CommonClassBuilder<VelocityCommandInformation
           %s.register(this.proxy, this);
         }""".formatted(selfType.name()))
     ));
+  }
+
+  @Override
+  protected MethodBuilder getCreateMethodBuilder(CodeParameterDefinition... additionalParameters) {
+    final MethodBuilder builder = CodeMethod.builder("create");
+    builder.addModifiers(Modifiers.PUBLIC);
+    if (!commandInformation.useInjection()) {
+      builder.addModifiers(Modifiers.STATIC);
+    }
+    builder.setReturnType(Classes.LITERAL_COMMAND_NODE.typed(PlatformUtils.get().platformType()));
+
+    builder.addParameters(additionalParameters);
+
+    // Propagate constructor parameters
+    addConstructorParametersTo(builder, param -> !param.type().isType(VelocityClasses.PROXY_SERVER));
+
+    builder.addParameter(VelocityClasses.PROXY_SERVER, "server");
+
+    // todo: probably not the proper way to create variables, but as of right now
+    //       works
+    for (SourceMethod m : commandInformation.sourceClass().methods()) {
+      for (SourceMethodParameter param : m.parameters()) {
+        if (param.hasAnnotation(CustomArg.class)) {
+          final SourceAnnotation customArg = param.getAnnotation(CustomArg.class);
+          final CodeClassType classType = customArg.parameter("value").classValue();
+          builder.addCode(
+            Statements.variableDeclarationFinal(classType, "custom_arg_" + classType.simpleName(), classType.ctor())
+          );
+        }
+      }
+    }
+
+    return builder;
   }
 }

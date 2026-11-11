@@ -29,6 +29,7 @@ import net.strokkur.commands.internal.velocity.util.SenderType;
 import net.strokkur.commands.internal.velocity.util.VelocityAttributeKeys;
 import net.strokkur.commands.internal.velocity.util.VelocityClasses;
 import net.strokkur.commands.permission.Permission;
+import net.strokkur.commands.velocity.Executor;
 import net.strokkur.jap.code.convert.ConvertToExpression;
 import net.strokkur.jap.code.expression.Expressions;
 import net.strokkur.jap.code.expression.builder.InvocationChainBuilder;
@@ -75,7 +76,7 @@ public final class VelocityPlatformUtils implements PlatformUtils {
       final CodeType adapted = sourceParam.type().toType();
 
       final SenderType thisType;
-      if (adapted.equals(VelocityClasses.PLAYER.toType())) {
+      if (adapted.equals(VelocityClasses.PLAYER.toType()) && sourceParam.hasAnnotation(Executor.class)) {
         thisType = SenderType.PLAYER;
       } else if (adapted.equals(VelocityClasses.CONSOLE_COMMAND_SOURCE.toType())) {
         thisType = SenderType.CONSOLE;
@@ -114,5 +115,10 @@ public final class VelocityPlatformUtils implements PlatformUtils {
     return VelocityClasses.BRIGADIER_COMMAND
       .chainBuilder()
       .chainMethod("requiredArgumentBuilder", name, argument);
+  }
+
+  @Override
+  public boolean mayParameterBeArgument(SourceParameterLike parameter) {
+    return !parameter.hasAnnotation(Executor.class);
   }
 }

@@ -23,6 +23,7 @@ import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
 import net.strokkur.commands.Literal;
 import net.strokkur.commands.permission.Permission;
+import net.strokkur.commands.velocity.Executor;
 
 @Command("test")
 class CommandTest {
@@ -35,7 +36,7 @@ class CommandTest {
 
   @Executes("yell")
   @Permission("test.command.yell")
-  void yell(Player player, @Literal String whatisit, String message) {
+  void yell(@Executor Player player, @Literal String whatisit, String message) {
     player.sendRichMessage("<red>" + message.toUpperCase());
   }
 }

@@ -22,13 +22,14 @@ import com.velocitypowered.api.proxy.Player;
 import net.strokkur.commands.Command;
 import net.strokkur.commands.CustomRequirement;
 import net.strokkur.commands.Executes;
+import net.strokkur.commands.velocity.Executor;
 
 @Command("requirements-test")
 @RequirementsTest.MyRequirement
 class RequirementsTest {
 
   @Executes
-  void execute(Player player) {
+  void execute(@Executor Player player) {
     player.sendPlainMessage("This command is clearly rigged.");
   }
 

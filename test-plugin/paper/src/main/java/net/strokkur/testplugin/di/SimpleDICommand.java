@@ -21,7 +21,7 @@ import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 @Command("simpledi")
 class SimpleDICommand {

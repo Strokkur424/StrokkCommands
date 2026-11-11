@@ -27,6 +27,7 @@ import net.strokkur.commands.Command;
 import net.strokkur.commands.Executes;
 import net.strokkur.commands.UseInjection;
 import net.strokkur.commands.permission.Permission;
+import net.strokkur.commands.velocity.Executor;
 
 import java.util.Optional;
 
@@ -43,7 +44,7 @@ final class TestCommand {
   }
 
   @Executes("run")
-  void run(Player player) {
+  void run(@Executor Player player) {
     player.sendPlainMessage("Velocity commands wohoo!");
   }
 
