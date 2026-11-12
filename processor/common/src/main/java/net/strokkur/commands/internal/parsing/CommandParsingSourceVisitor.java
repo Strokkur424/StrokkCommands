@@ -17,22 +17,12 @@
  */
 package net.strokkur.commands.internal.parsing;
 
-import net.strokkur.commands.Command;
-import net.strokkur.commands.DefaultExecutes;
-import net.strokkur.commands.Executes;
-import net.strokkur.commands.Literal;
-import net.strokkur.commands.Subcommand;
-import net.strokkur.commands.UnsetExecutorWrapper;
+import net.strokkur.commands.*;
 import net.strokkur.commands.container.ManyDefaultExecutes;
 import net.strokkur.commands.container.ManyExecutes;
 import net.strokkur.commands.container.ManySubcommands;
 import net.strokkur.commands.internal.PlatformUtils;
-import net.strokkur.commands.internal.arguments.BrigadierArgumentConverter;
-import net.strokkur.commands.internal.arguments.BrigadierArgumentType;
-import net.strokkur.commands.internal.arguments.CommandArgument;
-import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
-import net.strokkur.commands.internal.arguments.MultiLiteralCommandArgument;
-import net.strokkur.commands.internal.arguments.RequiredCommandArgument;
+import net.strokkur.commands.internal.arguments.*;
 import net.strokkur.commands.internal.exceptions.IllegalCommandClassTypeException;
 import net.strokkur.commands.internal.exceptions.IllegalSubcommandFieldType;
 import net.strokkur.commands.internal.exceptions.ParameterArgumentException;
@@ -44,28 +34,13 @@ import net.strokkur.commands.internal.intermediate.executable.DefaultExecutable;
 import net.strokkur.commands.internal.intermediate.executable.Executable;
 import net.strokkur.commands.internal.intermediate.executable.UnparsedCommandParameter;
 import net.strokkur.commands.internal.intermediate.record.RecordArguments;
-import net.strokkur.commands.internal.intermediate.registrable.CombinedRequirementProvider;
-import net.strokkur.commands.internal.intermediate.registrable.ExecutorWrapperRegistry;
-import net.strokkur.commands.internal.intermediate.registrable.RegistrableRegistry;
-import net.strokkur.commands.internal.intermediate.registrable.RequirementProvider;
-import net.strokkur.commands.internal.intermediate.registrable.RequirementRegistry;
-import net.strokkur.commands.internal.intermediate.registrable.SuggestionProvider;
-import net.strokkur.commands.internal.intermediate.registrable.SuggestionsRegistry;
+import net.strokkur.commands.internal.intermediate.registrable.*;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.commands.internal.util.ForwardingMessagerWrapper;
 import net.strokkur.jap.code.type.CodeTypes;
 import net.strokkur.jap.source.annotation.AnnotationsHolder;
 import net.strokkur.jap.source.annotation.SourceAnnotation;
-import net.strokkur.jap.source.classmodel.SourceAnnotationInterface;
-import net.strokkur.jap.source.classmodel.SourceClass;
-import net.strokkur.jap.source.classmodel.SourceClassLike;
-import net.strokkur.jap.source.classmodel.SourceConstructor;
-import net.strokkur.jap.source.classmodel.SourceEnum;
-import net.strokkur.jap.source.classmodel.SourceField;
-import net.strokkur.jap.source.classmodel.SourceInterface;
-import net.strokkur.jap.source.classmodel.SourceMethod;
-import net.strokkur.jap.source.classmodel.SourceParameterLike;
-import net.strokkur.jap.source.classmodel.SourceRecord;
+import net.strokkur.jap.source.classmodel.*;
 import net.strokkur.jap.source.type.ClassLikeType;
 import net.strokkur.jap.source.visitor.SourceVisitor;
 import org.jspecify.annotations.Nullable;
@@ -152,18 +127,16 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
     final AdvancedNodeExtender<Executes> executesExtender = new AdvancedNodeExtender<>(Executes.class, Executes::value)
       .withPluralAnnotationsClass(ManyExecutes.class)
       .withAlwaysRunHooks(false)
-      .withFirstPathNodeConsumer(node -> {
+      .withFirstNodeConsumer(node -> {
         applyExecutorTransform(sourceMethod, node);
         PlatformUtils.get().populateNode(sourceMethod, node);
         applyRequirements(sourceMethod, node);
       })
+      .withArguments(splitOptionals)
       .withPostProcess(node -> {
-        for (List<CommandArgument> argumentPath : splitOptionals) {
-          final CommandNode endNode = node.addArguments(argumentPath);
-          final Executable executableObj = new Executable(executable);
-          endNode.setAttribute(AttributeKey.EXECUTABLE, executableObj);
-          PlatformUtils.get().populateExecutesNode(executableObj, node, endNode, arguments);
-        }
+        final Executable executableObj = new Executable(executable);
+        node.setAttribute(AttributeKey.EXECUTABLE, executableObj);
+        PlatformUtils.get().populateExecutesNode(executableObj, rootNode, node, arguments);
       });
 
     executesExtender.accept(sourceMethod, rootNode);
@@ -172,12 +145,9 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
       .withAnnotationClass(DefaultExecutes.class, DefaultExecutes::value)
       .withPluralAnnotationsClass(ManyDefaultExecutes.class)
       .withPostProcess(node -> {
-        for (List<CommandArgument> argumentPath : splitOptionals) {
-          final CommandNode endNode = node.addArguments(argumentPath);
-          final DefaultExecutable executableObj = new DefaultExecutable(executable);
-          endNode.setAttribute(AttributeKey.DEFAULT_EXECUTABLE, executableObj);
-          PlatformUtils.get().populateExecutesNode(executableObj, node, endNode, arguments);
-        }
+        final DefaultExecutable executableObj = new DefaultExecutable(executable);
+        node.setAttribute(AttributeKey.DEFAULT_EXECUTABLE, executableObj);
+        PlatformUtils.get().populateExecutesNode(executableObj, rootNode, node, arguments);
       });
 
     defaultExecutesExtender.accept(sourceMethod, rootNode);
@@ -195,7 +165,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
 
     final AdvancedNodeExtender<Subcommand> fieldExtender = new AdvancedNodeExtender<>(Subcommand.class, Subcommand::value)
       .withPluralAnnotationsClass(ManySubcommands.class)
-      .withFirstPathNodeConsumer(node -> {
+      .withFirstNodeConsumer(node -> {
         node.setAttribute(AttributeKey.ACCESS, ExecuteAccess.of(sourceField));
         applyExecutorTransform(sourceField, node);
         PlatformUtils.get().populateNode(sourceField, node);
@@ -239,7 +209,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
 
     final AdvancedNodeExtender<A> classExtender = new AdvancedNodeExtender<>(annotationClass, toPath)
       .withPluralAnnotationsClass(collectionAnnotation)
-      .withFirstPathNodeConsumer(node -> {
+      .withFirstNodeConsumer(node -> {
         applyExecutorTransform(sourceClass, node);
         PlatformUtils.get().populateNode(sourceClass, node);
         applyRequirements(sourceClass, node);
@@ -289,12 +259,12 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
 
     final AdvancedNodeExtender<A> recordExtender = new AdvancedNodeExtender<>(annotationClass, toPath)
       .withPluralAnnotationsClass(collectionAnnotation)
-      .withFirstPathNodeConsumer(node -> {
+      .withFirstNodeConsumer(node -> {
         applyExecutorTransform(record, node);
         PlatformUtils.get().populateNode(record, node);
         applyRequirements(record, node);
       })
-      .withEndPathNodeTransform(node -> node.addArguments(recordArguments))
+      .withArguments(List.of(recordArguments))
       .withPostProcess(node -> nestedNodes.forEach(node::addChild));
 
     final CommandNode rootNode = CommandNode.createEmpty();

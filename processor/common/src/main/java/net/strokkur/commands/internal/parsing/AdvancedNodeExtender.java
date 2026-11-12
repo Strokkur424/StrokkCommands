@@ -17,6 +17,7 @@
  */
 package net.strokkur.commands.internal.parsing;
 
+import net.strokkur.commands.internal.arguments.CommandArgument;
 import net.strokkur.commands.internal.arguments.LiteralCommandArgument;
 import net.strokkur.commands.internal.intermediate.tree.CommandNode;
 import net.strokkur.jap.source.annotation.AnnotationsHolder;
@@ -34,26 +35,53 @@ class AdvancedNodeExtender<A extends Annotation> {
   private @Nullable Class<? extends Annotation> pluralAnnotationsClass = null;
   private boolean alwaysRunHooks = true;
 
-  private Consumer<CommandNode> firstPathNodeConsumer = AdvancedNodeExtender::nullConsumer;
+  private Consumer<CommandNode> firstNodeConsumer = AdvancedNodeExtender::nullConsumer;
   private Consumer<CommandNode> postProcessNode = AdvancedNodeExtender::nullConsumer;
-  private Function<CommandNode, CommandNode> endPathNodeFunction = Function.identity();
+  private List<List<CommandArgument>> arguments = List.of();
 
   AdvancedNodeExtender(Class<A> annotationClass, Function<A, String> toPath) {
     this.annotationClass = annotationClass;
     this.annotationToPathString = toPath;
   }
 
+  private void acceptMaybePath(CommandNode node, boolean firstNodeFirst) {
+    if (this.arguments.isEmpty()) {
+      if (firstNodeFirst) {
+        firstNodeConsumer.accept(node);
+      }
+      postProcessNode.accept(node);
+      return;
+    }
+
+    for (List<CommandArgument> args : this.arguments) {
+      if (args.isEmpty()) {
+        if (firstNodeFirst) {
+          firstNodeConsumer.accept(node);
+        }
+        postProcessNode.accept(node);
+        continue;
+      }
+      final CommandNode first = node.addArgument(args.getFirst());
+      if (firstNodeFirst) {
+        firstNodeConsumer.accept(first);
+      }
+      postProcessNode.accept(args.size() == 1
+        ? first
+        : first.addArguments(args.subList(1, args.size()))
+      );
+    }
+  }
+
   public void accept(AnnotationsHolder source, CommandNode root) {
-    final List<A> annotations = source.getAnnotations(pluralAnnotationsClass, annotationClass);
-    if (annotations.isEmpty()) {
+    final List<A> pathAnnotations = source.getAnnotations(pluralAnnotationsClass, annotationClass);
+    if (pathAnnotations.isEmpty()) {
       if (alwaysRunHooks) {
-        firstPathNodeConsumer.accept(root);
-        postProcessNode.accept(endPathNodeFunction.apply(root));
+        this.acceptMaybePath(root, true);
       }
       return;
     }
 
-    annotations.stream()
+    pathAnnotations.stream()
       .map(annotationToPathString)
       .distinct()
       .map(path -> path.isBlank() ?
@@ -63,25 +91,24 @@ class AdvancedNodeExtender<A extends Annotation> {
           .toList())
       .forEach(args -> {
         if (args.isEmpty()) {
-          firstPathNodeConsumer.accept(root);
-          postProcessNode.accept(endPathNodeFunction.apply(root));
+          this.acceptMaybePath(root, true);
           return;
         }
 
         final CommandNode firstPathNode = root.addArgument(args.getFirst());
-        firstPathNodeConsumer.accept(firstPathNode);
+        firstNodeConsumer.accept(firstPathNode);
         final CommandNode endPathNode = args.size() == 1 ?
           firstPathNode :
           firstPathNode.addArguments(args.subList(1, args.size()));
-        postProcessNode.accept(endPathNodeFunction.apply(endPathNode));
+        this.acceptMaybePath(endPathNode, false);
       });
   }
 
   public <N extends Annotation> AdvancedNodeExtender<N> withAnnotationClass(Class<N> annotationClass, Function<N, String> annotationToPathString) {
     final AdvancedNodeExtender<N> with = new AdvancedNodeExtender<>(annotationClass, annotationToPathString);
-    with.firstPathNodeConsumer = this.firstPathNodeConsumer;
+    with.firstNodeConsumer = this.firstNodeConsumer;
     with.postProcessNode = this.postProcessNode;
-    with.endPathNodeFunction = this.endPathNodeFunction;
+    with.arguments = this.arguments;
     with.alwaysRunHooks = this.alwaysRunHooks;
     return with;
   }
@@ -96,13 +123,13 @@ class AdvancedNodeExtender<A extends Annotation> {
     return this;
   }
 
-  public AdvancedNodeExtender<A> withFirstPathNodeConsumer(Consumer<CommandNode> firstPathNodeConsumer) {
-    this.firstPathNodeConsumer = firstPathNodeConsumer;
+  public AdvancedNodeExtender<A> withFirstNodeConsumer(Consumer<CommandNode> firstNodeConsumer) {
+    this.firstNodeConsumer = firstNodeConsumer;
     return this;
   }
 
-  public AdvancedNodeExtender<A> withEndPathNodeTransform(Function<CommandNode, CommandNode> endPathNodeFunction) {
-    this.endPathNodeFunction = endPathNodeFunction;
+  public AdvancedNodeExtender<A> withArguments(List<List<CommandArgument>> arguments) {
+    this.arguments = arguments;
     return this;
   }
 
