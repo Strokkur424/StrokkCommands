@@ -21,15 +21,9 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import net.strokkur.testplugin.enumarg.GiveMaterialCommandBrigadier;
-import net.strokkur.testplugin.enumarg.SomeEnumsCommandBrigadier;
 import net.strokkur.testplugin.guice.InjectionCommandBrigadierRef;
 import net.strokkur.testplugin.guice.NestedInjectionCommandBrigadierRef;
 import net.strokkur.testplugin.guice.module.GuiceModule;
-import net.strokkur.testplugin.optional.MixedOptionalArgumentsBrigadier;
-import net.strokkur.testplugin.optional.OptionalArgumentsBrigadier;
-import net.strokkur.testplugin.optional.OptionalExecutorsBrigadier;
-import net.strokkur.testplugin.optional.OptionalLiteralsBrigadier;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class TestPlugin extends JavaPlugin {
@@ -47,14 +41,6 @@ public final class TestPlugin extends JavaPlugin {
       final Commands commands = event.registrar();
       injector.getInstance(InjectionCommandBrigadierRef.class).register(commands);
       injector.getInstance(NestedInjectionCommandBrigadierRef.class).register(commands);
-
-      MixedOptionalArgumentsBrigadier.register(commands);
-      OptionalArgumentsBrigadier.register(commands);
-      OptionalLiteralsBrigadier.register(commands);
-      OptionalExecutorsBrigadier.register(commands);
-
-      SomeEnumsCommandBrigadier.register(commands);
-      GiveMaterialCommandBrigadier.register(commands);
     }));
 
 //      OneBrigadier.register(commands);

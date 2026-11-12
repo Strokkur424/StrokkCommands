@@ -152,18 +152,16 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
     final AdvancedNodeExtender<Executes> executesExtender = new AdvancedNodeExtender<>(Executes.class, Executes::value)
       .withPluralAnnotationsClass(ManyExecutes.class)
       .withAlwaysRunHooks(false)
-      .withFirstPathNodeConsumer(node -> {
+      .withFirstNodeConsumer(node -> {
         applyExecutorTransform(sourceMethod, node);
         PlatformUtils.get().populateNode(sourceMethod, node);
         applyRequirements(sourceMethod, node);
       })
+      .withArguments(splitOptionals)
       .withPostProcess(node -> {
-        for (List<CommandArgument> argumentPath : splitOptionals) {
-          final CommandNode endNode = node.addArguments(argumentPath);
-          final Executable executableObj = new Executable(executable);
-          endNode.setAttribute(AttributeKey.EXECUTABLE, executableObj);
-          PlatformUtils.get().populateExecutesNode(executableObj, node, endNode, arguments);
-        }
+        final Executable executableObj = new Executable(executable);
+        node.setAttribute(AttributeKey.EXECUTABLE, executableObj);
+        PlatformUtils.get().populateExecutesNode(executableObj, rootNode, node, arguments);
       });
 
     executesExtender.accept(sourceMethod, rootNode);
@@ -172,12 +170,9 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
       .withAnnotationClass(DefaultExecutes.class, DefaultExecutes::value)
       .withPluralAnnotationsClass(ManyDefaultExecutes.class)
       .withPostProcess(node -> {
-        for (List<CommandArgument> argumentPath : splitOptionals) {
-          final CommandNode endNode = node.addArguments(argumentPath);
-          final DefaultExecutable executableObj = new DefaultExecutable(executable);
-          endNode.setAttribute(AttributeKey.DEFAULT_EXECUTABLE, executableObj);
-          PlatformUtils.get().populateExecutesNode(executableObj, node, endNode, arguments);
-        }
+        final DefaultExecutable executableObj = new DefaultExecutable(executable);
+        node.setAttribute(AttributeKey.DEFAULT_EXECUTABLE, executableObj);
+        PlatformUtils.get().populateExecutesNode(executableObj, rootNode, node, arguments);
       });
 
     defaultExecutesExtender.accept(sourceMethod, rootNode);
@@ -195,7 +190,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
 
     final AdvancedNodeExtender<Subcommand> fieldExtender = new AdvancedNodeExtender<>(Subcommand.class, Subcommand::value)
       .withPluralAnnotationsClass(ManySubcommands.class)
-      .withFirstPathNodeConsumer(node -> {
+      .withFirstNodeConsumer(node -> {
         node.setAttribute(AttributeKey.ACCESS, ExecuteAccess.of(sourceField));
         applyExecutorTransform(sourceField, node);
         PlatformUtils.get().populateNode(sourceField, node);
@@ -239,7 +234,7 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
 
     final AdvancedNodeExtender<A> classExtender = new AdvancedNodeExtender<>(annotationClass, toPath)
       .withPluralAnnotationsClass(collectionAnnotation)
-      .withFirstPathNodeConsumer(node -> {
+      .withFirstNodeConsumer(node -> {
         applyExecutorTransform(sourceClass, node);
         PlatformUtils.get().populateNode(sourceClass, node);
         applyRequirements(sourceClass, node);
@@ -289,12 +284,12 @@ public class CommandParsingSourceVisitor implements SourceVisitor<CommandNode, C
 
     final AdvancedNodeExtender<A> recordExtender = new AdvancedNodeExtender<>(annotationClass, toPath)
       .withPluralAnnotationsClass(collectionAnnotation)
-      .withFirstPathNodeConsumer(node -> {
+      .withFirstNodeConsumer(node -> {
         applyExecutorTransform(record, node);
         PlatformUtils.get().populateNode(record, node);
         applyRequirements(record, node);
       })
-      .withEndPathNodeTransform(node -> node.addArguments(recordArguments))
+      .withArguments(List.of(recordArguments))
       .withPostProcess(node -> nestedNodes.forEach(node::addChild));
 
     final CommandNode rootNode = CommandNode.createEmpty();
